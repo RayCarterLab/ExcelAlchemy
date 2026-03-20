@@ -4,11 +4,11 @@ from pydantic import BaseModel
 
 from excelalchemy import FieldMeta
 from excelalchemy import PhoneNumber
-from tests import BaseTestCase
+from tests.support import BaseTestCase
 
 
-class TestPhoneNumber(BaseTestCase):
-    async def test_validate(self):
+class TestPhoneNumberValueType(BaseTestCase):
+    async def test_validate_accepts_mobile_numbers_only(self):
         class Importer(BaseModel):
             phone_number: PhoneNumber = FieldMeta(label='手机号', order=1)
 

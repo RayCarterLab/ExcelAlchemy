@@ -4,11 +4,11 @@ from pydantic import BaseModel
 
 from excelalchemy import FieldMeta
 from excelalchemy import NumberRange
-from tests import BaseTestCase
+from tests.support import BaseTestCase
 
 
-class TestNumberRange(BaseTestCase):
-    def test_comment(self):
+class TestNumberRangeValueType(BaseTestCase):
+    def test_comment_reuses_number_comment_contract(self):
         class Importer(BaseModel):
             number: NumberRange = FieldMeta(label='数字', order=1, comment='数字')
 
@@ -19,7 +19,7 @@ class TestNumberRange(BaseTestCase):
         assert field.value_type.comment(field) == '必填性：必填\n格式：数值\n小数位数：0\n可输入范围：无限制\n单位：无'
         assert len(field.value_type.model_items()) == 2
 
-    async def test_serialize(self):
+    async def test_serialize_parses_number_range_inputs(self):
         class Importer(BaseModel):
             number: NumberRange = FieldMeta(label='数字', order=1)
 
@@ -46,7 +46,7 @@ class TestNumberRange(BaseTestCase):
             'end': 1.23,
         }
 
-    async def test_deserialize(self):
+    async def test_deserialize_stringifies_number_range_boundaries(self):
         class Importer(BaseModel):
             number: NumberRange = FieldMeta(label='数字', order=1)
 
@@ -59,7 +59,7 @@ class TestNumberRange(BaseTestCase):
         field.fraction_digits = 2
         assert field.value_type.deserialize(1.2345, field) == '1.23'
 
-    async def test_validate(self):
+    async def test_validate_enforces_number_range_order_and_constraints(self):
         class Importer(BaseModel):
             number: NumberRange = FieldMeta(label='数字', order=1)
 

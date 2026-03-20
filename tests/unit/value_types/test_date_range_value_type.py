@@ -10,12 +10,12 @@ from excelalchemy import DateFormat
 from excelalchemy import DateRange
 from excelalchemy import FieldMeta
 from excelalchemy import ValidateResult
-from tests import BaseTestCase
-from tests.registry import FileRegistry
+from tests.support import BaseTestCase
+from tests.support import FileRegistry
 
 
-class TestDateRange(BaseTestCase):
-    async def test_daterange(self):
+class TestDateRangeValueType(BaseTestCase):
+    async def test_import_accepts_valid_date_range_workbook(self):
         class Importer(BaseModel):
             date_range: DateRange = FieldMeta(label='日期范围', order=1)
 
@@ -25,7 +25,7 @@ class TestDateRange(BaseTestCase):
         )
         assert result.result == ValidateResult.SUCCESS, '导入失败'
 
-    async def test_daterange_missing_before(self):
+    async def test_import_returns_header_invalid_when_merged_header_loses_trailing_child(self):
         """对于合并的表头，如果后面缺失
             日期范围	｜    （这里合并了表头）｜
             开始日期	｜    （这里缺了一个值）｜
@@ -45,7 +45,7 @@ class TestDateRange(BaseTestCase):
         assert sorted(result.missing_required) == sorted(['开始日期', '结束日期'])
         assert result.unrecognized == ['日期范围']
 
-    async def test_test_date_range_missing_input_after(self):
+    async def test_import_returns_header_invalid_when_merged_header_loses_leading_child(self):
         """对于合并的表头，如果前面缺失
             日期范围	        ｜   （这里合并了表头）｜
             （这里缺了一个值）	｜    开始日期       ｜
@@ -63,7 +63,7 @@ class TestDateRange(BaseTestCase):
         assert sorted(result.missing_required) == sorted(['结束日期'])
         assert result.unrecognized == ['日期范围']
 
-    async def test_daterange_value_type(self):
+    async def test_date_range_value_type_exposes_comment_and_boundaries(self):
         class Importer(BaseModel):
             date_range: DateRange = FieldMeta(label='日期范围', order=1, date_format=DateFormat.DAY)
 
@@ -79,7 +79,7 @@ class TestDateRange(BaseTestCase):
         assert value_type.end == DateTime(2023, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai'))
         assert value_type.comment(field) == '必填性：必填\n格式：日期（yyyy/mm/dd）\n提示：开始日期不得晚于结束日期'
 
-    async def test_serialize(self):
+    async def test_serialize_parses_supported_date_range_inputs(self):
         class Importer(BaseModel):
             date_range: DateRange = FieldMeta(label='日期范围', order=1, date_format=DateFormat.DAY)
 
@@ -116,7 +116,7 @@ class TestDateRange(BaseTestCase):
 
         assert value_type.serialize('不能解析的值', field) == '不能解析的值'
 
-    async def test_validate(self):
+    async def test_validate_rejects_invalid_date_range_boundaries_and_constraints(self):
         class Importer(BaseModel):
             date_range: DateRange = FieldMeta(label='日期范围', order=1, date_format=DateFormat.DAY)
 
@@ -198,7 +198,7 @@ class TestDateRange(BaseTestCase):
             'end': 1675267200000,
         }
 
-    async def test_deserialize(self):
+    async def test_deserialize_formats_supported_date_range_outputs(self):
         class Importer(BaseModel):
             date_range: DateRange = FieldMeta(label='日期范围', order=1, date_format=DateFormat.DAY)
 

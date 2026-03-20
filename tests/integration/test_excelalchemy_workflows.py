@@ -41,11 +41,11 @@ from excelalchemy import String
 from excelalchemy import UniqueKey
 from excelalchemy import Url
 from excelalchemy import ValidateResult
-from tests import BaseTestCase
-from tests.registry import FileRegistry
+from tests.support import BaseTestCase
+from tests.support import FileRegistry
 
 
-class TestImport(BaseTestCase):
+class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
     class NoMergeHeaderImporter(BaseModel):
         age: Number = FieldMeta(label='年龄', order=1)
         name: String = FieldMeta(label='姓名', order=2)
@@ -227,7 +227,7 @@ class TestImport(BaseTestCase):
             context = {}
         return random.choices([True, False], weights=[0.5, 0.5])[0]
 
-    async def test_simple_import_on_creator(self):
+    async def test_import_create_mode_returns_success_for_valid_simple_workbook(self):
         """Test import excel with no merged header"""
         config = ImporterConfig(self.NoMergeHeaderImporter, creator=self.creator, minio=cast(Minio, self.minio))
         alchemy = ExcelAlchemy(config)
@@ -243,7 +243,7 @@ class TestImport(BaseTestCase):
         assert result.success_count == 1
         assert result.url is None
 
-    async def test_simple_import_on_update(self):
+    async def test_import_update_mode_returns_success_for_valid_simple_workbook(self):
         """Test import excel with no merged header"""
         self.assertRaises(ConfigError, ImporterConfig, self.NoMergeHeaderImporter, import_mode=ImportMode.UPDATE)
         config = ImporterConfig(
@@ -263,7 +263,7 @@ class TestImport(BaseTestCase):
         assert result.success_count == 1
         assert result.url is None
 
-    async def test_simple_import_on_create_or_update(self):
+    async def test_import_create_or_update_mode_returns_success_for_valid_simple_workbook(self):
         """Test import excel with no merged header"""
         self.assertRaises(
             ConfigError,
@@ -294,7 +294,7 @@ class TestImport(BaseTestCase):
         assert result.success_count == 1
         assert result.url is None
 
-    async def test_no_merge_header_import_with_errors(self):
+    async def test_import_records_cell_errors_for_invalid_simple_workbook(self):
         """Test import excel with no merged header"""
         config = ImporterConfig(self.NoMergeHeaderImporter, creator=self.creator, minio=cast(Minio, self.minio))
         alchemy = ExcelAlchemy(config)
@@ -325,7 +325,7 @@ class TestImport(BaseTestCase):
             }
         }
 
-    async def test_no_merge_header_export(self):
+    async def test_export_returns_simple_header_dataframe_for_flat_model(self):
         config = ExporterConfig(self.NoMergeHeaderImporter, minio=cast(Minio, self.minio))
         alchemy = ExcelAlchemy(config)
         data = [
@@ -359,7 +359,7 @@ class TestImport(BaseTestCase):
         assert df.shape == (1, 17)
         assert df.iloc[0, 0] == '18'
 
-    async def test_duplicate_order(self):
+    async def test_duplicate_field_order_raises_config_error(self):
         class DuplicateOrderImporter(self.NoMergeHeaderImporter):
             max_stay_date: DateRange = FieldMeta(label='最大停留日期', order=7, date_format=DateFormat.YEAR)
             salary: NumberRange = FieldMeta(label='工资', order=14)
@@ -367,7 +367,7 @@ class TestImport(BaseTestCase):
         config = ExporterConfig(DuplicateOrderImporter, minio=cast(Minio, self.minio))
         self.assertRaises(ConfigError, ExcelAlchemy, config)
 
-    async def test_export_with_merged_header(self):
+    async def test_export_detects_merged_header_layout_for_composite_fields(self):
         config = ExporterConfig(self.MergeHeaderImporter, minio=cast(Minio, self.minio))
         alchemy = ExcelAlchemy(config)
         data = [
@@ -399,7 +399,7 @@ class TestImport(BaseTestCase):
         df, has_merged_header = alchemy._gen_export_df(data)
         assert has_merged_header is True
 
-    async def test_import_with_merge_header(self):
+    async def test_import_returns_success_for_merged_header_workbook(self):
         config = ImporterConfig(self.MergeHeaderImporter, creator=self.creator, minio=cast(Minio, self.minio))
         alchemy = ExcelAlchemy(config)
 
@@ -412,7 +412,7 @@ class TestImport(BaseTestCase):
         assert result.success_count == 1
         assert result.url is None
 
-    async def test_empty_config_model(self):
+    async def test_empty_importer_model_raises_config_error(self):
         class EmptyCModel(BaseModel):
             ...
 
@@ -422,7 +422,7 @@ class TestImport(BaseTestCase):
 
         self.assertEqual(str(cm.exception), '没有从模型 EmptyCModel 中提取到字段元数据，请检查模型是否定义了字段')
 
-    async def test_empty_field_meta(self):
+    async def test_non_fieldmeta_definition_raises_programmatic_error(self):
         class EmptyFieldMetaModel(BaseModel):
             name: str
 
@@ -431,7 +431,7 @@ class TestImport(BaseTestCase):
             ExcelAlchemy(config)
         self.assertEqual(str(cm.exception), '字段定义必须是 FieldMeta 的实例')
 
-    async def test_not_importer_config(self):
+    async def test_passing_non_config_object_raises_config_error(self):
         class NotImporterConfigModel(BaseModel):
             name: str = FieldMeta(label='姓名')
 
@@ -440,7 +440,7 @@ class TestImport(BaseTestCase):
 
         self.assertEqual(str(cm.exception), '导出模式的配置类必须是 ExporterConfig')
 
-    async def test_download_template_on_export(self):
+    async def test_download_template_in_export_mode_raises_config_error(self):
         config = ExporterConfig(self.MergeHeaderImporter, minio=cast(Minio, self.minio))
         alchemy = ExcelAlchemy(config)
 

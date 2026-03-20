@@ -10,11 +10,11 @@ from excelalchemy import Number
 from excelalchemy import Option
 from excelalchemy import OptionId
 from excelalchemy import Radio
-from tests import BaseTestCase
+from tests.support import BaseTestCase
 
 
-class TestFieldMeta(BaseTestCase):
-    async def test_set_is_primary_key(self):
+class TestFieldMetadata(BaseTestCase):
+    async def test_set_is_primary_key_marks_field_as_required_and_unique(self):
         class Importer(BaseModel):
             email: Email = FieldMeta(
                 label='邮箱',
@@ -39,7 +39,7 @@ class TestFieldMeta(BaseTestCase):
         assert alchemy.ordered_field_meta[0].is_primary_key
         assert alchemy.ordered_field_meta[0].required and alchemy.ordered_field_meta[0].unique
 
-    async def test_set_unique(self):
+    async def test_set_unique_marks_field_as_required(self):
         class Importer(BaseModel):
             email: Email = FieldMeta(
                 label='邮箱',
@@ -64,7 +64,7 @@ class TestFieldMeta(BaseTestCase):
         assert alchemy.ordered_field_meta[0].unique
         assert alchemy.ordered_field_meta[0].required
 
-    async def test_validate_state(self):
+    async def test_validate_state_accepts_consistent_field_configuration(self):
         class Importer(BaseModel):
             email: Email = FieldMeta(
                 label='邮箱',
@@ -99,7 +99,7 @@ class TestFieldMeta(BaseTestCase):
             [OptionId('男'), OptionId('不存在')]
         ) == (['male'], ['选项不存在，请参照表头的注释填写'])
 
-    async def test_unique_label(self):
+    async def test_unique_label_uses_parent_label_for_nested_fields(self):
         class Importer(BaseModel):
             email: Email = FieldMeta(
                 label='邮箱',
@@ -117,7 +117,7 @@ class TestFieldMeta(BaseTestCase):
         alchemy.ordered_field_meta[1].parent_label = '父'
         assert alchemy.ordered_field_meta[1].unique_label == '父·邮箱2'
 
-    async def test_unique_key(self):
+    async def test_unique_key_uses_parent_key_for_nested_fields(self):
         class Importer(BaseModel):
             email: Email = FieldMeta(
                 label='邮箱',
@@ -135,7 +135,7 @@ class TestFieldMeta(BaseTestCase):
         alchemy.ordered_field_meta[1].parent_key = 'parent'
         assert alchemy.ordered_field_meta[1].unique_key == 'parent·email2'
 
-    async def test_options_id_map(self):
+    async def test_options_id_map_indexes_options_by_id(self):
         class Importer(BaseModel):
             sex: Radio = FieldMeta(
                 label='邮箱',
@@ -149,7 +149,7 @@ class TestFieldMeta(BaseTestCase):
             'female': Option(id=OptionId('female'), name='女'),
         }
 
-    async def test_options_name_map(self):
+    async def test_options_name_map_indexes_options_by_name(self):
         class Importer(BaseModel):
             sex: Radio = FieldMeta(
                 label='邮箱',
@@ -163,7 +163,7 @@ class TestFieldMeta(BaseTestCase):
             '女': Option(id=OptionId('female'), name='女'),
         }
 
-    async def test_comment_required(self):
+    async def test_comment_required_reflects_required_flag(self):
         class Importer(BaseModel):
             email: Email = FieldMeta(
                 label='邮箱',
@@ -179,7 +179,7 @@ class TestFieldMeta(BaseTestCase):
         assert alchemy.ordered_field_meta[0].comment_required == '必填性：必填'
         assert alchemy.ordered_field_meta[1].comment_required == '必填性：选填'
 
-    async def test_comment_date_format(self):
+    async def test_comment_date_format_uses_configured_date_pattern(self):
         class Importer(BaseModel):
             date: Date = FieldMeta(label='日期', order=1, date_format=DateFormat.DAY)
             date2: Date = FieldMeta(label='日期', order=2, date_format=DateFormat.MONTH)
@@ -188,7 +188,7 @@ class TestFieldMeta(BaseTestCase):
         assert alchemy.ordered_field_meta[0].comment_date_format == '格式：日期（yyyy/mm/dd）'
         assert alchemy.ordered_field_meta[1].comment_date_format == '格式：日期（yyyy/mm）'
 
-    async def test_comment_date_range_option(self):
+    async def test_comment_date_range_option_reflects_range_constraint(self):
         class Importer(BaseModel):
             ne: Date = FieldMeta(
                 label='日期',
@@ -211,7 +211,7 @@ class TestFieldMeta(BaseTestCase):
         assert alchemy.ordered_field_meta[1].comment_date_range_option == '范围：无限制'
         assert alchemy.ordered_field_meta[2].comment_date_range_option == '范围：早于当前时间'
 
-    async def test_comment_hint(self):
+    async def test_comment_hint_returns_configured_hint(self):
         class Importer(BaseModel):
             email: Email = FieldMeta(
                 label='邮箱',
@@ -222,7 +222,7 @@ class TestFieldMeta(BaseTestCase):
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_hint == '提示：请输入邮箱'
 
-    async def test_comment_options(self):
+    async def test_comment_options_lists_available_option_names(self):
         class Importer(BaseModel):
             sex: Radio = FieldMeta(
                 label='邮箱',
@@ -233,7 +233,7 @@ class TestFieldMeta(BaseTestCase):
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_options == '选项：男，女'
 
-    async def test_comment_fraction_digits(self):
+    async def test_comment_fraction_digits_reflects_numeric_precision(self):
         class Importer(BaseModel):
             decimal: Number = FieldMeta(
                 label='邮箱',
@@ -244,7 +244,7 @@ class TestFieldMeta(BaseTestCase):
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_fraction_digits == '小数位数：2'
 
-    async def test_comment_unit(self):
+    async def test_comment_unit_reflects_configured_unit(self):
         class Importer(BaseModel):
             decimal: Number = FieldMeta(
                 label='邮箱',
@@ -255,7 +255,7 @@ class TestFieldMeta(BaseTestCase):
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_unit == '单位：元'
 
-    async def test_comment_unique(self):
+    async def test_comment_unique_reflects_unique_constraint(self):
         class Importer(BaseModel):
             email: Email = FieldMeta(
                 label='邮箱',
@@ -266,7 +266,7 @@ class TestFieldMeta(BaseTestCase):
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_unique == '唯一性：唯一'
 
-    async def test_comment_max_length(self):
+    async def test_comment_max_length_reflects_string_length_limit(self):
         class Importer(BaseModel):
             email: Email = FieldMeta(
                 label='邮箱',
@@ -277,7 +277,7 @@ class TestFieldMeta(BaseTestCase):
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_max_length == '最大长度：10'
 
-    async def test_must_date_format(self):
+    async def test_must_date_format_returns_configured_format_or_raises(self):
         class Importer(BaseModel):
             date: Date = FieldMeta(label='日期', order=1, date_format=DateFormat.DAY)
             date2: Date = FieldMeta(
@@ -291,7 +291,7 @@ class TestFieldMeta(BaseTestCase):
         with self.assertRaises(ConfigError):
             alchemy.ordered_field_meta[1].must_date_format  # noqa
 
-    async def test_python_date_format(self):
+    async def test_python_date_format_maps_enum_to_strftime_pattern(self):
         class Importer(BaseModel):
             date: Date = FieldMeta(label='日期', order=1, date_format=DateFormat.DAY)
             date2: Date = FieldMeta(
@@ -305,7 +305,7 @@ class TestFieldMeta(BaseTestCase):
         with self.assertRaises(ConfigError):
             alchemy.ordered_field_meta[1].python_date_format  # noqa
 
-    async def test_repr(self):
+    async def test_repr_summarizes_field_metadata_state(self):
         class Importer(BaseModel):
             email: Email = FieldMeta(
                 label='邮箱',

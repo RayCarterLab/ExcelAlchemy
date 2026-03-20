@@ -1,4 +1,5 @@
 import io
+import os
 from copy import copy
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -7,7 +8,7 @@ from typing import Any
 import pandas
 
 from excelalchemy.const import HEADER_HINT
-from tests.registry import FileRegistry
+from tests.support.registry import FileRegistry
 
 
 class LocalMockMinio:
@@ -107,11 +108,13 @@ class LocalMockMinio:
         """
         for filename, data in self.mock_excel_data.items():
             if isinstance(data, str):
-                df = pandas.read_excel(Path(__file__).parent / Path(data))
+                df = pandas.read_excel(Path(__file__).resolve().parent.parent / Path(data.lstrip('./')))
             else:
                 df = pandas.DataFrame(data)
 
-            f = NamedTemporaryFile(suffix='.xlsx')
+            f = NamedTemporaryFile(suffix='.xlsx', delete=False)
+            f.close()  # 关键：先关闭，避免 Windows 文件锁问题
+
             original_header = df.columns
             df.columns = range(len(df.columns))
             header_row = pandas.Series(original_header, index=df.columns)
@@ -123,11 +126,13 @@ class LocalMockMinio:
             df.iat[0, 0] = HEADER_HINT
 
             df.to_excel(f.name, index=False, header=False, engine='openpyxl')
-            f.seek(0)
-            data = io.BytesIO(f.read())
-            f.seek(0)
-            length = len(f.read())
-            self.put_object(self.bucket_name, filename, data, length, f)
+
+            with open(f.name, 'rb') as rf:
+                file_bytes = rf.read()
+
+            data = io.BytesIO(file_bytes)
+            length = len(file_bytes)
+            self.put_object(self.bucket_name, filename, data, length, f.name)
 
     def put_object(self, bucket_name: str, filename: str, data: io.BytesIO, length: int, file: Any = None) -> None:
         self.storage[filename] = {
@@ -148,7 +153,8 @@ class LocalMockMinio:
 
     def __del__(self):
         for filename, data in self.storage.items():
-            data['file'].close() if data['file'] else None
+            if isinstance(data['file'], str) and os.path.exists(data['file']):
+                os.remove(data['file'])
 
 
 local_minio = LocalMockMinio()

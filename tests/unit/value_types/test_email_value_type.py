@@ -7,12 +7,12 @@ from excelalchemy import FieldMeta
 from excelalchemy import Label
 from excelalchemy import RowIndex
 from excelalchemy import ValidateResult
-from tests import BaseTestCase
-from tests.registry import FileRegistry
+from tests.support import BaseTestCase
+from tests.support import FileRegistry
 
 
-class TestEmail(BaseTestCase):
-    async def test_email_wrong_format(self):
+class TestEmailValueType(BaseTestCase):
+    async def test_import_rejects_invalid_email_value(self):
         class Importer(BaseModel):
             email: Email = FieldMeta(label='邮箱', order=1)
 
@@ -25,7 +25,7 @@ class TestEmail(BaseTestCase):
         row, col, first_error = RowIndex(0), ColumnIndex(2), 0
         assert alchemy.cell_errors[row][col][first_error] == ExcelCellError(label=Label('邮箱'), message='请输入正确的邮箱')
 
-    async def test_email_correct_format(self):
+    async def test_import_accepts_valid_email_value(self):
         class Importer(BaseModel):
             email: Email = FieldMeta(label='邮箱', order=1)
 
@@ -37,7 +37,7 @@ class TestEmail(BaseTestCase):
         assert result.fail_count == 0
         assert result.success_count == 1
 
-    async def test_validate(self):
+    async def test_validate_accepts_well_formed_email_addresses(self):
         class Importer(BaseModel):
             email: Email = FieldMeta(label='邮箱', order=1)
 

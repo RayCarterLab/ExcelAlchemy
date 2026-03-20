@@ -8,11 +8,11 @@ from excelalchemy import OptionId
 from excelalchemy import ProgrammaticError
 from excelalchemy import Radio
 from excelalchemy.const import MULTI_CHECKBOX_SEPARATOR
-from tests import BaseTestCase
+from tests.support import BaseTestCase
 
 
-class TestRadio(BaseTestCase):
-    async def test_comment(self):
+class TestRadioValueType(BaseTestCase):
+    async def test_comment_describes_single_select_behavior(self):
         class Importer(BaseModel):
             radio: Radio = FieldMeta(
                 label='单选框组',
@@ -32,7 +32,7 @@ class TestRadio(BaseTestCase):
         field.options = None
         assert field.value_type.comment(field) == '必填性：必填\n\n单/多选：单选\n'
 
-    async def test_serialize(self):
+    async def test_serialize_stringifies_option_values(self):
         class Importer(BaseModel):
             radio: Radio = FieldMeta(
                 label='单选框组',
@@ -50,7 +50,7 @@ class TestRadio(BaseTestCase):
         assert field.value_type.serialize(1, field) == '1'
         assert field.value_type.serialize(2, field) == '2'
 
-    async def test_deserialize(self):
+    async def test_deserialize_maps_option_ids_to_display_names(self):
         class Importer(BaseModel):
             radio: Radio = FieldMeta(
                 label='单选框组',
@@ -73,7 +73,7 @@ class TestRadio(BaseTestCase):
         assert field.value_type.deserialize('选项2', field) == '选项2'
         assert field.value_type.deserialize('选项3', field) == '选项3'
 
-    async def test_validate(self):
+    async def test_validate_accepts_known_options_and_rejects_invalid_inputs(self):
         class Importer(BaseModel):
             radio: Radio = FieldMeta(
                 label='单选框组',

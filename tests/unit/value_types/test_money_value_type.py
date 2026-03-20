@@ -4,11 +4,11 @@ from pydantic import BaseModel
 
 from excelalchemy import FieldMeta
 from excelalchemy import Money
-from tests import BaseTestCase
+from tests.support import BaseTestCase
 
 
-class TestMoney(BaseTestCase):
-    async def test_validate(self):
+class TestMoneyValueType(BaseTestCase):
+    async def test_validate_normalizes_money_inputs_and_rejects_invalid_values(self):
         class Importer(BaseModel):
             money: Money = FieldMeta(label='金额', order=1)
 

@@ -8,11 +8,11 @@ from excelalchemy import OptionId
 from excelalchemy import ProgrammaticError
 from excelalchemy.const import MULTI_CHECKBOX_SEPARATOR
 from excelalchemy.const import Option
-from tests import BaseTestCase
+from tests.support import BaseTestCase
 
 
-class TestMultiCheckbox(BaseTestCase):
-    async def test_comment(self):
+class TestMultiCheckboxValueType(BaseTestCase):
+    async def test_comment_describes_multi_select_behavior(self):
         class Importer(BaseModel):
             multi_checkbox: MultiCheckbox = FieldMeta(label='多选框', order=1)
 
@@ -22,7 +22,7 @@ class TestMultiCheckbox(BaseTestCase):
 
         assert field.value_type.comment(field) == '必填性：必填\n\n单/多选：多选\n'
 
-    async def test_serialize(self):
+    async def test_serialize_splits_multi_select_inputs_into_lists(self):
         class Importer(BaseModel):
             multi_checkbox: MultiCheckbox = FieldMeta(label='多选框', order=1)
 
@@ -36,7 +36,7 @@ class TestMultiCheckbox(BaseTestCase):
         assert field.value_type.serialize(None, field) is None
         assert field.value_type.serialize('', field) == ['']
 
-    async def test_validate(self):
+    async def test_validate_rejects_unknown_or_duplicate_multi_select_options(self):
         class Importer(BaseModel):
             multi_checkbox: MultiCheckbox = FieldMeta(
                 label='多选框',
@@ -61,7 +61,7 @@ class TestMultiCheckbox(BaseTestCase):
         field.options = None
         self.assertRaises(ProgrammaticError, field.value_type.__validate__, ['a', 'b'], field)
 
-    async def test_deserialize(self):
+    async def test_deserialize_maps_multi_select_option_ids_to_display_names(self):
         class Importer(BaseModel):
             multi_checkbox: MultiCheckbox = FieldMeta(
                 label='多选框',

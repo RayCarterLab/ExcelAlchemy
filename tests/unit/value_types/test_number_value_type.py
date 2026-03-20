@@ -5,11 +5,11 @@ from pydantic import BaseModel
 
 from excelalchemy import FieldMeta
 from excelalchemy import Number
-from tests import BaseTestCase
+from tests.support import BaseTestCase
 
 
-class TestNumber(BaseTestCase):
-    async def test_comment(self):
+class TestNumberValueType(BaseTestCase):
+    async def test_comment_reflects_fraction_digits_and_range_constraints(self):
         class Importer(BaseModel):
             number: Number = FieldMeta(label='数字', order=1, comment='数字')
 
@@ -31,7 +31,7 @@ class TestNumber(BaseTestCase):
         field.importer_ge = 1
         assert field.value_type.comment(field) == '必填性：必填\n格式：数值\n小数位数：2\n可输入范围：≥ 1\n单位：无'
 
-    async def test_serialize(self):
+    async def test_serialize_preserves_numeric_inputs_before_validation(self):
         class Importer(BaseModel):
             number: Number = FieldMeta(label='数字', order=1)
 
@@ -48,7 +48,7 @@ class TestNumber(BaseTestCase):
         assert field.value_type.serialize(1.236, field) == 1.236
         assert field.value_type.serialize(1.2345, field) == 1.2345
 
-    async def test_deserialize(self):
+    async def test_deserialize_stringifies_numeric_inputs_for_excel_display(self):
         class Importer(BaseModel):
             number: Number = FieldMeta(label='数字', order=1)
 
@@ -66,7 +66,7 @@ class TestNumber(BaseTestCase):
         assert field.value_type.deserialize(1.236, field) == '1.236'
         assert field.value_type.deserialize(1.2345, field) == '1.2345'
 
-    async def test_validate(self):
+    async def test_validate_enforces_numeric_ranges_and_precision(self):
         class Importer(BaseModel):
             number: Number = FieldMeta(label='数字', order=1)
 

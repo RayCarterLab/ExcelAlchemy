@@ -3,12 +3,12 @@ from pydantic import BaseModel
 from excelalchemy import Boolean
 from excelalchemy import FieldMeta
 from excelalchemy import ValidateResult
-from tests import BaseTestCase
-from tests.registry import FileRegistry
+from tests.support import BaseTestCase
+from tests.support import FileRegistry
 
 
-class TestBoolean(BaseTestCase):
-    async def test_boolean(self):
+class TestBooleanValueType(BaseTestCase):
+    async def test_import_accepts_recognized_boolean_cell_value(self):
         """测试导入时，布尔值正确读取"""
 
         class Importer(BaseModel):
@@ -20,7 +20,7 @@ class TestBoolean(BaseTestCase):
         )
         assert result.result == ValidateResult.SUCCESS, '导入失败'
 
-    async def test_boolean_deserialize(self):
+    async def test_deserialize_maps_supported_boolean_inputs_to_display_values(self):
         class Importer(BaseModel):
             is_active: Boolean = FieldMeta(label='是否启用', order=1)
 
@@ -35,7 +35,7 @@ class TestBoolean(BaseTestCase):
         assert field.value_type.deserialize('', field) == '否'
         assert field.value_type.deserialize(1, field) == '否'
 
-    async def test_validate(self):
+    async def test_validate_accepts_only_yes_or_no_inputs(self):
         class Importer(BaseModel):
             is_active: Boolean = FieldMeta(label='是否启用', order=1)
 

@@ -6,11 +6,11 @@ from excelalchemy import FieldMeta
 from excelalchemy import Option
 from excelalchemy import OptionId
 from excelalchemy import SingleOrganization
-from tests import BaseTestCase
+from tests.support import BaseTestCase
 
 
-class TestSingleOrganization(BaseTestCase):
-    async def test_comment(self):
+class TestSingleOrganizationValueType(BaseTestCase):
+    async def test_comment_describes_single_organization_input(self):
         class Importer(BaseModel):
             single_organization: SingleOrganization = FieldMeta(label='单选组织', order=1)
 
@@ -20,7 +20,7 @@ class TestSingleOrganization(BaseTestCase):
 
         assert field.value_type.comment(field) == "必填性：必填\n提示：需按照组织架构树填写组织完整路径，例如 'XX公司/一级部门/二级部门'."
 
-    async def test_serialize(self):
+    async def test_serialize_strips_single_organization_input(self):
         class Importer(BaseModel):
             single_organization: SingleOrganization = FieldMeta(label='单选组织', order=1)
 
@@ -30,7 +30,7 @@ class TestSingleOrganization(BaseTestCase):
 
         assert field.value_type.serialize('XX公司/一级部门/二级部门', field) == 'XX公司/一级部门/二级部门'
 
-    async def test_deserialize(self):
+    async def test_deserialize_maps_single_organization_id_to_display_name(self):
         class Importer(BaseModel):
             single_organization: SingleOrganization = FieldMeta(
                 label='单选组织',
