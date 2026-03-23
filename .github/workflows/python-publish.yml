@@ -8,12 +8,14 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  build-and-verify:
     runs-on: ubuntu-latest
-    environment: pypi
+    timeout-minutes: 15
     permissions:
       contents: read
-      id-token: write
+
+    outputs:
+      artifact-name: ${{ steps.artifact-meta.outputs.name }}
 
     steps:
       - name: Check out code
@@ -29,10 +31,55 @@ jobs:
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install build
+          python -m pip install build twine
 
       - name: Build package
         run: python -m build
+
+      - name: Check package metadata
+        run: python -m twine check dist/*
+
+      - name: Smoke test wheel installation
+        run: |
+          python -m venv .pkg-smoke-wheel
+          . .pkg-smoke-wheel/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install dist/*.whl
+          python -c "import excelalchemy; print(excelalchemy.__version__)"
+
+      - name: Smoke test source distribution installation
+        run: |
+          python -m venv .pkg-smoke-sdist
+          . .pkg-smoke-sdist/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install dist/*.tar.gz
+          python -c "import excelalchemy; print(excelalchemy.__version__)"
+
+      - name: Set artifact metadata
+        id: artifact-meta
+        run: echo "name=python-package-dists" >> "$GITHUB_OUTPUT"
+
+      - name: Upload package distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact-meta.outputs.name }}
+          path: dist/
+
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build-and-verify
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Download package distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build-and-verify.outputs.artifact-name }}
+          path: dist/
 
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

@@ -4,11 +4,25 @@ build-backend = 'flit_core.buildapi'
 
 [project]
 name = 'ExcelAlchemy'
-authors = [{ name = '何睿', email = 'hrui835@gmail.com' }]
+description = 'A Python library for reading and writing Excel files with Pydantic-based schemas.'
+authors = [{ name = 'Ray', email = 'hrui835@gmail.com' }]
 readme = 'README.md'
 license = { file = 'LICENSE' }
-classifiers = ['License :: OSI Approved :: MIT License']
-dynamic = ['version', 'description']
+keywords = ['excel', 'openpyxl', 'pandas', 'pydantic', 'minio']
+classifiers = [
+    'Development Status :: 4 - Beta',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: MIT License',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Topic :: Office/Business :: Financial :: Spreadsheet',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+]
+dynamic = ['version']
 requires-python = '>=3.10'
 dependencies = [
     'pandas >=2.0.0, <3',
@@ -23,6 +37,9 @@ name = 'excelalchemy'
 
 [project.urls]
 Home = 'https://github.com/RayCarterLab/ExcelAlchemy'
+Repository = 'https://github.com/RayCarterLab/ExcelAlchemy'
+Documentation = 'https://github.com/RayCarterLab/ExcelAlchemy#readme'
+Issues = 'https://github.com/RayCarterLab/ExcelAlchemy/issues'
 
 [project.optional-dependencies]
 development = [
@@ -94,5 +111,6 @@ branch = true
 source = ['excelalchemy']
 
 [tool.coverage.report]
+fail_under = 85
 skip_covered = true
 show_missing = true

@@ -4,6 +4,16 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Shanghai'
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'ci(deps)'
+    groups:
+      github-actions:
+        patterns:
+          - '*'
     labels:
       - 'dependencies'
       - 'github-actions'
@@ -12,6 +22,21 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
+      day: 'monday'
+      time: '09:15'
+      timezone: 'Asia/Shanghai'
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'build(deps)'
+    groups:
+      python-production:
+        dependency-type: 'production'
+        patterns:
+          - '*'
+      python-development:
+        dependency-type: 'development'
+        patterns:
+          - '*'
     labels:
       - 'dependencies'
       - 'python'
@@ -20,6 +45,16 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
+      day: 'monday'
+      time: '09:30'
+      timezone: 'Asia/Shanghai'
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: 'chore(pre-commit)'
+    groups:
+      pre-commit-hooks:
+        patterns:
+          - '*'
     labels:
       - 'dependencies'
       - 'pre-commit'

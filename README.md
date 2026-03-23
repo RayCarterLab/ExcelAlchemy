@@ -1,4 +1,4 @@
-> [中文](https://github.com/SundayWindy/ExcelAlchemy/blob/main/README_cn.md) | English
+> [中文](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README_cn.md) | English
 >
 
 
@@ -120,8 +120,29 @@ asyncio.run(main())
 ![image](https://github.com/SundayWindy/ExcelAlchemy/raw/main/images/002_import_result.png)
 
 
+## Development
+
+Install the project in editable mode with development dependencies:
+
+```bash
+pip install -e .[development]
+pre-commit install
+```
+
+Common local commands:
+
+```bash
+nox -s ruff
+nox -s pyright
+nox -s tests-3.10
+```
+
+The CI workflow runs `ruff`, `pyright`, and the test matrix on Python 3.10, 3.11, and 3.12.
+
 ### Contributing
-If you have any questions or suggestions regarding the ExcelAlchemy library, please raise an issue in [GitHub Issues](https://github.com/SundayWindy/ExcelAlchemy/issues). We also welcome you to submit a pull request to contribute your code.
+
+If you have questions, bug reports, or feature ideas, please open an issue in [GitHub Issues](https://github.com/RayCarterLab/ExcelAlchemy/issues).
+Pull requests are welcome. Before opening one, please run the local validation commands above and update documentation when behavior changes.
 
 ### License
-ExcelAlchemy is licensed under the MIT license. For more information, please see the [LICENSE](https://github.com/SundayWindy/ExcelAlchemy/blob/main/LICENSE) file.
+ExcelAlchemy is licensed under the MIT license. For more information, please see the [LICENSE](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/LICENSE) file.

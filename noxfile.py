@@ -32,7 +32,8 @@ def tests(session: nox.Session) -> None:
         'pytest',
         '--cov=excelalchemy',
         '--cov-report=term-missing:skip-covered',
-        '--cov-report=xml',
+        '--cov-report=xml:coverage.xml',
+        '--junitxml=pytest.xml',
         'tests',
         *session.posargs,
     )

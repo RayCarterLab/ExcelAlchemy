@@ -1,4 +1,4 @@
-> [English](https://github.com/SundayWindy/ExcelAlchemy) | 中文
+> [English](https://github.com/RayCarterLab/ExcelAlchemy) | 中文
 >
 # ExcelAlchemy 使用指南
 
@@ -126,8 +126,25 @@ asyncio.run(main())
 
 ## 贡献
 
-如果你在使用 ExcelAlchemy 过程中遇到了问题或者有任何建议，欢迎在 [GitHub Issues](https://github.com/SundayWindy/ExcelAlchemy/issues) 中提出。我们也非常欢迎你提交 Pull Request，贡献你的代码。
+如果你希望参与开发，可以先安装开发依赖并启用本地检查：
+
+```bash
+pip install -e .[development]
+pre-commit install
+```
+
+常用本地命令：
+
+```bash
+nox -s ruff
+nox -s pyright
+nox -s tests-3.10
+```
+
+CI 会运行 `ruff`、`pyright`，以及 Python 3.10、3.11、3.12 的测试矩阵。
+
+如果你在使用 ExcelAlchemy 过程中遇到了问题或者有任何建议，欢迎在 [GitHub Issues](https://github.com/RayCarterLab/ExcelAlchemy/issues) 中提出。我们也非常欢迎你提交 Pull Request，贡献你的代码。在提交前，建议先运行上面的本地校验命令，并在行为变化时同步更新文档。
 
 ## 许可证
 
-ExcelAlchemy 使用 MIT 许可证。详细信息请参阅 [LICENSE](https://github.com/SundayWindy/ExcelAlchemy/blob/main/LICENSE)。
+ExcelAlchemy 使用 MIT 许可证。详细信息请参阅 [LICENSE](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/LICENSE)。
