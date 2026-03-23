@@ -25,6 +25,7 @@ from excelalchemy import SingleOrganization
 from excelalchemy import SingleStaff
 from excelalchemy import SingleTreeNode
 from excelalchemy import String
+from excelalchemy import Label
 from excelalchemy import Url
 
 COMMON_OPTIONS = [
@@ -133,4 +134,4 @@ async def updater(data: dict[str, Any], context: dict[str, Any] | None) -> dict[
 
 
 async def failing_creator(data: dict[str, Any], context: dict[str, Any] | None) -> dict[str, Any]:
-    raise ExcelCellError(label='姓名', message='模拟失败')
+    raise ExcelCellError(label=Label('姓名'), message='模拟失败')

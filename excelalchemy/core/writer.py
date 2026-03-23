@@ -91,7 +91,7 @@ def _write_simple_header(
         df.columns[column_write_offset:],
         start=column_write_offset + OPENPYXL_EXCEL_INDEX_START_AT,
     ):  # pyright: reportUnknownArgumentType=false
-        field_meta = field_meta_mapping[column]
+        field_meta = field_meta_mapping[cast(UniqueLabel, column)]
         comment_text = field_meta.value_type.comment(field_meta)
         comment = Comment(
             text=comment_text,
@@ -173,7 +173,7 @@ def _write_vertically_merged_header(
         df.columns[column_write_offset:],
         start=column_write_offset + OPENPYXL_EXCEL_INDEX_START_AT,
     ):
-        field_meta = field_meta_mapping[column]
+        field_meta = field_meta_mapping[cast(UniqueLabel, column)]
         if field_meta.label == field_meta.parent_label:
             # 如果 label 和 parent_label 相同，说明需要上下合并
             worksheet.merge_cells(
@@ -206,7 +206,7 @@ def _write_horizontally_merged_header(
         df.columns[column_write_offset:],
         start=column_write_offset + OPENPYXL_EXCEL_INDEX_START_AT,
     ):
-        field_meta = field_meta_mapping[column]
+        field_meta = field_meta_mapping[cast(UniqueLabel, column)]
         if field_meta.parent_label is None:
             raise RuntimeError('运行时 parent_label 不能为空')
         if field_meta.label != field_meta.parent_label and field_meta.offset == 0:

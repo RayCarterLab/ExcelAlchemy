@@ -14,8 +14,8 @@ from tests.support.mock_minio import local_minio
 
 class BaseTestCase(IsolatedAsyncioTestCase):
     minio = local_minio
-    first_data_row: RowIndex = 0
-    first_data_col: ColumnIndex = 2
+    first_data_row: RowIndex = RowIndex(0)
+    first_data_col: ColumnIndex = ColumnIndex(2)
 
     @staticmethod
     async def fake_creator(data: dict[str, Any], context: dict[str, Any] | None) -> dict[str, Any]:

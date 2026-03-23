@@ -7,7 +7,7 @@ from typing import Any
 
 import pandas
 from minio import Minio
-from urllib3.response import HTTPResponse
+from urllib3.response import BaseHTTPResponse
 
 from excelalchemy.const import UNIQUE_HEADER_CONNECTOR
 
@@ -25,7 +25,7 @@ def remove_excel_prefix(content: str) -> str:
     return content.lstrip(f'{EXCEL_PREFIX},')
 
 
-def construct_file_like_object(response: HTTPResponse) -> IO[bytes]:
+def construct_file_like_object(response: BaseHTTPResponse) -> IO[bytes]:
     """Construct a file like object from HTTPResponse.
 
     You must close the file after you finished using it.
@@ -43,7 +43,7 @@ def read_file_from_minio_object(
 ) -> IO[bytes]:
     """ "Read file content by <Minio> object."""
     # pyright: reportUnknownMemberType=false
-    response: HTTPResponse = client.get_object(bucket_name, filename)
+    response: BaseHTTPResponse = client.get_object(bucket_name, filename)
     return construct_file_like_object(response)
 
 

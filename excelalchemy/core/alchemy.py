@@ -380,6 +380,8 @@ class ExcelAlchemy(
     def _upload_file(self, output_name: str, content_with_prefix: str) -> UrlStr:
         """上传文件"""
         assert isinstance(self.config, (ExporterConfig, ImporterConfig))  # only for type check
+        if self.config.minio is None:
+            raise ConfigError('未配置 minio')
         url = upload_file_from_minio_object(
             self.config.minio,
             self.config.bucket_name,
@@ -454,6 +456,8 @@ class ExcelAlchemy(
         """读取 DataFrame"""
         assert isinstance(self.config, ImporterConfig)  # only for type check
         if not self.__state_df_has_been_loaded__:
+            if self.config.minio is None:
+                raise ConfigError('未配置 minio')
             file_object = read_file_from_minio_object(
                 # pyright: reportUnknownMemberType=false
                 # pyright: reportUnknownArgumentType=false

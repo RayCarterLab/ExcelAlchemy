@@ -49,7 +49,7 @@ class ImporterConfig(Generic[ContextT, ImporterCreateModelT, ImporterUpdateModel
 
     import_mode: ImportMode = field(default=ImportMode.CREATE)
 
-    minio: Minio = field(default=None)
+    minio: Minio | None = field(default=None)
     bucket_name: str = field(default='excel')
     url_expires: int = field(default=3600)
 
@@ -108,7 +108,7 @@ class ExporterConfig(Generic[ExporterModelT]):
     # Callable function receive Key as dict key instead of Label.
     data_converter: Callable[[dict[str, Any]], dict[str, Any]] | None = field(default=export_data_converter)
 
-    minio: Minio = field(default=None)
+    minio: Minio | None = field(default=None)
     bucket_name: str = field(default='excel')
     url_expires: int = field(default=3600)
 

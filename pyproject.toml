@@ -11,11 +11,11 @@ classifiers = ['License :: OSI Approved :: MIT License']
 dynamic = ['version', 'description']
 requires-python = '>=3.10'
 dependencies = [
-    'pandas >=2.0.0, <2.1.0',
+    'pandas >=2.0.0, <3',
     'minio >=7.0.0, <8',
     'pydantic[email] >=1.9, <2',
     'openpyxl >=3.0.10, <4',
-    'pendulum >=2.1.2, <3',
+    'pendulum >=2.1.2, <4',
 ]
 
 [tool.flit.module]
@@ -30,6 +30,7 @@ development = [
     'black',
     'isort',
     'mypy',
+    'nox',
     'pylint',
     'pre-commit',
     'pyright==1.1.299',
@@ -73,6 +74,7 @@ disable = [
     'missing-class-docstring',
     'too-many-instance-attributes',
     'too-many-arguments',
+    'too-many-positional-arguments',
     'too-few-public-methods',
     'too-many-public-methods',
     'no-else-return',
@@ -81,7 +83,8 @@ disable = [
     'duplicate-code',
     'redefined-builtin',
     'broad-except',
-    'abstract-class-instantiated'
+    'abstract-class-instantiated',
+    'invalid-name',
 ]
 
 
@@ -124,3 +127,14 @@ force_single_line = true
 
 [tool.mypy]
 ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ['tests']
+
+[tool.coverage.run]
+branch = true
+source = ['excelalchemy']
+
+[tool.coverage.report]
+skip_covered = true
+show_missing = true
