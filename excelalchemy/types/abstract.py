@@ -50,7 +50,7 @@ class ABCValueType(ABC):
         yield cls.__wrapped_validate__
 
 
-class ComplexABCValueType(ABCValueType, dict):  # pyright: reportMissingTypeArgument=false
+class ComplexABCValueType(ABCValueType, dict):
     """用于生成 pydantic 的模型时，用于标记字段的类型"""
 
     @classmethod

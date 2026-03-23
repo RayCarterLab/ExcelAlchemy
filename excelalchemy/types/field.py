@@ -36,7 +36,7 @@ class PatchFieldMeta(BaseModel):
     options: list[Option] | None = None
 
 
-class FieldMetaInfo(FieldInfo):
+class FieldMetaInfo(FieldInfo):  # pyright: ignore[reportGeneralTypeIssues]
     """用于表示后端真实期望的 Excel 表头信息"""
 
     label: Label  # 字段用于展示给用户的名称, 必有

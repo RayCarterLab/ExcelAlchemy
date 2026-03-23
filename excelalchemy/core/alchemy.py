@@ -187,7 +187,7 @@ class ExcelAlchemy(
             return ImportResult.from_validate_header_result(validate_header)
 
         self.df = self.df.iloc[1:]  # 去掉表头
-        self._set_columns(self.df)  # pyright: reportGeneralTypeIssues=false
+        self._set_columns(self.df)
         self.df = self.df.reset_index(drop=True)  # 重置索引
 
         all_success, success_count, fail_count = True, 0, 0

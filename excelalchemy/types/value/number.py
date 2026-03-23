@@ -28,7 +28,7 @@ def transform_decimal(value: Decimal | int | float | None) -> float | int | None
     if isinstance(value, (int, float)):
         return value
 
-    if not isinstance(value, Decimal):  # pyright: reportUnnecessaryIsInstance=false
+    if not isinstance(value, Decimal):
         raise TypeError(f'Expected Decimal, got {type(value)}')
 
     if value.as_tuple().exponent == 0:

@@ -75,6 +75,7 @@ def _write_simple_header(
     """写入简单的表头(没有合并的表头)"""
 
     writer = writer or ExcelWriter(file, engine='openpyxl')
+    assert writer is not None
     # pyright: reportUnknownMemberType=false
     df.to_excel(writer, sheet_name=sheet_name, index=False, startrow=PANDAS_WRITE_START_AT)
     worksheet: Worksheet = writer.sheets[sheet_name]
@@ -82,7 +83,7 @@ def _write_simple_header(
     for openpyxl_col_index, column in enumerate(
         df.columns[column_write_offset:],
         start=column_write_offset + OPENPYXL_EXCEL_INDEX_START_AT,
-    ):  # pyright: reportUnknownArgumentType=false
+    ):
         field_meta = field_meta_mapping[cast(UniqueLabel, column)]
         comment_text = field_meta.value_type.comment(field_meta)
         comment = Comment(
@@ -135,6 +136,7 @@ def _write_comment_header(
     """写入 HEADER_HINT"""
 
     writer = writer or ExcelWriter(file, engine='openpyxl')
+    assert writer is not None
     df.to_excel(writer, sheet_name=sheet_name, index=False, startrow=PANDAS_WRITE_START_AT)
     worksheet: Worksheet = writer.sheets[sheet_name]
     cell = worksheet.cell(row=HEADER_HINT_ROW_INDEX, column=HEADER_HINT_COL_INDEX)
@@ -231,6 +233,7 @@ def _write_merged_header(  # pragma: no mccabe
     """写入含有合并的表头"""
 
     writer = writer or ExcelWriter(file, engine='openpyxl')
+    assert writer is not None
     worksheet: Worksheet = writer.sheets[sheet_name]
 
     # 写入注释需要在合并表头之前
@@ -353,6 +356,7 @@ def _write_value_mark_error(  # pragma: no mccabe
     """写入错误标记，并把对应位置标红"""
 
     writer = writer or ExcelWriter(file, engine='openpyxl')
+    assert writer is not None
     worksheet: Worksheet = writer.sheets[sheet_name]
 
     _mark_error(

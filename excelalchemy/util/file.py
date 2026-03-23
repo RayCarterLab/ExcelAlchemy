@@ -47,7 +47,7 @@ def read_file_from_minio_object(
 
 
 def upload_file_from_minio_object(
-    client: Minio,  # pyright: reportUnknownParameterType=false
+    client: Minio,
     bucket_name: str,
     filename: str,
     content: str,
@@ -58,7 +58,7 @@ def upload_file_from_minio_object(
     data = base64.b64decode(content)
     # pyright: reportUnknownMemberType=false
     client.put_object(bucket_name, filename, io.BytesIO(data), len(data))
-    return client.presigned_get_object(  # pyright: reportUnknownMemberType=false
+    return client.presigned_get_object(
         # pyright: reportUnknownVariableType=false
         bucket_name,
         filename,
