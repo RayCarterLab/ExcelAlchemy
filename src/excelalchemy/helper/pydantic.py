@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Any, Generator, Iterable, TypeVar, cast
 
 from pydantic import BaseModel, MissingError, NoneIsNotAllowedError, ValidationError
@@ -8,33 +9,79 @@ from pydantic.fields import ModelField, UndefinedType
 from excelalchemy.const import ImporterCreateModelT, ImporterUpdateModelT
 from excelalchemy.exc import ExcelCellError, ProgrammaticError
 from excelalchemy.types.abstract import ABCValueType, ComplexABCValueType
-from excelalchemy.types.field import FieldMetaInfo
+from excelalchemy.types.field import FieldMetaInfo, extract_declared_field_metadata
 from excelalchemy.types.identity import Key
 
 ModelT = TypeVar('ModelT', bound=BaseModel)
 
 
+@dataclass(frozen=True)
+class PydanticFieldAdapter:
+    raw_field: ModelField
+
+    @property
+    def name(self) -> str:
+        return self.raw_field.name
+
+    @property
+    def value_type(self) -> type[Any]:
+        return self.raw_field.type_
+
+    @property
+    def required(self) -> bool:
+        if isinstance(self.raw_field.required, UndefinedType):
+            return False
+        return bool(self.raw_field.required)
+
+    @property
+    def declared_metadata(self) -> FieldMetaInfo:
+        return extract_declared_field_metadata(self.raw_field.field_info)
+
+    def runtime_metadata(self) -> FieldMetaInfo:
+        declared = self.declared_metadata
+        return declared.bind_runtime(
+            required=self.required,
+            value_type=cast(type[ABCValueType], self.value_type),
+            parent_label=declared.label,
+            parent_key=Key(self.name),
+            key=Key(self.name),
+            offset=0,
+        )
+
+
+@dataclass(frozen=True)
+    class PydanticModelAdapter:
+    model: type[BaseModel]
+
+    def fields(self) -> Iterable[PydanticFieldAdapter]:
+        return (PydanticFieldAdapter(field) for field in self.model.__fields__.values())
+
+    def field(self, name: str) -> PydanticFieldAdapter:
+        return PydanticFieldAdapter(self.model.__fields__[name])
+
+    def field_names(self) -> list[str]:
+        return list(self.model.__fields__.keys())
+
+
 def extract_pydantic_model(
     model: type[ImporterCreateModelT] | type[ImporterUpdateModelT] | type[BaseModel] | None,
 ) -> list[FieldMetaInfo]:
-    """根据 Pydantic 模型提取 Excel 表头信息
-    包含是否必填、值类型、注释等信息
-    """
+    """根据 Pydantic 模型提取 Excel 表头信息."""
     if model is None:
         raise RuntimeError('模型不能为空')
-    return list(_extract_pydantic_model(model))
+    return list(_extract_pydantic_model(PydanticModelAdapter(model)))
+
+
+def get_model_field_names(model: type[BaseModel]) -> list[str]:
+    return PydanticModelAdapter(model).field_names()
 
 
 def instantiate_pydantic_model(  # noqa: C901
     data: dict[Key, Any],
     model: type[ModelT],
 ) -> ModelT | list[ExcelCellError]:
-    """实例化 Pydantic 模型, 并返回错误.
-
-    若实例化成功, 则返回实例化后的模型, 错误信息为 None
-    若实例化失败, 则模型返回 None, 错误信息为 ExcelImportError 列表
-    若无法取得FieldMeta, 则raise ProgrammaticError
-    """
+    """实例化 Pydantic 模型, 并返回错误."""
+    model_adapter = PydanticModelAdapter(model)
     try:
         result: ModelT | list[ExcelCellError] = model.parse_obj(data)
     except ValidationError as wrapped_error:
@@ -45,20 +92,20 @@ def instantiate_pydantic_model(  # noqa: C901
 
         result = []
 
-        for loc, e in locations_and_errors:
+        for loc, error_wrapper in locations_and_errors:
             attr_path = _validate_error_loc(loc)
 
             match attr_path:
                 case (leaf,):
-                    leaf_field_def = _validate_field_meta(model.__fields__[leaf])
-
-                    _handle_error(result, e.exc, None, leaf_field_def)
+                    leaf_field_def = model_adapter.field(leaf).declared_metadata
+                    _handle_error(result, error_wrapper.exc, None, leaf_field_def)
 
                 case (parent, leaf):
-                    parent_field_def = _validate_field_meta(model.__fields__[parent])
-                    leaf_field_def = _validate_field_meta(model.__fields__[parent].type_.__fields__[leaf])
-
-                    _handle_error(result, e.exc, parent_field_def, leaf_field_def)
+                    parent_field = model_adapter.field(parent)
+                    parent_field_def = parent_field.declared_metadata
+                    nested_model = cast(type[BaseModel], parent_field.value_type)
+                    leaf_field_def = PydanticModelAdapter(nested_model).field(leaf).declared_metadata
+                    _handle_error(result, error_wrapper.exc, parent_field_def, leaf_field_def)
 
         if len(result) == 0:
             raise ProgrammaticError('实例化模型失败, 但错误信息为空') from wrapped_error
@@ -66,53 +113,28 @@ def instantiate_pydantic_model(  # noqa: C901
     return result
 
 
-def _extract_pydantic_model(model: type[BaseModel]) -> Generator[FieldMetaInfo, None, None]:
-    for model_field in model.__fields__.values():
-        field_info = model_field.field_info
-        if not isinstance(field_info, FieldMetaInfo):
-            raise ProgrammaticError('字段定义必须是 FieldMeta 的实例')
+def _extract_pydantic_model(model: PydanticModelAdapter) -> Generator[FieldMetaInfo, None, None]:
+    for field_adapter in model.fields():
+        declared_metadata = field_adapter.declared_metadata
+        value_type = field_adapter.value_type
 
-        type_ = model_field.type_
-        if issubclass(type_, ComplexABCValueType):
-            for offset, (key, sub_field_info) in enumerate(type_.model_items()):
-                sub_field_info = _complete_field_info(sub_field_info, model_field)
-                sub_field_info.parent_label, sub_field_info.key, sub_field_info.offset = field_info.label, key, offset
-                yield sub_field_info
+        if issubclass(value_type, ComplexABCValueType):
+            for offset, (key, sub_field_info) in enumerate(value_type.model_items()):
+                inherited = sub_field_info.inherited_from(declared_metadata)
+                yield inherited.bind_runtime(
+                    required=field_adapter.required,
+                    value_type=cast(type[ABCValueType], value_type),
+                    parent_label=declared_metadata.label,
+                    parent_key=Key(field_adapter.name),
+                    key=key,
+                    offset=offset,
+                )
 
-        elif issubclass(type_, ABCValueType):
-            field_info = _complete_field_info(field_info, model_field)
-            yield field_info
+        elif issubclass(value_type, ABCValueType):
+            yield field_adapter.runtime_metadata()
 
         else:
-            raise ProgrammaticError(f'字段定义必须是 ValueType 的子类, 或 ComplexValueType 的子类, 不支持 {type_}')
-
-
-def _complete_field_info(field_info: FieldMetaInfo, field: ModelField) -> FieldMetaInfo:
-    """补全 FieldMeta 信息"""
-    if isinstance(field.required, UndefinedType):
-        field_info.required = False
-    else:
-        field_info.required = field.required
-    field_info.value_type = field.type_
-    field_info.parent_label = field_info.label
-    field_info.parent_key = Key(field.name)
-    field_info.key = Key(field.name)
-    field_info.offset = 0
-
-    # 不同 ValueType 需要的不同信息, 需要及时补充
-    original_field_info = cast(FieldMetaInfo, field.field_info)
-    field_info.order = original_field_info.order
-
-    field_info.character_set = field_info.character_set or original_field_info.character_set
-    field_info.fraction_digits = field_info.fraction_digits or original_field_info.fraction_digits
-
-    field_info.timezone = field_info.timezone or original_field_info.timezone
-    field_info.date_format = field_info.date_format or original_field_info.date_format
-    field_info.date_range_option = field_info.date_range_option or original_field_info.date_range_option
-
-    field_info.unit = field_info.unit or original_field_info.unit
-
-    return field_info
+            raise ProgrammaticError(f'字段定义必须是 ValueType 的子类, 或 ComplexValueType 的子类, 不支持 {value_type}')
 
 
 def _handle_error(
@@ -120,7 +142,7 @@ def _handle_error(
     exc: Exception,
     parent_field_def: FieldMetaInfo | None,
     leaf_field_def: FieldMetaInfo,
-):
+) -> None:
     match exc:
         case NoneIsNotAllowedError() | MissingError():
             error_container.append(
@@ -161,14 +183,6 @@ def _flatten_errors(
 
         else:
             yield from _flatten_errors(error, loc=loc)
-
-
-def _validate_field_meta(raw_model_field: ModelField) -> FieldMetaInfo:
-    field_info = raw_model_field.field_info
-    if not isinstance(field_info, FieldMetaInfo):
-        raise ProgrammaticError('field definition must be an instance of FieldMeta')
-
-    return field_info
 
 
 def _validate_error_loc(raw_loc: tuple[int | str, ...]) -> tuple[str] | tuple[str, str]:

@@ -8,6 +8,7 @@ from minio import Minio
 
 from excelalchemy.const import ContextT, ExporterModelT, ImporterCreateModelT, ImporterUpdateModelT
 from excelalchemy.exc import ConfigError
+from excelalchemy.helper.pydantic import get_model_field_names
 from excelalchemy.util.convertor import export_data_converter, import_data_converter
 
 
@@ -86,7 +87,7 @@ class ImporterConfig(Generic[ContextT, ImporterCreateModelT, ImporterUpdateModel
         if not self.is_data_exist:
             raise ConfigError('当选择【创建或更新模式】时，数据存在判断函数不能为空')
         # 创建模型和更新模型的字段必须一致
-        if self.create_importer_model.__fields__.keys() != self.update_importer_model.__fields__.keys():
+        if get_model_field_names(self.create_importer_model) != get_model_field_names(self.update_importer_model):
             raise ConfigError('创建模型和更新模型的字段名称必须一致')
 
     def __post_init__(self):

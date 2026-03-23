@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 from excelalchemy import DateFormat, DateRange, Email, FieldMeta, Label
 from excelalchemy.helper.pydantic import extract_pydantic_model, instantiate_pydantic_model
+from excelalchemy.types.field import FieldMetaInfo, extract_declared_field_metadata
 
 
 class ContractPydanticModel(BaseModel):
@@ -10,6 +11,12 @@ class ContractPydanticModel(BaseModel):
 
 
 class TestPydanticContracts:
+    def test_fieldmeta_keeps_excel_metadata_outside_pydantic_fieldinfo_subclass(self):
+        raw_field_info = ContractPydanticModel.__fields__['email'].field_info
+
+        assert not isinstance(raw_field_info, FieldMetaInfo)
+        assert extract_declared_field_metadata(raw_field_info).label == Label('邮箱')
+
     def test_extract_pydantic_model_preserves_excel_metadata_shape(self):
         metas = extract_pydantic_model(ContractPydanticModel)
 

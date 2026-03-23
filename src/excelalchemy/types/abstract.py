@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Iterable
 
-from pydantic.fields import ModelField
-
 from excelalchemy.types.identity import Key
 
 if TYPE_CHECKING:
@@ -36,9 +34,11 @@ class ABCValueType(ABC):
         """用于把 pandas 读取的 Excel 之后的数据，转回用户可识别的数据, 处理聚合之前的数据"""
 
     @classmethod
-    def __wrapped_validate__(cls, value: Any, field: ModelField) -> Any:
-        # pyright: reportGeneralTypeIssues=false
-        return cls.__validate__(value, field.field_info)  # type: ignore[arg-type]
+    def __wrapped_validate__(cls, value: Any, field: Any) -> Any:
+        # Delay the import to avoid a hard dependency on Pydantic internals at module import time.
+        from excelalchemy.types.field import extract_declared_field_metadata
+
+        return cls.__validate__(value, extract_declared_field_metadata(field.field_info))
 
     @classmethod
     @abstractmethod

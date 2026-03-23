@@ -1,11 +1,12 @@
-"""用于表示后端实际希望接受的 Excel 表头"""
+"""Excel metadata definitions decoupled from Pydantic internals."""
 
+import copy
 import datetime
 import logging
 from functools import cached_property
 from typing import AbstractSet, Any, Optional, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo
 from pydantic.fields import Undefined as PydanticUndefined
 from pydantic.typing import NoArgAnyCallable
@@ -24,9 +25,11 @@ from excelalchemy.const import (
     IntStr,
     Option,
 )
-from excelalchemy.exc import ConfigError
+from excelalchemy.exc import ConfigError, ProgrammaticError
 from excelalchemy.types.abstract import ABCValueType, Undefined
 from excelalchemy.types.identity import Key, Label, OptionId, UniqueKey, UniqueLabel
+
+EXCEL_FIELD_METADATA_KEY = 'excelalchemy_metadata'
 
 
 class PatchFieldMeta(BaseModel):
@@ -36,84 +39,28 @@ class PatchFieldMeta(BaseModel):
     options: list[Option] | None = None
 
 
-class FieldMetaInfo(FieldInfo):  # pyright: ignore[reportGeneralTypeIssues]
-    """用于表示后端真实期望的 Excel 表头信息"""
+class FieldMetaInfo:
+    """Excel field metadata independent from any validation backend."""
 
-    label: Label  # 字段用于展示给用户的名称, 必有
-    is_primary_key: bool = False  # 是否为主键(产品定义的关键列）
-
-    # 不使用自定义表单时，下面字段可以不用填写
-    parent_label: Label | None = None  # 字段的父字段, 运行时必有, parent_label 等于 label
-
-    key: Key | None = None  # 字段存储在数据库的名称, 运行时必有
-    parent_key: Key | None = None  # 字段存储在数据库中的父级名称, 运行时必有
-
-    offset: int = DEFAULT_FIELD_META_ORDER  # 合并表头·子单元格所属父单元格的偏移量, 运行时必有
-    value_type: type[ABCValueType] = Undefined  # 字段的数据类型, 运行时必有
-    unique: bool | None = False  # 当前列是否唯一，不用于校验，用于渲染 Excel 表头的注释
-
-    required: bool | None = False  # 当前列是否必填，不用于校验，用于渲染 Excel 表头的注释
-    ignore_import: bool | None = False  # 当前列是否忽略导入，不用于校验，用于渲染 Excel 表头的注释
-
-    order: int = 0  # 字段的顺序, 运行时必有
-
-    # 若增加属性，需要同步修改 helper.pydantic._complete_field_info 方法
-    # TEXT相关配置
-    character_set: set[CharacterSet] | None = None
-
-    # NUMBER相关配置
-    fraction_digits: int | None = None
-
-    # DATE相关配置
-    timezone: datetime.timezone
-    date_format: DateFormat | None = None
-    date_range_option: DataRangeOption | None = None
-
-    # RADIO, MULTI_CHECKBOX, SELECT相关配置
-    options: list[Option] | None = None
-
-    unit: str | None = None  # 单位
-
-    # 废弃
-    agg_key: str | None = None  # 聚合字段的 key, 可选
-
-    # pylint: disable=too-many-locals
     def __init__(
         self,
-        default: Any = Undefined,
         *,
-        # 导入模块增加的字段·必填
-        label: str,
-        # 是否为主键(产品定义的关键列）
+        label: str | Label,
         is_primary_key: bool = False,
-        # 导入模块增加的字段·从 pydantic 模型中获取
         unique: bool = False,
         ignore_import: bool = False,
+        required: bool | None = False,
         order: int = DEFAULT_FIELD_META_ORDER,
-        # TEXT
         character_set: set[CharacterSet] | None = None,
-        # NUMBER
         fraction_digits: int | None = None,
-        # DATE
         timezone: datetime.timezone | None = None,
         date_format: DateFormat | None = None,
         date_range_option: DataRangeOption | None = None,
-        # RADIO, MULTI_CHECKBOX, SELECT
         options: list[Option] | None = None,
         unit: str | None = None,
         hint: str | None = None,
-        # 导入模块增加的字段·结束
-        default_factory: Optional[NoArgAnyCallable] = None,
-        alias: str | None = None,
-        title: str | None = None,
-        description: str | None = None,
-        exclude: Union[AbstractSet[IntStr], AbstractSet[IntStr], Any] = None,
-        include: Union[AbstractSet[IntStr], AbstractSet[IntStr], Any] = None,
-        const: bool | None = None,
         ge: float | None = None,
         le: float | None = None,
-        multiple_of: float | None = None,
-        allow_inf_nan: bool | None = None,
         max_digits: int | None = None,
         decimal_places: int | None = None,
         min_items: int | None = None,
@@ -121,45 +68,19 @@ class FieldMetaInfo(FieldInfo):  # pyright: ignore[reportGeneralTypeIssues]
         unique_items: bool | None = None,
         min_length: int | None = None,
         max_length: int | None = None,
-        allow_mutation: bool | None = True,
-        regex: str | None = None,
-        discriminator: str | None = None,
-        repr: bool = True,
-        **extra: Any,
     ) -> None:
-        super().__init__(
-            default,
-            default_factory=default_factory,
-            alias=alias,
-            title=title,
-            description=description,
-            exclude=exclude,
-            include=include,
-            const=const,
-            gt=None,
-            lt=None,
-            multiple_of=multiple_of,
-            allow_inf_nan=allow_inf_nan,
-            allow_mutation=allow_mutation,
-            regex=regex,
-            discriminator=discriminator,
-            repr=repr,
-            **extra,
-        )
-        self.importer_ge = ge
-        self.importer_le = le
-        self.importer_max_digits = max_digits
-        self.importer_decimal_places = decimal_places
-        self.importer_min_length = min_length
-        self.importer_max_length = max_length
-        self.importer_min_items = min_items
-        self.importer_max_items = max_items
-        self.importer_unique_items = unique_items
-
-        self._validate()
         self.label = Label(label)
         self.is_primary_key = is_primary_key
-        self.unique = unique or is_primary_key  # 主键一定唯一
+        self.parent_label: Label | None = None
+
+        self.key: Key | None = None
+        self.parent_key: Key | None = None
+
+        self.offset = DEFAULT_FIELD_META_ORDER
+        self.value_type: type[ABCValueType] = Undefined
+        self.unique = unique or is_primary_key
+
+        self.required = required
         self.ignore_import = ignore_import
         self.order = order
 
@@ -172,8 +93,48 @@ class FieldMetaInfo(FieldInfo):  # pyright: ignore[reportGeneralTypeIssues]
         self.unit = unit
         self.hint = hint
 
-        # 下列属性从 pydantic 配置中获取，不允许手动设置
-        self.required = False
+        self.importer_ge = ge
+        self.importer_le = le
+        self.importer_max_digits = max_digits
+        self.importer_decimal_places = decimal_places
+        self.importer_min_length = min_length
+        self.importer_max_length = max_length
+        self.importer_min_items = min_items
+        self.importer_max_items = max_items
+        self.importer_unique_items = unique_items
+
+    def clone(self) -> 'FieldMetaInfo':
+        return copy.copy(self)
+
+    def inherited_from(self, parent: 'FieldMetaInfo') -> 'FieldMetaInfo':
+        runtime = self.clone()
+        runtime.order = parent.order
+        runtime.character_set = runtime.character_set or parent.character_set
+        runtime.fraction_digits = runtime.fraction_digits or parent.fraction_digits
+        runtime.timezone = runtime.timezone or parent.timezone
+        runtime.date_format = runtime.date_format or parent.date_format
+        runtime.date_range_option = runtime.date_range_option or parent.date_range_option
+        runtime.unit = runtime.unit or parent.unit
+        return runtime
+
+    def bind_runtime(
+        self,
+        *,
+        required: bool,
+        value_type: type[ABCValueType],
+        parent_label: Label,
+        parent_key: Key,
+        key: Key,
+        offset: int,
+    ) -> 'FieldMetaInfo':
+        runtime = self.clone()
+        runtime.required = required
+        runtime.value_type = value_type
+        runtime.parent_label = parent_label
+        runtime.parent_key = parent_key
+        runtime.key = key
+        runtime.offset = offset
+        return runtime
 
     def set_is_primary_key(self, is_primary_key: bool | None) -> None:
         if is_primary_key is None:
@@ -235,6 +196,8 @@ class FieldMetaInfo(FieldInfo):  # pyright: ignore[reportGeneralTypeIssues]
     def unique_key(self) -> UniqueKey:
         if self.parent_key is None:
             raise RuntimeError('运行时 parent_key 不能为空')
+        if self.key is None:
+            raise RuntimeError('运行时 key 不能为空')
         key = f'{self.parent_key}{UNIQUE_HEADER_CONNECTOR}{self.key}' if self.parent_key != self.key else self.key
         return UniqueKey(key)
 
@@ -316,7 +279,7 @@ class FieldMetaInfo(FieldInfo):  # pyright: ignore[reportGeneralTypeIssues]
     def python_date_format(self) -> str:
         return DATE_FORMAT_TO_PYTHON_MAPPING[self.must_date_format]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f'FieldMeta(label={self.label!r}, '
             f'order={self.order!r}, '
@@ -330,32 +293,31 @@ class FieldMetaInfo(FieldInfo):  # pyright: ignore[reportGeneralTypeIssues]
     __str__ = __repr__
 
 
+def extract_declared_field_metadata(field_info: FieldInfo) -> FieldMetaInfo:
+    metadata = field_info.extra.get(EXCEL_FIELD_METADATA_KEY)
+    if not isinstance(metadata, FieldMetaInfo):
+        raise ProgrammaticError('字段定义必须是 FieldMeta 的实例')
+    return metadata
+
+
 # pylint: disable=invalid-name
 # pylint: disable=too-many-locals
 def FieldMeta(
     default: Any = PydanticUndefined,
     *,
-    # 导入模块增加的字段·必填
     label: str,
-    # 是否为主键(产品定义的关键列）
     is_primary_key: bool = False,
-    # 导入模块增加的字段·从 pydantic 模型中获取
     unique: bool = False,
     ignore_import: bool = False,
     order: int = DEFAULT_FIELD_META_ORDER,
-    # TEXT
     character_set: set[CharacterSet] | None = None,
-    # NUMBER
     fraction_digits: int | None = None,
-    # DATE
     timezone: datetime.timezone | None = None,
     date_format: DateFormat | None = None,
     date_range_option: DataRangeOption | None = None,
-    # RADIO, MULTI_CHECKBOX, SELECT
     options: list[Option] | None = None,
     unit: str | None = None,
     hint: str | None = None,
-    # 导入模块增加的字段·结束
     default_factory: Optional[NoArgAnyCallable] = None,
     alias: str | None = None,
     title: str | None = None,
@@ -379,12 +341,12 @@ def FieldMeta(
     discriminator: str | None = None,
     repr: bool = True,
     **extra: Any,
-) -> Any:  # return any to ignore the annotation type
+) -> Any:
     # pyright: reportUnnecessaryIsInstance=false
     if fraction_digits is not None and not isinstance(fraction_digits, int):
         raise ValueError('fraction_digits 必须是整数')
-    return FieldMetaInfo(
-        default=default,
+
+    metadata = FieldMetaInfo(
         label=label,
         is_primary_key=is_primary_key,
         unique=unique,
@@ -398,17 +360,8 @@ def FieldMeta(
         options=options,
         unit=unit,
         hint=hint,
-        default_factory=default_factory,
-        alias=alias,
-        title=title,
-        description=description,
-        exclude=exclude,
-        include=include,
-        const=const,
         ge=ge,
         le=le,
-        multiple_of=multiple_of,
-        allow_inf_nan=allow_inf_nan,
         max_digits=max_digits,
         decimal_places=decimal_places,
         min_items=min_items,
@@ -416,9 +369,24 @@ def FieldMeta(
         unique_items=unique_items,
         min_length=min_length,
         max_length=max_length,
+    )
+
+    return Field(
+        default,
+        default_factory=default_factory,
+        alias=alias,
+        title=title,
+        description=description,
+        exclude=exclude,
+        include=include,
+        const=const,
+        gt=None,
+        lt=None,
+        multiple_of=multiple_of,
+        allow_inf_nan=allow_inf_nan,
         allow_mutation=allow_mutation,
         regex=regex,
         discriminator=discriminator,
         repr=repr,
-        **extra,
+        **({EXCEL_FIELD_METADATA_KEY: metadata} | extra),
     )

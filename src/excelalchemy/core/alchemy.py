@@ -27,7 +27,7 @@ from excelalchemy.const import (
 from excelalchemy.core.abstract import ABCExcelAlchemy
 from excelalchemy.core.writer import render_data_excel, render_merged_header_excel, render_simple_header_excel
 from excelalchemy.exc import ConfigError, ExcelCellError, ExcelRowError
-from excelalchemy.helper.pydantic import extract_pydantic_model, instantiate_pydantic_model
+from excelalchemy.helper.pydantic import extract_pydantic_model, get_model_field_names, instantiate_pydantic_model
 from excelalchemy.types.abstract import SystemReserved
 from excelalchemy.types.alchemy import ExcelMode, ExporterConfig, ImporterConfig, ImportMode
 from excelalchemy.types.field import FieldMetaInfo
@@ -305,7 +305,7 @@ class ExcelAlchemy(
             logging.info('导出模式为导入模式, 调用导出方法时自动切换为导出模式')
 
         input_keys = keys or list(filter(None, [x.parent_key for x in self.ordered_field_meta]))
-        model_keys = cast(list[Key], self.exporter_model.__fields__.keys())
+        model_keys = cast(list[Key], get_model_field_names(self.exporter_model))
         if unrecognized := (set(input_keys) - set(model_keys)):
             logging.warning('导出的列 {%s} 不在模型 {%s} 中', unrecognized, model_keys)
 
