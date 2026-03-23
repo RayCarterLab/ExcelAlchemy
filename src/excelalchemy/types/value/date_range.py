@@ -3,8 +3,6 @@ from datetime import datetime
 from typing import Any
 
 import pendulum
-
-# pyright: reportPrivateImportUsage=false
 from pendulum import DateTime
 from pydantic import BaseModel
 
@@ -32,7 +30,6 @@ class DateRange(ComplexABCValueType):
         return self
 
     def __init__(self, start: datetime | None, end: datetime | None):
-        # pyright: reportUnknownMemberType=false
         # trick, BaseMode.dict() 会得到时间戳，而不是 datetime 对象，这是预期的行为
         _start = int(start.timestamp() * MILLISECOND_TO_SECOND) if start else None
         _end = int(end.timestamp() * MILLISECOND_TO_SECOND) if end else None
@@ -66,8 +63,6 @@ class DateRange(ComplexABCValueType):
             case dict():
                 try:
                     start_str, end_str = value.get('start'), value.get('end')
-                    # pyright: reportGeneralTypeIssues=false
-                    # pyright: reportUnknownArgumentType=false
                     start_time = (
                         pendulum.parse(start_str).replace(  # type: ignore
                             tzinfo=field_meta.timezone,

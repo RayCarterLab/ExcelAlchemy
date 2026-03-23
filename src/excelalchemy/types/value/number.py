@@ -8,7 +8,6 @@ from excelalchemy.types.field import FieldMetaInfo
 
 def canonicalize_decimal(value: Decimal, digits_limit: int | None) -> Decimal:
     """将 Decimal 转换为指定精度的 Decimal"""
-    # pyright: reportGeneralTypeIssues=false
     if digits_limit is not None and abs(value.as_tuple().exponent) != digits_limit:  # type: ignore[arg-type]
         try:
             value = Decimal(value).quantize(

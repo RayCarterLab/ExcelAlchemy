@@ -341,7 +341,6 @@ def FieldMeta(
     repr: bool = True,
     **extra: Any,
 ) -> Any:
-    # pyright: reportUnnecessaryIsInstance=false
     if fraction_digits is not None and not isinstance(fraction_digits, int):
         raise ValueError('fraction_digits 必须是整数')
 

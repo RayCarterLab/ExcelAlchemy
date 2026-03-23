@@ -441,8 +441,6 @@ class ExcelAlchemy(
             if self.config.minio is None:
                 raise ConfigError('未配置 minio')
             file_object = read_file_from_minio_object(
-                # pyright: reportUnknownMemberType=false
-                # pyright: reportUnknownArgumentType=false
                 self.config.minio,
                 self.config.bucket_name,
                 input_excel_name,

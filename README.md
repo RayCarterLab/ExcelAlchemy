@@ -14,6 +14,9 @@ Use pip to install:
 pip install ExcelAlchemy
 ```
 
+ExcelAlchemy currently supports Python 3.12 through 3.14.
+Python 3.14 is the primary supported version, and new behavior or dependency updates may be optimized for it first.
+
 ## Usage
 
 ### Generate Excel template from Pydantic class
@@ -136,10 +139,10 @@ Common local commands:
 ```bash
 nox -s ruff
 nox -s pyright
-nox -s tests-3.10
+nox -s tests-3.12
 ```
 
-The CI workflow runs `ruff`, `pyright`, and the test matrix on Python 3.10, 3.11, and 3.12.
+The CI workflow runs `ruff`, `pyright`, and the test matrix on Python 3.12, 3.13, and 3.14.
 
 ### Contributing
 

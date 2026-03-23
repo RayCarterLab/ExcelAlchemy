@@ -7,7 +7,6 @@ from pydantic_core import core_schema
 from excelalchemy.types.identity import Key
 
 if TYPE_CHECKING:
-    # pyright: reportImportCycles=false
     from excelalchemy.types.field import FieldMetaInfo
 else:
     FieldMetaInfo = Any

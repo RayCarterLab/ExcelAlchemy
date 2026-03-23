@@ -41,7 +41,6 @@ def read_file_from_minio_object(
     filename: str,
 ) -> IO[bytes]:
     """ "Read file content by <Minio> object."""
-    # pyright: reportUnknownMemberType=false
     response: BaseHTTPResponse = client.get_object(bucket_name, filename)
     return construct_file_like_object(response)
 
@@ -56,10 +55,8 @@ def upload_file_from_minio_object(
     """把文件上传到minio"""
 
     data = base64.b64decode(content)
-    # pyright: reportUnknownMemberType=false
     client.put_object(bucket_name, filename, io.BytesIO(data), len(data))
     return client.presigned_get_object(
-        # pyright: reportUnknownVariableType=false
         bucket_name,
         filename,
         expires=timedelta(seconds=expires),
@@ -73,11 +70,9 @@ def flatten(data: dict[str, Any], level: list[Any] | None = None) -> dict[str, A
     {'a.b.c': 12}
     """
     tmp_dict = {}
-    # pyright: reportGeneralTypeIssues=false
     level = level or []
     for key, val in data.items():
         if isinstance(val, dict):
-            # pyright: reportUnknownArgumentType=false
             tmp_dict.update(flatten(val, level + [key]))
         else:
             tmp_dict[f'{UNIQUE_HEADER_CONNECTOR}'.join(level + [key])] = val

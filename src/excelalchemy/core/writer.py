@@ -76,7 +76,6 @@ def _write_simple_header(
 
     writer = writer or ExcelWriter(file, engine='openpyxl')
     assert writer is not None
-    # pyright: reportUnknownMemberType=false
     df.to_excel(writer, sheet_name=sheet_name, index=False, startrow=PANDAS_WRITE_START_AT)
     worksheet: Worksheet = writer.sheets[sheet_name]
 
@@ -149,7 +148,6 @@ def _write_comment_header(
         end_row=HEADER_HINT_ROW_INDEX,
         end_column=len(df.columns),
     )
-    # pyright: reportGeneralTypeIssues=false
     worksheet.row_dimensions[HEADER_HINT_ROW_INDEX].height = 120
 
     if close_file:

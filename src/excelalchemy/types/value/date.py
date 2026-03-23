@@ -38,9 +38,6 @@ class Date(ABCValueType, datetime):
 
         value = str(value).strip()
         try:
-            # pyright: reportPrivateImportUsage=false
-            # pyright: reportUnknownMemberType=false
-            # pyright: reportGeneralTypeIssues=false
             v = value.replace('/', '-')  # pendulum 不支持 / 作为日期分隔符
             dt: DateTime = cast(DateTime, pendulum.parse(v))
             return dt.replace(tzinfo=field_meta.timezone)

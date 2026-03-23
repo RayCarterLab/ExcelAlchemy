@@ -15,7 +15,6 @@ class NumberRange(ComplexABCValueType):
     __name__ = '数值范围'
 
     def __init__(self, start: Decimal | int | float | None, end: Decimal | int | float | None):
-        # pyright: reportUnknownMemberType=false
         # trick: for dict call to get the correct value
         super().__init__(start=transform_decimal(start), end=transform_decimal(end))
         self.start = transform_decimal(start)
@@ -44,7 +43,6 @@ class NumberRange(ComplexABCValueType):
 
         # Attempt to create a new NumberRange object from a dictionary
         try:
-            # pyright: reportGeneralTypeIssues=false
             start, end = Decimal(value['start']), Decimal(value['end'])  # type: ignore[index]
             return NumberRange(start, end)
         except (KeyError, TypeError, ValueError) as exc:
