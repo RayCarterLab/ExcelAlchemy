@@ -6,8 +6,8 @@ from tempfile import NamedTemporaryFile
 from typing import Any
 
 import pandas
-
 from excelalchemy.const import HEADER_HINT
+
 from tests.support.registry import FileRegistry
 
 

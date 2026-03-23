@@ -1,8 +1,5 @@
 import logging
-from decimal import ROUND_DOWN
-from decimal import Context
-from decimal import Decimal
-from decimal import InvalidOperation
+from decimal import ROUND_DOWN, Context, Decimal, InvalidOperation
 from typing import Any
 
 from excelalchemy.types.abstract import ABCValueType

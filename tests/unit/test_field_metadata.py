@@ -1,15 +1,17 @@
+from excelalchemy import (
+    ConfigError,
+    DataRangeOption,
+    Date,
+    DateFormat,
+    Email,
+    FieldMeta,
+    Number,
+    Option,
+    OptionId,
+    Radio,
+)
 from pydantic import BaseModel
 
-from excelalchemy import ConfigError
-from excelalchemy import DataRangeOption
-from excelalchemy import Date
-from excelalchemy import DateFormat
-from excelalchemy import Email
-from excelalchemy import FieldMeta
-from excelalchemy import Number
-from excelalchemy import Option
-from excelalchemy import OptionId
-from excelalchemy import Radio
 from tests.support import BaseTestCase
 
 

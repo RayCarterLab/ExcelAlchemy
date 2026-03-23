@@ -1,23 +1,23 @@
 from decimal import Decimal
 from typing import cast
 
+from excelalchemy import (
+    ConfigError,
+    DataRangeOption,
+    Date,
+    DateFormat,
+    ExcelAlchemy,
+    ExcelCellError,
+    FieldMeta,
+    ImporterConfig,
+    ValidateResult,
+)
 from minio import Minio
-from pendulum import DateTime
-from pendulum import today
+from pendulum import DateTime, today
 from pendulum.tz.timezone import Timezone
 from pydantic import BaseModel
 
-from excelalchemy import ConfigError
-from excelalchemy import DataRangeOption
-from excelalchemy import Date
-from excelalchemy import DateFormat
-from excelalchemy import ExcelAlchemy
-from excelalchemy import ExcelCellError
-from excelalchemy import FieldMeta
-from excelalchemy import ImporterConfig
-from excelalchemy import ValidateResult
-from tests.support import BaseTestCase
-from tests.support import FileRegistry
+from tests.support import BaseTestCase, FileRegistry
 
 
 class TestDateValueType(BaseTestCase):
@@ -50,7 +50,9 @@ class TestDateValueType(BaseTestCase):
         error = alchemy.cell_errors[self.first_data_row][self.first_data_col][0]
         assert isinstance(error, ExcelCellError)
         assert error.label == '出生日期'
-        assert error.message == '请输入格式为yyyy/mm的日期'  # may be more accurate to say "请输入格式为yyyy/mm的日期，如2021/01"
+        assert (
+            error.message == '请输入格式为yyyy/mm的日期'
+        )  # may be more accurate to say "请输入格式为yyyy/mm的日期，如2021/01"
         assert repr(error) == "ExcelCellError(label=Label('出生日期'), message='请输入格式为yyyy/mm的日期')"
         assert str(error) == '【出生日期】请输入格式为yyyy/mm的日期'
 

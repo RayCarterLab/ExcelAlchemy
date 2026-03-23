@@ -5,7 +5,9 @@ from excelalchemy.exc import ProgrammaticError
 from excelalchemy.types.abstract import ABCValueType
 from excelalchemy.types.field import FieldMetaInfo
 
-SPECIAL_SYMBOLS = set('!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~"。？！，、；：‘’“”（）《》〈〉【】〔〕｛｝｟｠〖〗〘〙〚〛〜〝〞〟〰–—‘‛“”„‟…‧﹏.')
+SPECIAL_SYMBOLS = set(
+    '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~"。？！，、；：‘’“”（）《》〈〉【】〔〕｛｝｟｠〖〗〘〙〚〛〜〝〞〟〰–—‘‛“”„‟…‧﹏.'
+)
 
 
 def _is_chinese_character(character: str) -> bool:

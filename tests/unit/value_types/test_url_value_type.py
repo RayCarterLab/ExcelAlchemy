@@ -1,9 +1,8 @@
 from typing import cast
 
+from excelalchemy import FieldMeta, Url
 from pydantic import BaseModel
 
-from excelalchemy import FieldMeta
-from excelalchemy import Url
 from tests.support import BaseTestCase
 
 
@@ -16,7 +15,10 @@ class TestUrlValueType(BaseTestCase):
         field = alchemy.ordered_field_meta[0]
         field.value_type = cast(Url, field.value_type)
 
-        assert field.value_type.comment(field) == '唯一性：非唯一\n必填性：必填\n最大长度：无限制\n可输入内容:中文、数字、大写字母、小写字母、符号\n'
+        assert (
+            field.value_type.comment(field)
+            == '唯一性：非唯一\n必填性：必填\n最大长度：无限制\n可输入内容:中文、数字、大写字母、小写字母、符号\n'
+        )
 
     async def test_serialize_strips_url_input(self):
         class Importer(BaseModel):

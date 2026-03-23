@@ -1,9 +1,8 @@
 from typing import cast
 
+from excelalchemy import FieldMeta, NumberRange
 from pydantic import BaseModel
 
-from excelalchemy import FieldMeta
-from excelalchemy import NumberRange
 from tests.support import BaseTestCase
 
 

@@ -1,42 +1,34 @@
 """负责将 pandas 写入 Excel 文件"""
+
 import base64
 from collections import defaultdict
 from math import ceil
 from tempfile import NamedTemporaryFile
-from typing import Any
-from typing import BinaryIO
-from typing import cast
+from typing import Any, BinaryIO, cast
 
 from openpyxl.comments import Comment
-from openpyxl.styles import Alignment
-from openpyxl.styles import Font
-from openpyxl.styles import PatternFill
-from openpyxl.styles import numbers
+from openpyxl.styles import Alignment, Font, PatternFill, numbers
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.worksheet import Worksheet
-from pandas import DataFrame
-from pandas import ExcelWriter
+from pandas import DataFrame, ExcelWriter
 
-from excelalchemy.const import BACKGROUND_ERROR_COLOR
-from excelalchemy.const import BACKGROUND_REQUIRED_COLOR
-from excelalchemy.const import CHARACTER_WIDTH
-from excelalchemy.const import DEFAULT_SHEET_NAME
-from excelalchemy.const import FONT_READ_COLOR
-from excelalchemy.const import HEADER_HINT
-from excelalchemy.const import REASON_COLUMN_LABEL
-from excelalchemy.const import RESULT_COLUMN_LABEL
+from excelalchemy.const import (
+    BACKGROUND_ERROR_COLOR,
+    BACKGROUND_REQUIRED_COLOR,
+    CHARACTER_WIDTH,
+    DEFAULT_SHEET_NAME,
+    FONT_READ_COLOR,
+    HEADER_HINT,
+    REASON_COLUMN_LABEL,
+    RESULT_COLUMN_LABEL,
+)
 from excelalchemy.exc import ExcelCellError
 from excelalchemy.types.field import FieldMetaInfo
-from excelalchemy.types.identity import Base64Str
-from excelalchemy.types.identity import ColumnIndex
-from excelalchemy.types.identity import Label
-from excelalchemy.types.identity import RowIndex
-from excelalchemy.types.identity import UniqueLabel
+from excelalchemy.types.identity import Base64Str, ColumnIndex, Label, RowIndex, UniqueLabel
 from excelalchemy.types.result import ValidateRowResult
 from excelalchemy.types.value import EXCEL_CHOICE_VALUE_TYPE
-from excelalchemy.util.file import add_excel_prefix
-from excelalchemy.util.file import value_is_nan
+from excelalchemy.util.file import add_excel_prefix, value_is_nan
 
 # pandas 认为 Excel 的第一行是 0, 第一列是 0
 PANDAS_EXCEL_INDEX_START_AT = 0
@@ -103,7 +95,9 @@ def _write_simple_header(
         if comment_text:
             cell.comment = comment
         if field_meta.required:
-            cell.fill = PatternFill(start_color=BACKGROUND_REQUIRED_COLOR, fill_type='solid')  # 如果是必填项，设置背景颜色
+            cell.fill = PatternFill(
+                start_color=BACKGROUND_REQUIRED_COLOR, fill_type='solid'
+            )  # 如果是必填项，设置背景颜色
 
         cell.font = Font(bold=True)  # 字体加粗
         cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)

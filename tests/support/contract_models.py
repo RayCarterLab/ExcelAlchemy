@@ -1,32 +1,33 @@
 import datetime
 from typing import Any
 
+from excelalchemy import (
+    Boolean,
+    Date,
+    DateFormat,
+    DateRange,
+    Email,
+    ExcelCellError,
+    FieldMeta,
+    Label,
+    Money,
+    MultiCheckbox,
+    MultiOrganization,
+    MultiStaff,
+    MultiTreeNode,
+    Number,
+    NumberRange,
+    Option,
+    OptionId,
+    PhoneNumber,
+    Radio,
+    SingleOrganization,
+    SingleStaff,
+    SingleTreeNode,
+    String,
+    Url,
+)
 from pydantic import BaseModel
-
-from excelalchemy import Boolean
-from excelalchemy import Date
-from excelalchemy import DateFormat
-from excelalchemy import DateRange
-from excelalchemy import Email
-from excelalchemy import ExcelCellError
-from excelalchemy import FieldMeta
-from excelalchemy import Money
-from excelalchemy import MultiCheckbox
-from excelalchemy import MultiOrganization
-from excelalchemy import MultiStaff
-from excelalchemy import MultiTreeNode
-from excelalchemy import Number
-from excelalchemy import NumberRange
-from excelalchemy import Option
-from excelalchemy import OptionId
-from excelalchemy import PhoneNumber
-from excelalchemy import Radio
-from excelalchemy import SingleOrganization
-from excelalchemy import SingleStaff
-from excelalchemy import SingleTreeNode
-from excelalchemy import String
-from excelalchemy import Label
-from excelalchemy import Url
 
 COMMON_OPTIONS = [
     Option(id=OptionId('1'), name='选项1'),

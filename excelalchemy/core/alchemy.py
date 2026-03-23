@@ -5,62 +5,41 @@ from decimal import Decimal
 from functools import cached_property
 from itertools import chain
 from os import PathLike
-from typing import Any
-from typing import Awaitable
-from typing import Callable
-from typing import Generator
-from typing import Iterable
-from typing import Type
-from typing import cast
+from typing import Any, Awaitable, Callable, Generator, Iterable, Type, cast
 
 import pandas
-from pandas import DataFrame
-from pandas import concat
+from pandas import DataFrame, concat
 from pydantic import BaseModel
 
-from excelalchemy.const import DEFAULT_FIELD_META_ORDER
-from excelalchemy.const import REASON_COLUMN_KEY
-from excelalchemy.const import REASON_COLUMN_LABEL
-from excelalchemy.const import RESULT_COLUMN_KEY
-from excelalchemy.const import RESULT_COLUMN_LABEL
-from excelalchemy.const import ContextT
-from excelalchemy.const import CreateModelT
-from excelalchemy.const import ExporterModelT
-from excelalchemy.const import ImporterCreateModelT
-from excelalchemy.const import ImporterUpdateModelT
-from excelalchemy.const import UpdateModelT
+from excelalchemy.const import (
+    DEFAULT_FIELD_META_ORDER,
+    REASON_COLUMN_KEY,
+    REASON_COLUMN_LABEL,
+    RESULT_COLUMN_KEY,
+    RESULT_COLUMN_LABEL,
+    ContextT,
+    CreateModelT,
+    ExporterModelT,
+    ImporterCreateModelT,
+    ImporterUpdateModelT,
+    UpdateModelT,
+)
 from excelalchemy.core.abstract import ABCExcelAlchemy
-from excelalchemy.core.writer import render_data_excel
-from excelalchemy.core.writer import render_merged_header_excel
-from excelalchemy.core.writer import render_simple_header_excel
-from excelalchemy.exc import ConfigError
-from excelalchemy.exc import ExcelCellError
-from excelalchemy.exc import ExcelRowError
-from excelalchemy.helper.pydantic import extract_pydantic_model
-from excelalchemy.helper.pydantic import instantiate_pydantic_model
+from excelalchemy.core.writer import render_data_excel, render_merged_header_excel, render_simple_header_excel
+from excelalchemy.exc import ConfigError, ExcelCellError, ExcelRowError
+from excelalchemy.helper.pydantic import extract_pydantic_model, instantiate_pydantic_model
 from excelalchemy.types.abstract import SystemReserved
-from excelalchemy.types.alchemy import ExcelMode
-from excelalchemy.types.alchemy import ExporterConfig
-from excelalchemy.types.alchemy import ImporterConfig
-from excelalchemy.types.alchemy import ImportMode
+from excelalchemy.types.alchemy import ExcelMode, ExporterConfig, ImporterConfig, ImportMode
 from excelalchemy.types.field import FieldMetaInfo
 from excelalchemy.types.header import ExcelHeader
-from excelalchemy.types.identity import Base64Str
-from excelalchemy.types.identity import ColumnIndex
-from excelalchemy.types.identity import Key
-from excelalchemy.types.identity import Label
-from excelalchemy.types.identity import RowIndex
-from excelalchemy.types.identity import UniqueKey
-from excelalchemy.types.identity import UniqueLabel
-from excelalchemy.types.identity import UrlStr
-from excelalchemy.types.result import ImportResult
-from excelalchemy.types.result import ValidateHeaderResult
-from excelalchemy.types.result import ValidateResult
-from excelalchemy.types.result import ValidateRowResult
-from excelalchemy.util.file import flatten
-from excelalchemy.util.file import read_file_from_minio_object
-from excelalchemy.util.file import remove_excel_prefix
-from excelalchemy.util.file import upload_file_from_minio_object
+from excelalchemy.types.identity import Base64Str, ColumnIndex, Key, Label, RowIndex, UniqueKey, UniqueLabel, UrlStr
+from excelalchemy.types.result import ImportResult, ValidateHeaderResult, ValidateResult, ValidateRowResult
+from excelalchemy.util.file import (
+    flatten,
+    read_file_from_minio_object,
+    remove_excel_prefix,
+    upload_file_from_minio_object,
+)
 
 HEADER_HINT_LINE_COUNT = 1  # HEADER_HINT 占用的行数
 
@@ -94,11 +73,14 @@ class ExcelAlchemy(
     ):
         self.df = DataFrame()  # 初始化一个空的DataFrame
         self.header_df = DataFrame()  # 初始化一个空的DataFrame
-        self.config: ImporterConfig[
-            ContextT,
-            ImporterCreateModelT,
-            ImporterUpdateModelT,
-        ] | ExporterConfig[ExporterModelT] = config
+        self.config: (
+            ImporterConfig[
+                ContextT,
+                ImporterCreateModelT,
+                ImporterUpdateModelT,
+            ]
+            | ExporterConfig[ExporterModelT]
+        ) = config
         # 每个单元格的错误, 用于标红单元格, 索引与 df 位置对应
         self.cell_errors: dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]] = {}
         # 行错误, 用于标记错误信息，单元格错误会在行错误中显示，行标索引与 df 位置对应
@@ -539,7 +521,9 @@ class ExcelAlchemy(
             else:
                 result.append(str(ValidateRowResult.FAIL))
                 raw_reason = []
-                for idx, error in enumerate(self._order_errors(row_errors), start=1):  # 给每个错误加上序号，方便用户查看，从1开始
+                for idx, error in enumerate(
+                    self._order_errors(row_errors), start=1
+                ):  # 给每个错误加上序号，方便用户查看，从1开始
                     raw_reason.append(f'{idx}、{str(error)}')
                 reason.append('\n'.join(raw_reason))
         if self.extra_header_count_on_import == 1:  # 有合并表头

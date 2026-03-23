@@ -1,11 +1,8 @@
 from typing import cast
 
+from excelalchemy import FieldMeta, MultiStaff, Option, OptionId
 from pydantic import BaseModel
 
-from excelalchemy import FieldMeta
-from excelalchemy import MultiStaff
-from excelalchemy import Option
-from excelalchemy import OptionId
 from tests.support import BaseTestCase
 
 
@@ -20,7 +17,10 @@ class TestMultiStaffValueType(BaseTestCase):
         field = alchemy.ordered_field_meta[0]
         field.value_type = cast(MultiStaff, field.value_type)
 
-        assert field.value_type.comment(field) == '必填性：必填\n提示：请输入人员姓名和工号，如“张三/001”，多选时，选项之间用“、”连接'
+        assert (
+            field.value_type.comment(field)
+            == '必填性：必填\n提示：请输入人员姓名和工号，如“张三/001”，多选时，选项之间用“、”连接'
+        )
 
     async def test_serialize_splits_multi_staff_input_into_values(self):
         class Importer(BaseModel):

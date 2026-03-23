@@ -1,9 +1,8 @@
 """导入 Excel 的结果"""
+
 from enum import Enum
 
-from pydantic import BaseModel
-from pydantic import Extra
-from pydantic import Field
+from pydantic import BaseModel, Extra, Field
 
 from excelalchemy.types.identity import Label
 

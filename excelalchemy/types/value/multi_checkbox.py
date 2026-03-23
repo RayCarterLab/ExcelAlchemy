@@ -1,6 +1,5 @@
 import logging
-from typing import Any
-from typing import cast
+from typing import Any, cast
 
 from excelalchemy.const import MULTI_CHECKBOX_SEPARATOR
 from excelalchemy.exc import ProgrammaticError

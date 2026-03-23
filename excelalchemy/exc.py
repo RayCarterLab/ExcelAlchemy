@@ -1,8 +1,7 @@
 from typing import Any
 
 from excelalchemy.const import UNIQUE_HEADER_CONNECTOR
-from excelalchemy.types.identity import Label
-from excelalchemy.types.identity import UniqueLabel
+from excelalchemy.types.identity import Label, UniqueLabel
 
 
 class ExcelCellError(Exception):
@@ -73,9 +72,7 @@ class ExcelRowError(Exception):
         return f"{type(self).__name__}(message='{self.message}')"
 
 
-class ProgrammaticError(Exception):
-    ...
+class ProgrammaticError(Exception): ...
 
 
-class ConfigError(Exception):
-    ...
+class ConfigError(Exception): ...

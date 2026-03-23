@@ -1,17 +1,10 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Set
-from typing import TypeVar
-from typing import Union
+from typing import Any, Dict, List, Set, TypeVar, Union
 
 from pydantic import BaseModel
 
-from excelalchemy.types.identity import Key
-from excelalchemy.types.identity import Label
-from excelalchemy.types.identity import OptionId
+from excelalchemy.types.identity import Key, Label, OptionId
 
 HEADER_HINT = """
 导入填写须知：

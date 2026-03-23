@@ -1,15 +1,15 @@
 from typing import cast
 
+from excelalchemy import ExcelAlchemy, ExporterConfig
 from minio import Minio
 
-from excelalchemy import ExcelAlchemy
-from excelalchemy import ExporterConfig
-from tests.support import BaseTestCase
-from tests.support import decode_prefixed_excel_to_workbook
-from tests.support.contract_models import MergedContractImporter
-from tests.support.contract_models import SimpleContractImporter
-from tests.support.contract_models import sample_merged_export_row
-from tests.support.contract_models import sample_simple_export_row
+from tests.support import BaseTestCase, decode_prefixed_excel_to_workbook
+from tests.support.contract_models import (
+    MergedContractImporter,
+    SimpleContractImporter,
+    sample_merged_export_row,
+    sample_simple_export_row,
+)
 
 
 class TestExportContracts(BaseTestCase):

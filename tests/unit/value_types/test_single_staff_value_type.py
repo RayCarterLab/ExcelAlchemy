@@ -1,11 +1,8 @@
 from typing import cast
 
+from excelalchemy import FieldMeta, Option, OptionId, SingleStaff
 from pydantic import BaseModel
 
-from excelalchemy import FieldMeta
-from excelalchemy import Option
-from excelalchemy import OptionId
-from excelalchemy import SingleStaff
 from tests.support import BaseTestCase
 
 

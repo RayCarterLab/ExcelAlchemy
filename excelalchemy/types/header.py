@@ -1,10 +1,10 @@
 """用于表示用户实际输入 Excel 的表头"""
+
 from pydantic import BaseModel
 from pydantic.fields import Field
 
 from excelalchemy.const import UNIQUE_HEADER_CONNECTOR
-from excelalchemy.types.identity import Label
-from excelalchemy.types.identity import UniqueLabel
+from excelalchemy.types.identity import Label, UniqueLabel
 
 
 class ExcelHeader(BaseModel):

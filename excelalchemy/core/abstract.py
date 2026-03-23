@@ -1,17 +1,15 @@
-from abc import ABC
-from abc import abstractmethod
-from typing import Any
-from typing import Generic
+from abc import ABC, abstractmethod
+from typing import Any, Generic
 
-from excelalchemy.const import ContextT
-from excelalchemy.const import CreateModelT
-from excelalchemy.const import ExporterModelT
-from excelalchemy.const import ImporterCreateModelT
-from excelalchemy.const import ImporterUpdateModelT
-from excelalchemy.const import UpdateModelT
-from excelalchemy.types.identity import Base64Str
-from excelalchemy.types.identity import Key
-from excelalchemy.types.identity import UrlStr
+from excelalchemy.const import (
+    ContextT,
+    CreateModelT,
+    ExporterModelT,
+    ImporterCreateModelT,
+    ImporterUpdateModelT,
+    UpdateModelT,
+)
+from excelalchemy.types.identity import Base64Str, Key, UrlStr
 from excelalchemy.types.result import ImportResult
 
 

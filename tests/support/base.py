@@ -1,14 +1,10 @@
-from typing import Any
-from typing import cast
+from typing import Any, cast
 from unittest import IsolatedAsyncioTestCase
 
+from excelalchemy import ColumnIndex, ExcelAlchemy, ImporterConfig, RowIndex
 from minio import Minio
 from pydantic import BaseModel
 
-from excelalchemy import ColumnIndex
-from excelalchemy import ExcelAlchemy
-from excelalchemy import ImporterConfig
-from excelalchemy import RowIndex
 from tests.support.mock_minio import local_minio
 
 

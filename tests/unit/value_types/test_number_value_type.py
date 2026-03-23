@@ -1,10 +1,9 @@
 from decimal import Decimal
 from typing import cast
 
+from excelalchemy import FieldMeta, Number
 from pydantic import BaseModel
 
-from excelalchemy import FieldMeta
-from excelalchemy import Number
 from tests.support import BaseTestCase
 
 

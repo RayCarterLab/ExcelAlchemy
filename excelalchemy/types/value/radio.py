@@ -16,7 +16,9 @@ class Radio(ABCValueType, str):
         if not field_meta.options:
             logging.error('%s 类型的字段 %s 必须设置 options', cls.__name__, field_meta.label)
 
-        return '\n'.join([field_meta.comment_required, field_meta.comment_options, '单/多选：单选', field_meta.comment_hint])
+        return '\n'.join(
+            [field_meta.comment_required, field_meta.comment_options, '单/多选：单选', field_meta.comment_hint]
+        )
 
     @classmethod
     def serialize(cls, value: Any, field_meta: FieldMetaInfo) -> str:

@@ -1,10 +1,7 @@
+from excelalchemy import Boolean, FieldMeta, ValidateResult
 from pydantic import BaseModel
 
-from excelalchemy import Boolean
-from excelalchemy import FieldMeta
-from excelalchemy import ValidateResult
-from tests.support import BaseTestCase
-from tests.support import FileRegistry
+from tests.support import BaseTestCase, FileRegistry
 
 
 class TestBooleanValueType(BaseTestCase):

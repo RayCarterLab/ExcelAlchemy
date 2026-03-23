@@ -1,48 +1,44 @@
-import asyncio
 import datetime
 import random
-from typing import Any
-from typing import cast
+from typing import Any, cast
 
+from excelalchemy import (
+    Boolean,
+    ConfigError,
+    Date,
+    DateFormat,
+    DateRange,
+    Email,
+    ExcelAlchemy,
+    ExcelCellError,
+    ExporterConfig,
+    FieldMeta,
+    ImporterConfig,
+    ImportMode,
+    Label,
+    Money,
+    MultiCheckbox,
+    MultiOrganization,
+    MultiStaff,
+    MultiTreeNode,
+    Number,
+    NumberRange,
+    Option,
+    OptionId,
+    PhoneNumber,
+    ProgrammaticError,
+    Radio,
+    SingleOrganization,
+    SingleStaff,
+    SingleTreeNode,
+    String,
+    Url,
+    ValidateResult,
+)
 from minio import Minio
 from pydantic import BaseModel
 
-from excelalchemy import Boolean
-from excelalchemy import ColumnIndex
-from excelalchemy import ConfigError
-from excelalchemy import Date
-from excelalchemy import DateFormat
-from excelalchemy import DateRange
-from excelalchemy import Email
-from excelalchemy import ExcelAlchemy
-from excelalchemy import ExcelCellError
-from excelalchemy import ExporterConfig
-from excelalchemy import FieldMeta
-from excelalchemy import ImporterConfig
-from excelalchemy import ImportMode
-from excelalchemy import Label
-from excelalchemy import Money
-from excelalchemy import MultiCheckbox
-from excelalchemy import MultiOrganization
-from excelalchemy import MultiStaff
-from excelalchemy import MultiTreeNode
-from excelalchemy import Number
-from excelalchemy import NumberRange
-from excelalchemy import Option
-from excelalchemy import OptionId
-from excelalchemy import PhoneNumber
-from excelalchemy import ProgrammaticError
-from excelalchemy import Radio
-from excelalchemy import RowIndex
-from excelalchemy import SingleOrganization
-from excelalchemy import SingleStaff
-from excelalchemy import SingleTreeNode
-from excelalchemy import String
-from excelalchemy import UniqueKey
-from excelalchemy import Url
-from excelalchemy import ValidateResult
-from tests.support import BaseTestCase
-from tests.support import FileRegistry
+from tests.support import BaseTestCase, FileRegistry
 
 
 class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
@@ -413,8 +409,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         assert result.url is None
 
     async def test_empty_importer_model_raises_config_error(self):
-        class EmptyCModel(BaseModel):
-            ...
+        class EmptyCModel(BaseModel): ...
 
         config = ImporterConfig(EmptyCModel, creator=self.creator, minio=cast(Minio, self.minio))
         with self.assertRaises(ConfigError) as cm:

@@ -1,6 +1,6 @@
-from excelalchemy import ExcelCellError
-from excelalchemy import Label
+from excelalchemy import ExcelCellError, Label
 from excelalchemy.exc import ExcelRowError
+
 from tests.support import BaseTestCase
 
 

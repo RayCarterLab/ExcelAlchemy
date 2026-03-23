@@ -1,15 +1,10 @@
 from typing import cast
 
+from excelalchemy import ExcelAlchemy, ExporterConfig, ImporterConfig
 from minio import Minio
 
-from excelalchemy import ExcelAlchemy
-from excelalchemy import ExporterConfig
-from excelalchemy import ImporterConfig
-from tests.support import BaseTestCase
-from tests.support import FileRegistry
-from tests.support.contract_models import SimpleContractImporter
-from tests.support.contract_models import creator
-from tests.support.contract_models import sample_simple_export_row
+from tests.support import BaseTestCase, FileRegistry
+from tests.support.contract_models import SimpleContractImporter, creator, sample_simple_export_row
 
 
 class TestStorageContracts(BaseTestCase):
@@ -28,9 +23,7 @@ class TestStorageContracts(BaseTestCase):
     async def test_import_failure_upload_uses_requested_output_excel_name(self):
         output_name = 'contract-import-upload.xlsx'
         self.minio.storage.pop(output_name, None)
-        alchemy = ExcelAlchemy(
-            ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio))
-        )
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
 
         await alchemy.import_data(
             input_excel_name=FileRegistry.TEST_SIMPLE_IMPORT_WITH_ERROR,

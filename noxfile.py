@@ -15,6 +15,8 @@ def install_project(session: nox.Session) -> None:
 @nox.session(python='3.10')
 def lint(session: nox.Session) -> None:
     install_project(session)
+    session.run('ruff', 'format', '--check', '.')
+    session.run('ruff', 'check', '.')
     session.run('pylint', 'excelalchemy')
 
 

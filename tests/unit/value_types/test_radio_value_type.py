@@ -1,13 +1,9 @@
 from typing import cast
 
+from excelalchemy import FieldMeta, Option, OptionId, ProgrammaticError, Radio
+from excelalchemy.const import MULTI_CHECKBOX_SEPARATOR
 from pydantic import BaseModel
 
-from excelalchemy import FieldMeta
-from excelalchemy import Option
-from excelalchemy import OptionId
-from excelalchemy import ProgrammaticError
-from excelalchemy import Radio
-from excelalchemy.const import MULTI_CHECKBOX_SEPARATOR
 from tests.support import BaseTestCase
 
 

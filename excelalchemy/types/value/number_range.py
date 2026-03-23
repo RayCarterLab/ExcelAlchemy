@@ -5,9 +5,7 @@ from typing import Any
 from excelalchemy.types.abstract import ComplexABCValueType
 from excelalchemy.types.field import FieldMetaInfo
 from excelalchemy.types.identity import Key
-from excelalchemy.types.value.number import Number
-from excelalchemy.types.value.number import canonicalize_decimal
-from excelalchemy.types.value.number import transform_decimal
+from excelalchemy.types.value.number import Number, canonicalize_decimal, transform_decimal
 
 
 class NumberRange(ComplexABCValueType):

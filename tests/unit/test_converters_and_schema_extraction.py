@@ -1,14 +1,8 @@
 from unittest import IsolatedAsyncioTestCase
 
+from excelalchemy import ExcelAlchemy, FieldMeta, ImporterConfig, String, extract_pydantic_model
+from excelalchemy.util.convertor import export_data_converter, import_data_converter
 from pydantic import BaseModel
-
-from excelalchemy import ExcelAlchemy
-from excelalchemy import FieldMeta
-from excelalchemy import ImporterConfig
-from excelalchemy import String
-from excelalchemy import extract_pydantic_model
-from excelalchemy.util.convertor import export_data_converter
-from excelalchemy.util.convertor import import_data_converter
 
 
 class TestConvertersAndSchemaExtraction(IsolatedAsyncioTestCase):

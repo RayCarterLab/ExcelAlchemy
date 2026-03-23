@@ -40,7 +40,10 @@ class MultiTreeNode(MultiCheckbox):
     @classmethod
     def comment(cls, field_meta: FieldMetaInfo) -> str:
         required = '必填' if field_meta.required else '非必填'
-        extra_hint = field_meta.hint or '请输入完整路径（包含根节点），层级之间用“/”连接，如“一级/二级/选项1”；多选时，选项之间用“，”连接'
+        extra_hint = (
+            field_meta.hint
+            or '请输入完整路径（包含根节点），层级之间用“/”连接，如“一级/二级/选项1”；多选时，选项之间用“，”连接'
+        )
         return f"""必填性：{required} \n提示：{extra_hint}"""
 
     @classmethod

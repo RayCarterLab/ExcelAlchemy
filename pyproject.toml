@@ -27,8 +27,6 @@ Home = 'https://github.com/SundayWindy/excelalchemy'
 [project.optional-dependencies]
 development = [
     'pandas-stubs',
-    'black',
-    'isort',
     'mypy',
     'nox',
     'pylint',
@@ -37,6 +35,7 @@ development = [
     'pytest',
     'coverage',
     'pytest-cov',
+    'ruff',
 ]
 
 [tool.pyright]
@@ -109,21 +108,26 @@ extension-pkg-whitelist = [
 ]
 
 
-[tool.black]
+[tool.ruff]
 line-length = 120
-skip-string-normalization = true
+target-version = 'py310'
+src = ['excelalchemy', 'tests']
+extend-exclude = ['files']
 
+[tool.ruff.lint]
+select = ['E', 'F', 'I']
+ignore = ['E501']
+
+[tool.ruff.lint.per-file-ignores]
+'**/__init__.py' = ['F401']
+
+[tool.ruff.format]
+quote-style = 'preserve'
+indent-style = 'space'
+line-ending = 'auto'
 
 [tool.pylint.'FORMAT']
 max-line-length = 120
-
-[tool.isort]
-skip_gitignore = true
-profile = 'black'
-line_length = 120
-indent = '    '
-no_lines_before = 'LOCALFOLDER'
-force_single_line = true
 
 [tool.mypy]
 ignore_missing_imports = true

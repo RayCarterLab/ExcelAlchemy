@@ -1,12 +1,6 @@
+from excelalchemy import DateFormat, DateRange, Email, FieldMeta, Label
+from excelalchemy.helper.pydantic import extract_pydantic_model, instantiate_pydantic_model
 from pydantic import BaseModel
-
-from excelalchemy import DateFormat
-from excelalchemy import DateRange
-from excelalchemy import Email
-from excelalchemy import FieldMeta
-from excelalchemy import Label
-from excelalchemy.helper.pydantic import extract_pydantic_model
-from excelalchemy.helper.pydantic import instantiate_pydantic_model
 
 
 class ContractPydanticModel(BaseModel):

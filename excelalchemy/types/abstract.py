@@ -1,8 +1,5 @@
-from abc import ABC
-from abc import abstractmethod
-from typing import TYPE_CHECKING
-from typing import Any
-from typing import Iterable
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Any, Iterable
 
 from pydantic.fields import ModelField
 

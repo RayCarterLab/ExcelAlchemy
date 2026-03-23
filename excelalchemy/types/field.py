@@ -1,37 +1,32 @@
-"""用于表示后端实际希望接受的 Excel 表头  """
+"""用于表示后端实际希望接受的 Excel 表头"""
+
 import datetime
 import logging
 from functools import cached_property
-from typing import AbstractSet
-from typing import Any
-from typing import Optional
-from typing import Union
+from typing import AbstractSet, Any, Optional, Union
 
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 from pydantic.fields import Undefined as PydanticUndefined
 from pydantic.typing import NoArgAnyCallable
 
-from excelalchemy.const import DATA_RANGE_OPTION_TO_CHINESE
-from excelalchemy.const import DATE_FORMAT_TO_HINT_MAPPING
-from excelalchemy.const import DATE_FORMAT_TO_PYTHON_MAPPING
-from excelalchemy.const import DEFAULT_FIELD_META_ORDER
-from excelalchemy.const import MAX_OPTIONS_COUNT
-from excelalchemy.const import MULTI_CHECKBOX_SEPARATOR
-from excelalchemy.const import UNIQUE_HEADER_CONNECTOR
-from excelalchemy.const import CharacterSet
-from excelalchemy.const import DataRangeOption
-from excelalchemy.const import DateFormat
-from excelalchemy.const import IntStr
-from excelalchemy.const import Option
+from excelalchemy.const import (
+    DATA_RANGE_OPTION_TO_CHINESE,
+    DATE_FORMAT_TO_HINT_MAPPING,
+    DATE_FORMAT_TO_PYTHON_MAPPING,
+    DEFAULT_FIELD_META_ORDER,
+    MAX_OPTIONS_COUNT,
+    MULTI_CHECKBOX_SEPARATOR,
+    UNIQUE_HEADER_CONNECTOR,
+    CharacterSet,
+    DataRangeOption,
+    DateFormat,
+    IntStr,
+    Option,
+)
 from excelalchemy.exc import ConfigError
-from excelalchemy.types.abstract import ABCValueType
-from excelalchemy.types.abstract import Undefined
-from excelalchemy.types.identity import Key
-from excelalchemy.types.identity import Label
-from excelalchemy.types.identity import OptionId
-from excelalchemy.types.identity import UniqueKey
-from excelalchemy.types.identity import UniqueLabel
+from excelalchemy.types.abstract import ABCValueType, Undefined
+from excelalchemy.types.identity import Key, Label, OptionId, UniqueKey, UniqueLabel
 
 
 class PatchFieldMeta(BaseModel):
