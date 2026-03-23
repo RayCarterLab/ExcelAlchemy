@@ -2,6 +2,9 @@ import datetime
 import random
 from typing import Any, cast
 
+from minio import Minio
+from pydantic import BaseModel
+
 from excelalchemy import (
     Boolean,
     ConfigError,
@@ -35,9 +38,6 @@ from excelalchemy import (
     Url,
     ValidateResult,
 )
-from minio import Minio
-from pydantic import BaseModel
-
 from tests.support import BaseTestCase, FileRegistry
 
 

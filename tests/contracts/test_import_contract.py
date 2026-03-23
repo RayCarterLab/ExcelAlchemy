@@ -1,9 +1,9 @@
 from typing import cast
 
-from excelalchemy import ExcelAlchemy, ImporterConfig, ValidateResult
-from excelalchemy.const import BACKGROUND_ERROR_COLOR, REASON_COLUMN_LABEL, RESULT_COLUMN_LABEL
 from minio import Minio
 
+from excelalchemy import ExcelAlchemy, ImporterConfig, ValidateResult
+from excelalchemy.const import BACKGROUND_ERROR_COLOR, REASON_COLUMN_LABEL, RESULT_COLUMN_LABEL
 from tests.support import BaseTestCase, FileRegistry, get_fill_color, load_binary_excel_to_workbook
 from tests.support.contract_models import SimpleContractImporter, creator
 

@@ -1,6 +1,11 @@
 from decimal import Decimal
 from typing import cast
 
+from minio import Minio
+from pendulum import DateTime, today
+from pendulum.tz.timezone import Timezone
+from pydantic import BaseModel
+
 from excelalchemy import (
     ConfigError,
     DataRangeOption,
@@ -12,11 +17,6 @@ from excelalchemy import (
     ImporterConfig,
     ValidateResult,
 )
-from minio import Minio
-from pendulum import DateTime, today
-from pendulum.tz.timezone import Timezone
-from pydantic import BaseModel
-
 from tests.support import BaseTestCase, FileRegistry
 
 

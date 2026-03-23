@@ -1,8 +1,8 @@
 from typing import cast
 
-from excelalchemy import FieldMeta, Money
 from pydantic import BaseModel
 
+from excelalchemy import FieldMeta, Money
 from tests.support import BaseTestCase
 
 

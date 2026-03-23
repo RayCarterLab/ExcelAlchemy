@@ -1,9 +1,9 @@
 from typing import cast
 
-from excelalchemy import FieldMeta, MultiCheckbox, OptionId, ProgrammaticError
-from excelalchemy.const import MULTI_CHECKBOX_SEPARATOR, Option
 from pydantic import BaseModel
 
+from excelalchemy import FieldMeta, MultiCheckbox, OptionId, ProgrammaticError
+from excelalchemy.const import MULTI_CHECKBOX_SEPARATOR, Option
 from tests.support import BaseTestCase
 
 

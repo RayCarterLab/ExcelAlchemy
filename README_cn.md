@@ -133,6 +133,8 @@ pip install -e .[development]
 pre-commit install
 ```
 
+项目现在采用标准 `src/` 布局，因此本地开发建议通过 editable install 或 `nox` 运行，而不是依赖仓库根目录的隐式导入。
+
 常用本地命令：
 
 ```bash

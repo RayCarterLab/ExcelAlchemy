@@ -1,3 +1,5 @@
+from pydantic import BaseModel
+
 from excelalchemy import (
     ConfigError,
     DataRangeOption,
@@ -10,8 +12,6 @@ from excelalchemy import (
     OptionId,
     Radio,
 )
-from pydantic import BaseModel
-
 from tests.support import BaseTestCase
 
 

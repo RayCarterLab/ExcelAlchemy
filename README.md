@@ -129,6 +129,8 @@ pip install -e .[development]
 pre-commit install
 ```
 
+The project uses the standard `src/` layout, so local development should go through an editable install or `nox` rather than relying on repository-root imports.
+
 Common local commands:
 
 ```bash

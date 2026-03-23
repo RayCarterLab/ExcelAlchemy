@@ -1,8 +1,8 @@
 from typing import cast
 
-from excelalchemy import ExcelAlchemy, ExporterConfig
 from minio import Minio
 
+from excelalchemy import ExcelAlchemy, ExporterConfig
 from tests.support import BaseTestCase, decode_prefixed_excel_to_workbook
 from tests.support.contract_models import (
     MergedContractImporter,

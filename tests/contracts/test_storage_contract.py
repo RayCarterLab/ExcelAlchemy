@@ -1,8 +1,8 @@
 from typing import cast
 
-from excelalchemy import ExcelAlchemy, ExporterConfig, ImporterConfig
 from minio import Minio
 
+from excelalchemy import ExcelAlchemy, ExporterConfig, ImporterConfig
 from tests.support import BaseTestCase, FileRegistry
 from tests.support.contract_models import SimpleContractImporter, creator, sample_simple_export_row
 

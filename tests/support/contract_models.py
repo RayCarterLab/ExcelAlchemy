@@ -1,6 +1,8 @@
 import datetime
 from typing import Any
 
+from pydantic import BaseModel
+
 from excelalchemy import (
     Boolean,
     Date,
@@ -27,7 +29,6 @@ from excelalchemy import (
     String,
     Url,
 )
-from pydantic import BaseModel
 
 COMMON_OPTIONS = [
     Option(id=OptionId('1'), name='选项1'),

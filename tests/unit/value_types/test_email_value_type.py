@@ -1,6 +1,6 @@
-from excelalchemy import ColumnIndex, Email, ExcelCellError, FieldMeta, Label, RowIndex, ValidateResult
 from pydantic import BaseModel
 
+from excelalchemy import ColumnIndex, Email, ExcelCellError, FieldMeta, Label, RowIndex, ValidateResult
 from tests.support import BaseTestCase, FileRegistry
 
 

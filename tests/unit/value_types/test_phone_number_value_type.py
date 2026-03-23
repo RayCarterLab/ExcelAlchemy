@@ -1,8 +1,8 @@
 from typing import cast
 
-from excelalchemy import FieldMeta, PhoneNumber
 from pydantic import BaseModel
 
+from excelalchemy import FieldMeta, PhoneNumber
 from tests.support import BaseTestCase
 
 

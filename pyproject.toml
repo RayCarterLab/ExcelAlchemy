@@ -55,7 +55,7 @@ development = [
 ]
 
 [tool.pyright]
-include = ['excelalchemy', 'tests']
+include = ['src/excelalchemy', 'tests']
 exclude = [
     '.venv',
     'venv',
@@ -63,7 +63,7 @@ exclude = [
     '**/.mypy_cache',
     '**/__pycache__',
     '**/.pytest_cache',
-    'excelalchemy/types/field.py',
+    'src/excelalchemy/types/field.py',
 ]
 ignore = ['pandas']
 enableTypeIgnoreComments = false
@@ -88,7 +88,7 @@ typeCheckingMode = 'basic'
 [tool.ruff]
 line-length = 120
 target-version = 'py310'
-src = ['excelalchemy', 'tests']
+src = ['src', 'tests']
 extend-exclude = ['files']
 
 [tool.ruff.lint]
@@ -104,6 +104,7 @@ indent-style = 'space'
 line-ending = 'auto'
 
 [tool.pytest.ini_options]
+addopts = ['--import-mode=importlib']
 testpaths = ['tests']
 
 [tool.coverage.run]

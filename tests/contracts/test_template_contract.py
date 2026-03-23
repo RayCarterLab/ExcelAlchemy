@@ -1,9 +1,9 @@
 from typing import cast
 
-from excelalchemy import ExcelAlchemy, ImporterConfig
-from excelalchemy.const import BACKGROUND_REQUIRED_COLOR, HEADER_HINT
 from minio import Minio
 
+from excelalchemy import ExcelAlchemy, ImporterConfig
+from excelalchemy.const import BACKGROUND_REQUIRED_COLOR, HEADER_HINT
 from tests.support import (
     BaseTestCase,
     decode_prefixed_excel_to_workbook,
