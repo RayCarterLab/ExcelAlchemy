@@ -2,7 +2,7 @@
 
 from enum import Enum
 
-from pydantic import BaseModel, Extra, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from excelalchemy.types.identity import Label
 
@@ -43,6 +43,8 @@ class ValidateResult(str, Enum):
 class ImportResult(BaseModel):
     """导入数据结果"""
 
+    model_config = ConfigDict(extra='allow')
+
     result: ValidateResult = Field(description='导入结果')
 
     is_required_missing: bool = Field(default=False, description='是否缺失必填表头')
@@ -54,9 +56,6 @@ class ImportResult(BaseModel):
     url: str | None = Field(default=None, description='导入结果文件的下载链接, 失败时有值')
     success_count: int = Field(default=0, description='导入成功的数据条数')
     fail_count: int = Field(default=0, description='导入失败的数据条数')
-
-    class Config:
-        extra = Extra.allow
 
     @classmethod
     def from_validate_header_result(cls, result: ValidateHeaderResult) -> 'ImportResult':

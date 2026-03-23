@@ -605,9 +605,9 @@ class ExcelAlchemy(
         # 第二步： 调用 creator/updater, 可能产生错误
         importer_instance = importer_instance_or_errors
         if data_converter is not None:
-            converted_data = data_converter(importer_instance.dict(exclude_unset=True))
+            converted_data = data_converter(importer_instance.model_dump(exclude_unset=True))
         else:
-            converted_data = importer_instance.dict(exclude_unset=True)
+            converted_data = importer_instance.model_dump(exclude_unset=True)
         try:
             await dml_func(converted_data, self.context)
         except ExcelCellError as e:

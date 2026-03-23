@@ -26,8 +26,8 @@ class DateRange(ComplexABCValueType):
     __name__ = '日期范围'
 
     @classmethod
-    def parse_obj(cls, obj: Any) -> 'DateRange':
-        impl = _DateRangeImpl.parse_obj(obj)
+    def model_validate(cls, obj: Any) -> 'DateRange':
+        impl = _DateRangeImpl.model_validate(obj)
         self = cls(impl.start, impl.end)
         return self
 
@@ -106,7 +106,7 @@ class DateRange(ComplexABCValueType):
         field_meta: FieldMetaInfo,
     ) -> 'DateRange':
         try:
-            parsed = DateRange.parse_obj(value)
+            parsed = DateRange.model_validate(value)
             parsed.start = parsed.start.replace(tzinfo=field_meta.timezone) if parsed.start else parsed.start
             parsed.end = parsed.end.replace(tzinfo=field_meta.timezone) if parsed.end else parsed.end
         except Exception as exc:

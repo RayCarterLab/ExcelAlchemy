@@ -1,12 +1,14 @@
 from typing import Any
 
-from pydantic import EmailStr
+from pydantic import EmailStr, TypeAdapter
 
 from excelalchemy.types.field import FieldMetaInfo
 from excelalchemy.types.value.string import String
 
 
 class Email(String):
+    _validator = TypeAdapter(EmailStr)
+
     @classmethod
     def __validate__(cls, value: Any, field_meta: FieldMetaInfo) -> str:
         # Try to parse the value as a string
@@ -17,7 +19,7 @@ class Email(String):
 
         # Validate the parsed string as an email address
         try:
-            EmailStr.validate(parsed)
+            cls._validator.validate_python(parsed)
         except Exception as exc:
             raise ValueError('请输入正确的邮箱') from exc
 

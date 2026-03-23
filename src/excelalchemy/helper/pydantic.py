@@ -1,10 +1,9 @@
-from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Generator, Iterable, TypeVar, cast
+from types import UnionType
+from typing import Any, Generator, Iterable, TypeVar, cast, get_args, get_origin
 
-from pydantic import BaseModel, MissingError, NoneIsNotAllowedError, ValidationError
-from pydantic.error_wrappers import ErrorList, ErrorWrapper
-from pydantic.fields import ModelField, UndefinedType
+from pydantic import BaseModel
+from pydantic.fields import FieldInfo, PydanticUndefined
 
 from excelalchemy.const import ImporterCreateModelT, ImporterUpdateModelT
 from excelalchemy.exc import ExcelCellError, ProgrammaticError
@@ -17,25 +16,46 @@ ModelT = TypeVar('ModelT', bound=BaseModel)
 
 @dataclass(frozen=True)
 class PydanticFieldAdapter:
-    raw_field: ModelField
+    name: str
+    raw_field: FieldInfo
 
     @property
-    def name(self) -> str:
-        return self.raw_field.name
+    def annotation(self) -> Any:
+        return self.raw_field.annotation
 
     @property
     def value_type(self) -> type[Any]:
-        return self.raw_field.type_
+        annotation = self.annotation
+        origin = get_origin(annotation)
+        if origin in (UnionType, getattr(__import__('typing'), 'Union')):
+            args = [arg for arg in get_args(annotation) if arg is not type(None)]
+            if len(args) != 1:
+                raise ProgrammaticError(f'不支持的字段类型定义: {annotation}')
+            return cast(type[Any], args[0])
+
+        return cast(type[Any], annotation)
+
+    @property
+    def allows_none(self) -> bool:
+        return any(arg is type(None) for arg in get_args(self.annotation))
 
     @property
     def required(self) -> bool:
-        if isinstance(self.raw_field.required, UndefinedType):
+        declared = self.declared_metadata
+
+        if declared.is_primary_key or declared.unique:
+            return True
+        if declared.required is not None:
+            return declared.required
+        if self.raw_field.default is not PydanticUndefined or self.raw_field.default_factory is not None:
             return False
-        return bool(self.raw_field.required)
+        if self.allows_none:
+            return False
+        return True
 
     @property
     def declared_metadata(self) -> FieldMetaInfo:
-        return extract_declared_field_metadata(self.raw_field.field_info)
+        return extract_declared_field_metadata(self.raw_field)
 
     def runtime_metadata(self) -> FieldMetaInfo:
         declared = self.declared_metadata
@@ -48,19 +68,30 @@ class PydanticFieldAdapter:
             offset=0,
         )
 
+    def validate_value(self, raw_value: Any) -> Any:
+        if raw_value is None:
+            if self.allows_none and not self.required:
+                return None
+            raise ValueError('必填项缺失')
+
+        return self.value_type.__validate__(raw_value, self.declared_metadata)
+
 
 @dataclass(frozen=True)
-    class PydanticModelAdapter:
+class PydanticModelAdapter:
     model: type[BaseModel]
 
     def fields(self) -> Iterable[PydanticFieldAdapter]:
-        return (PydanticFieldAdapter(field) for field in self.model.__fields__.values())
+        return (
+            PydanticFieldAdapter(name=name, raw_field=field_info)
+            for name, field_info in self.model.model_fields.items()
+        )
 
     def field(self, name: str) -> PydanticFieldAdapter:
-        return PydanticFieldAdapter(self.model.__fields__[name])
+        return PydanticFieldAdapter(name=name, raw_field=self.model.model_fields[name])
 
     def field_names(self) -> list[str]:
-        return list(self.model.__fields__.keys())
+        return list(self.model.model_fields.keys())
 
 
 def extract_pydantic_model(
@@ -82,35 +113,33 @@ def instantiate_pydantic_model(  # noqa: C901
 ) -> ModelT | list[ExcelCellError]:
     """实例化 Pydantic 模型, 并返回错误."""
     model_adapter = PydanticModelAdapter(model)
-    try:
-        result: ModelT | list[ExcelCellError] = model.parse_obj(data)
-    except ValidationError as wrapped_error:
-        locations_and_errors = list(_flatten_errors(wrapped_error.raw_errors, None))
+    validated_data: dict[str, Any] = {}
+    errors: list[ExcelCellError] = []
 
-        if len(locations_and_errors) == 0:
-            raise ProgrammaticError('empty ValidationError') from wrapped_error
+    for field_adapter in model_adapter.fields():
+        raw_value = data.get(Key(field_adapter.name), PydanticUndefined)
+        if raw_value is PydanticUndefined:
+            if field_adapter.required:
+                errors.append(ExcelCellError(label=field_adapter.declared_metadata.label, message='必填项缺失'))
+            continue
 
-        result = []
+        try:
+            validated_data[field_adapter.name] = field_adapter.validate_value(raw_value)
+        except ProgrammaticError:
+            raise
+        except Exception as exc:
+            _handle_error(errors, exc, field_adapter.declared_metadata)
 
-        for loc, error_wrapper in locations_and_errors:
-            attr_path = _validate_error_loc(loc)
+    if errors:
+        return errors
 
-            match attr_path:
-                case (leaf,):
-                    leaf_field_def = model_adapter.field(leaf).declared_metadata
-                    _handle_error(result, error_wrapper.exc, None, leaf_field_def)
-
-                case (parent, leaf):
-                    parent_field = model_adapter.field(parent)
-                    parent_field_def = parent_field.declared_metadata
-                    nested_model = cast(type[BaseModel], parent_field.value_type)
-                    leaf_field_def = PydanticModelAdapter(nested_model).field(leaf).declared_metadata
-                    _handle_error(result, error_wrapper.exc, parent_field_def, leaf_field_def)
-
-        if len(result) == 0:
-            raise ProgrammaticError('实例化模型失败, 但错误信息为空') from wrapped_error
-
-    return result
+    return cast(
+        ModelT,
+        model.model_construct(
+            _fields_set=set(validated_data.keys()),
+            **validated_data,
+        ),
+    )
 
 
 def _extract_pydantic_model(model: PydanticModelAdapter) -> Generator[FieldMetaInfo, None, None]:
@@ -140,57 +169,13 @@ def _extract_pydantic_model(model: PydanticModelAdapter) -> Generator[FieldMetaI
 def _handle_error(
     error_container: list[ExcelCellError],
     exc: Exception,
-    parent_field_def: FieldMetaInfo | None,
-    leaf_field_def: FieldMetaInfo,
+    field_def: FieldMetaInfo,
 ) -> None:
-    match exc:
-        case NoneIsNotAllowedError() | MissingError():
-            error_container.append(
-                ExcelCellError(
-                    parent_label=parent_field_def and parent_field_def.label,  # type: ignore[arg-type]
-                    label=leaf_field_def.label,
-                    message='必填项缺失',
-                )
-            )
-        case _:
-            error_container.extend(
-                [
-                    ExcelCellError(
-                        parent_label=parent_field_def and parent_field_def.label,  # type: ignore[arg-type]
-                        label=leaf_field_def.label,
-                        message=arg,
-                    )
-                    for arg in exc.args
-                ]
-            )
-
-
-def _flatten_errors(
-    error_list: Sequence[ErrorList],
-    loc: tuple[str | int, ...] | None,
-) -> Iterable[tuple[tuple[str | int, ...], ErrorWrapper]]:
-    for error in error_list:
-        if isinstance(error, ErrorWrapper):
-            if loc:
-                error_loc = loc + error.loc_tuple()
-            else:
-                error_loc = error.loc_tuple()
-
-            if isinstance(error.exc, ValidationError):
-                yield from _flatten_errors(error.exc.raw_errors, error_loc)
-            else:
-                yield error_loc, error
-
-        else:
-            yield from _flatten_errors(error, loc=loc)
-
-
-def _validate_error_loc(raw_loc: tuple[int | str, ...]) -> tuple[str] | tuple[str, str]:
-    if len(raw_loc) > 2:
-        raise ProgrammaticError('too deep nested fields (>2) from ill-formed model')
-
-    for loc_node in raw_loc:
-        if not isinstance(loc_node, str):
-            raise ProgrammaticError('unsupported list element from ill-formed model')
-
-    return cast(tuple[str] | tuple[str, str], raw_loc)
+    messages = [str(arg) for arg in exc.args if str(arg)] or [str(exc) or '无效输入']
+    error_container.extend(
+        ExcelCellError(
+            label=field_def.label,
+            message=message,
+        )
+        for message in messages
+    )

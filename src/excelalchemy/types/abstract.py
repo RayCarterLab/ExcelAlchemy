@@ -1,5 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any
+
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import core_schema
 
 from excelalchemy.types.identity import Key
 
@@ -34,20 +37,19 @@ class ABCValueType(ABC):
         """用于把 pandas 读取的 Excel 之后的数据，转回用户可识别的数据, 处理聚合之前的数据"""
 
     @classmethod
-    def __wrapped_validate__(cls, value: Any, field: Any) -> Any:
-        # Delay the import to avoid a hard dependency on Pydantic internals at module import time.
-        from excelalchemy.types.field import extract_declared_field_metadata
-
-        return cls.__validate__(value, extract_declared_field_metadata(field.field_info))
-
-    @classmethod
     @abstractmethod
     def __validate__(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
         """验证用户输入的值是否符合约束. 接收 serialize 后的值"""
 
     @classmethod
-    def __get_validators__(cls) -> Iterable[Any]:
-        yield cls.__wrapped_validate__
+    def __get_pydantic_core_schema__(
+        cls,
+        source_type: Any,
+        handler: GetCoreSchemaHandler,
+    ) -> core_schema.CoreSchema:
+        # ExcelAlchemy runs metadata-aware validation in its adapter layer.
+        # Pydantic only needs a permissive schema here so model classes can be built in v2.
+        return core_schema.any_schema()
 
 
 class ComplexABCValueType(ABCValueType, dict):

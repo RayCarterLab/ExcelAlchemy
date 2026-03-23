@@ -12,7 +12,7 @@ class ContractPydanticModel(BaseModel):
 
 class TestPydanticContracts:
     def test_fieldmeta_keeps_excel_metadata_outside_pydantic_fieldinfo_subclass(self):
-        raw_field_info = ContractPydanticModel.__fields__['email'].field_info
+        raw_field_info = ContractPydanticModel.model_fields['email']
 
         assert not isinstance(raw_field_info, FieldMetaInfo)
         assert extract_declared_field_metadata(raw_field_info).label == Label('邮箱')

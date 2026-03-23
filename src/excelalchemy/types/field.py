@@ -4,12 +4,10 @@ import copy
 import datetime
 import logging
 from functools import cached_property
-from typing import AbstractSet, Any, Optional, Union
+from typing import AbstractSet, Any, Callable, Optional, Union
 
 from pydantic import BaseModel, Field
-from pydantic.fields import FieldInfo
-from pydantic.fields import Undefined as PydanticUndefined
-from pydantic.typing import NoArgAnyCallable
+from pydantic.fields import FieldInfo, PydanticUndefined
 
 from excelalchemy.const import (
     DATA_RANGE_OPTION_TO_CHINESE,
@@ -49,7 +47,7 @@ class FieldMetaInfo:
         is_primary_key: bool = False,
         unique: bool = False,
         ignore_import: bool = False,
-        required: bool | None = False,
+        required: bool | None = None,
         order: int = DEFAULT_FIELD_META_ORDER,
         character_set: set[CharacterSet] | None = None,
         fraction_digits: int | None = None,
@@ -294,7 +292,7 @@ class FieldMetaInfo:
 
 
 def extract_declared_field_metadata(field_info: FieldInfo) -> FieldMetaInfo:
-    metadata = field_info.extra.get(EXCEL_FIELD_METADATA_KEY)
+    metadata = (field_info.json_schema_extra or {}).get(EXCEL_FIELD_METADATA_KEY)
     if not isinstance(metadata, FieldMetaInfo):
         raise ProgrammaticError('字段定义必须是 FieldMeta 的实例')
     return metadata
@@ -309,6 +307,7 @@ def FieldMeta(
     is_primary_key: bool = False,
     unique: bool = False,
     ignore_import: bool = False,
+    required: bool | None = None,
     order: int = DEFAULT_FIELD_META_ORDER,
     character_set: set[CharacterSet] | None = None,
     fraction_digits: int | None = None,
@@ -318,7 +317,7 @@ def FieldMeta(
     options: list[Option] | None = None,
     unit: str | None = None,
     hint: str | None = None,
-    default_factory: Optional[NoArgAnyCallable] = None,
+    default_factory: Optional[Callable[[], Any]] = None,
     alias: str | None = None,
     title: str | None = None,
     description: str | None = None,
@@ -351,6 +350,7 @@ def FieldMeta(
         is_primary_key=is_primary_key,
         unique=unique,
         ignore_import=ignore_import,
+        required=required,
         order=order,
         character_set=character_set,
         fraction_digits=fraction_digits,
@@ -371,22 +371,53 @@ def FieldMeta(
         max_length=max_length,
     )
 
-    return Field(
-        default,
-        default_factory=default_factory,
-        alias=alias,
-        title=title,
-        description=description,
-        exclude=exclude,
-        include=include,
-        const=const,
-        gt=None,
-        lt=None,
-        multiple_of=multiple_of,
-        allow_inf_nan=allow_inf_nan,
-        allow_mutation=allow_mutation,
-        regex=regex,
-        discriminator=discriminator,
-        repr=repr,
-        **({EXCEL_FIELD_METADATA_KEY: metadata} | extra),
-    )
+    json_schema_extra = {EXCEL_FIELD_METADATA_KEY: metadata} | extra
+    if include is not None:
+        json_schema_extra['include'] = include
+    if const is not None:
+        json_schema_extra['const'] = const
+    if min_items is not None:
+        json_schema_extra['min_items'] = min_items
+    if max_items is not None:
+        json_schema_extra['max_items'] = max_items
+    if unique_items is not None:
+        json_schema_extra['unique_items'] = unique_items
+
+    field_kwargs: dict[str, Any] = {
+        'repr': repr,
+        'json_schema_extra': json_schema_extra,
+    }
+    if default_factory is not None:
+        field_kwargs['default_factory'] = default_factory
+    if alias is not None:
+        field_kwargs['alias'] = alias
+    if title is not None:
+        field_kwargs['title'] = title
+    if description is not None:
+        field_kwargs['description'] = description
+    if isinstance(exclude, bool):
+        field_kwargs['exclude'] = exclude
+    if ge is not None:
+        field_kwargs['ge'] = ge
+    if le is not None:
+        field_kwargs['le'] = le
+    if multiple_of is not None:
+        field_kwargs['multiple_of'] = multiple_of
+    if allow_inf_nan is not None:
+        field_kwargs['allow_inf_nan'] = allow_inf_nan
+    if max_digits is not None:
+        field_kwargs['max_digits'] = max_digits
+    if decimal_places is not None:
+        field_kwargs['decimal_places'] = decimal_places
+    if min_length is not None:
+        field_kwargs['min_length'] = min_length
+    if max_length is not None:
+        field_kwargs['max_length'] = max_length
+    if regex is not None:
+        field_kwargs['pattern'] = regex
+    if discriminator is not None:
+        field_kwargs['discriminator'] = discriminator
+    if allow_mutation is not None and allow_mutation is not True:
+        field_kwargs['frozen'] = not allow_mutation
+
+    return Field(default, **field_kwargs)

@@ -83,7 +83,7 @@ class Importer(BaseModel):
 
 
 def data_converter(data: dict[str, Any]) -> dict[str, Any]:
-    """自定义数据转换器, 在这里，你可以对 Importer.dict() 的结果进行转换"""
+    """自定义数据转换器, 在这里，你可以对 Importer.model_dump() 的结果进行转换"""
     data['age'] = data['age'] + 1
     data['name'] = {"phone": data['phone']}
     return data
@@ -115,7 +115,7 @@ asyncio.run(main())
 
 * 导入功能的文件基于 Minio，因此在使用该功能前，你需要先安装 Minio，并且在 Minio 中创建一个 bucket，用于存放 Excel 文件。
 * 导入的 Excel 文件，必须是从 `download_template` 方法生成的 Excel 文件，否则会产生解析错误。
-* 上面的示例代码中，我们定义了一个 `data_converter` 函数，该函数用于对 `Importer.dict()` 的结果进行转换，最终返回的结果将会作为 `create_func` 函数的参数。当然，此函数是可选的，如果你不需要对数据进行转换，可以不定义该函数。
+* 上面的示例代码中，我们定义了一个 `data_converter` 函数，该函数用于对 `Importer.model_dump()` 的结果进行转换，最终返回的结果将会作为 `create_func` 函数的参数。当然，此函数是可选的，如果你不需要对数据进行转换，可以不定义该函数。
 * `create_func` 函数用于创建数据，该函数的参数为 `data_converter` 函数的返回值，`context` 为 `None`，你可以在该函数中对数据进行创建，例如，你可以将数据存入数据库中。
 * `import_data` 方法的参数 `input_excel_name` 为 Excel 文件在 Minio 中的名称，`output_excel_name` 为解析结果 Excel 文件在 Minio 中的名称，该文件包含所有输入的数据，如果某条数据解析失败，则在该条数据的第一列中会有错误信息，并且会讲产生错误的单元格标红。
 *  返回 ImportResult 类型的结果，您可以在代码中查看该类的定义，该类包含了解析结果的所有信息，例如，成功导入的数据条数、失败的数据条数、失败的数据等。

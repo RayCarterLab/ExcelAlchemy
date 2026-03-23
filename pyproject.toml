@@ -27,7 +27,7 @@ requires-python = '>=3.10'
 dependencies = [
     'pandas >=2.0.0, <3',
     'minio >=7.0.0, <8',
-    'pydantic[email] >=1.9, <2',
+    'pydantic[email] >=2, <3',
     'openpyxl >=3.0.10, <4',
     'pendulum >=2.1.2, <4',
 ]
