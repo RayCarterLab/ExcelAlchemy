@@ -2,11 +2,11 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Awaitable, Callable, Generic, Literal, Type
+from typing import Any, Awaitable, Callable, Literal
 
 from minio import Minio
+from pydantic import BaseModel
 
-from excelalchemy.const import ContextT, ExporterModelT, ImporterCreateModelT, ImporterUpdateModelT
 from excelalchemy.exc import ConfigError
 from excelalchemy.helper.pydantic import get_model_field_names
 from excelalchemy.util.convertor import export_data_converter, import_data_converter
@@ -26,9 +26,9 @@ class ImportMode(str, Enum):
 
 
 @dataclass
-class ImporterConfig(Generic[ContextT, ImporterCreateModelT, ImporterUpdateModelT]):
-    create_importer_model: Type[ImporterCreateModelT] | None = field(default=None)
-    update_importer_model: Type[ImporterUpdateModelT] | None = field(default=None)
+class ImporterConfig[ContextT, ImporterCreateModelT: BaseModel, ImporterUpdateModelT: BaseModel]:
+    create_importer_model: type[ImporterCreateModelT] | None = field(default=None)
+    update_importer_model: type[ImporterUpdateModelT] | None = field(default=None)
 
     # Callable function receive Key as dict key instead of Label.
     data_converter: Callable[[dict[str, Any]], dict[str, Any]] | None = field(default=import_data_converter)
@@ -95,8 +95,8 @@ class ImporterConfig(Generic[ContextT, ImporterCreateModelT, ImporterUpdateModel
 
 
 @dataclass
-class ExporterConfig(Generic[ExporterModelT]):
-    exporter_model: Type[ExporterModelT]
+class ExporterConfig[ExporterModelT: BaseModel]:
+    exporter_model: type[ExporterModelT]
     # Callable function receive Key as dict key instead of Label.
     data_converter: Callable[[dict[str, Any]], dict[str, Any]] | None = field(default=export_data_converter)
 

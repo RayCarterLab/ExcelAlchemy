@@ -1,29 +1,20 @@
 from abc import ABC, abstractmethod
-from typing import Any, Generic
+from typing import Any
 
-from excelalchemy.const import (
-    ContextT,
-    CreateModelT,
-    ExporterModelT,
-    ImporterCreateModelT,
-    ImporterUpdateModelT,
-    UpdateModelT,
-)
+from pydantic import BaseModel
+
 from excelalchemy.types.identity import Base64Str, Key, UrlStr
 from excelalchemy.types.result import ImportResult
 
 
-class ABCExcelAlchemy(
-    ABC,
-    Generic[
-        ContextT,
-        ImporterCreateModelT,
-        ImporterUpdateModelT,
-        CreateModelT,
-        UpdateModelT,
-        ExporterModelT,
-    ],
-):
+class ABCExcelAlchemy[
+    ContextT,
+    ImporterCreateModelT: BaseModel,
+    ImporterUpdateModelT: BaseModel,
+    CreateModelT: BaseModel,
+    UpdateModelT: BaseModel,
+    ExporterModelT: BaseModel,
+](ABC):
     @abstractmethod
     def download_template(self, sample_data: list[dict[str, Any]] | None = None) -> str:
         """下载导入模版, Excel 字段顺序与定义的导出模型一致"""

@@ -1,21 +1,20 @@
 from dataclasses import dataclass
 from types import UnionType
-from typing import Any, Generator, Iterable, TypeVar, cast, get_args, get_origin
+from typing import Any, Generator, Iterable, cast, get_args, get_origin
 
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo, PydanticUndefined
 
-from excelalchemy.const import ImporterCreateModelT, ImporterUpdateModelT
 from excelalchemy.exc import ExcelCellError, ProgrammaticError
 from excelalchemy.types.abstract import ABCValueType, ComplexABCValueType
 from excelalchemy.types.field import FieldMetaInfo, extract_declared_field_metadata
 from excelalchemy.types.identity import Key
 
-ModelT = TypeVar('ModelT', bound=BaseModel)
-
 
 @dataclass(frozen=True)
 class PydanticFieldAdapter:
+    """Provide a stable view over one Pydantic field."""
+
     name: str
     raw_field: FieldInfo
 
@@ -79,6 +78,8 @@ class PydanticFieldAdapter:
 
 @dataclass(frozen=True)
 class PydanticModelAdapter:
+    """Expose a small, version-friendly API over a Pydantic model class."""
+
     model: type[BaseModel]
 
     def fields(self) -> Iterable[PydanticFieldAdapter]:
@@ -95,7 +96,7 @@ class PydanticModelAdapter:
 
 
 def extract_pydantic_model(
-    model: type[ImporterCreateModelT] | type[ImporterUpdateModelT] | type[BaseModel] | None,
+    model: type[BaseModel] | None,
 ) -> list[FieldMetaInfo]:
     """根据 Pydantic 模型提取 Excel 表头信息."""
     if model is None:
@@ -107,7 +108,7 @@ def get_model_field_names(model: type[BaseModel]) -> list[str]:
     return PydanticModelAdapter(model).field_names()
 
 
-def instantiate_pydantic_model(  # noqa: C901
+def instantiate_pydantic_model[ModelT: BaseModel](  # noqa: C901
     data: dict[Key, Any],
     model: type[ModelT],
 ) -> ModelT | list[ExcelCellError]:

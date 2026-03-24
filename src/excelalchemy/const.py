@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Set, TypeVar, Union
-
-from pydantic import BaseModel
+from typing import Any
 
 from excelalchemy.types.identity import Key, Label, OptionId
 
@@ -45,17 +43,11 @@ MILLISECOND_TO_SECOND = 1000
 MAX_OPTIONS_COUNT = 100
 
 DEFAULT_FIELD_META_ORDER = -1
-DictStrAny = Dict[str, Any]
-DictAny = Dict[Any, Any]
-SetStr = Set[str]
-ListStr = List[str]
-IntStr = Union[int, str]
-ContextT = TypeVar('ContextT')
-ImporterCreateModelT = TypeVar('ImporterCreateModelT', bound=BaseModel)
-ImporterUpdateModelT = TypeVar('ImporterUpdateModelT', bound=BaseModel)
-ExporterModelT = TypeVar('ExporterModelT', bound=BaseModel)
-CreateModelT = TypeVar('CreateModelT', bound=BaseModel)
-UpdateModelT = TypeVar('UpdateModelT', bound=BaseModel)
+type DictStrAny = dict[str, Any]
+type DictAny = dict[Any, Any]
+type SetStr = set[str]
+type ListStr = list[str]
+type IntStr = int | str
 
 
 class CharacterSet(str, Enum):

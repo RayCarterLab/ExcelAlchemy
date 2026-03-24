@@ -4,7 +4,7 @@ import copy
 import datetime
 import logging
 from functools import cached_property
-from typing import AbstractSet, Any, Callable, Optional, Union
+from typing import AbstractSet, Any, Callable
 
 from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo, PydanticUndefined
@@ -317,12 +317,12 @@ def FieldMeta(
     options: list[Option] | None = None,
     unit: str | None = None,
     hint: str | None = None,
-    default_factory: Optional[Callable[[], Any]] = None,
+    default_factory: Callable[[], Any] | None = None,
     alias: str | None = None,
     title: str | None = None,
     description: str | None = None,
-    exclude: Union[AbstractSet[IntStr], AbstractSet[IntStr], Any] = None,
-    include: Union[AbstractSet[IntStr], AbstractSet[IntStr], Any] = None,
+    exclude: AbstractSet[IntStr] | Any = None,
+    include: AbstractSet[IntStr] | Any = None,
     const: bool | None = None,
     ge: float | None = None,
     le: float | None = None,
