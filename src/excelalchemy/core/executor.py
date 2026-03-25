@@ -2,7 +2,6 @@
 
 from typing import Any, Awaitable, Callable
 
-from pandas import DataFrame
 from pydantic import BaseModel
 
 from excelalchemy.exc import ConfigError, ExcelCellError, ExcelRowError
@@ -11,6 +10,7 @@ from excelalchemy.types.alchemy import ImporterConfig, ImportMode
 from excelalchemy.types.identity import Key, RowIndex
 
 from .rows import ImportIssueTracker
+from .table import WorksheetTable
 
 
 class ImportExecutor[ContextT]:
@@ -26,7 +26,7 @@ class ImportExecutor[ContextT]:
         self.issue_tracker = issue_tracker
         self.get_context = get_context
 
-    async def execute(self, row_index: RowIndex, data: dict[Key, Any], df: DataFrame) -> bool:
+    async def execute(self, row_index: RowIndex, data: dict[Key, Any], df: WorksheetTable) -> bool:
         """Dispatch one aggregated row to the configured import mode handler."""
         match self.config.import_mode:
             case ImportMode.CREATE:
@@ -37,7 +37,7 @@ class ImportExecutor[ContextT]:
                 return await self._create_or_update(row_index, data, df)
         raise ConfigError(f'不支持的导入模式: {self.config.import_mode}')
 
-    async def _create(self, row_index: RowIndex, data: dict[Key, Any], df: DataFrame) -> bool:
+    async def _create(self, row_index: RowIndex, data: dict[Key, Any], df: WorksheetTable) -> bool:
         if self.config.creator is None:
             raise ConfigError('未配置 creator')
         if self.config.create_importer_model is None:
@@ -52,7 +52,7 @@ class ImportExecutor[ContextT]:
             self.config.exec_formatter,
         )
 
-    async def _update(self, row_index: RowIndex, data: dict[Key, Any], df: DataFrame) -> bool:
+    async def _update(self, row_index: RowIndex, data: dict[Key, Any], df: WorksheetTable) -> bool:
         if self.config.updater is None:
             raise ConfigError('未配置 updater')
         if self.config.update_importer_model is None:
@@ -67,7 +67,7 @@ class ImportExecutor[ContextT]:
             self.config.exec_formatter,
         )
 
-    async def _create_or_update(self, row_index: RowIndex, data: dict[Key, Any], df: DataFrame) -> bool:
+    async def _create_or_update(self, row_index: RowIndex, data: dict[Key, Any], df: WorksheetTable) -> bool:
         if self.config.is_data_exist is None:
             raise ConfigError('未配置 is_data_exists')
 
@@ -81,7 +81,7 @@ class ImportExecutor[ContextT]:
         self,
         row_index: RowIndex,
         data: dict[Key, Any],
-        df: DataFrame,
+        df: WorksheetTable,
         importer_model: type[BaseModel],
         dml_func: Callable[[dict[str, Any], ContextT | None], Awaitable[Any]],
         data_converter: Callable[[dict[str, Any]], dict[str, Any]] | None,

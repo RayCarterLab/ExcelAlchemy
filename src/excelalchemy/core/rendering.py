@@ -2,8 +2,7 @@
 
 from typing import cast
 
-from pandas import DataFrame
-
+from excelalchemy.core.table import WorksheetTable
 from excelalchemy.core.writer import render_data_excel, render_merged_header_excel, render_simple_header_excel
 from excelalchemy.exc import ExcelCellError
 from excelalchemy.types.field import FieldMetaInfo
@@ -14,7 +13,7 @@ class ExcelRenderer:
     """Render templates and result workbooks for the facade layer."""
 
     def render_template(
-        self, df: DataFrame, field_meta_mapping: dict[UniqueLabel, FieldMetaInfo], *, has_merged_header: bool
+        self, df: WorksheetTable, field_meta_mapping: dict[UniqueLabel, FieldMetaInfo], *, has_merged_header: bool
     ) -> Base64Str:
         """Render a template workbook with either a simple or merged header layout."""
         if has_merged_header:
@@ -23,7 +22,7 @@ class ExcelRenderer:
 
     def render_data(
         self,
-        df: DataFrame,
+        df: WorksheetTable,
         field_meta_mapping: dict[UniqueLabel, FieldMetaInfo],
         *,
         has_merged_header: bool,

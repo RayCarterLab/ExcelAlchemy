@@ -3,16 +3,15 @@
 from collections import defaultdict
 from typing import Any, cast
 
-import pandas
-from pandas import DataFrame
-
 from excelalchemy.exc import ConfigError, ExcelCellError, ExcelRowError
 from excelalchemy.types.alchemy import ImportMode
 from excelalchemy.types.field import FieldMetaInfo
 from excelalchemy.types.identity import ColumnIndex, Key, RowIndex, UniqueLabel
 from excelalchemy.types.result import ValidateRowResult
+from excelalchemy.util.file import value_is_nan
 
 from .schema import ExcelSchemaLayout
+from .table import WorksheetTable
 
 
 class RowAggregator:
@@ -34,7 +33,7 @@ class RowAggregator:
             if field_meta.key is None or field_meta.parent_key is None:
                 raise ConfigError(f'{type(field_meta).__name__} 未配置 key/parent_key')
 
-            if pandas.isna(value):
+            if value_is_nan(value):
                 if self.import_mode in {ImportMode.UPDATE, ImportMode.CREATE_OR_UPDATE}:
                     value = None
                 else:
@@ -79,7 +78,7 @@ class ImportIssueTracker:
         else:
             self.row_errors[row_index].append(error)
 
-    def register_cell_errors(self, row_index: RowIndex, errors: list[ExcelCellError], df: DataFrame) -> None:
+    def register_cell_errors(self, row_index: RowIndex, errors: list[ExcelCellError], df: WorksheetTable) -> None:
         """Map cell errors from schema labels to rendered workbook coordinates."""
         for error in errors:
             for index in self._column_indices(df, error.unique_label):
@@ -88,7 +87,7 @@ class ImportIssueTracker:
 
     def add_result_columns(
         self,
-        df: DataFrame,
+        df: WorksheetTable,
         *,
         result_unique_label: UniqueLabel,
         reason_unique_label: UniqueLabel,
@@ -118,7 +117,7 @@ class ImportIssueTracker:
         df.insert(loc=0, column=reason_unique_label, value=reason)
         df.insert(loc=0, column=result_unique_label, value=result)
 
-    def _column_indices(self, df: DataFrame, unique_label: UniqueLabel):
+    def _column_indices(self, df: WorksheetTable, unique_label: UniqueLabel):
         if unique_label not in self.layout.unique_label_to_field_meta:
             if unique_label not in self.layout.parent_label_to_field_metas:
                 raise ValueError(f'找不到 {unique_label} 对应的字段')
@@ -130,7 +129,7 @@ class ImportIssueTracker:
         yield from self._single_column_index(df, unique_label)
 
     @staticmethod
-    def _single_column_index(df: DataFrame, unique_label: UniqueLabel):
+    def _single_column_index(df: WorksheetTable, unique_label: UniqueLabel):
         index = df.columns.get_loc(unique_label)
         if isinstance(index, int):
             yield ColumnIndex(index)

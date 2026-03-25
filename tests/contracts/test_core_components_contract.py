@@ -1,9 +1,8 @@
-from pandas import DataFrame
-
 from excelalchemy.core.alchemy import REASON_COLUMN, RESULT_COLUMN
 from excelalchemy.core.headers import ExcelHeaderParser, ExcelHeaderValidator
 from excelalchemy.core.rows import ImportIssueTracker, RowAggregator
 from excelalchemy.core.schema import ExcelSchemaLayout
+from excelalchemy.core.table import WorksheetTable
 from excelalchemy.exc import ExcelCellError
 from excelalchemy.types.alchemy import ImportMode
 from excelalchemy.types.identity import Key, Label, RowIndex
@@ -23,7 +22,7 @@ class TestCoreComponentContracts:
 
     def test_header_parser_and_validator_accept_generated_simple_headers_as_contract(self):
         layout = ExcelSchemaLayout.from_model(SimpleContractImporter)
-        header_df = DataFrame([layout.get_output_parent_excel_headers()])
+        header_df = WorksheetTable(rows=[layout.get_output_parent_excel_headers()])
         parser = ExcelHeaderParser()
         validator = ExcelHeaderValidator()
 
@@ -49,7 +48,7 @@ class TestCoreComponentContracts:
     def test_issue_tracker_offsets_cell_errors_after_result_columns(self):
         layout = ExcelSchemaLayout.from_model(SimpleContractImporter)
         tracker = ImportIssueTracker(layout, [RESULT_COLUMN, REASON_COLUMN])
-        df = DataFrame(columns=['姓名'], data=[['张三']])
+        df = WorksheetTable(columns=['姓名'], rows=[['张三']])
         error = ExcelCellError(label=Label('姓名'), message='模拟失败')
 
         tracker.register_cell_errors(RowIndex(0), [error], df)

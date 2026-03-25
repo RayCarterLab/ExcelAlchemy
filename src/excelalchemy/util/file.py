@@ -1,10 +1,10 @@
 import base64
 import io
+import math
 from datetime import timedelta
 from tempfile import TemporaryFile
 from typing import IO, Any
 
-import pandas
 from minio import Minio
 from urllib3.response import BaseHTTPResponse
 
@@ -80,10 +80,14 @@ def flatten(data: dict[str, Any], level: list[Any] | None = None) -> dict[str, A
 
 
 def value_is_nan(value: Any) -> bool:
-    """判断 value 是否是 NaN"""
-    is_nan = pandas.isna(value)
-    if isinstance(is_nan, bool) and is_nan:
+    """判断 value 是否为空单元格或 NaN。"""
+    if value is None:
         return True
-    if isinstance(value, list) and any(is_nan):  # type: ignore[arg-type]
+
+    if isinstance(value, float) and math.isnan(value):
         return True
+
+    if isinstance(value, list | tuple):
+        return any(value_is_nan(item) for item in value)
+
     return False

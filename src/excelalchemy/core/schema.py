@@ -87,7 +87,7 @@ class ExcelSchemaLayout:
         )
 
     def get_output_parent_excel_headers(self, selected_keys: list[UniqueKey] | None = None) -> list[UniqueLabel]:
-        """Return the flattened header row used as DataFrame columns."""
+        """Return the flattened header row used as worksheet table columns."""
         if not selected_keys:
             return [field_meta.unique_label for field_meta in self.ordered_field_meta]
         return [self.unique_key_to_field_meta[key].unique_label for key in selected_keys]

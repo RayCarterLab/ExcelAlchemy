@@ -33,7 +33,7 @@ class ABCValueType(ABC):
     @classmethod
     @abstractmethod
     def deserialize(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
-        """用于把 pandas 读取的 Excel 之后的数据，转回用户可识别的数据, 处理聚合之前的数据"""
+        """用于把 worksheet 读入后的值转回用户可识别的数据, 处理聚合之前的数据"""
 
     @classmethod
     @abstractmethod
@@ -70,7 +70,7 @@ class ComplexABCValueType(ABCValueType, dict):
     @classmethod
     @abstractmethod
     def deserialize(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
-        """用于把 pandas 读取的 Excel 之后的数据，转回用户可识别的数据, 处理聚合之前的数据"""
+        """用于把 worksheet 读入后的值转回用户可识别的数据, 处理聚合之前的数据"""
 
     @classmethod
     @abstractmethod

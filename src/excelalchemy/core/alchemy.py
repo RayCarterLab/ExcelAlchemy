@@ -2,7 +2,6 @@ import logging
 from functools import cached_property
 from typing import Any, Callable, Iterable, cast
 
-from pandas import DataFrame, concat
 from pydantic import BaseModel
 
 from excelalchemy.const import (
@@ -18,6 +17,7 @@ from excelalchemy.core.rendering import ExcelRenderer
 from excelalchemy.core.rows import ImportIssueTracker, RowAggregator
 from excelalchemy.core.schema import ExcelSchemaLayout
 from excelalchemy.core.storage import MinioStorageGateway
+from excelalchemy.core.table import WorksheetTable
 from excelalchemy.exc import ConfigError, ExcelCellError, ExcelRowError
 from excelalchemy.helper.pydantic import get_model_field_names
 from excelalchemy.types.abstract import SystemReserved
@@ -62,8 +62,8 @@ class ExcelAlchemy[
         self,
         config: ImporterConfig[ContextT, ImporterCreateModelT, ImporterUpdateModelT] | ExporterConfig[ExporterModelT],
     ):
-        self.df = DataFrame()
-        self.header_df = DataFrame()
+        self.df = WorksheetTable()
+        self.header_df = WorksheetTable()
         self.config = config
         self.context: ContextT | None = None
         self.__state_df_has_been_loaded__ = False
@@ -151,9 +151,9 @@ class ExcelAlchemy[
         self.df = self.df.reset_index(drop=True)
 
         all_success, success_count, fail_count = True, 0, 0
-        for pandas_row_index, row in self.df.iloc[self.extra_header_count_on_import :].iterrows():
+        for table_row_index, row in self.df.iloc[self.extra_header_count_on_import :].iterrows():
             aggregate_data = self._aggregate_data(cast(dict[UniqueLabel, Any], row.to_dict()))
-            success = await self._executor.execute(cast(RowIndex, pandas_row_index), aggregate_data, self.df)
+            success = await self._executor.execute(cast(RowIndex, table_row_index), aggregate_data, self.df)
             all_success = all_success and success
             success_count, fail_count = (success_count + 1, fail_count) if success else (success_count, fail_count + 1)
 
@@ -239,7 +239,7 @@ class ExcelAlchemy[
     def get_output_child_excel_headers(self, selected_keys: list[UniqueKey] | None = None) -> list[Label]:
         return self._layout.get_output_child_excel_headers(selected_keys)
 
-    def _gen_export_df(self, data: list[dict[str, Any]], keys: list[Key] | None = None) -> tuple[DataFrame, bool]:
+    def _gen_export_df(self, data: list[dict[str, Any]], keys: list[Key] | None = None) -> tuple[WorksheetTable, bool]:
         if self.excel_mode == ExcelMode.IMPORT:
             logging.info('导出模式为导入模式, 调用导出方法时自动切换为导出模式')
 
@@ -279,13 +279,13 @@ class ExcelAlchemy[
     def _order_errors(self, errors: list[ExcelRowError | ExcelCellError]) -> Iterable[ExcelCellError | ExcelRowError]:
         return self._layout.order_errors(errors)
 
-    def _set_columns(self, df: DataFrame) -> DataFrame:
+    def _set_columns(self, df: WorksheetTable) -> WorksheetTable:
         return self._header_parser.apply_columns(df, self.input_excel_headers, self.get_output_parent_excel_headers())
 
     def _select_output_excel_keys(self, keys: list[Key] | None = None) -> list[UniqueKey]:
         return self._layout.select_output_excel_keys(keys)
 
-    def _read_dataframe(self, input_excel_name: str) -> DataFrame:
+    def _read_dataframe(self, input_excel_name: str) -> WorksheetTable:
         assert isinstance(self.config, ImporterConfig)
         if not self.__state_df_has_been_loaded__:
             df = self._storage_gateway.read_excel_dataframe(
@@ -303,7 +303,7 @@ class ExcelAlchemy[
         records: list[dict[str, Any]] | None,
         selected_keys: list[UniqueKey],
         data_converter: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
-    ) -> DataFrame:
+    ) -> WorksheetTable:
         rows = []
         records = records or []
         for record in records:
@@ -316,24 +316,23 @@ class ExcelAlchemy[
                 row[field_meta.unique_label] = field_meta.value_type.deserialize(value, field_meta)
             rows.append(row)
 
-        return DataFrame(columns=self.get_output_parent_excel_headers(selected_keys), data=rows)
+        return WorksheetTable(columns=self.get_output_parent_excel_headers(selected_keys), rows=rows)
 
     def _export_with_merged_header(
         self,
         records: list[dict[str, Any]] | None,
         selected_keys: list[UniqueKey],
         data_converter: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
-    ) -> DataFrame:
+    ) -> WorksheetTable:
         data_df = self._generate_export_df(records, selected_keys, data_converter)
-        header_df = DataFrame(columns=data_df.columns, data=[self.get_output_child_excel_headers(selected_keys)])
-        return concat([header_df, data_df], ignore_index=True)
+        return data_df.with_prepended_rows([self.get_output_child_excel_headers(selected_keys)])
 
     def _export_with_simple_header(
         self,
         records: list[dict[str, Any]] | None,
         selected_keys: list[UniqueKey],
         data_converter: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
-    ) -> DataFrame:
+    ) -> WorksheetTable:
         return self._generate_export_df(records, selected_keys, data_converter)
 
     def _add_result_column(self):

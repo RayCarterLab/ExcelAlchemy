@@ -21,7 +21,7 @@ class TestDateRangeValueType(BaseTestCase):
         """对于合并的表头，如果后面缺失
             日期范围	｜    （这里合并了表头）｜
             开始日期	｜    （这里缺了一个值）｜
-        DataFrame 不会读到第一行第二列的值，因此 ExcelAlchemy 不会认为有合并得表头
+        worksheet reader 不会读到第一行第二列的值，因此 ExcelAlchemy 不会认为有合并得表头
         """
 
         class Importer(BaseModel):
@@ -41,7 +41,7 @@ class TestDateRangeValueType(BaseTestCase):
         """对于合并的表头，如果前面缺失
             日期范围	        ｜   （这里合并了表头）｜
             （这里缺了一个值）	｜    开始日期       ｜
-        DataFrame 能正确读到四个值，因此 ExcelAlchemy 会认为有合并得表头
+        worksheet reader 能正确读到四个值，因此 ExcelAlchemy 会认为有合并得表头
         """
 
         class Importer(BaseModel):

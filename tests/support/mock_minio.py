@@ -5,7 +5,8 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any
 
-import pandas
+from openpyxl import Workbook, load_workbook
+from openpyxl.worksheet.cell_range import CellRange
 
 from excelalchemy.const import HEADER_HINT
 from tests.support.registry import FileRegistry
@@ -107,25 +108,12 @@ class LocalMockMinio:
         automatically add HEADER_HINT to first row
         """
         for filename, data in self.mock_excel_data.items():
-            if isinstance(data, str):
-                df = pandas.read_excel(Path(__file__).resolve().parent.parent / Path(data.lstrip('./')))
-            else:
-                df = pandas.DataFrame(data)
-
             f = NamedTemporaryFile(suffix='.xlsx', delete=False)
             f.close()  # 关键：先关闭，避免 Windows 文件锁问题
 
-            original_header = df.columns
-            df.columns = range(len(df.columns))
-            header_row = pandas.Series(original_header, index=df.columns)
-            df = pandas.concat([header_row.to_frame().T, df], ignore_index=True)
-
-            df.loc[-1] = 0
-            df.index = df.index + 1
-            df = df.sort_index()
-            df.iat[0, 0] = HEADER_HINT
-
-            df.to_excel(f.name, index=False, header=False, engine='openpyxl')
+            workbook = self._build_workbook(data)
+            workbook.save(f.name)
+            workbook.close()
 
             with open(f.name, 'rb') as rf:
                 file_bytes = rf.read()
@@ -133,6 +121,68 @@ class LocalMockMinio:
             data = io.BytesIO(file_bytes)
             length = len(file_bytes)
             self.put_object(self.bucket_name, filename, data, length, f.name)
+
+    def _build_workbook(self, data: str | list[dict[str, Any]]):
+        if isinstance(data, str):
+            source_workbook = load_workbook(Path(__file__).resolve().parent.parent / Path(data.lstrip('./')))
+            source_worksheet = source_workbook['Sheet1']
+            rows = [list(row) for row in source_worksheet.iter_rows(values_only=True)]
+            trimmed_width = self._trimmed_width(rows)
+
+            workbook = Workbook()
+            worksheet = workbook.active
+            assert worksheet is not None
+            worksheet.title = source_worksheet.title
+            worksheet.cell(row=1, column=1, value=HEADER_HINT)
+
+            for row_index, row in enumerate(rows, start=2):
+                for column_index, value in enumerate(row[:trimmed_width], start=1):
+                    worksheet.cell(row=row_index, column=column_index, value=value)
+
+            for merged_range in source_worksheet.merged_cells.ranges:
+                if merged_range.min_col > trimmed_width:
+                    continue
+                shifted_range = CellRange(
+                    min_col=merged_range.min_col,
+                    max_col=min(merged_range.max_col, trimmed_width),
+                    min_row=merged_range.min_row + 1,
+                    max_row=merged_range.max_row + 1,
+                )
+                worksheet.merge_cells(str(shifted_range))
+
+            source_workbook.close()
+            return workbook
+
+        workbook = Workbook()
+        worksheet = workbook.active
+        assert worksheet is not None
+        worksheet.title = 'Sheet1'
+        worksheet.cell(row=1, column=1, value=HEADER_HINT)
+
+        if not data:
+            return workbook
+
+        headers = list(data[0].keys())
+        for column_index, header in enumerate(headers, start=1):
+            worksheet.cell(row=2, column=column_index, value=header)
+
+        for row_index, row in enumerate(data, start=3):
+            for column_index, header in enumerate(headers, start=1):
+                worksheet.cell(row=row_index, column=column_index, value=row.get(header))
+
+        return workbook
+
+    @staticmethod
+    def _trimmed_width(rows: list[list[Any]]) -> int:
+        if not rows:
+            return 0
+
+        width = max(len(row) for row in rows)
+        while width > 0:
+            if any(len(row) >= width and row[width - 1] is not None for row in rows):
+                return width
+            width -= 1
+        return 0
 
     def put_object(self, bucket_name: str, filename: str, data: io.BytesIO, length: int, file: Any = None) -> None:
         self.storage[filename] = {
