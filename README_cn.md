@@ -132,21 +132,23 @@ asyncio.run(main())
 如果你希望参与开发，可以先安装开发依赖并启用本地检查：
 
 ```bash
-pip install -e .[development]
-pre-commit install
+uv sync --extra development
+uv run pre-commit install
 ```
 
-项目现在采用标准 `src/` 布局，因此本地开发建议通过 editable install 或 `nox` 运行，而不是依赖仓库根目录的隐式导入。
+项目现在采用标准 `src/` 布局，因此本地开发建议通过 `uv` 管理的环境运行，而不是依赖仓库根目录的隐式导入。
 
 常用本地命令：
 
 ```bash
-nox -s ruff
-nox -s pyright
-nox -s tests-3.12
+uv run ruff format --check .
+uv run ruff check .
+uv run pyright
+uv run pytest --cov=excelalchemy --cov-report=term-missing:skip-covered tests
+uv build
 ```
 
-CI 会运行 `ruff`、`pyright`，以及 Python 3.12、3.13、3.14 的测试矩阵。
+CI 现在使用 `uv` 管理依赖，并运行 `ruff`、`pyright`，以及 Python 3.12、3.13、3.14 的测试矩阵。
 
 如果你在使用 ExcelAlchemy 过程中遇到了问题或者有任何建议，欢迎在 [GitHub Issues](https://github.com/RayCarterLab/ExcelAlchemy/issues) 中提出。我们也非常欢迎你提交 Pull Request，贡献你的代码。在提交前，建议先运行上面的本地校验命令，并在行为变化时同步更新文档。
 

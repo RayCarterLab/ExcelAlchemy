@@ -19,41 +19,37 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python 3.14
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.14'
-          cache: 'pip'
-          cache-dependency-path: pyproject.toml
-
-      - name: Install build dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install build twine
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            pyproject.toml
+            uv.lock
 
       - name: Build package
-        run: python -m build
+        run: uv build
 
       - name: Check package metadata
-        run: python -m twine check dist/*
+        run: uvx twine check dist/*
 
       - name: Smoke test wheel installation
         run: |
-          python -m venv .pkg-smoke-wheel
-          . .pkg-smoke-wheel/bin/activate
-          python -m pip install --upgrade pip
-          python -m pip install dist/*.whl
-          python -c "import excelalchemy; print(excelalchemy.__version__)"
+          uv venv .pkg-smoke-wheel --python 3.14
+          uv pip install --python .pkg-smoke-wheel/bin/python dist/*.whl
+          .pkg-smoke-wheel/bin/python -c "import excelalchemy; print(excelalchemy.__version__)"
 
       - name: Smoke test source distribution installation
         run: |
-          python -m venv .pkg-smoke-sdist
-          . .pkg-smoke-sdist/bin/activate
-          python -m pip install --upgrade pip
-          python -m pip install dist/*.tar.gz
-          python -c "import excelalchemy; print(excelalchemy.__version__)"
+          uv venv .pkg-smoke-sdist --python 3.14
+          uv pip install --python .pkg-smoke-sdist/bin/python dist/*.tar.gz
+          .pkg-smoke-sdist/bin/python -c "import excelalchemy; print(excelalchemy.__version__)"
 
       - name: Set artifact metadata
         id: artifact-meta

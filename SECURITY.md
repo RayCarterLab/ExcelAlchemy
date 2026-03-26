@@ -20,4 +20,3 @@ If that workflow is unavailable, contact the maintainers privately and include:
 - any suggested mitigations
 
 We will acknowledge valid reports as quickly as possible, confirm impact, and coordinate a fix before public disclosure when appropriate.
-

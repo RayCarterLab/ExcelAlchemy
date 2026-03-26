@@ -51,4 +51,3 @@ body:
     attributes:
       label: Environment details
       description: OS, dependency versions, storage backend details, or anything else that may matter.
-

@@ -125,24 +125,26 @@ asyncio.run(main())
 
 ## Development
 
-Install the project in editable mode with development dependencies:
+Install `uv`, then sync the development environment:
 
 ```bash
-pip install -e .[development]
-pre-commit install
+uv sync --extra development
+uv run pre-commit install
 ```
 
-The project uses the standard `src/` layout, so local development should go through an editable install or `nox` rather than relying on repository-root imports.
+The project uses the standard `src/` layout, so local development should go through the managed `uv` environment rather than relying on repository-root imports.
 
 Common local commands:
 
 ```bash
-nox -s ruff
-nox -s pyright
-nox -s tests-3.12
+uv run ruff format --check .
+uv run ruff check .
+uv run pyright
+uv run pytest --cov=excelalchemy --cov-report=term-missing:skip-covered tests
+uv build
 ```
 
-The CI workflow runs `ruff`, `pyright`, and the test matrix on Python 3.12, 3.13, and 3.14.
+The CI workflow uses `uv` for dependency management and runs `ruff`, `pyright`, and the test matrix on Python 3.12, 3.13, and 3.14.
 
 ### Contributing
 
