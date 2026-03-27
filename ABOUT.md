@@ -125,6 +125,16 @@ That is why the project now separates:
 
 This is a small but meaningful design distinction.
 
+### 6. Locale Policy Is Public, Not Accidental
+
+The project now documents its locale behavior explicitly instead of leaving it as an implementation detail.
+
+- runtime messages are English-first and stable for the 2.x line
+- workbook display text supports `zh-CN` and `en`
+- workbook display defaults to `zh-CN`
+
+That policy is written down in [docs/locale.md](./docs/locale.md), so users do not have to infer it from scattered examples.
+
 ## Major Evolution Steps
 
 ### `src/` Layout Migration

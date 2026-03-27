@@ -82,6 +82,13 @@ class MessageKey(StrEnum):
     ONLY_CHARACTER_SET_ALLOWED = 'only_character_set_allowed'
     IMPORT_RESULT_ONLY_FOR_INVALID_HEADER_VALIDATION = 'import_result_only_for_invalid_header_validation'
     BOOLEAN_ENTER_YES_OR_NO = 'boolean_enter_yes_or_no'
+    BOOLEAN_TRUE_DISPLAY = 'boolean_true_display'
+    BOOLEAN_FALSE_DISPLAY = 'boolean_false_display'
+    CHARACTER_SET_NAME_CHINESE = 'character_set_name_chinese'
+    CHARACTER_SET_NAME_NUMBER = 'character_set_name_number'
+    CHARACTER_SET_NAME_LOWERCASE = 'character_set_name_lowercase'
+    CHARACTER_SET_NAME_UPPERCASE = 'character_set_name_uppercase'
+    CHARACTER_SET_NAME_SPECIAL = 'character_set_name_special'
     HEADER_HINT = 'header_hint'
     RESULT_COLUMN_LABEL = 'result_column_label'
     REASON_COLUMN_LABEL = 'reason_column_label'
@@ -126,6 +133,8 @@ class MessageKey(StrEnum):
 
 DEFAULT_LOCALE: Final[str] = 'en'
 DISPLAY_DEFAULT_LOCALE: Final[str] = 'zh-CN'
+SUPPORTED_RUNTIME_LOCALES: Final[tuple[str, ...]] = (DEFAULT_LOCALE,)
+SUPPORTED_DISPLAY_LOCALES: Final[tuple[str, ...]] = (DISPLAY_DEFAULT_LOCALE, 'en')
 _current_display_locale: ContextVar[str] = ContextVar('excelalchemy_display_locale', default=DISPLAY_DEFAULT_LOCALE)
 
 MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
@@ -240,7 +249,14 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.IMPORT_RESULT_ONLY_FOR_INVALID_HEADER_VALIDATION: (
             'ImportResult can only be built from an invalid header validation result'
         ),
-        MessageKey.BOOLEAN_ENTER_YES_OR_NO: 'Enter "是" or "否"',
+        MessageKey.BOOLEAN_ENTER_YES_OR_NO: 'Enter "{true_value}" or "{false_value}"',
+        MessageKey.BOOLEAN_TRUE_DISPLAY: 'Yes',
+        MessageKey.BOOLEAN_FALSE_DISPLAY: 'No',
+        MessageKey.CHARACTER_SET_NAME_CHINESE: 'Chinese characters',
+        MessageKey.CHARACTER_SET_NAME_NUMBER: 'numbers',
+        MessageKey.CHARACTER_SET_NAME_LOWERCASE: 'lowercase letters',
+        MessageKey.CHARACTER_SET_NAME_UPPERCASE: 'uppercase letters',
+        MessageKey.CHARACTER_SET_NAME_SPECIAL: 'symbols',
         MessageKey.HEADER_HINT: (
             'Import instructions:\n'
             '1. Review the header comments before filling in data to avoid import failures.\n'
@@ -338,6 +354,8 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.DATE_RANGE_OPTION_PRE_DISPLAY: '早于当前时间',
         MessageKey.DATE_RANGE_OPTION_NEXT_DISPLAY: '晚于当前时间',
         MessageKey.DATE_RANGE_OPTION_NONE_DISPLAY: '无限制',
+        MessageKey.BOOLEAN_TRUE_DISPLAY: '是',
+        MessageKey.BOOLEAN_FALSE_DISPLAY: '否',
         MessageKey.SINGLE_ORGANIZATION_HINT: "需按照组织架构树填写组织完整路径，例如 'XX公司/一级部门/二级部门'.",
         MessageKey.MULTI_ORGANIZATION_HINT: '需按照组织架构树填写组织完整路径，如“XX公司/一级部门/二级部门”，多选时，选项之间用“、”连接',
         MessageKey.SINGLE_STAFF_HINT: '请输入人员姓名和工号，如“张三/001”',

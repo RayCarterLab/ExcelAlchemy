@@ -1,12 +1,14 @@
 # ExcelAlchemy
 
-[中文 README](./README_cn.md) · [About](./ABOUT.md) · [Architecture](./docs/architecture.md)
+[中文 README](./README_cn.md) · [About](./ABOUT.md) · [Architecture](./docs/architecture.md) · [Locale Policy](./docs/locale.md) · [Changelog](./CHANGELOG.md) · [Migration Notes](./MIGRATIONS.md)
 
 ExcelAlchemy is a schema-driven Excel import/export library for Python.
 It turns Pydantic models into Excel templates, validates spreadsheet input back into application data, and keeps the import/export workflow explicit, typed, and extensible.
 
 This repository is also a design artifact.
 It documents a series of deliberate engineering choices: `src/` layout, Pydantic v2 migration, pandas removal, pluggable storage, `uv`-based workflows, and locale-aware workbook output.
+
+The current release track being prepared is `2.0.0rc1`, the first public release candidate for ExcelAlchemy 2.0.
 
 ## What This Project Is
 
@@ -68,6 +70,21 @@ flowchart TD
 
 See the full breakdown in [docs/architecture.md](./docs/architecture.md).
 
+## Workflow
+
+```mermaid
+flowchart LR
+    A[Pydantic model + FieldMeta] --> B[ExcelAlchemy facade]
+    B --> C[Template rendering]
+    B --> D[Worksheet parsing]
+    D --> E[Header validation]
+    D --> F[Row aggregation]
+    F --> G[Import executor]
+    G --> H[Import result workbook]
+    C --> I[Workbook for users]
+    H --> I
+```
+
 ## Design Principles
 
 This repository is guided by explicit design principles rather than accidental convenience.
@@ -123,6 +140,13 @@ template_base64 = alchemy.download_template()
 - column comments
 - result workbook column titles
 - row validation status labels
+
+The public locale policy is documented in [docs/locale.md](./docs/locale.md).
+In short:
+
+- runtime exceptions are standardized in English
+- workbook display locales currently support `zh-CN` and `en`
+- workbook display defaults to `zh-CN` for the 2.x line
 
 ```python
 from excelalchemy import ExcelAlchemy, FieldMeta, ImporterConfig, Number, String

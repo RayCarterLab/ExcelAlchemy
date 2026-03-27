@@ -1,9 +1,11 @@
 # ExcelAlchemy
 
-[English README](./README.md) · [项目说明](./ABOUT.md) · [架构文档](./docs/architecture.md)
+[English README](./README.md) · [项目说明](./ABOUT.md) · [架构文档](./docs/architecture.md) · [Locale Policy](./docs/locale.md) · [Changelog](./CHANGELOG.md) · [迁移说明](./MIGRATIONS.md)
 
 ExcelAlchemy 是一个面向 Excel 导入导出的 schema-first Python 库。
 它的核心思路不是“读写表格文件”，而是“把 Excel 当成一种带约束的业务契约”。
+
+当前准备发布的版本线是 `2.0.0rc1`，也就是 ExcelAlchemy 2.0 的首个公开预发布版本。
 
 你用 Pydantic 模型定义结构，用 `FieldMeta` 定义 Excel 元数据，用显式的导入/导出流程去完成模板生成、数据校验、错误回写和后端集成。
 
@@ -65,6 +67,21 @@ flowchart TD
 
 完整分层说明见 [docs/architecture.md](./docs/architecture.md)。
 
+## 工作流概览
+
+```mermaid
+flowchart LR
+    A[Pydantic 模型 + FieldMeta] --> B[ExcelAlchemy 门面]
+    B --> C[模板渲染]
+    B --> D[Worksheet 解析]
+    D --> E[表头校验]
+    D --> F[行聚合]
+    F --> G[导入执行器]
+    G --> H[导入结果工作簿]
+    C --> I[给用户的工作簿]
+    H --> I
+```
+
 ## 安装
 
 ```bash
@@ -104,6 +121,12 @@ template_base64 = alchemy.download_template()
 - “校验通过 / 校验不通过” 文本
 
 默认是 `zh-CN`，如果你想生成英文模板或英文结果工作簿，可以传 `locale='en'`。
+
+更完整的公共策略见 [docs/locale.md](./docs/locale.md)：
+
+- 运行时异常默认并稳定使用英文
+- workbook 展示文案当前支持 `zh-CN` 和 `en`
+- 2.x 版本线默认 workbook locale 仍是 `zh-CN`
 
 ```python
 from excelalchemy import ExcelAlchemy, FieldMeta, ImporterConfig, Number, String

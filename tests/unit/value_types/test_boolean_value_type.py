@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
 from excelalchemy import Boolean, FieldMeta, ValidateResult
+from excelalchemy.i18n.messages import use_display_locale
 from tests.support import BaseTestCase, FileRegistry
 
 
@@ -45,3 +46,21 @@ class TestBooleanValueType(BaseTestCase):
 
         self.assertRaises(ValueError, field.value_type.__validate__, '任何无法识别的值', field)
         self.assertRaises(ValueError, field.value_type.__validate__, '', field)
+
+    async def test_boolean_display_values_follow_english_locale(self):
+        class Importer(BaseModel):
+            is_active: Boolean = FieldMeta(label='是否启用', order=1)
+
+        alchemy = self.build_alchemy(Importer)
+        field = alchemy.ordered_field_meta[0]
+
+        with use_display_locale('en'):
+            assert field.value_type.deserialize(None, field) == 'No'
+            assert field.value_type.deserialize(True, field) == 'Yes'
+            assert field.value_type.deserialize(False, field) == 'No'
+            assert field.value_type.deserialize('Yes', field) == 'Yes'
+            assert field.value_type.deserialize('No', field) == 'No'
+            assert field.value_type.__validate__('Yes', field)
+            assert field.value_type.__validate__('No', field) is False
+            assert field.value_type.__validate__('是', field)
+            assert field.value_type.__validate__('否', field) is False

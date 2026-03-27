@@ -2,16 +2,11 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import display_message as dmsg
 from excelalchemy.types.identity import Key, Label, OptionId
 
-HEADER_HINT = """
-导入填写须知：
-1、填写数据时，请注意查看字段名称上的注释，避免导入失败。
-2、表格中可能包含部分只读字段，可能是根据系统规则自动生成或是在编辑时禁止被修改，仅用于导出时查看，导入时不生效。
-3、字段名称背景是红色的为必填字段，导入时必须根据注释的提示填写好内容。
-4、请不要随意修改列的单元格格式，避免模板校验不通过。
-5、导入前请删除示例数据。
-"""
+HEADER_HINT = dmsg(MessageKey.HEADER_HINT, locale='zh-CN')
 
 EXCEL_COMMENT_FORMAT = {'height': 100, 'width': 300, 'font_size': 7}
 CHARACTER_WIDTH = 1.3
@@ -20,11 +15,11 @@ DEFAULT_SHEET_NAME = 'Sheet1'
 UNIQUE_HEADER_CONNECTOR: str = '·'
 
 # 数据导出结果列
-RESULT_COLUMN_LABEL: Label = Label('校验结果\n重新上传前请删除此列')
+RESULT_COLUMN_LABEL: Label = Label(dmsg(MessageKey.RESULT_COLUMN_LABEL, locale='zh-CN'))
 RESULT_COLUMN_KEY: Key = Key('__result__')
 
 # 数据导出原因列
-REASON_COLUMN_LABEL: Label = Label('失败原因\n重新上传前请删除此列')
+REASON_COLUMN_LABEL: Label = Label(dmsg(MessageKey.REASON_COLUMN_LABEL, locale='zh-CN'))
 REASON_COLUMN_KEY: Key = Key('__reason__')
 
 BACKGROUND_REQUIRED_COLOR = 'FDAFB5'
@@ -84,9 +79,9 @@ DATE_FORMAT_TO_HINT_MAPPING = {
     DateFormat.MINUTE: 'yyyy/mm/dd hh:mm',
 }
 DATA_RANGE_OPTION_TO_CHINESE = {
-    DataRangeOption.PRE: '早于当前时间',
-    DataRangeOption.NEXT: '晚于当前时间',
-    DataRangeOption.NONE: '无限制',
+    DataRangeOption.PRE: dmsg(MessageKey.DATE_RANGE_OPTION_PRE_DISPLAY, locale='zh-CN'),
+    DataRangeOption.NEXT: dmsg(MessageKey.DATE_RANGE_OPTION_NEXT_DISPLAY, locale='zh-CN'),
+    DataRangeOption.NONE: dmsg(MessageKey.DATE_RANGE_OPTION_NONE_DISPLAY, locale='zh-CN'),
 }
 
 

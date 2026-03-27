@@ -22,6 +22,21 @@ flowchart TD
     F --> O[Runtime Messages]
 ```
 
+## Workflow Map
+
+```mermaid
+flowchart LR
+    A[Pydantic model + FieldMeta] --> B[ExcelAlchemy facade]
+    B --> C[ExcelSchemaLayout]
+    B --> D[ExcelHeaderParser / Validator]
+    B --> E[RowAggregator]
+    B --> F[ImportExecutor]
+    B --> G[ExcelRenderer]
+    B --> H[ExcelStorage]
+    G --> I[Workbook output]
+    F --> J[Import result workbook]
+```
+
 ## Layer Responsibilities
 
 ### Facade

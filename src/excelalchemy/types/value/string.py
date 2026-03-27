@@ -69,17 +69,18 @@ _CHARACTER_SET_TO_VALIDATOR = {
     CharacterSet.SPECIAL_SYMBOLS: _is_special_symbols,
 }
 
-_CHARACTER_SET_TO_NAME = {
-    CharacterSet.CHINESE: '中文字符',
-    CharacterSet.NUMBER: '数字',
-    CharacterSet.LOWERCASE_LETTERS: '小写字母',
-    CharacterSet.UPPERCASE_LETTERS: '大写字母',
-    CharacterSet.SPECIAL_SYMBOLS: '特殊符号',
+_CHARACTER_SET_TO_MESSAGE_KEY = {
+    CharacterSet.CHINESE: MessageKey.CHARACTER_SET_NAME_CHINESE,
+    CharacterSet.NUMBER: MessageKey.CHARACTER_SET_NAME_NUMBER,
+    CharacterSet.LOWERCASE_LETTERS: MessageKey.CHARACTER_SET_NAME_LOWERCASE,
+    CharacterSet.UPPERCASE_LETTERS: MessageKey.CHARACTER_SET_NAME_UPPERCASE,
+    CharacterSet.SPECIAL_SYMBOLS: MessageKey.CHARACTER_SET_NAME_SPECIAL,
 }
 
 
 def _format_character_set_names(cs: set[CharacterSet]) -> str:
-    return '、'.join(_CHARACTER_SET_TO_NAME[c] for c in cs)
+    ordered = sorted(cs, key=lambda item: item.value)
+    return ', '.join(msg(_CHARACTER_SET_TO_MESSAGE_KEY[c]) for c in ordered)
 
 
 class String(str, ABCValueType):

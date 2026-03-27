@@ -1,7 +1,15 @@
 from pydantic import BaseModel
 
 from excelalchemy import Date, DateFormat, FieldMeta
-from excelalchemy.i18n.messages import MessageKey, display_message, message, use_display_locale
+from excelalchemy.i18n.messages import (
+    DISPLAY_DEFAULT_LOCALE,
+    SUPPORTED_DISPLAY_LOCALES,
+    SUPPORTED_RUNTIME_LOCALES,
+    MessageKey,
+    display_message,
+    message,
+    use_display_locale,
+)
 from excelalchemy.types.field import extract_declared_field_metadata
 from excelalchemy.types.result import ValidateRowResult
 
@@ -23,6 +31,11 @@ class TestI18nMessages:
         with use_display_locale('en'):
             assert display_message(MessageKey.RESULT_COLUMN_LABEL) == 'Validation result\nDelete this column before re-uploading'
             assert str(ValidateRowResult.FAIL) == 'Validation failed'
+
+    def test_public_locale_policy_constants_are_stable(self):
+        assert SUPPORTED_RUNTIME_LOCALES == ('en',)
+        assert SUPPORTED_DISPLAY_LOCALES == ('zh-CN', 'en')
+        assert DISPLAY_DEFAULT_LOCALE == 'zh-CN'
 
     def test_comment_strings_switch_with_display_locale(self):
         class Importer(BaseModel):
