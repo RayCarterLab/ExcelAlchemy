@@ -2,6 +2,9 @@ import logging
 from decimal import Decimal
 from typing import Any
 
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import display_message as dmsg
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.abstract import ComplexABCValueType
 from excelalchemy.types.field import FieldMetaInfo
 from excelalchemy.types.identity import Key
@@ -23,8 +26,8 @@ class NumberRange(ComplexABCValueType):
     @classmethod
     def model_items(cls) -> list[tuple[Key, FieldMetaInfo]]:
         return [
-            (Key('start'), FieldMetaInfo(label='最小值')),
-            (Key('end'), FieldMetaInfo(label='最大值')),
+            (Key('start'), FieldMetaInfo(label=dmsg(MessageKey.LABEL_MINIMUM_VALUE))),
+            (Key('end'), FieldMetaInfo(label=dmsg(MessageKey.LABEL_MAXIMUM_VALUE))),
         ]
 
     @classmethod
@@ -46,7 +49,7 @@ class NumberRange(ComplexABCValueType):
             start, end = Decimal(value['start']), Decimal(value['end'])  # type: ignore[index]
             return NumberRange(start, end)
         except (KeyError, TypeError, ValueError) as exc:
-            logging.warning('%s 类型无法解析 Excel 输入，返回原值 %s。原因：%s', cls.__name__, value, exc)
+            logging.warning('%s could not parse Excel input %s; returning the original value. Reason: %s', cls.__name__, value, exc)
 
         # Return the original value if parsing fails
         return value
@@ -58,7 +61,7 @@ class NumberRange(ComplexABCValueType):
         try:
             return str(transform_decimal(canonicalize_decimal(Decimal(value), field_meta.fraction_digits)))
         except Exception as exc:
-            logging.warning('ValueType 类型 <%s> 无法解析 Excel 输入, 返回原值:%s, 原因: %s', cls.__name__, value, exc)
+            logging.warning('ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s', cls.__name__, value, exc)
             return str(value)
 
     @classmethod
@@ -66,7 +69,7 @@ class NumberRange(ComplexABCValueType):
         parsed = cls.__maybe_number_range__(value, field_meta)
         errors: list[str] = []
         if parsed.start is not None and parsed.end is not None and parsed.start > parsed.end:
-            errors.append('最小值不能大于最大值')
+            errors.append(msg(MessageKey.NUMBER_RANGE_MIN_GREATER_THAN_MAX))
 
         if parsed.start is not None:
             errors.extend(Number.__check_range__(parsed.start, field_meta))
@@ -91,6 +94,6 @@ class NumberRange(ComplexABCValueType):
                 value['end'] = canonicalize_decimal(Decimal(value['end']), field_meta.fraction_digits)
                 return NumberRange(value['start'], value['end'])
             except Exception as exc:
-                raise ValueError('请输入数字') from exc
+                raise ValueError(msg(MessageKey.ENTER_NUMBER)) from exc
 
-        raise ValueError('请输入符合格式的数字')
+        raise ValueError(msg(MessageKey.ENTER_NUMBER_EXPECTED_FORMAT))

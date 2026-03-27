@@ -86,3 +86,21 @@ class TestImportContracts(BaseTestCase):
         row_colors = [get_fill_color(cell) for cell in worksheet[3]]
 
         assert BACKGROUND_ERROR_COLOR in row_colors
+
+    async def test_import_result_workbook_supports_english_display_locale(self):
+        output_name = 'contract-data-invalid-english.xlsx'
+        self.minio.storage.pop(output_name, None)
+        alchemy = ExcelAlchemy(
+            ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio), locale='en')
+        )
+
+        await alchemy.import_data(
+            input_excel_name=FileRegistry.TEST_SIMPLE_IMPORT_WITH_ERROR,
+            output_excel_name=output_name,
+        )
+        workbook = load_binary_excel_to_workbook(self.minio.storage[output_name]['data'].getvalue())
+        worksheet = workbook['Sheet1']
+
+        assert worksheet['A2'].value == 'Validation result\nDelete this column before re-uploading'
+        assert worksheet['B2'].value == 'Failure reason\nDelete this column before re-uploading'
+        assert worksheet['A3'].value == 'Validation failed'

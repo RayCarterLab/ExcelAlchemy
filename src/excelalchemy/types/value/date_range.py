@@ -7,6 +7,9 @@ from pendulum import DateTime
 from pydantic import BaseModel
 
 from excelalchemy.const import DATE_FORMAT_TO_PYTHON_MAPPING, MILLISECOND_TO_SECOND, DataRangeOption
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import display_message as dmsg
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.abstract import ComplexABCValueType
 from excelalchemy.types.field import FieldMetaInfo
 from excelalchemy.types.identity import Key
@@ -40,20 +43,20 @@ class DateRange(ComplexABCValueType):
     @classmethod
     def model_items(cls) -> list[tuple[Key, FieldMetaInfo]]:
         return [
-            (Key('start'), FieldMetaInfo(label='开始日期')),
-            (Key('end'), FieldMetaInfo(label='结束日期')),
+            (Key('start'), FieldMetaInfo(label=dmsg(MessageKey.LABEL_START_DATE))),
+            (Key('end'), FieldMetaInfo(label=dmsg(MessageKey.LABEL_END_DATE))),
         ]
 
     @classmethod
     def comment(cls, field_meta: FieldMetaInfo) -> str:
         if field_meta.date_format is None:
-            raise RuntimeError('日期格式未定义')
+            raise RuntimeError(msg(MessageKey.DATE_FORMAT_NOT_CONFIGURED))
 
         return '\n'.join(
             [
                 field_meta.comment_required,
                 field_meta.comment_date_format,
-                f'提示：开始日期不得晚于结束日期{field_meta.hint or ""}',
+                dmsg(MessageKey.COMMENT_DATE_RANGE_START_NOT_AFTER_END, extra_hint=field_meta.hint or ''),
             ]
         )
 
@@ -105,21 +108,21 @@ class DateRange(ComplexABCValueType):
             parsed.start = parsed.start.replace(tzinfo=field_meta.timezone) if parsed.start else parsed.start
             parsed.end = parsed.end.replace(tzinfo=field_meta.timezone) if parsed.end else parsed.end
         except Exception as exc:
-            raise ValueError('无法识别的输入') from exc
+            raise ValueError(msg(MessageKey.INVALID_INPUT)) from exc
 
         errors: list[str] = []
         now = datetime.now(tz=field_meta.timezone)
 
         if parsed.start and parsed.end and parsed.start > parsed.end:
-            errors.append('开始日期不得晚于结束日期')
+            errors.append(msg(MessageKey.DATE_RANGE_START_AFTER_END))
 
         match field_meta.date_range_option:
             case DataRangeOption.PRE:
                 if (parsed.start and parsed.start > now) or (parsed.end and parsed.end > now):
-                    errors.append('需早于当前时间（含当前时间）')
+                    errors.append(msg(MessageKey.DATE_MUST_BE_EARLIER_THAN_NOW))
             case DataRangeOption.NEXT:
                 if (parsed.start and parsed.start < now) or (parsed.end and parsed.end < now):
-                    errors.append('需晚于当前时间（含当前时间）')
+                    errors.append(msg(MessageKey.DATE_MUST_BE_LATER_THAN_NOW))
             case DataRangeOption.NONE | None:
                 ...  # do nothing
 
@@ -144,7 +147,7 @@ class DateRange(ComplexABCValueType):
         if isinstance(value, dict):
             return cls.__deserialize__dict(py_date_format, value)
 
-        logging.warning('%s 反序列化失败，返回原值', cls.__name__)
+        logging.warning('%s could not be deserialized; returning the original value', cls.__name__)
         return value if value is not None else ''
 
     @classmethod

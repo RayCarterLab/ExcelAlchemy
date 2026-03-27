@@ -14,6 +14,8 @@ from urllib3.response import BaseHTTPResponse
 from excelalchemy.core.storage_protocol import ExcelStorage
 from excelalchemy.core.table import WorksheetTable
 from excelalchemy.exc import ConfigError
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.alchemy import ExporterConfig, ImporterConfig
 from excelalchemy.types.identity import UrlStr
 from excelalchemy.util.file import remove_excel_prefix
@@ -28,7 +30,7 @@ class MinioStorageGateway(ExcelStorage):
     def read_excel_table(self, input_excel_name: str, *, skiprows: int, sheet_name: str) -> WorksheetTable:
         """Read one workbook object from Minio into a worksheet table."""
         if self.config.minio is None:
-            raise ConfigError('未配置 minio')
+            raise ConfigError(msg(MessageKey.MINIO_CLIENT_NOT_CONFIGURED))
 
         file_object = self._read_file_object(
             self.config.minio,
@@ -41,7 +43,7 @@ class MinioStorageGateway(ExcelStorage):
             workbook = load_workbook(cast(BinaryIO, file_object), data_only=True)
             try:
                 if sheet_name not in workbook.sheetnames:
-                    raise ValueError(f'Worksheet named {sheet_name!r} not found')
+                    raise ValueError(msg(MessageKey.WORKSHEET_NOT_FOUND, sheet_name=sheet_name))
                 worksheet = workbook[sheet_name]
                 return self._worksheet_to_table(worksheet, skiprows=skiprows)
             finally:
@@ -52,7 +54,7 @@ class MinioStorageGateway(ExcelStorage):
     def upload_excel(self, output_name: str, content_with_prefix: str) -> UrlStr:
         """Upload one rendered workbook and return its signed URL."""
         if self.config.minio is None:
-            raise ConfigError('未配置 minio')
+            raise ConfigError(msg(MessageKey.MINIO_CLIENT_NOT_CONFIGURED))
         url = self._upload_file_object(
             self.config.minio,
             self.config.bucket_name,

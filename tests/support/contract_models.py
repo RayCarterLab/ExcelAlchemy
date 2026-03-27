@@ -136,4 +136,4 @@ async def updater(data: dict[str, Any], context: dict[str, Any] | None) -> dict[
 
 
 async def failing_creator(data: dict[str, Any], context: dict[str, Any] | None) -> dict[str, Any]:
-    raise ExcelCellError(label=Label('姓名'), message='模拟失败')
+    raise ExcelCellError(label=Label('姓名'), message='Simulated failure')

@@ -2,6 +2,9 @@ from typing import Any
 
 from excelalchemy.const import CharacterSet
 from excelalchemy.exc import ProgrammaticError
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import display_message as dmsg
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.abstract import ABCValueType
 from excelalchemy.types.field import FieldMetaInfo
 
@@ -87,7 +90,7 @@ class String(str, ABCValueType):
                 field_meta.comment_unique,
                 field_meta.comment_required,
                 field_meta.comment_max_length,
-                '可输入内容:中文、数字、大写字母、小写字母、符号',
+                dmsg(MessageKey.COMMENT_STRING_ALLOWED_CONTENT),
                 field_meta.comment_hint,
             ]
         )
@@ -108,7 +111,7 @@ class String(str, ABCValueType):
 
         if field_meta.importer_max_length is not None:
             if len(parsed) > field_meta.importer_max_length:
-                errors.append(f'最长为{field_meta.importer_max_length}个字')
+                errors.append(msg(MessageKey.MAX_LENGTH_CHARACTERS, max_length=field_meta.importer_max_length))
 
         errors.extend(cls.__check_character_set__(parsed, field_meta))
 
@@ -121,11 +124,16 @@ class String(str, ABCValueType):
     def __check_character_set__(cls, value: str, field_meta: FieldMetaInfo) -> list[str]:
         errors: list[str] = []
         if field_meta.character_set is None:
-            raise ProgrammaticError('character_set 未设置')
+            raise ProgrammaticError(msg(MessageKey.CHARACTER_SET_NOT_CONFIGURED))
 
         for single_character in value:
             if not any(_CHARACTER_SET_TO_VALIDATOR[cs](single_character) for cs in field_meta.character_set):
-                errors.append(f'仅允许输入{_format_character_set_names(field_meta.character_set)}')
+                errors.append(
+                    msg(
+                        MessageKey.ONLY_CHARACTER_SET_ALLOWED,
+                        character_set_names=_format_character_set_names(field_meta.character_set),
+                    )
+                )
                 break
 
         return errors

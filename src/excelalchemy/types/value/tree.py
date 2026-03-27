@@ -1,6 +1,8 @@
 import logging
 from typing import Any
 
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import display_message as dmsg
 from excelalchemy.types.field import FieldMetaInfo
 from excelalchemy.types.value.multi_checkbox import MultiCheckbox
 from excelalchemy.types.value.radio import Radio
@@ -14,7 +16,7 @@ class SingleTreeNode(Radio):
         return '\n'.join(
             [
                 field_meta.comment_required,
-                f'提示：{field_meta.hint or "需按照组织架构树填写组织完整路径，如“XX公司/一级部门/二级部门”，多选时，选项之间用“、”连接"}',
+                dmsg(MessageKey.COMMENT_HINT, value=field_meta.hint or dmsg(MessageKey.SINGLE_TREE_HINT)),
             ]
         )
 
@@ -39,12 +41,9 @@ class MultiTreeNode(MultiCheckbox):
 
     @classmethod
     def comment(cls, field_meta: FieldMetaInfo) -> str:
-        required = '必填' if field_meta.required else '非必填'
-        extra_hint = (
-            field_meta.hint
-            or '请输入完整路径（包含根节点），层级之间用“/”连接，如“一级/二级/选项1”；多选时，选项之间用“，”连接'
-        )
-        return f"""必填性：{required} \n提示：{extra_hint}"""
+        extra_hint = field_meta.hint or dmsg(MessageKey.MULTI_TREE_HINT)
+        value_key = MessageKey.COMMENT_REQUIRED_VALUE_REQUIRED if field_meta.required else MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL
+        return '\n'.join([dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key)), dmsg(MessageKey.COMMENT_HINT, value=extra_hint)])
 
     @classmethod
     def serialize(cls, value: Any, field_meta: FieldMetaInfo) -> Any:

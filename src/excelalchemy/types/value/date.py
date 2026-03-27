@@ -7,6 +7,8 @@ from pendulum import DateTime
 
 from excelalchemy.const import DATE_FORMAT_TO_HINT_MAPPING, MILLISECOND_TO_SECOND, DataRangeOption
 from excelalchemy.exc import ConfigError
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.abstract import ABCValueType
 from excelalchemy.types.field import FieldMetaInfo
 
@@ -17,7 +19,7 @@ class Date(ABCValueType, datetime):
     @classmethod
     def comment(cls, field_meta: FieldMetaInfo) -> str:
         if not field_meta.date_format:
-            raise ConfigError('日期格式未定义')
+            raise ConfigError(msg(MessageKey.DATE_FORMAT_NOT_CONFIGURED))
         return '\n'.join(
             [
                 field_meta.comment_required,
@@ -34,7 +36,7 @@ class Date(ABCValueType, datetime):
             return value
 
         if not field_meta.date_format:
-            raise ConfigError('日期格式未定义')
+            raise ConfigError(msg(MessageKey.DATE_FORMAT_NOT_CONFIGURED))
 
         value = str(value).strip()
         try:
@@ -42,7 +44,7 @@ class Date(ABCValueType, datetime):
             dt: DateTime = cast(DateTime, pendulum.parse(v))
             return dt.replace(tzinfo=field_meta.timezone)
         except Exception as exc:
-            logging.warning('ValueType 类型 <%s> 无法解析 Excel 输入，返回原值：%s，原因：%s', cls.__name__, value, exc)
+            logging.warning('ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s', cls.__name__, value, exc)
             return value
 
     @classmethod
@@ -62,10 +64,12 @@ class Date(ABCValueType, datetime):
     @classmethod
     def __validate__(cls, value: Any, field_meta: FieldMetaInfo) -> int:
         if field_meta.date_format is None:
-            raise ConfigError('日期格式未定义')
+            raise ConfigError(msg(MessageKey.DATE_FORMAT_NOT_CONFIGURED))
 
         if not isinstance(value, datetime):
-            raise ValueError(f'请输入格式为{DATE_FORMAT_TO_HINT_MAPPING[field_meta.date_format]}的日期')
+            raise ValueError(
+                msg(MessageKey.ENTER_DATE_FORMAT, date_format=DATE_FORMAT_TO_HINT_MAPPING[field_meta.date_format])
+            )
 
         parsed = cls._parse_date(value, field_meta)
         errors = cls._validate_date_range(parsed, field_meta)
@@ -90,10 +94,10 @@ class Date(ABCValueType, datetime):
         match field_meta.date_range_option:
             case DataRangeOption.PRE:
                 if parsed > now:
-                    errors.append('需早于当前时间（含当前时间）')
+                    errors.append(msg(MessageKey.DATE_MUST_BE_EARLIER_THAN_NOW))
             case DataRangeOption.NEXT:
                 if parsed < now:
-                    errors.append('需晚于当前时间（含当前时间）')
+                    errors.append(msg(MessageKey.DATE_MUST_BE_LATER_THAN_NOW))
             case DataRangeOption.NONE | None:
                 ...
 

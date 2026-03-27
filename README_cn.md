@@ -103,6 +103,51 @@ print(storage.uploaded['people.xlsx'][:2])  # b'PK'
 
 ## 使用方法
 
+### 选择模板/结果语言
+
+`locale` 用来控制 Excel 展示文案，例如：
+
+- 第一行的填写须知
+- 表头批注
+- 导入结果工作簿里的结果列标题
+- 行级“校验通过 / 校验不通过”文本
+
+默认值是 `zh-CN`。如果你希望生成英文模板和英文结果工作簿，可以传 `locale='en'`。
+
+```python
+from excelalchemy import ExcelAlchemy, FieldMeta, ImporterConfig, Number, String
+from pydantic import BaseModel
+
+
+class Importer(BaseModel):
+    age: Number = FieldMeta(label='Age', order=1)
+    name: String = FieldMeta(label='Name', order=2)
+
+
+alchemy_zh = ExcelAlchemy(ImporterConfig(Importer, locale='zh-CN'))
+template_zh = alchemy_zh.download_template()
+
+alchemy_en = ExcelAlchemy(ImporterConfig(Importer, locale='en'))
+template_en = alchemy_en.download_template()
+```
+
+导入结果工作簿也会使用同一个 `locale`：
+
+```python
+from excelalchemy import ExcelAlchemy, ImporterConfig
+
+
+alchemy = ExcelAlchemy(
+    ImporterConfig(
+        Importer,
+        creator=create_func,
+        storage=storage,
+        locale='en',
+    )
+)
+result = await alchemy.import_data(input_excel_name='people.xlsx', output_excel_name='people-result.xlsx')
+```
+
 ### 从 Pydantic 类生成 Excel 模板
 
 ```python
@@ -214,6 +259,7 @@ asyncio.run(main())
 * 上面的示例使用了内置的 Minio 兼容存储策略，因此如果你要使用这个后端，需要先安装 Minio，并准备好 bucket。
 * 如果你已经有自己的对象存储、本地文件系统封装或测试替身，也可以直接通过 `storage=...` 传入。
 * 旧的 `minio=..., bucket_name=..., url_expires=...` 写法仍然兼容，但现在更推荐 `storage=MinioStorageGateway(...)` 这种形式。
+* 你也可以在 `ImporterConfig(...)` 上设置 `locale='en'` 或 `locale='zh-CN'`，来控制生成模板和导入结果工作簿中的展示语言。
 * 导入的 Excel 文件，必须是从 `download_template` 方法生成的 Excel 文件，否则会产生解析错误。
 * 上面的示例代码中，我们定义了一个 `data_converter` 函数，该函数用于对 `Importer.model_dump()` 的结果进行转换，最终返回的结果将会作为 `create_func` 函数的参数。当然，此函数是可选的，如果你不需要对数据进行转换，可以不定义该函数。
 * `create_func` 函数用于创建数据，该函数的参数为 `data_converter` 函数的返回值，`context` 为 `None`，你可以在该函数中对数据进行创建，例如，你可以将数据存入数据库中。

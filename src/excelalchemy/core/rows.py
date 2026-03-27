@@ -4,6 +4,8 @@ from collections import defaultdict
 from typing import Any, cast
 
 from excelalchemy.exc import ConfigError, ExcelCellError, ExcelRowError
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.alchemy import ImportMode
 from excelalchemy.types.field import FieldMetaInfo
 from excelalchemy.types.identity import ColumnIndex, Key, RowIndex, UniqueLabel
@@ -31,7 +33,7 @@ class RowAggregator:
             field_meta = self.layout.unique_label_to_field_meta[unique_label]
 
             if field_meta.key is None or field_meta.parent_key is None:
-                raise ConfigError(f'{type(field_meta).__name__} 未配置 key/parent_key')
+                raise ConfigError(msg(MessageKey.FIELD_META_RUNTIME_KEY_MISSING, field_meta_type=type(field_meta).__name__))
 
             if value_is_nan(value):
                 if self.import_mode in {ImportMode.UPDATE, ImportMode.CREATE_OR_UPDATE}:
@@ -120,7 +122,7 @@ class ImportIssueTracker:
     def _column_indices(self, df: WorksheetTable, unique_label: UniqueLabel):
         if unique_label not in self.layout.unique_label_to_field_meta:
             if unique_label not in self.layout.parent_label_to_field_metas:
-                raise ValueError(f'找不到 {unique_label} 对应的字段')
+                raise ValueError(msg(MessageKey.FIELD_NOT_FOUND, unique_label=unique_label))
 
             for field_meta in self.layout.parent_label_to_field_metas[unique_label]:
                 yield from self._single_column_index(df, field_meta.unique_label)
@@ -134,4 +136,4 @@ class ImportIssueTracker:
         if isinstance(index, int):
             yield ColumnIndex(index)
             return
-        raise ValueError(f'找不到 {unique_label} 对应的列, 推测是 value_type 定义不正确')
+        raise ValueError(msg(MessageKey.COLUMN_NOT_FOUND, unique_label=unique_label))

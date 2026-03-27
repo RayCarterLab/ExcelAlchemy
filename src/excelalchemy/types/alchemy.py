@@ -11,6 +11,8 @@ from pydantic import BaseModel
 from excelalchemy.core.storage_protocol import ExcelStorage
 from excelalchemy.exc import ConfigError
 from excelalchemy.helper.pydantic import get_model_field_names
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.util.convertor import export_data_converter, import_data_converter
 
 if TYPE_CHECKING:
@@ -50,12 +52,13 @@ class ImporterConfig[ContextT, ImporterCreateModelT: BaseModel, ImporterUpdateMo
     minio: Minio | None = field(default=None)
     bucket_name: str = field(default='excel')
     url_expires: int = field(default=3600)
+    locale: str = field(default='zh-CN')
 
     sheet_name: Literal['Sheet1'] = field(default='Sheet1')
 
     def validate_model(self):
         if self.import_mode not in ImportMode.__members__.values():
-            raise ConfigError(f'导入模式 {self.import_mode} 不合法')
+            raise ConfigError(msg(MessageKey.INVALID_IMPORT_MODE, import_mode=self.import_mode))
 
         match self.import_mode:
             case ImportMode.CREATE:
@@ -70,31 +73,31 @@ class ImporterConfig[ContextT, ImporterCreateModelT: BaseModel, ImporterUpdateMo
     # 创建模式验证
     def _validate_create(self):
         if self.import_mode != ImportMode.CREATE:
-            raise ConfigError(f'导入模式 {self.import_mode} 不合法')
+            raise ConfigError(msg(MessageKey.INVALID_IMPORT_MODE, import_mode=self.import_mode))
         if not self.create_importer_model:
-            raise ConfigError('当选择【创建模式】时，创建模型不能为空')
+            raise ConfigError(msg(MessageKey.CREATE_IMPORTER_MODEL_REQUIRED_CREATE))
 
     # 更新模式验证
     def _validate_update(self):
         if self.import_mode != ImportMode.UPDATE:
-            raise ConfigError(f'导入模式 {self.import_mode} 不合法')
+            raise ConfigError(msg(MessageKey.INVALID_IMPORT_MODE, import_mode=self.import_mode))
         if not self.update_importer_model:
-            raise ConfigError('当选择【更新模式】时，更新模型不能为空')
+            raise ConfigError(msg(MessageKey.UPDATE_IMPORTER_MODEL_REQUIRED_UPDATE))
 
     # 创建或更新模式验证
     def _validate_create_or_update(self):
         if self.import_mode != ImportMode.CREATE_OR_UPDATE:
-            raise ConfigError(f'导入模式 {self.import_mode} 不合法')
+            raise ConfigError(msg(MessageKey.INVALID_IMPORT_MODE, import_mode=self.import_mode))
 
         if not self.create_importer_model:
-            raise ConfigError('当选择【创建或更新模式】时，创建模型不能为空')
+            raise ConfigError(msg(MessageKey.CREATE_IMPORTER_MODEL_REQUIRED_CREATE_OR_UPDATE))
         if not self.update_importer_model:
-            raise ConfigError('当选择【创建或更新模式】时，更新模型不能为空')
+            raise ConfigError(msg(MessageKey.UPDATE_IMPORTER_MODEL_REQUIRED_CREATE_OR_UPDATE))
         if not self.is_data_exist:
-            raise ConfigError('当选择【创建或更新模式】时，数据存在判断函数不能为空')
+            raise ConfigError(msg(MessageKey.IS_DATA_EXIST_REQUIRED_CREATE_OR_UPDATE))
         # 创建模型和更新模型的字段必须一致
         if get_model_field_names(self.create_importer_model) != get_model_field_names(self.update_importer_model):
-            raise ConfigError('创建模型和更新模型的字段名称必须一致')
+            raise ConfigError(msg(MessageKey.IMPORTER_MODELS_FIELD_NAMES_MUST_MATCH))
 
     def __post_init__(self):
         self.validate_model()
@@ -110,12 +113,13 @@ class ExporterConfig[ExporterModelT: BaseModel]:
     minio: Minio | None = field(default=None)
     bucket_name: str = field(default='excel')
     url_expires: int = field(default=3600)
+    locale: str = field(default='zh-CN')
 
     sheet_name: Literal['Sheet1'] = field(default='Sheet1')
 
     def validate_model(self):
         if not self.exporter_model:
-            raise ValueError('导出模型不能为空')
+            raise ValueError(msg(MessageKey.EXPORTER_MODEL_CANNOT_BE_EMPTY))
         return self
 
     def __post_init__(self):

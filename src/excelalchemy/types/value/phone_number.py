@@ -1,6 +1,8 @@
 import re
 from typing import Any
 
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.field import FieldMetaInfo
 from excelalchemy.types.value.string import String
 
@@ -13,6 +15,6 @@ class PhoneNumber(String):
         parsed = str(value)
 
         if not PHONE_NUMBER_PATTERN.match(parsed):
-            raise ValueError('请输入正确的手机号')
+            raise ValueError(msg(MessageKey.VALID_PHONE_NUMBER_REQUIRED))
 
         return parsed

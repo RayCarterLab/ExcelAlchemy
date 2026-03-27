@@ -120,7 +120,7 @@ class WorksheetTable:
 
     def reset_index(self, *, drop: bool = False) -> 'WorksheetTable':
         if not drop:
-            raise NotImplementedError('WorksheetTable 仅支持 reset_index(drop=True)')
+            raise NotImplementedError('WorksheetTable only supports reset_index(drop=True)')
         return WorksheetTable(columns=self.columns, rows=self._rows)
 
     def iterrows(self) -> Iterator[tuple[int, WorksheetRow]]:

@@ -2,6 +2,9 @@ import logging
 from typing import Any
 
 from excelalchemy.const import MULTI_CHECKBOX_SEPARATOR
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import display_message as dmsg
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.field import FieldMetaInfo
 from excelalchemy.types.identity import OptionId
 from excelalchemy.types.value.multi_checkbox import MultiCheckbox
@@ -13,9 +16,9 @@ class SingleStaff(Radio):
 
     @classmethod
     def comment(cls, field_meta: FieldMetaInfo) -> str:
-        required = '必填' if field_meta.required else '非必填'
-        extra_hint = field_meta.hint or '请输入人员姓名和工号，如“张三/001”'
-        return f"""必填性：{required} \n提示：{extra_hint}"""
+        extra_hint = field_meta.hint or dmsg(MessageKey.SINGLE_STAFF_HINT)
+        value_key = MessageKey.COMMENT_REQUIRED_VALUE_REQUIRED if field_meta.required else MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL
+        return f'{dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key))} \n{dmsg(MessageKey.COMMENT_HINT, value=extra_hint)}'
 
     @classmethod
     def serialize(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
@@ -42,7 +45,7 @@ class MultiStaff(MultiCheckbox):
         return '\n'.join(
             [
                 field_meta.comment_required,
-                f'提示：{field_meta.hint or "请输入人员姓名和工号，如“张三/001”，多选时，选项之间用“、”连接"}',
+                dmsg(MessageKey.COMMENT_HINT, value=field_meta.hint or dmsg(MessageKey.MULTI_STAFF_HINT)),
             ]
         )
 
@@ -61,10 +64,10 @@ class MultiStaff(MultiCheckbox):
 
         if isinstance(value, list):
             if len(value) != len(set(value)):
-                raise ValueError('选项有重复')
+                raise ValueError(msg(MessageKey.OPTIONS_CONTAIN_DUPLICATES))
 
             option_names = field_meta.exchange_option_ids_to_names(value)
             return f'{MULTI_CHECKBOX_SEPARATOR}'.join(option_names)
 
-        logging.warning('%s 反序列化失败', cls.__name__)
+        logging.warning('%s could not be deserialized', cls.__name__)
         return value

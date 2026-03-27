@@ -4,17 +4,22 @@ from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import display_message as dmsg
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.identity import Label
 
 
 class ValidateRowResult(str, Enum):
     """导入结果"""
 
-    SUCCESS = '校验通过'
-    FAIL = '校验不通过'
+    SUCCESS = 'SUCCESS'
+    FAIL = 'FAIL'
 
     def __str__(self):
-        return self.value
+        if self is ValidateRowResult.SUCCESS:
+            return dmsg(MessageKey.VALIDATE_ROW_SUCCESS)
+        return dmsg(MessageKey.VALIDATE_ROW_FAIL)
 
 
 class ValidateHeaderResult(BaseModel):
@@ -61,7 +66,7 @@ class ImportResult(BaseModel):
     def from_validate_header_result(cls, result: ValidateHeaderResult) -> 'ImportResult':
         """从校验表头结果构造导入结果"""
         if result.is_valid:
-            raise RuntimeError('只有校验表头失败时才能构造导入结果')
+            raise RuntimeError(msg(MessageKey.IMPORT_RESULT_ONLY_FOR_INVALID_HEADER_VALIDATION))
         return cls(
             result=ValidateResult.HEADER_INVALID,
             is_required_missing=result.is_required_missing,

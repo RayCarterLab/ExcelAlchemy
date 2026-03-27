@@ -74,3 +74,15 @@ class TestTemplateContracts(BaseTestCase):
         validations = list_data_validations(worksheet)
 
         assert validations == []
+
+    async def test_download_template_supports_english_display_locale(self):
+        alchemy = ExcelAlchemy(
+            ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio), locale='en')
+        )
+
+        workbook = decode_prefixed_excel_to_workbook(alchemy.download_template())
+        worksheet = workbook['Sheet1']
+
+        assert worksheet['A1'].value.startswith('Import instructions:')
+        assert worksheet['A2'].comment is not None
+        assert 'Required: required' in worksheet['A2'].comment.text

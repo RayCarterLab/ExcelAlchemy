@@ -11,6 +11,8 @@ from pydantic import BaseModel
 from excelalchemy.const import DEFAULT_FIELD_META_ORDER
 from excelalchemy.exc import ConfigError, ExcelCellError, ExcelRowError
 from excelalchemy.helper.pydantic import extract_pydantic_model
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.field import FieldMetaInfo
 from excelalchemy.types.identity import Key, Label, UniqueKey, UniqueLabel
 
@@ -22,7 +24,7 @@ class ExcelSchemaLayout:
         self.field_metas = field_metas
         self._check_field_meta_order(field_metas)
         if not field_metas:
-            raise ConfigError('没有提取到字段元数据，请检查模型是否定义了字段')
+            raise ConfigError(msg(MessageKey.NO_FIELD_METADATA_EXTRACTED))
 
         self.ordered_field_meta = self._sort_field_meta(field_metas)
         self.unique_label_to_field_meta: dict[UniqueLabel, FieldMetaInfo] = {}
@@ -36,15 +38,15 @@ class ExcelSchemaLayout:
         """Build a layout from a model and validate its field ordering contract."""
         field_metas = extract_pydantic_model(model)
         if not field_metas:
-            raise ConfigError(f'没有从模型 {model.__name__} 中提取到字段元数据，请检查模型是否定义了字段')
+            raise ConfigError(msg(MessageKey.NO_FIELD_METADATA_EXTRACTED_FROM_MODEL, model_name=model.__name__))
         return cls(field_metas)
 
     def _build_indexes(self) -> None:
         for field_meta in self.ordered_field_meta:
             if field_meta.parent_label is None:
-                raise ConfigError('父标签不能为空')
+                raise ConfigError(msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME))
             if field_meta.parent_key is None:
-                raise ConfigError('父键不能为空')
+                raise ConfigError(msg(MessageKey.PARENT_KEY_EMPTY_RUNTIME))
 
             self.parent_label_to_field_metas.setdefault(field_meta.parent_label, []).append(field_meta)
             self.parent_key_to_field_metas.setdefault(field_meta.parent_key, []).append(field_meta)
@@ -59,7 +61,12 @@ class ExcelSchemaLayout:
             order_to_field_meta[field_meta.order].add(field_meta.parent_label)
         duplicate_order = [v for k, v in order_to_field_meta.items() if len(v) > 1 and k != DEFAULT_FIELD_META_ORDER]
         if duplicate_order:
-            raise ConfigError(f'字段顺序定义有重复：{list(itertools.chain.from_iterable(duplicate_order))}')
+            raise ConfigError(
+                msg(
+                    MessageKey.DUPLICATE_FIELD_ORDER_DEFINITIONS,
+                    duplicate_order=list(itertools.chain.from_iterable(duplicate_order)),
+                )
+            )
 
     @classmethod
     def _sort_field_meta(cls, field_metas: list[FieldMetaInfo]) -> list[FieldMetaInfo]:
@@ -110,7 +117,7 @@ class ExcelSchemaLayout:
             elif key in self.parent_key_to_field_metas:
                 selected_field_meta.extend(self.parent_key_to_field_metas[key])
             else:
-                raise ValueError(f'无效的 Key: {key}')
+                raise ValueError(msg(MessageKey.INVALID_KEY, key=key))
 
         return [field_meta.unique_key for field_meta in self._sort_field_meta(selected_field_meta)]
 

@@ -2,6 +2,8 @@ from typing import Any
 
 from pydantic import HttpUrl, TypeAdapter
 
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.field import FieldMetaInfo
 from excelalchemy.types.value.string import String
 
@@ -17,7 +19,7 @@ class Url(String):
         try:
             cls._validator.validate_python(parsed)
         except Exception:
-            errors.append('请输入正确的网址')
+            errors.append(msg(MessageKey.VALID_URL_REQUIRED))
 
         if errors:
             raise ValueError(*errors)

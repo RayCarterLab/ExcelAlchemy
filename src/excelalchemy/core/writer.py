@@ -18,11 +18,12 @@ from excelalchemy.const import (
     CHARACTER_WIDTH,
     DEFAULT_SHEET_NAME,
     FONT_READ_COLOR,
-    HEADER_HINT,
-    RESULT_COLUMN_LABEL,
 )
 from excelalchemy.core.table import WorksheetTable
 from excelalchemy.exc import ExcelCellError
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import display_message as dmsg
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.field import FieldMetaInfo
 from excelalchemy.types.identity import Base64Str, ColumnIndex, Label, RowIndex, UniqueLabel
 from excelalchemy.types.result import ValidateRowResult
@@ -92,7 +93,7 @@ def _style_child_header_cell(cell) -> None:
 
 def _write_header_hint(worksheet: Worksheet, *, column_count: int) -> None:
     cell = worksheet.cell(row=HEADER_HINT_ROW_INDEX, column=HEADER_HINT_COL_INDEX)
-    cell.value = HEADER_HINT
+    cell.value = dmsg(MessageKey.HEADER_HINT)
     cell.font = Font(size=16)
     cell.alignment = Alignment(wrap_text=True)
     worksheet.merge_cells(
@@ -157,7 +158,7 @@ def _write_horizontally_merged_header(
     counter: dict[Label, int] = defaultdict(int)
     for field_meta in field_meta_mapping.values():
         if field_meta.parent_label is None:
-            raise RuntimeError('运行时 parent_label 不能为空')
+            raise RuntimeError(msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME))
         counter[field_meta.parent_label] += 1
 
     for openpyxl_col_index, column in enumerate(
@@ -166,7 +167,7 @@ def _write_horizontally_merged_header(
     ):
         field_meta = field_meta_mapping[cast(UniqueLabel, column)]
         if field_meta.parent_label is None:
-            raise RuntimeError('运行时 parent_label 不能为空')
+            raise RuntimeError(msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME))
         if field_meta.label != field_meta.parent_label and field_meta.offset == 0:
             cell = worksheet.cell(row=start_row, column=openpyxl_col_index)
             cell.value = field_meta.parent_label
@@ -283,7 +284,7 @@ def _write_value(
             cell.number_format = numbers.FORMAT_TEXT
             cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
 
-            if RESULT_COLUMN_LABEL == df.columns[column_index] and cell.value == str(ValidateRowResult.FAIL):
+            if dmsg(MessageKey.RESULT_COLUMN_LABEL) == df.columns[column_index] and cell.value == str(ValidateRowResult.FAIL):
                 cell.font = Font(color=FONT_READ_COLOR)
 
             col_width_mapping[ColumnIndex(openpyxl_col_index)] = max(

@@ -2,6 +2,9 @@ import logging
 from decimal import ROUND_DOWN, Context, Decimal, InvalidOperation
 from typing import Any
 
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import display_message as dmsg
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.abstract import ABCValueType
 from excelalchemy.types.field import FieldMetaInfo
 
@@ -15,7 +18,7 @@ def canonicalize_decimal(value: Decimal, digits_limit: int | None) -> Decimal:
                 context=Context(rounding=ROUND_DOWN),
             )
         except InvalidOperation as e:
-            logging.warning('精度设置的过小，导致精度丢失，%s', e)
+            logging.warning('fraction_digits is too small and causes precision loss: %s', e)
     return value
 
 
@@ -44,9 +47,9 @@ class Number(Decimal, ABCValueType):
         return '\n'.join(
             [
                 field_meta.comment_required,
-                '格式：数值',
+                dmsg(MessageKey.COMMENT_NUMBER_FORMAT),
                 field_meta.comment_fraction_digits,
-                f'可输入范围：{cls.__get_range_description__(field_meta)}',
+                dmsg(MessageKey.COMMENT_NUMBER_INPUT_RANGE, value=cls.__get_range_description__(field_meta)),
                 field_meta.comment_unit,
             ]
         )
@@ -58,7 +61,7 @@ class Number(Decimal, ABCValueType):
         try:
             return transform_decimal(Decimal(value))  # type: ignore[arg-type]
         except Exception as exc:
-            logging.warning('ValueType 类型 <%s> 无法解析 Excel 输入, 返回原值:%s, 原因: %s', cls.__name__, value, exc)
+            logging.warning('ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s', cls.__name__, value, exc)
             return str(value) if value is not None else ''
 
     @classmethod
@@ -69,14 +72,14 @@ class Number(Decimal, ABCValueType):
         try:
             return str(transform_decimal(Decimal(value)))
         except Exception as exc:
-            logging.warning('ValueType 类型 <%s> 无法解析 Excel 输入, 返回原值:%s, 原因: %s', cls.__name__, value, exc)
+            logging.warning('ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s', cls.__name__, value, exc)
             return str(value)
 
     @classmethod
     def __get_range_description__(cls, field_meta: FieldMetaInfo) -> str:  # type: ignore[return]
         match (field_meta.importer_le, field_meta.importer_ge):
             case (None, None):
-                return '无限制'
+                return dmsg(MessageKey.DATE_RANGE_OPTION_NONE_DISPLAY)
             case (_, None):
                 return f'≤ {field_meta.importer_le}'
             case (None, _):
@@ -93,7 +96,7 @@ class Number(Decimal, ABCValueType):
         try:
             parsed = Decimal(str(value))
         except Exception as exc:
-            raise ValueError('无效输入，请输入数字。') from exc
+            raise ValueError(msg(MessageKey.INVALID_NUMBER_ENTER_NUMBER)) from exc
 
         return parsed
 
@@ -108,11 +111,17 @@ class Number(Decimal, ABCValueType):
         # 确保解析后的 decimal 在接受范围内。
         if not importer_ge <= value <= importer_le:
             if field_meta.importer_le and field_meta.importer_ge:
-                errors.append(f'请输入在 {field_meta.importer_ge} 和 {field_meta.importer_le} 之间的数字。')
+                errors.append(
+                    msg(
+                        MessageKey.NUMBER_BETWEEN_MIN_AND_MAX,
+                        minimum=field_meta.importer_ge,
+                        maximum=field_meta.importer_le,
+                    )
+                )
             elif field_meta.importer_le:
-                errors.append(f'请输入在 -∞ 和 {field_meta.importer_le} 之间的数字。')
+                errors.append(msg(MessageKey.NUMBER_BETWEEN_NEG_INF_AND_MAX, maximum=field_meta.importer_le))
             elif field_meta.importer_ge:
-                errors.append(f'请输入在 {field_meta.importer_ge} 和 +∞ 之间的数字。')
+                errors.append(msg(MessageKey.NUMBER_BETWEEN_MIN_AND_POS_INF, minimum=field_meta.importer_ge))
             else:
                 pass
 
@@ -123,7 +132,7 @@ class Number(Decimal, ABCValueType):
         # 如果输入不是 Decimal 类型，尝试转换。
         parsed = cls.__maybe_decimal__(value)
         if parsed is None:
-            raise ValueError('无效输入，请输入数字。')
+            raise ValueError(msg(MessageKey.INVALID_NUMBER_ENTER_NUMBER))
         # 初始化一个错误信息列表。
         errors: list[str] = cls.__check_range__(value, field_meta)
         if errors:
@@ -131,5 +140,5 @@ class Number(Decimal, ABCValueType):
         parsed = canonicalize_decimal(parsed, field_meta.fraction_digits)
         value = transform_decimal(parsed)
         if value is None:
-            raise ValueError('无效输入，请输入数字。')
+            raise ValueError(msg(MessageKey.INVALID_NUMBER_ENTER_NUMBER))
         return value

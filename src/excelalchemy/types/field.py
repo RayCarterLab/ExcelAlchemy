@@ -10,7 +10,6 @@ from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo, PydanticUndefined
 
 from excelalchemy.const import (
-    DATA_RANGE_OPTION_TO_CHINESE,
     DATE_FORMAT_TO_HINT_MAPPING,
     DATE_FORMAT_TO_PYTHON_MAPPING,
     DEFAULT_FIELD_META_ORDER,
@@ -24,6 +23,9 @@ from excelalchemy.const import (
     Option,
 )
 from excelalchemy.exc import ConfigError, ProgrammaticError
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import display_message as dmsg
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.abstract import ABCValueType, Undefined
 from excelalchemy.types.identity import Key, Label, OptionId, UniqueKey, UniqueLabel
 
@@ -151,9 +153,9 @@ class FieldMetaInfo:
 
     def validate_state(self) -> None:
         if self.is_primary_key and not self.unique:
-            raise ValueError('主键必须唯一')
+            raise ValueError(msg(MessageKey.PRIMARY_KEY_MUST_BE_UNIQUE))
         if (self.is_primary_key or self.unique) and self.required is False:
-            raise ValueError('主键或唯一字段必须必填')
+            raise ValueError(msg(MessageKey.PRIMARY_KEY_AND_UNIQUE_MUST_BE_REQUIRED))
 
     def exchange_option_ids_to_names(self, option_ids: list[str] | list[OptionId]) -> list[str]:
         option_names: list[str] = []
@@ -163,7 +165,7 @@ class FieldMetaInfo:
             try:
                 option_names.append(self.options_id_map[option_id].name)
             except KeyError:
-                logging.warning('找不到选项id %s，将返回原值', option_id)
+                logging.warning('Could not find option id %s; returning the original value', option_id)
                 option_names.append(option_id)
 
         return option_names
@@ -174,7 +176,7 @@ class FieldMetaInfo:
         for name in names:
             option = self.options_name_map.get(name)
             if option is None:
-                errors.append('选项不存在，请参照表头的注释填写')
+                errors.append(msg(MessageKey.OPTION_NOT_FOUND_HEADER_COMMENT))
             else:
                 result.append(option.id)
         return result, errors
@@ -182,7 +184,7 @@ class FieldMetaInfo:
     @property
     def unique_label(self) -> UniqueLabel:
         if self.parent_label is None:
-            raise RuntimeError('运行时 parent_label 不能为空')
+            raise RuntimeError(msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME))
         label = (
             f'{self.parent_label}{UNIQUE_HEADER_CONNECTOR}{self.label}'
             if self.parent_label != self.label
@@ -193,9 +195,9 @@ class FieldMetaInfo:
     @property
     def unique_key(self) -> UniqueKey:
         if self.parent_key is None:
-            raise RuntimeError('运行时 parent_key 不能为空')
+            raise RuntimeError(msg(MessageKey.PARENT_KEY_EMPTY_RUNTIME))
         if self.key is None:
-            raise RuntimeError('运行时 key 不能为空')
+            raise RuntimeError(msg(MessageKey.KEY_EMPTY_RUNTIME))
         key = f'{self.parent_key}{UNIQUE_HEADER_CONNECTOR}{self.key}' if self.parent_key != self.key else self.key
         return UniqueKey(key)
 
@@ -205,7 +207,7 @@ class FieldMetaInfo:
             return {}
         if len(self.options) > MAX_OPTIONS_COUNT:
             logging.warning(
-                '您为字段【%s】指定了 %s 个选项, 请考虑此数量是否合理，options 设计的本意不是为了处理大量数据',
+                'Field "%s" defines %s options; please confirm that this is intentional because options are not meant for large datasets',
                 self.label,
                 len(self.options),
             )
@@ -217,7 +219,7 @@ class FieldMetaInfo:
             return {}
         if len(self.options) > MAX_OPTIONS_COUNT:
             logging.warning(
-                '您为字段【%s】指定了 %s 个选项, 请考虑此数量是否合理，options 设计的本意不是为了处理大量数据',
+                'Field "%s" defines %s options; please confirm that this is intentional because options are not meant for large datasets',
                 self.label,
                 len(self.options),
             )
@@ -225,52 +227,62 @@ class FieldMetaInfo:
 
     @property
     def comment_required(self) -> str:
-        return f"必填性：{'必填' if self.required else '选填'}"
+        value_key = MessageKey.COMMENT_REQUIRED_VALUE_REQUIRED if self.required else MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL
+        return dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key))
 
     @property
     def comment_date_format(self) -> str:
         if self.date_format is None:
             return ''
-        return f'格式：日期（{DATE_FORMAT_TO_HINT_MAPPING[self.date_format]}）'
+        return dmsg(MessageKey.COMMENT_DATE_FORMAT, value=DATE_FORMAT_TO_HINT_MAPPING[self.date_format])
 
     @property
     def comment_date_range_option(self) -> str:
         if self.date_range_option is None:
-            return '范围：无限制'
-        return f'范围：{DATA_RANGE_OPTION_TO_CHINESE[self.date_range_option]}'
+            return dmsg(MessageKey.COMMENT_DATE_RANGE_OPTION, value=dmsg(MessageKey.DATE_RANGE_OPTION_NONE_DISPLAY))
+        option_mapping = {
+            DataRangeOption.PRE: MessageKey.DATE_RANGE_OPTION_PRE_DISPLAY,
+            DataRangeOption.NEXT: MessageKey.DATE_RANGE_OPTION_NEXT_DISPLAY,
+            DataRangeOption.NONE: MessageKey.DATE_RANGE_OPTION_NONE_DISPLAY,
+        }
+        return dmsg(MessageKey.COMMENT_DATE_RANGE_OPTION, value=dmsg(option_mapping[self.date_range_option]))
 
     @property
     def comment_hint(self) -> str:
         if self.hint is None:
             return ''
-        return f'提示：{self.hint}'
+        return dmsg(MessageKey.COMMENT_HINT, value=self.hint)
 
     @property
     def comment_options(self) -> str:
         if self.options is None:
             return ''
-        return f'选项：{MULTI_CHECKBOX_SEPARATOR.join(x.name for x in self.options)}'
+        return dmsg(MessageKey.COMMENT_OPTIONS, value=MULTI_CHECKBOX_SEPARATOR.join(x.name for x in self.options))
 
     @property
     def comment_fraction_digits(self) -> str:
-        return f'小数位数：{self.fraction_digits or 0}'
+        return dmsg(MessageKey.COMMENT_FRACTION_DIGITS, value=self.fraction_digits or 0)
 
     @property
     def comment_unit(self) -> str:
-        return f'单位：{self.unit or "无"}'
+        return dmsg(MessageKey.COMMENT_UNIT, value=self.unit or dmsg(MessageKey.COMMENT_UNIT_VALUE_NONE))
 
     @property
     def comment_unique(self) -> str:
-        return f"唯一性：{'唯一' if self.unique else '非唯一'}"
+        value_key = MessageKey.COMMENT_UNIQUE_VALUE_UNIQUE if self.unique else MessageKey.COMMENT_UNIQUE_VALUE_NON_UNIQUE
+        return dmsg(MessageKey.COMMENT_UNIQUE, value=dmsg(value_key))
 
     @property
     def comment_max_length(self) -> str:
-        return f'最大长度：{self.importer_max_length or "无限制"}'
+        return dmsg(
+            MessageKey.COMMENT_MAX_LENGTH,
+            value=self.importer_max_length or dmsg(MessageKey.COMMENT_MAX_LENGTH_VALUE_UNLIMITED),
+        )
 
     @property
     def must_date_format(self) -> DateFormat:
         if self.date_format is None:
-            raise ConfigError('运行时 date_format 不能为空')
+            raise ConfigError(msg(MessageKey.DATE_FORMAT_EMPTY_RUNTIME))
         return self.date_format
 
     @property
@@ -294,7 +306,7 @@ class FieldMetaInfo:
 def extract_declared_field_metadata(field_info: FieldInfo) -> FieldMetaInfo:
     metadata = (field_info.json_schema_extra or {}).get(EXCEL_FIELD_METADATA_KEY)
     if not isinstance(metadata, FieldMetaInfo):
-        raise ProgrammaticError('字段定义必须是 FieldMeta 的实例')
+        raise ProgrammaticError(msg(MessageKey.FIELD_DEFINITIONS_MUST_USE_FIELDMETA))
     return metadata
 
 
@@ -342,7 +354,7 @@ def FieldMeta(
     **extra: Any,
 ) -> Any:
     if fraction_digits is not None and not isinstance(fraction_digits, int):
-        raise ValueError('fraction_digits 必须是整数')
+        raise ValueError(msg(MessageKey.FRACTION_DIGITS_MUST_BE_INTEGER))
 
     metadata = FieldMetaInfo(
         label=label,

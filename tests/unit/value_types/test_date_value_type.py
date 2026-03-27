@@ -51,10 +51,10 @@ class TestDateValueType(BaseTestCase):
         assert isinstance(error, ExcelCellError)
         assert error.label == '出生日期'
         assert (
-            error.message == '请输入格式为yyyy/mm的日期'
-        )  # may be more accurate to say "请输入格式为yyyy/mm的日期，如2021/01"
-        assert repr(error) == "ExcelCellError(label=Label('出生日期'), message='请输入格式为yyyy/mm的日期')"
-        assert str(error) == '【出生日期】请输入格式为yyyy/mm的日期'
+            error.message == 'Enter a date in yyyy/mm format'
+        )  # may be more accurate to say 'Enter a date in yyyy/mm format, e.g. 2021/01'
+        assert repr(error) == "ExcelCellError(label=Label('出生日期'), message='Enter a date in yyyy/mm format')"
+        assert str(error) == '【出生日期】Enter a date in yyyy/mm format'
 
     async def test_import_rejects_dates_that_do_not_match_day_format(self):
         class Importer(BaseModel):
@@ -70,7 +70,7 @@ class TestDateValueType(BaseTestCase):
         error = alchemy.cell_errors[self.first_data_row][self.first_data_col][0]
         assert isinstance(error, ExcelCellError)
         assert error.label == '出生日期'
-        assert error.message == '请输入格式为yyyy/mm/dd的日期'
+        assert error.message == 'Enter a date in yyyy/mm/dd format'
 
     async def test_serialize_parses_supported_date_inputs(self):
         class Importer(BaseModel):

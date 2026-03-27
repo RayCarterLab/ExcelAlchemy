@@ -306,18 +306,18 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
 
         assert alchemy.cell_errors == {
             0: {
-                6: [ExcelCellError(label=Label('出生日期'), message='请输入格式为yyyy的日期')],
-                7: [ExcelCellError(label=Label('邮箱'), message='请输入正确的邮箱')],
-                18: [ExcelCellError(label=Label('网址'), message='请输入正确的网址')],
-                9: [ExcelCellError(label=Label('爱好'), message='选项不存在，请参照表头的注释填写')],
-                10: [ExcelCellError(label=Label('公司'), message='选项不存在，请参照表头的注释填写')],
-                11: [ExcelCellError(label=Label('经理'), message='选项不存在，请参照表头的注释填写')],
-                12: [ExcelCellError(label=Label('部门'), message='选项不存在，请参照表头的注释填写')],
-                17: [ExcelCellError(label=Label('团队'), message='选项不存在，请参照字段注释填写')],
-                13: [ExcelCellError(label=Label('电话'), message='请输入正确的手机号')],
-                14: [ExcelCellError(label=Label('单选'), message='选项不存在，请参照字段注释填写')],
-                15: [ExcelCellError(label=Label('老板'), message='选项不存在，请参照字段注释填写')],
-                16: [ExcelCellError(label=Label('领导'), message='选项不存在，请参照字段注释填写')],
+                6: [ExcelCellError(label=Label('出生日期'), message='Enter a date in yyyy format')],
+                7: [ExcelCellError(label=Label('邮箱'), message='Enter a valid email address')],
+                18: [ExcelCellError(label=Label('网址'), message='Enter a valid URL')],
+                9: [ExcelCellError(label=Label('爱好'), message='Option not found; check the header comment for valid values')],
+                10: [ExcelCellError(label=Label('公司'), message='Option not found; check the header comment for valid values')],
+                11: [ExcelCellError(label=Label('经理'), message='Option not found; check the header comment for valid values')],
+                12: [ExcelCellError(label=Label('部门'), message='Option not found; check the header comment for valid values')],
+                17: [ExcelCellError(label=Label('团队'), message='Option not found; check the field comment for valid values')],
+                13: [ExcelCellError(label=Label('电话'), message='Enter a valid phone number')],
+                14: [ExcelCellError(label=Label('单选'), message='Option not found; check the field comment for valid values')],
+                15: [ExcelCellError(label=Label('老板'), message='Option not found; check the field comment for valid values')],
+                16: [ExcelCellError(label=Label('领导'), message='Option not found; check the field comment for valid values')],
             }
         }
 
@@ -415,7 +415,10 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         with self.assertRaises(ConfigError) as cm:
             ExcelAlchemy(config)
 
-        self.assertEqual(str(cm.exception), '没有从模型 EmptyCModel 中提取到字段元数据，请检查模型是否定义了字段')
+        self.assertEqual(
+            str(cm.exception),
+            'No field metadata was extracted from model EmptyCModel; check its field definitions',
+        )
 
     async def test_non_fieldmeta_definition_raises_programmatic_error(self):
         class EmptyFieldMetaModel(BaseModel):
@@ -424,7 +427,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         config = ImporterConfig(EmptyFieldMetaModel, creator=self.creator, minio=cast(Minio, self.minio))
         with self.assertRaises(ProgrammaticError) as cm:
             ExcelAlchemy(config)
-        self.assertEqual(str(cm.exception), '字段定义必须是 FieldMeta 的实例')
+        self.assertEqual(str(cm.exception), 'Field definitions must be created with FieldMeta')
 
     async def test_passing_non_config_object_raises_config_error(self):
         class NotImporterConfigModel(BaseModel):
@@ -433,7 +436,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         with self.assertRaises(ConfigError) as cm:
             ExcelAlchemy(NotImporterConfigModel)
 
-        self.assertEqual(str(cm.exception), '导出模式的配置类必须是 ExporterConfig')
+        self.assertEqual(str(cm.exception), 'Export mode requires an ExporterConfig instance')
 
     async def test_download_template_in_export_mode_raises_config_error(self):
         config = ExporterConfig(self.MergeHeaderImporter, minio=cast(Minio, self.minio))
@@ -442,4 +445,4 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         with self.assertRaises(ConfigError) as cm:
             alchemy.download_template()
 
-        self.assertEqual(str(cm.exception), '只支持导入模式调用此方法')
+        self.assertEqual(str(cm.exception), 'This method is only available in import mode')

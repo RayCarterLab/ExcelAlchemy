@@ -2,6 +2,8 @@ from typing import Any
 
 from pydantic import EmailStr, TypeAdapter
 
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.field import FieldMetaInfo
 from excelalchemy.types.value.string import String
 
@@ -15,13 +17,13 @@ class Email(String):
         try:
             parsed = str(value)
         except Exception as exc:
-            raise ValueError('请输入正确的邮箱') from exc
+            raise ValueError(msg(MessageKey.VALID_EMAIL_REQUIRED)) from exc
 
         # Validate the parsed string as an email address
         try:
             cls._validator.validate_python(parsed)
         except Exception as exc:
-            raise ValueError('请输入正确的邮箱') from exc
+            raise ValueError(msg(MessageKey.VALID_EMAIL_REQUIRED)) from exc
 
         # Return the parsed string if validation succeeds
         return parsed

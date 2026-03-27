@@ -49,7 +49,7 @@ class TestCoreComponentContracts:
         layout = ExcelSchemaLayout.from_model(SimpleContractImporter)
         tracker = ImportIssueTracker(layout, [RESULT_COLUMN, REASON_COLUMN])
         df = WorksheetTable(columns=['姓名'], rows=[['张三']])
-        error = ExcelCellError(label=Label('姓名'), message='模拟失败')
+        error = ExcelCellError(label=Label('姓名'), message='Simulated failure')
 
         tracker.register_cell_errors(RowIndex(0), [error], df)
 

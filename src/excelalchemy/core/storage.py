@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING, Any
 
 from excelalchemy.core.storage_protocol import ExcelStorage
 from excelalchemy.exc import ConfigError
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.alchemy import ExporterConfig, ImporterConfig
 
 if TYPE_CHECKING:
@@ -14,10 +16,10 @@ class MissingStorageGateway(ExcelStorage):
     """Fallback storage used when no concrete backend has been configured."""
 
     def read_excel_table(self, input_excel_name: str, *, skiprows: int, sheet_name: str):
-        raise ConfigError('未配置存储后端，请传入 storage=... 或安装并配置 ExcelAlchemy[minio]')
+        raise ConfigError(msg(MessageKey.NO_STORAGE_BACKEND_CONFIGURED))
 
     def upload_excel(self, output_name: str, content_with_prefix: str):
-        raise ConfigError('未配置存储后端，请传入 storage=... 或安装并配置 ExcelAlchemy[minio]')
+        raise ConfigError(msg(MessageKey.NO_STORAGE_BACKEND_CONFIGURED))
 
 
 def build_storage_gateway(config: ImporterConfig | ExporterConfig) -> ExcelStorage:

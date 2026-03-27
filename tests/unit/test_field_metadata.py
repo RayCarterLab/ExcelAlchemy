@@ -99,7 +99,7 @@ class TestFieldMetadata(BaseTestCase):
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].exchange_names_to_option_ids_with_errors(
             [OptionId('男'), OptionId('不存在')]
-        ) == (['male'], ['选项不存在，请参照表头的注释填写'])
+        ) == (['male'], ['Option not found; check the header comment for valid values'])
 
     async def test_unique_label_uses_parent_label_for_nested_fields(self):
         class Importer(BaseModel):

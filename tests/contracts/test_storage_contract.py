@@ -43,7 +43,10 @@ class TestStorageContracts(BaseTestCase):
         with self.assertRaises(ConfigError) as cm:
             alchemy.export_upload('missing-storage.xlsx', [sample_simple_export_row()])
 
-        self.assertEqual(str(cm.exception), '未配置存储后端，请传入 storage=... 或安装并配置 ExcelAlchemy[minio]')
+        self.assertEqual(
+            str(cm.exception),
+            'No storage backend is configured; pass storage=... or install and configure ExcelAlchemy[minio]',
+        )
 
     async def test_explicit_storage_is_preferred_over_legacy_minio_settings(self):
         input_name = FileRegistry.TEST_SIMPLE_IMPORT

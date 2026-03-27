@@ -6,6 +6,8 @@ from pydantic import BaseModel
 
 from excelalchemy.exc import ConfigError, ExcelCellError, ExcelRowError
 from excelalchemy.helper.pydantic import instantiate_pydantic_model
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.alchemy import ImporterConfig, ImportMode
 from excelalchemy.types.identity import Key, RowIndex
 
@@ -35,13 +37,13 @@ class ImportExecutor[ContextT]:
                 return await self._update(row_index, data, df)
             case ImportMode.CREATE_OR_UPDATE:
                 return await self._create_or_update(row_index, data, df)
-        raise ConfigError(f'不支持的导入模式: {self.config.import_mode}')
+        raise ConfigError(msg(MessageKey.UNSUPPORTED_IMPORT_MODE, import_mode=self.config.import_mode))
 
     async def _create(self, row_index: RowIndex, data: dict[Key, Any], df: WorksheetTable) -> bool:
         if self.config.creator is None:
-            raise ConfigError('未配置 creator')
+            raise ConfigError(msg(MessageKey.CREATOR_NOT_CONFIGURED))
         if self.config.create_importer_model is None:
-            raise ConfigError('未配置 create_importer_model')
+            raise ConfigError(msg(MessageKey.CREATE_IMPORTER_MODEL_NOT_CONFIGURED))
         return await self._invoke_dml(
             row_index,
             data,
@@ -54,9 +56,9 @@ class ImportExecutor[ContextT]:
 
     async def _update(self, row_index: RowIndex, data: dict[Key, Any], df: WorksheetTable) -> bool:
         if self.config.updater is None:
-            raise ConfigError('未配置 updater')
+            raise ConfigError(msg(MessageKey.UPDATER_NOT_CONFIGURED))
         if self.config.update_importer_model is None:
-            raise ConfigError('未配置 update_importer_model')
+            raise ConfigError(msg(MessageKey.UPDATE_IMPORTER_MODEL_NOT_CONFIGURED))
         return await self._invoke_dml(
             row_index,
             data,
@@ -69,7 +71,7 @@ class ImportExecutor[ContextT]:
 
     async def _create_or_update(self, row_index: RowIndex, data: dict[Key, Any], df: WorksheetTable) -> bool:
         if self.config.is_data_exist is None:
-            raise ConfigError('未配置 is_data_exists')
+            raise ConfigError(msg(MessageKey.IS_DATA_EXIST_NOT_CONFIGURED))
 
         converted_data = self.config.data_converter(dict(data)) if self.config.data_converter else data
         is_data_exist = await self.config.is_data_exist(converted_data, self.get_context())

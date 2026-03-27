@@ -3,6 +3,9 @@ from typing import Any
 
 from excelalchemy.const import MULTI_CHECKBOX_SEPARATOR
 from excelalchemy.exc import ProgrammaticError
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import display_message as dmsg
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.abstract import ABCValueType
 from excelalchemy.types.field import FieldMetaInfo
 from excelalchemy.types.identity import OptionId
@@ -14,10 +17,15 @@ class Radio(ABCValueType, str):
     @classmethod
     def comment(cls, field_meta: FieldMetaInfo) -> str:
         if not field_meta.options:
-            logging.error('%s 类型的字段 %s 必须设置 options', cls.__name__, field_meta.label)
+            logging.error('Field %s of type %s must define options', field_meta.label, cls.__name__)
 
         return '\n'.join(
-            [field_meta.comment_required, field_meta.comment_options, '单/多选：单选', field_meta.comment_hint]
+            [
+                field_meta.comment_required,
+                field_meta.comment_options,
+                dmsg(MessageKey.COMMENT_SELECTION_MODE, value=dmsg(MessageKey.COMMENT_SELECTION_VALUE_SINGLE)),
+                field_meta.comment_hint,
+            ]
         )
 
     @classmethod
@@ -33,10 +41,10 @@ class Radio(ABCValueType, str):
             return field_meta.options_id_map[value.strip()].name
         except Exception as exc:
             logging.warning(
-                '类型【%s】无法为【%s】找到【%s】的选项, 返回原值, 原因 %s',
+                'Type %s could not resolve option %s for field %s; returning the original value. Reason: %s',
                 cls.__name__,
-                field_meta.label,
                 value,
+                field_meta.label,
                 exc,
             )
         return value if value is not None else ''
@@ -44,21 +52,21 @@ class Radio(ABCValueType, str):
     @classmethod
     def __validate__(cls, value: str, field_meta: FieldMetaInfo) -> OptionId | str:  # return Option.id
         if MULTI_CHECKBOX_SEPARATOR in value:
-            raise ValueError('多选不支持')
+            raise ValueError(msg(MessageKey.MULTIPLE_SELECTIONS_NOT_SUPPORTED))
 
         parsed = value.strip()
 
         if field_meta.options is None:
-            raise ProgrammaticError('当验证【RADIO / MULTI_CHECKBOX / SELECT】类型字段时，选项不得为空！')
+            raise ProgrammaticError(msg(MessageKey.OPTIONS_CANNOT_BE_NONE_FOR_SELECTION_FIELDS))
 
         if not field_meta.options:  # empty
-            logging.warning('%s 类型字段"%s"的选项为空，将返回原值', cls.__name__, field_meta.label)
+            logging.warning('Field %s of type %s has no options; returning the original value', field_meta.label, cls.__name__)
             return parsed
 
         if parsed in field_meta.options_id_map:
             return parsed
 
         if parsed not in field_meta.options_name_map:
-            raise ValueError('选项不存在，请参照字段注释填写')
+            raise ValueError(msg(MessageKey.OPTION_NOT_FOUND_FIELD_COMMENT))
 
         return field_meta.options_name_map[parsed].id

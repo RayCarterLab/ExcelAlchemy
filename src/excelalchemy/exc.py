@@ -1,13 +1,15 @@
 from typing import Any
 
 from excelalchemy.const import UNIQUE_HEADER_CONNECTOR
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.identity import Label, UniqueLabel
 
 
 class ExcelCellError(Exception):
     """Excel 单元格错误"""
 
-    message = '导入 Excel 发生错误'
+    message = msg(MessageKey.EXCEL_IMPORT_ERROR)
     label: Label
     parent_label: Label | None
     detail: dict[str, Any]
@@ -48,13 +50,13 @@ class ExcelCellError(Exception):
 
     def _validate(self) -> None:
         if not self.label:
-            raise ValueError('label 不能为空')
+            raise ValueError(msg(MessageKey.LABEL_CANNOT_BE_EMPTY))
 
 
 class ExcelRowError(Exception):
     """Excel 整行发生导入错误"""
 
-    message = '导入 Excel 发生行错误'
+    message = msg(MessageKey.EXCEL_ROW_IMPORT_ERROR)
 
     def __init__(
         self,

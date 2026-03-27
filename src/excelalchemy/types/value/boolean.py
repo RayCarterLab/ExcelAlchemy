@@ -1,6 +1,8 @@
 import logging
 from typing import Any
 
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.abstract import ABCValueType
 from excelalchemy.types.field import FieldMetaInfo
 from excelalchemy.types.value import excel_choice
@@ -34,11 +36,11 @@ class Boolean(ABCValueType):
         elif isinstance(value, str):
             value = value.strip()
             if value not in ('是', '否'):
-                logging.warning('无法识别布尔值 %s, 返回原值', value)
+                logging.warning('Could not recognize boolean value %s; returning the original value', value)
                 return value
             return value
         else:
-            logging.warning('类型【%s】无法为 %s 反序列化: %s, 返回默认值 "否" ', cls.__name__, field_meta.label, value)
+            logging.warning('Type %s could not deserialize %s for field %s; returning the default value "否"', cls.__name__, value, field_meta.label)
 
         return '是' if str(value) == '是' else '否'
 
@@ -50,6 +52,6 @@ class Boolean(ABCValueType):
         value_str = str(value)
 
         if value_str not in ('是', '否'):
-            raise ValueError('请输入“是”或“否”')
+            raise ValueError(msg(MessageKey.BOOLEAN_ENTER_YES_OR_NO))
 
         return value_str == '是'

@@ -6,6 +6,8 @@ from pydantic import BaseModel
 from pydantic.fields import FieldInfo, PydanticUndefined
 
 from excelalchemy.exc import ExcelCellError, ProgrammaticError
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.abstract import ABCValueType, ComplexABCValueType
 from excelalchemy.types.field import FieldMetaInfo, extract_declared_field_metadata
 from excelalchemy.types.identity import Key
@@ -29,7 +31,7 @@ class PydanticFieldAdapter:
         if origin in (UnionType, getattr(__import__('typing'), 'Union')):
             args = [arg for arg in get_args(annotation) if arg is not type(None)]
             if len(args) != 1:
-                raise ProgrammaticError(f'不支持的字段类型定义: {annotation}')
+                raise ProgrammaticError(msg(MessageKey.UNSUPPORTED_FIELD_TYPE_DECLARATION, annotation=annotation))
             return cast(type[Any], args[0])
 
         return cast(type[Any], annotation)
@@ -71,7 +73,7 @@ class PydanticFieldAdapter:
         if raw_value is None:
             if self.allows_none and not self.required:
                 return None
-            raise ValueError('必填项缺失')
+            raise ValueError(msg(MessageKey.THIS_FIELD_IS_REQUIRED))
 
         return self.value_type.__validate__(raw_value, self.declared_metadata)
 
@@ -100,7 +102,7 @@ def extract_pydantic_model(
 ) -> list[FieldMetaInfo]:
     """根据 Pydantic 模型提取 Excel 表头信息."""
     if model is None:
-        raise RuntimeError('模型不能为空')
+        raise RuntimeError(msg(MessageKey.MODEL_CANNOT_BE_NONE))
     return list(_extract_pydantic_model(PydanticModelAdapter(model)))
 
 
@@ -121,7 +123,12 @@ def instantiate_pydantic_model[ModelT: BaseModel](  # noqa: C901
         raw_value = data.get(Key(field_adapter.name), PydanticUndefined)
         if raw_value is PydanticUndefined:
             if field_adapter.required:
-                errors.append(ExcelCellError(label=field_adapter.declared_metadata.label, message='必填项缺失'))
+                errors.append(
+                    ExcelCellError(
+                        label=field_adapter.declared_metadata.label,
+                        message=msg(MessageKey.THIS_FIELD_IS_REQUIRED),
+                    )
+                )
             continue
 
         try:
@@ -164,7 +171,9 @@ def _extract_pydantic_model(model: PydanticModelAdapter) -> Generator[FieldMetaI
             yield field_adapter.runtime_metadata()
 
         else:
-            raise ProgrammaticError(f'字段定义必须是 ValueType 的子类, 或 ComplexValueType 的子类, 不支持 {value_type}')
+            raise ProgrammaticError(
+                msg(MessageKey.VALUE_TYPE_DECLARATION_UNSUPPORTED, value_type=value_type)
+            )
 
 
 def _handle_error(
@@ -172,7 +181,7 @@ def _handle_error(
     exc: Exception,
     field_def: FieldMetaInfo,
 ) -> None:
-    messages = [str(arg) for arg in exc.args if str(arg)] or [str(exc) or '无效输入']
+    messages = [str(arg) for arg in exc.args if str(arg)] or [str(exc) or msg(MessageKey.INVALID_INPUT)]
     error_container.extend(
         ExcelCellError(
             label=field_def.label,

@@ -2,6 +2,8 @@
 
 from excelalchemy.core.table import WorksheetTable
 from excelalchemy.exc import ConfigError
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import message as msg
 from excelalchemy.types.alchemy import ImportMode
 from excelalchemy.types.header import ExcelHeader
 from excelalchemy.types.identity import Label, UniqueLabel
@@ -39,7 +41,7 @@ class ExcelHeaderParser:
             child_value = header_df.iloc[1][column_index]
             if value_is_nan(parent_value) or (isinstance(parent_value, str) and parent_value.startswith('Unnamed')):
                 if value_is_nan(child_value):
-                    raise ValueError('合并表头错误: 子表头不能为空')
+                    raise ValueError(msg(MessageKey.INVALID_MERGED_HEADER_CHILD_EMPTY))
                 current_header = ExcelHeader(
                     label=Label(child_value),
                     parent_label=Label(last_header),
@@ -65,7 +67,7 @@ class ExcelHeaderParser:
         columns: list[UniqueLabel] = []
         for header in headers:
             if header.unique_label not in allowed_labels:
-                raise ConfigError(f'不支持的列名: {header.unique_label}')
+                raise ConfigError(msg(MessageKey.UNSUPPORTED_COLUMN_NAME, unique_label=header.unique_label))
             columns.append(header.unique_label)
 
         df.columns = columns  # type: ignore[assignment]
