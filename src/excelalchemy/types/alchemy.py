@@ -1,15 +1,20 @@
 """实例化 ExcelAlchemy 时的配置"""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Awaitable, Callable, Literal
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Literal
 
-from minio import Minio
 from pydantic import BaseModel
 
+from excelalchemy.core.storage_protocol import ExcelStorage
 from excelalchemy.exc import ConfigError
 from excelalchemy.helper.pydantic import get_model_field_names
 from excelalchemy.util.convertor import export_data_converter, import_data_converter
+
+if TYPE_CHECKING:
+    from minio import Minio
 
 
 class ExcelMode(str, Enum):
@@ -41,6 +46,7 @@ class ImporterConfig[ContextT, ImporterCreateModelT: BaseModel, ImporterUpdateMo
 
     import_mode: ImportMode = field(default=ImportMode.CREATE)
 
+    storage: ExcelStorage | None = field(default=None)
     minio: Minio | None = field(default=None)
     bucket_name: str = field(default='excel')
     url_expires: int = field(default=3600)
@@ -100,6 +106,7 @@ class ExporterConfig[ExporterModelT: BaseModel]:
     # Callable function receive Key as dict key instead of Label.
     data_converter: Callable[[dict[str, Any]], dict[str, Any]] | None = field(default=export_data_converter)
 
+    storage: ExcelStorage | None = field(default=None)
     minio: Minio | None = field(default=None)
     bucket_name: str = field(default='excel')
     url_expires: int = field(default=3600)

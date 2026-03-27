@@ -16,7 +16,8 @@ from excelalchemy.core.headers import ExcelHeaderParser, ExcelHeaderValidator
 from excelalchemy.core.rendering import ExcelRenderer
 from excelalchemy.core.rows import ImportIssueTracker, RowAggregator
 from excelalchemy.core.schema import ExcelSchemaLayout
-from excelalchemy.core.storage import MinioStorageGateway
+from excelalchemy.core.storage import build_storage_gateway
+from excelalchemy.core.storage_protocol import ExcelStorage
 from excelalchemy.core.table import WorksheetTable
 from excelalchemy.exc import ConfigError, ExcelCellError, ExcelRowError
 from excelalchemy.helper.pydantic import get_model_field_names
@@ -76,7 +77,7 @@ class ExcelAlchemy[
         self._header_parser = ExcelHeaderParser()
         self._header_validator = ExcelHeaderValidator()
         self._renderer = ExcelRenderer()
-        self._storage_gateway = MinioStorageGateway(config)
+        self._storage_gateway: ExcelStorage = build_storage_gateway(config)
         self._layout: ExcelSchemaLayout
         self._issue_tracker: ImportIssueTracker | None = None
         self._row_aggregator: RowAggregator | None = None
@@ -288,7 +289,7 @@ class ExcelAlchemy[
     def _read_dataframe(self, input_excel_name: str) -> WorksheetTable:
         assert isinstance(self.config, ImporterConfig)
         if not self.__state_df_has_been_loaded__:
-            df = self._storage_gateway.read_excel_dataframe(
+            df = self._storage_gateway.read_excel_table(
                 input_excel_name,
                 skiprows=HEADER_HINT_LINE_COUNT,
                 sheet_name=self.config.sheet_name,

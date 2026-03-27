@@ -4,17 +4,94 @@ from typing import cast
 from minio import Minio
 from openpyxl import Workbook
 
-from excelalchemy import ExcelAlchemy, ExporterConfig, ImporterConfig
-from excelalchemy.core.storage import MinioStorageGateway
+from excelalchemy import ConfigError, ExcelAlchemy, ExporterConfig, ImporterConfig, ValidateResult
+from excelalchemy.core.storage import MissingStorageGateway, build_storage_gateway
+from excelalchemy.core.storage_minio import MinioStorageGateway
+from excelalchemy.core.storage_protocol import ExcelStorage
 from excelalchemy.core.table import WorksheetTable
-from tests.support import BaseTestCase, FileRegistry
+from tests.support import BaseTestCase, FileRegistry, InMemoryExcelStorage
 from tests.support.contract_models import SimpleContractImporter, creator, sample_simple_export_row
 
 
 class TestStorageContracts(BaseTestCase):
-    def _build_storage_gateway(self) -> MinioStorageGateway:
+    def _build_storage_gateway(self) -> ExcelStorage:
         config = ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio))
-        return MinioStorageGateway(config)
+        return build_storage_gateway(config)
+
+    async def test_default_storage_gateway_conforms_to_excel_storage_protocol(self):
+        gateway = self._build_storage_gateway()
+
+        assert isinstance(gateway, ExcelStorage)
+        assert isinstance(gateway, MinioStorageGateway)
+
+    async def test_missing_storage_gateway_is_used_when_no_backend_is_configured(self):
+        config = ImporterConfig(SimpleContractImporter, creator=creator)
+        gateway = build_storage_gateway(config)
+
+        assert isinstance(gateway, MissingStorageGateway)
+
+    async def test_template_generation_does_not_require_storage_backend(self):
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator))
+
+        template = alchemy.download_template([sample_simple_export_row()])
+
+        assert template.startswith('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,')
+
+    async def test_export_upload_without_storage_backend_raises_clear_error(self):
+        alchemy = ExcelAlchemy(ExporterConfig(SimpleContractImporter))
+
+        with self.assertRaises(ConfigError) as cm:
+            alchemy.export_upload('missing-storage.xlsx', [sample_simple_export_row()])
+
+        self.assertEqual(str(cm.exception), '未配置存储后端，请传入 storage=... 或安装并配置 ExcelAlchemy[minio]')
+
+    async def test_explicit_storage_is_preferred_over_legacy_minio_settings(self):
+        input_name = FileRegistry.TEST_SIMPLE_IMPORT
+        input_bytes = self.minio.storage[input_name]['data'].getvalue()
+        storage = InMemoryExcelStorage({input_name: input_bytes})
+        config = ImporterConfig(
+            SimpleContractImporter,
+            creator=creator,
+            storage=storage,
+            minio=cast(Minio, self.minio),
+        )
+        gateway = build_storage_gateway(config)
+
+        assert gateway is storage
+
+        alchemy = ExcelAlchemy(config)
+        result = await alchemy.import_data(
+            input_excel_name=input_name,
+            output_excel_name='storage-preferred.xlsx',
+        )
+
+        assert result.result == ValidateResult.SUCCESS
+        assert 'storage-preferred.xlsx' not in self.minio.storage
+
+    async def test_export_upload_supports_explicit_custom_storage(self):
+        storage = InMemoryExcelStorage()
+        output_name = 'contract-export-memory.xlsx'
+        alchemy = ExcelAlchemy(ExporterConfig(SimpleContractImporter, storage=storage))
+
+        url = alchemy.export_upload(output_name, [sample_simple_export_row()])
+
+        assert url == f'memory://{output_name}'
+        assert output_name in storage.uploaded
+        assert storage.uploaded[output_name].startswith(b'PK')
+
+    async def test_import_failure_upload_supports_explicit_custom_storage(self):
+        input_name = FileRegistry.TEST_SIMPLE_IMPORT_WITH_ERROR
+        input_bytes = self.minio.storage[input_name]['data'].getvalue()
+        output_name = 'contract-import-memory.xlsx'
+        storage = InMemoryExcelStorage({input_name: input_bytes})
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=storage))
+
+        result = await alchemy.import_data(input_excel_name=input_name, output_excel_name=output_name)
+
+        assert result.result == ValidateResult.DATA_INVALID
+        assert result.url == f'memory://{output_name}'
+        assert output_name in storage.uploaded
+        assert storage.uploaded[output_name].startswith(b'PK')
 
     async def test_export_upload_stores_generated_workbook_in_minio(self):
         output_name = 'contract-export-upload.xlsx'
@@ -55,7 +132,7 @@ class TestStorageContracts(BaseTestCase):
     async def test_storage_reader_returns_worksheet_table_for_simple_import_workbook(self):
         gateway = self._build_storage_gateway()
 
-        table = gateway.read_excel_dataframe(FileRegistry.TEST_SIMPLE_IMPORT, skiprows=1, sheet_name='Sheet1')
+        table = gateway.read_excel_table(FileRegistry.TEST_SIMPLE_IMPORT, skiprows=1, sheet_name='Sheet1')
 
         assert isinstance(table, WorksheetTable)
         assert table.shape == (2, 17)
@@ -80,7 +157,7 @@ class TestStorageContracts(BaseTestCase):
         input_name = 'contract-merged-reader.xlsx'
         self.minio.put_object(self.minio.bucket_name, input_name, io.BytesIO(payload), len(payload))
 
-        table = gateway.read_excel_dataframe(input_name, skiprows=1, sheet_name='Sheet1')
+        table = gateway.read_excel_table(input_name, skiprows=1, sheet_name='Sheet1')
 
         assert table.iloc[0].tolist() == ['日期范围', None]
         assert table.iloc[1].tolist() == ['开始日期', '结束日期']

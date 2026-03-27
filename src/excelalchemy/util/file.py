@@ -1,12 +1,5 @@
-import base64
-import io
 import math
-from datetime import timedelta
-from tempfile import TemporaryFile
-from typing import IO, Any
-
-from minio import Minio
-from urllib3.response import BaseHTTPResponse
+from typing import Any
 
 from excelalchemy.const import UNIQUE_HEADER_CONNECTOR
 
@@ -22,45 +15,6 @@ def add_excel_prefix(content: str) -> str:
 def remove_excel_prefix(content: str) -> str:
     """Remove Excel prefixes for base64 content string."""
     return content.lstrip(f'{EXCEL_PREFIX},')
-
-
-def construct_file_like_object(response: BaseHTTPResponse) -> IO[bytes]:
-    """Construct a file like object from HTTPResponse.
-
-    You must close the file after you finished using it.
-    """
-    tmp = TemporaryFile()
-    tmp.write(response.read())
-    tmp.seek(0)
-    return tmp
-
-
-def read_file_from_minio_object(
-    client: Minio,
-    bucket_name: str,
-    filename: str,
-) -> IO[bytes]:
-    """ "Read file content by <Minio> object."""
-    response: BaseHTTPResponse = client.get_object(bucket_name, filename)
-    return construct_file_like_object(response)
-
-
-def upload_file_from_minio_object(
-    client: Minio,
-    bucket_name: str,
-    filename: str,
-    content: str,
-    expires: int,
-) -> str:
-    """把文件上传到minio"""
-
-    data = base64.b64decode(content)
-    client.put_object(bucket_name, filename, io.BytesIO(data), len(data))
-    return client.presigned_get_object(
-        bucket_name,
-        filename,
-        expires=timedelta(seconds=expires),
-    )
 
 
 def flatten(data: dict[str, Any], level: list[Any] | None = None) -> dict[str, Any]:

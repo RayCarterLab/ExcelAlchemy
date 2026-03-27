@@ -270,7 +270,6 @@ wheels = [
 name = "excelalchemy"
 source = { editable = "." }
 dependencies = [
-    { name = "minio" },
     { name = "openpyxl" },
     { name = "pendulum" },
     { name = "pydantic", extra = ["email"] },
@@ -279,17 +278,22 @@ dependencies = [
 [package.optional-dependencies]
 development = [
     { name = "coverage" },
+    { name = "minio" },
     { name = "pre-commit" },
     { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
 ]
+minio = [
+    { name = "minio" },
+]
 
 [package.metadata]
 requires-dist = [
     { name = "coverage", marker = "extra == 'development'" },
-    { name = "minio", specifier = ">=7.2.20,<8" },
+    { name = "minio", marker = "extra == 'development'", specifier = ">=7.2.20,<8" },
+    { name = "minio", marker = "extra == 'minio'", specifier = ">=7.2.20,<8" },
     { name = "openpyxl", specifier = ">=3.1.5,<4" },
     { name = "pendulum", specifier = ">=3.2.0,<4" },
     { name = "pre-commit", marker = "extra == 'development'" },
@@ -299,7 +303,7 @@ requires-dist = [
     { name = "pytest-cov", marker = "extra == 'development'" },
     { name = "ruff", marker = "extra == 'development'" },
 ]
-provides-extras = ["development"]
+provides-extras = ["development", "minio"]
 
 [[package]]
 name = "filelock"

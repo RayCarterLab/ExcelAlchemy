@@ -26,7 +26,6 @@ classifiers = [
 dynamic = ['version']
 requires-python = '>=3.12'
 dependencies = [
-    'minio >=7.2.20, <8',
     'pydantic[email] >=2.12, <3',
     'openpyxl >=3.1.5, <4',
     'pendulum >=3.2.0, <4',
@@ -42,7 +41,11 @@ Documentation = 'https://github.com/RayCarterLab/ExcelAlchemy#readme'
 Issues = 'https://github.com/RayCarterLab/ExcelAlchemy/issues'
 
 [project.optional-dependencies]
+minio = [
+    'minio >=7.2.20, <8',
+]
 development = [
+    'minio >=7.2.20, <8',
     'pre-commit',
     'pyright==1.1.408',
     'pytest',

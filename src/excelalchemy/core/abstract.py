@@ -29,7 +29,7 @@ class ABCExcelAlchemy[
 
     @abstractmethod
     def export_upload(self, output_name: str, data: list[dict[str, Any]], keys: list[Key] | None = None) -> UrlStr:
-        """导出数据, 自动将文件上传到 Minio，字段顺序与定义的导出模型一致"""
+        """导出数据, 自动将文件上传到配置的存储后端，字段顺序与定义的导出模型一致"""
 
     @abstractmethod
     def add_context(self, context: ContextT):

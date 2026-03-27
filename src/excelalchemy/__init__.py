@@ -3,6 +3,7 @@
 __version__ = '1.1.0'
 from excelalchemy.const import CharacterSet, DataRangeOption, DateFormat, Option
 from excelalchemy.core.alchemy import ExcelAlchemy
+from excelalchemy.core.storage_protocol import ExcelStorage
 from excelalchemy.exc import ConfigError, ExcelCellError, ProgrammaticError
 from excelalchemy.helper.pydantic import extract_pydantic_model
 from excelalchemy.types.alchemy import ExporterConfig, ImporterConfig, ImportMode
@@ -34,6 +35,7 @@ __all__ = [
     'DateRange',
     'DataRangeOption',
     'Email',
+    'ExcelStorage',
     'ExcelAlchemy',
     'ExcelCellError',
     'ExporterConfig',
