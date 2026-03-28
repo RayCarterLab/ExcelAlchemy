@@ -76,6 +76,8 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: read
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
@@ -116,9 +118,9 @@ jobs:
           retention-days: 14
 
       - name: Upload coverage to Codecov
-        if: matrix.python-version == '3.14' && secrets.CODECOV_TOKEN != ''
+        if: matrix.python-version == '3.14' && env.CODECOV_TOKEN != ''
         uses: codecov/codecov-action@v5
         with:
           files: coverage.xml
           disable_search: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ env.CODECOV_TOKEN }}

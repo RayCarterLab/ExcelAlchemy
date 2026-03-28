@@ -29,10 +29,6 @@ The current release track being prepared is `2.0.0rc1`, the first public release
 
 ## Screenshots
 
-These screenshots are generated from the repository itself using
-[`scripts/generate_portfolio_assets.py`](./scripts/generate_portfolio_assets.py).
-They show the English workbook locale because it is the clearest presentation for the public-facing README.
-
 | Template | Import Result |
 | --- | --- |
 | ![Excel template screenshot](./images/portfolio-template-en.png) | ![Excel import result screenshot](./images/portfolio-import-result-en.png) |
