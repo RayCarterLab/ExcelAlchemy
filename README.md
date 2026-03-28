@@ -6,7 +6,7 @@
 ![Lint](https://img.shields.io/badge/lint-ruff-D7FF64)
 ![Typing](https://img.shields.io/badge/typing-pyright-2C6BED)
 
-[中文 README](./README_cn.md) · [About](./ABOUT.md) · [Architecture](./docs/architecture.md) · [Locale Policy](./docs/locale.md) · [Changelog](./CHANGELOG.md) · [Migration Notes](./MIGRATIONS.md)
+[中文 README](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README_cn.md) · [About](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/ABOUT.md) · [Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/architecture.md) · [Locale Policy](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/locale.md) · [Changelog](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/CHANGELOG.md) · [Migration Notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/MIGRATIONS.md)
 
 ExcelAlchemy is a schema-driven Python library for Excel import and export workflows.
 It turns Pydantic models into typed workbook contracts: generate templates, validate uploads, map failures back to rows
@@ -16,7 +16,7 @@ This repository is also a design artifact.
 It documents a series of deliberate engineering choices: `src/` layout, Pydantic v2 migration, pandas removal,
 pluggable storage, `uv`-based workflows, and locale-aware workbook output.
 
-The current stable release line is `2.0.0`, the first public stable release of ExcelAlchemy 2.0.
+The current stable release line is `2.0.0.post1`, the first post-release update to the stable ExcelAlchemy 2.0 line.
 
 ## At a Glance
 
@@ -31,7 +31,7 @@ The current stable release line is `2.0.0`, the first public stable release of E
 
 | Template | Import Result |
 | --- | --- |
-| ![Excel template screenshot](./images/portfolio-template-en.png) | ![Excel import result screenshot](./images/portfolio-import-result-en.png) |
+| ![Excel template screenshot](https://raw.githubusercontent.com/RayCarterLab/ExcelAlchemy/main/images/portfolio-template-en.png) | ![Excel import result screenshot](https://raw.githubusercontent.com/RayCarterLab/ExcelAlchemy/main/images/portfolio-import-result-en.png) |
 
 ## Minimal Example
 
@@ -126,7 +126,7 @@ flowchart TD
     E --> M[Runtime Error Messages]
 ```
 
-See the full breakdown in [docs/architecture.md](./docs/architecture.md).
+See the full breakdown in [docs/architecture.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/architecture.md).
 
 ## Workflow
 
@@ -146,7 +146,7 @@ flowchart LR
 ## Design Principles
 
 This repository is guided by explicit design principles rather than accidental convenience.
-The full mapping is in [ABOUT.md](./ABOUT.md); the short version is:
+The full mapping is in [ABOUT.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/ABOUT.md); the short version is:
 
 1. Schema first.
 2. Explicit metadata over implicit conventions.
@@ -182,7 +182,7 @@ pip install "ExcelAlchemy[minio]"
 - result workbook column titles
 - row validation status labels
 
-The public locale policy is documented in [docs/locale.md](./docs/locale.md).
+The public locale policy is documented in [docs/locale.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/locale.md).
 In short:
 
 - runtime exceptions are standardized in English
@@ -293,7 +293,7 @@ This repository intentionally records its evolution:
 - i18n foundation and locale-aware workbook text
 
 These are not incidental refactors; they are the story of the codebase.
-See [ABOUT.md](./ABOUT.md) for the migration rationale behind each step.
+See [ABOUT.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/ABOUT.md) for the migration rationale behind each step.
 
 ## Pydantic v1 vs v2
 
@@ -306,14 +306,14 @@ The short version:
 | Validation integration | Deep reliance on internals | Adapter + explicit runtime validation |
 | Upgrade path | Brittle | Layered |
 
-More detail is documented in [ABOUT.md](./ABOUT.md).
+More detail is documented in [ABOUT.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/ABOUT.md).
 
 ## Docs Map
 
-- [README.md](./README.md): product + design overview
-- [README_cn.md](./README_cn.md): Chinese usage-oriented guide
-- [ABOUT.md](./ABOUT.md): engineering rationale and evolution notes
-- [docs/architecture.md](./docs/architecture.md): component map and boundaries
+- [README.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README.md): product + design overview
+- [README_cn.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README_cn.md): Chinese usage-oriented guide
+- [ABOUT.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/ABOUT.md): engineering rationale and evolution notes
+- [docs/architecture.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/architecture.md): component map and boundaries
 
 ## Development
 
@@ -330,4 +330,4 @@ uv build
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+MIT. See [LICENSE](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/LICENSE).

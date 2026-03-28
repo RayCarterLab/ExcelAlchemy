@@ -34,7 +34,9 @@ jobs:
             uv.lock
 
       - name: Build package
-        run: uv build
+        run: |
+          rm -rf dist
+          uv build
 
       - name: Check package metadata
         run: uvx twine check dist/*
