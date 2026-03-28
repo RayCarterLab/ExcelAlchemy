@@ -23,7 +23,7 @@ jobs:
       contents: read
     steps:
       - name: Check out code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Python 3.14
         uses: actions/setup-python@v6
@@ -52,7 +52,7 @@ jobs:
       contents: read
     steps:
       - name: Check out code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Python 3.14
         uses: actions/setup-python@v6
@@ -86,7 +86,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
@@ -109,7 +109,7 @@ jobs:
 
       - name: Upload coverage artifact
         if: always() && matrix.python-version == '3.14'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-reports-${{ matrix.python-version }}
           path: |
@@ -120,7 +120,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.14' && env.CODECOV_TOKEN != ''
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           files: coverage.xml
           disable_search: true
