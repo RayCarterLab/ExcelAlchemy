@@ -11,9 +11,11 @@ ExcelAlchemy 是一个面向 Excel 导入导出的 schema-first Python 库。
 
 ## 截图
 
+这些截图由仓库内的 [`scripts/generate_portfolio_assets.py`](./scripts/generate_portfolio_assets.py) 生成。
+
 | 模板 | 导入结果 |
 | --- | --- |
-| ![Excel 模板截图](./images/001_sample_template.png) | ![Excel 导入结果截图](./images/002_import_result.png) |
+| ![Excel 模板截图](./images/portfolio-template-en.png) | ![Excel 导入结果截图](./images/portfolio-import-result-en.png) |
 
 ## 这个项目适合什么
 

@@ -18,6 +18,15 @@ pluggable storage, `uv`-based workflows, and locale-aware workbook output.
 
 The current release track being prepared is `2.0.0rc1`, the first public release candidate for ExcelAlchemy 2.0.
 
+## At a Glance
+
+- Build Excel templates directly from typed Pydantic schemas
+- Validate uploaded workbooks and write failures back to rows and cells
+- Keep storage pluggable through `ExcelStorage`
+- Render workbook-facing text in `zh-CN` or `en`
+- Stay lightweight at runtime with `openpyxl` instead of pandas
+- Protect behavior with contract tests, `ruff`, and `pyright`
+
 ## Screenshots
 
 These screenshots are generated from the repository itself using
@@ -73,24 +82,13 @@ template = alchemy.download_template_artifact(filename='people-template.xlsx')
 For browser downloads, prefer `template.as_bytes()` with a `Blob`, or return the bytes from your backend with
 `Content-Disposition: attachment`. A top-level navigation to a long `data:` URL is less reliable in modern browsers.
 
-## Highlights
-
-- Pydantic v2-based schema extraction and validation
-- Locale-aware workbook text with `locale='zh-CN' | 'en'`
-- Row-level failure reporting and cell-level error marking
-- Pluggable storage via `ExcelStorage`
-- No pandas runtime dependency
-- Python 3.12-3.14 support, with 3.14 as the primary target
-- `uv`-based development and CI workflow
-- Contract tests that protect import/export behavior during refactors
-
-## What This Project Is
+## Repository Scope
 
 - A library for building Excel workflows from typed schemas.
 - A reference implementation of “facade outside, focused components inside”.
 - A portfolio project that emphasizes architecture, migration strategy, and maintainability.
 
-## What This Project Is Not
+## Non-Goals
 
 - Not a general spreadsheet analysis library.
 - Not a pandas-first data wrangling tool.
