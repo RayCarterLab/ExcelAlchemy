@@ -10,7 +10,7 @@ from excelalchemy.metadata import FieldMetaInfo
 
 
 def canonicalize_decimal(value: Decimal, digits_limit: int | None) -> Decimal:
-    """将 Decimal 转换为指定精度的 Decimal"""
+    """Quantize a Decimal to the configured precision when needed."""
     exponent = value.as_tuple().exponent
     if digits_limit is not None and isinstance(exponent, int) and abs(exponent) != digits_limit:
         try:
@@ -24,7 +24,7 @@ def canonicalize_decimal(value: Decimal, digits_limit: int | None) -> Decimal:
 
 
 def transform_decimal(value: Decimal | int | float | None) -> float | int | None:
-    """将 Decimal 转换为 float 或 int"""
+    """Convert a Decimal into an int or float for workbook-facing output."""
     if value is None:
         return None
 
@@ -38,7 +38,7 @@ def transform_decimal(value: Decimal | int | float | None) -> float | int | None
 
 
 class Number(Decimal, ExcelFieldCodec):
-    __name__ = '数值输入'
+    __name__ = 'Number'
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
@@ -89,7 +89,7 @@ class Number(Decimal, ExcelFieldCodec):
 
     @staticmethod
     def __maybe_decimal__(value: Any) -> Decimal | None:
-        # 如果输入不是 Decimal 类型，尝试转换。
+        # Convert non-Decimal input through Decimal for validation.
         if isinstance(value, Decimal):
             return value
 
@@ -104,11 +104,11 @@ class Number(Decimal, ExcelFieldCodec):
     def __check_range__(value: Decimal | float | int, field_meta: FieldMetaInfo) -> list[str]:
         errors: list[str] = []
 
-        # 从 field_meta 对象中获取导入者上限和下限值。
+        # Read the configured importer bounds from field metadata.
         importer_le = field_meta.importer_le or Decimal('Infinity')
         importer_ge = field_meta.importer_ge or Decimal('-Infinity')
 
-        # 确保解析后的 decimal 在接受范围内。
+        # Ensure the parsed decimal stays within the accepted range.
         if not importer_ge <= value <= importer_le:
             if field_meta.importer_le and field_meta.importer_ge:
                 errors.append(
@@ -129,11 +129,10 @@ class Number(Decimal, ExcelFieldCodec):
 
     @classmethod
     def normalize_import_value(cls, value: Decimal | Any, field_meta: FieldMetaInfo) -> float | int:
-        # 如果输入不是 Decimal 类型，尝试转换。
+        # Convert non-Decimal input before range validation.
         parsed = cls.__maybe_decimal__(value)
         if parsed is None:
             raise ValueError(msg(MessageKey.INVALID_NUMBER_ENTER_NUMBER))
-        # 初始化一个错误信息列表。
         errors: list[str] = cls.__check_range__(parsed, field_meta)
         if errors:
             raise ValueError(*errors)

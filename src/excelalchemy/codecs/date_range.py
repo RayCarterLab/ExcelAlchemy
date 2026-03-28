@@ -25,7 +25,7 @@ class DateRange(CompositeExcelFieldCodec):
     start: datetime | None
     end: datetime | None
 
-    __name__ = '日期范围'
+    __name__ = 'DateRange'
 
     @classmethod
     def model_validate(cls, obj: Any) -> 'DateRange':
@@ -34,7 +34,7 @@ class DateRange(CompositeExcelFieldCodec):
         return self
 
     def __init__(self, start: datetime | None, end: datetime | None):
-        # trick, BaseMode.dict() 会得到时间戳，而不是 datetime 对象，这是预期的行为
+        # Pydantic model dumps intentionally store timestamps rather than datetime objects here.
         _start = int(start.timestamp() * MILLISECOND_TO_SECOND) if start else None
         _end = int(end.timestamp() * MILLISECOND_TO_SECOND) if end else None
         super().__init__(start=_start, end=_end)

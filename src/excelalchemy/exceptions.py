@@ -9,7 +9,7 @@ from excelalchemy.i18n.messages import message as msg
 
 
 class ExcelCellError(Exception):
-    """Excel 单元格错误"""
+    """Cell-level import error tied to a specific workbook header."""
 
     message = msg(MessageKey.EXCEL_IMPORT_ERROR)
     label: Label
@@ -33,7 +33,7 @@ class ExcelCellError(Exception):
     def __str__(self) -> str:
         return f'【{self.label}】{self.message}'
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{type(self).__name__}(label=Label('{self.label}'), message='{self.message}')"
 
     def __eq__(self, other: object) -> bool:
@@ -56,7 +56,7 @@ class ExcelCellError(Exception):
 
 
 class ExcelRowError(Exception):
-    """Excel 整行发生导入错误"""
+    """Row-level import error not tied to a single workbook cell."""
 
     message = msg(MessageKey.EXCEL_ROW_IMPORT_ERROR)
 
@@ -69,10 +69,10 @@ class ExcelRowError(Exception):
         self.message = message or self.message
         self.detail = kwargs or {}
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.message
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{type(self).__name__}(message='{self.message}')"
 
 

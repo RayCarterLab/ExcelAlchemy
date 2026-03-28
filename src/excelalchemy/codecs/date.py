@@ -14,7 +14,7 @@ from excelalchemy.metadata import FieldMetaInfo
 
 
 class Date(ExcelFieldCodec, datetime):
-    __name__ = '日期选择'
+    __name__ = 'Date'
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
@@ -32,7 +32,7 @@ class Date(ExcelFieldCodec, datetime):
     @classmethod
     def parse_input(cls, value: str | DateTime | Any, field_meta: FieldMetaInfo) -> datetime | Any:
         if isinstance(value, DateTime):
-            logging.info('类型【%s】无需序列化: %s, 返回原值 %s ', cls.__name__, field_meta.label, value)
+            logging.info('Codec %s received a parsed datetime for %s; returning it unchanged: %s', cls.__name__, field_meta.label, value)
             return value
 
         if not field_meta.date_format:
@@ -40,7 +40,7 @@ class Date(ExcelFieldCodec, datetime):
 
         value = str(value).strip()
         try:
-            v = value.replace('/', '-')  # pendulum 不支持 / 作为日期分隔符
+            v = value.replace('/', '-')  # pendulum does not accept "/" as a date separator here.
             dt: DateTime = cast(DateTime, pendulum.parse(v))
             return dt.replace(tzinfo=field_meta.timezone)
         except Exception as exc:

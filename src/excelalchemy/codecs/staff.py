@@ -12,7 +12,7 @@ from excelalchemy.metadata import FieldMetaInfo
 
 
 class SingleStaff(Radio):
-    __name__ = '人员单选'
+    __name__ = 'SingleStaff'
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
@@ -33,12 +33,17 @@ class SingleStaff(Radio):
         try:
             return field_meta.options_id_map[OptionId(value.strip())].name
         except KeyError:
-            logging.warning('类型【%s】无法为【%s】找到【%s】的选项, 返回原值', cls.__name__, field_meta.label, value)
+            logging.warning(
+                'Type %s could not resolve option %s for field %s; returning the original value',
+                cls.__name__,
+                value,
+                field_meta.label,
+            )
         return value
 
 
 class MultiStaff(MultiCheckbox):
-    __name__ = '人员多选'
+    __name__ = 'MultiStaff'
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:

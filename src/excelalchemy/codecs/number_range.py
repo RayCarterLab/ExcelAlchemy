@@ -16,10 +16,10 @@ class NumberRange(CompositeExcelFieldCodec):
     start: float | int | None
     end: float | int | None
 
-    __name__ = '数值范围'
+    __name__ = 'NumberRange'
 
     def __init__(self, start: Decimal | int | float | None, end: Decimal | int | float | None):
-        # trick: for dict call to get the correct value
+        # Keep dict-like behavior while preserving normalized start/end attributes.
         super().__init__(start=transform_decimal(start), end=transform_decimal(end))
         self.start = transform_decimal(start)
         self.end = transform_decimal(end)
@@ -37,15 +37,12 @@ class NumberRange(CompositeExcelFieldCodec):
 
     @classmethod
     def parse_input(cls, value: object, field_meta: FieldMetaInfo) -> object:
-        # Strip leading/trailing whitespace from a string value
         if isinstance(value, str):
             value = value.strip()
 
-        # Return the given value if it is already a NumberRange object
         if isinstance(value, NumberRange):
             return value
 
-        # Attempt to create a new NumberRange object from a dictionary
         mapping = cls._coerce_mapping(value)
         if mapping is not None:
             try:
@@ -59,8 +56,6 @@ class NumberRange(CompositeExcelFieldCodec):
                     value,
                     exc,
                 )
-
-        # Return the original value if parsing fails
         return value
 
     @classmethod

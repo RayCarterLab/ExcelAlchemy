@@ -18,24 +18,22 @@ class ExcelFieldCodec(ABC):
     @classmethod
     @abstractmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
-        """用于渲染 Excel 表头的注释"""
+        """Return the header comment rendered into the workbook template."""
 
     @classmethod
     @abstractmethod
     def parse_input(cls, value: Any, field_meta: FieldMetaInfo) -> Any:  # value is always not None
-        """用于把用户填入 Excel 的数据，转换成后端代码入口可接收的数据
-        如果转换失败，返回原值，用户后续捕获更准确的错误
-        """
+        """Parse workbook input into the intermediate Python value consumed by the import pipeline."""
 
     @classmethod
     @abstractmethod
     def format_display_value(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
-        """用于把 worksheet 读入后的值转回用户可识别的数据, 处理聚合之前的数据"""
+        """Format a raw worksheet value back into a user-recognizable display value."""
 
     @classmethod
     @abstractmethod
     def normalize_import_value(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
-        """验证用户输入的值是否符合约束. 接收 serialize 后的值"""
+        """Validate and normalize parsed input before handing it to the Pydantic layer."""
 
     @classmethod
     def comment(cls, field_meta: FieldMetaInfo) -> str:
@@ -74,7 +72,7 @@ class CompositeExcelFieldCodec(ExcelFieldCodec, dict[str, object]):
     @classmethod
     @abstractmethod
     def column_items(cls) -> list[tuple[Key, FieldMetaInfo]]:
-        """用于获取模型的所有字段名"""
+        """Return the schema keys and metadata for each expanded worksheet column."""
 
     @classmethod
     def model_items(cls) -> list[tuple[Key, FieldMetaInfo]]:

@@ -37,9 +37,9 @@ type FieldIncludeExclude = Set[IntStr] | bool | None
 
 
 class PatchFieldMeta(BaseModel):
-    unique: bool | None = False  # 当前列是否唯一，不用于校验，用于渲染 Excel 表头的注释
-    is_primary_key: bool | None = False  # 当前列是否为主键，不用于校验，用于渲染 Excel 表头的注释
-    hint: str | None = None  # 当前列的提示信息，不用于校验，用于渲染 Excel 表头的注释
+    unique: bool | None = False  # Workbook hint only. Runtime uniqueness is enforced elsewhere.
+    is_primary_key: bool | None = False  # Workbook hint only. Runtime primary-key behavior is configured separately.
+    hint: str | None = None  # Workbook-facing help text rendered into header comments.
     options: list[Option] | None = None
 
 

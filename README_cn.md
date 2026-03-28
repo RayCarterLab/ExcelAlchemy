@@ -9,6 +9,12 @@ ExcelAlchemy 是一个面向 Excel 导入导出的 schema-first Python 库。
 
 你用 Pydantic 模型定义结构，用 `FieldMeta` 定义 Excel 元数据，用显式的导入/导出流程去完成模板生成、数据校验、错误回写和后端集成。
 
+## 截图
+
+| 模板 | 导入结果 |
+| --- | --- |
+| ![Excel 模板截图](./images/001_sample_template.png) | ![Excel 导入结果截图](./images/002_import_result.png) |
+
 ## 这个项目适合什么
 
 - 需要给业务方发 Excel 模板并回收数据

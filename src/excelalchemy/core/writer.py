@@ -73,7 +73,7 @@ def _build_comment(field_meta: FieldMetaInfo) -> Comment | None:
 
     return Comment(
         text=comment_text,
-        author='https://github.com/SundayWindy/ExcelAlchemy',
+        author='https://github.com/RayCarterLab/ExcelAlchemy',
         height=sum(ceil(len(line) / 20) for line in comment_text.splitlines()) * 28,
         width=300,
     )

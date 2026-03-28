@@ -1,4 +1,4 @@
-"""导入 Excel 的结果"""
+"""Import result models for ExcelAlchemy workflows."""
 
 from enum import StrEnum
 
@@ -15,7 +15,7 @@ def _empty_labels() -> list[Label]:
 
 
 class ValidateRowResult(StrEnum):
-    """导入结果"""
+    """Per-row validation status."""
 
     SUCCESS = 'SUCCESS'
     FAIL = 'FAIL'
@@ -27,48 +27,48 @@ class ValidateRowResult(StrEnum):
 
 
 class ValidateHeaderResult(BaseModel):
-    """校验表头结果"""
+    """Header validation result."""
 
-    missing_required: list[Label] = Field(description='缺失的必填表头')
-    missing_primary: list[Label] = Field(description='缺失的关键列')
-    unrecognized: list[Label] = Field(description='无法识别的表头')
-    duplicated: list[Label] = Field(description='重复的表头')
-    is_valid: bool = Field(default=True, description='是否校验通过')
+    missing_required: list[Label] = Field(description='Required headers missing from the workbook.')
+    missing_primary: list[Label] = Field(description='Primary-key headers missing from the workbook.')
+    unrecognized: list[Label] = Field(description='Headers present in the workbook but unknown to the schema.')
+    duplicated: list[Label] = Field(description='Headers that appear more than once in the workbook.')
+    is_valid: bool = Field(default=True, description='Whether header validation succeeded.')
 
     @property
     def is_required_missing(self) -> bool:
-        """是否缺失必填表头"""
+        """Return whether any required headers are missing."""
         return bool(self.missing_required)
 
 
 class ValidateResult(StrEnum):
-    """导入结果类型"""
+    """High-level import result type."""
 
-    HEADER_INVALID = 'HEADER_INVALID'  # 表头无效
-    DATA_INVALID = 'DATA_INVALID'  # 数据无效
-    SUCCESS = 'SUCCESS'  # 成功
+    HEADER_INVALID = 'HEADER_INVALID'
+    DATA_INVALID = 'DATA_INVALID'
+    SUCCESS = 'SUCCESS'
 
 
 class ImportResult(BaseModel):
-    """导入数据结果"""
+    """Structured result returned from an import run."""
 
     model_config = ConfigDict(extra='allow')
 
-    result: ValidateResult = Field(description='导入结果')
+    result: ValidateResult = Field(description='Overall import result.')
 
-    is_required_missing: bool = Field(default=False, description='是否缺失必填表头')
-    missing_required: list[Label] = Field(default_factory=_empty_labels, description='缺失的必填表头')
-    missing_primary: list[Label] = Field(default_factory=_empty_labels, description='缺失的关键列')
-    unrecognized: list[Label] = Field(default_factory=_empty_labels, description='无法识别的表头')
-    duplicated: list[Label] = Field(default_factory=_empty_labels, description='重复的表头')
+    is_required_missing: bool = Field(default=False, description='Whether required headers are missing.')
+    missing_required: list[Label] = Field(default_factory=_empty_labels, description='Required headers missing from the workbook.')
+    missing_primary: list[Label] = Field(default_factory=_empty_labels, description='Primary-key headers missing from the workbook.')
+    unrecognized: list[Label] = Field(default_factory=_empty_labels, description='Headers present in the workbook but unknown to the schema.')
+    duplicated: list[Label] = Field(default_factory=_empty_labels, description='Headers that appear more than once in the workbook.')
 
-    url: str | None = Field(default=None, description='导入结果文件的下载链接, 失败时有值')
-    success_count: int = Field(default=0, description='导入成功的数据条数')
-    fail_count: int = Field(default=0, description='导入失败的数据条数')
+    url: str | None = Field(default=None, description='Download URL for the import result workbook when one is produced.')
+    success_count: int = Field(default=0, description='Number of rows imported successfully.')
+    fail_count: int = Field(default=0, description='Number of rows that failed to import.')
 
     @classmethod
     def from_validate_header_result(cls, result: ValidateHeaderResult) -> 'ImportResult':
-        """从校验表头结果构造导入结果"""
+        """Build an import result from a failed header-validation result."""
         if result.is_valid:
             raise RuntimeError(msg(MessageKey.IMPORT_RESULT_ONLY_FOR_INVALID_HEADER_VALIDATION))
         return cls(

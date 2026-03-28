@@ -8,15 +8,15 @@ from excelalchemy._primitives.identity import Label, UniqueLabel
 
 
 class ExcelHeader(BaseModel):
-    """用于表示用户输入的 Excel 表头信息"""
+    """Normalized workbook header extracted from user input."""
 
-    label: Label = Field(description='Excel 的列名')
-    parent_label: Label = Field(description='Excel 的父列名, 如果没有父列名, parent_label 等于 label')
-    offset: int = Field(default=0, description='合并表头·子单元格所属父单元格的偏移量')
+    label: Label = Field(description='Workbook header label.')
+    parent_label: Label = Field(description='Parent workbook header label. Falls back to the label itself for flat headers.')
+    offset: int = Field(default=0, description='Child-column offset under a merged parent header.')
 
     @property
     def unique_label(self) -> UniqueLabel:
-        """返回唯一标签"""
+        """Return the fully qualified workbook header label."""
         label = (
             f'{self.parent_label}{UNIQUE_HEADER_CONNECTOR}{self.label}'
             if self.parent_label != self.label

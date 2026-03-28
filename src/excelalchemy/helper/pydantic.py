@@ -105,7 +105,7 @@ class PydanticModelAdapter:
 def extract_pydantic_model(
     model: type[BaseModel] | None,
 ) -> list[FieldMetaInfo]:
-    """根据 Pydantic 模型提取 Excel 表头信息."""
+    """Extract Excel field metadata from a Pydantic model declaration."""
     if model is None:
         raise RuntimeError(msg(MessageKey.MODEL_CANNOT_BE_NONE))
     return list(_extract_pydantic_model(PydanticModelAdapter(model)))
@@ -119,7 +119,7 @@ def instantiate_pydantic_model[ModelT: BaseModel](
     data: Mapping[str, Any],
     model: type[ModelT],
 ) -> ModelT | list[ExcelCellError | ExcelRowError]:
-    """实例化 Pydantic 模型, 并返回错误."""
+    """Instantiate a Pydantic model and return mapped Excel errors when validation fails."""
     model_adapter = PydanticModelAdapter(model)
     normalized_data: dict[str, Any] = {}
     errors: list[ExcelCellError | ExcelRowError] = []

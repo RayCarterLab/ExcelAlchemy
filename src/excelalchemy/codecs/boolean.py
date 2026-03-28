@@ -11,7 +11,7 @@ from excelalchemy.metadata import FieldMetaInfo
 
 @excel_choice_codec
 class Boolean(ExcelFieldCodec):
-    __name__ = '布尔'
+    __name__ = 'Boolean'
 
     @staticmethod
     def _true_display() -> str:

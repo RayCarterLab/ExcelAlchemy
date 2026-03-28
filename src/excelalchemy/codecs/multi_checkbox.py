@@ -12,7 +12,7 @@ from excelalchemy.metadata import FieldMetaInfo
 
 
 class MultiCheckbox(ExcelFieldCodec, list[str]):
-    __name__ = '复选框组'
+    __name__ = 'MultiChoice'
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
@@ -27,16 +27,13 @@ class MultiCheckbox(ExcelFieldCodec, list[str]):
 
     @classmethod
     def parse_input(cls, value: object, field_meta: FieldMetaInfo) -> list[str] | object:
-        # If the value is a list, convert all items to strings and strip whitespace
         if isinstance(value, list):
             items = cast(list[object], value)
             return [str(item).strip() for item in items]
 
-        # If the value is a string, split it into a list using MULTI_CHECKBOX_SEPARATOR and strip whitespace
         if isinstance(value, str):
             return [item.strip() for item in value.split(MULTI_CHECKBOX_SEPARATOR)]
 
-        # If the value is of an unsupported type, log a warning and return the original value
         logging.warning('ValueType <%s> could not parse Excel input %s; returning the original value', cls.__name__, value)
         return value
 

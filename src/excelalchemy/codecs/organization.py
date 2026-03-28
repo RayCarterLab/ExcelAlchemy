@@ -11,7 +11,7 @@ from excelalchemy.metadata import FieldMetaInfo
 
 
 class SingleOrganization(Radio):
-    __name__ = '组织单选'
+    __name__ = 'SingleOrganization'
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
@@ -30,13 +30,13 @@ class SingleOrganization(Radio):
         try:
             return field_meta.options_id_map[OptionId(value.strip())].name
         except KeyError:
-            logging.warning('无法找到组织 %s 的选项, 返回原值', value)
+            logging.warning('Could not resolve organization option %s; returning the original value', value)
 
         return value
 
 
 class MultiOrganization(MultiCheckbox):
-    __name__ = '组织多选'
+    __name__ = 'MultiOrganization'
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
@@ -65,7 +65,7 @@ class MultiOrganization(MultiCheckbox):
             option_names = field_meta.exchange_option_ids_to_names(option_ids)
             return MULTI_CHECKBOX_SEPARATOR.join(map(str, option_names))
 
-        logging.warning('%s 反序列化失败', cls.__name__)
+        logging.warning('%s could not be deserialized; returning the original value', cls.__name__)
         return str(value)
 
     @classmethod

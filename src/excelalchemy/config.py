@@ -1,4 +1,4 @@
-"""实例化 ExcelAlchemy 时的配置"""
+"""Configuration objects used to instantiate the ExcelAlchemy facade."""
 
 from __future__ import annotations
 
@@ -22,16 +22,16 @@ if TYPE_CHECKING:
 
 
 class ExcelMode(StrEnum):
-    """Excel 模式"""
+    """Top-level Excel workflow mode."""
 
     IMPORT = 'IMPORT'
     EXPORT = 'EXPORT'
 
 
 class ImportMode(StrEnum):
-    CREATE = 'CREATE'  # 创建
-    UPDATE = 'UPDATE'  # 更新
-    CREATE_OR_UPDATE = 'CREATE_OR_UPDATE'  # 创建或更新
+    CREATE = 'CREATE'
+    UPDATE = 'UPDATE'
+    CREATE_OR_UPDATE = 'CREATE_OR_UPDATE'
 
 
 @dataclass(slots=True)
@@ -39,7 +39,7 @@ class ImporterConfig[ContextT, ImporterCreateModelT: BaseModel, ImporterUpdateMo
     create_importer_model: type[ImporterCreateModelT] | None = None
     update_importer_model: type[ImporterUpdateModelT] | None = None
 
-    # Callable function receive Key as dict key instead of Label.
+    # The converter receives schema keys rather than workbook labels.
     data_converter: DataConverter | None = import_data_converter
     creator: DmlCallback[ContextT] | None = None
     updater: DmlCallback[ContextT] | None = None
@@ -72,21 +72,18 @@ class ImporterConfig[ContextT, ImporterCreateModelT: BaseModel, ImporterUpdateMo
 
         return self
 
-    # 创建模式验证
     def _validate_create(self) -> None:
         if self.import_mode != ImportMode.CREATE:
             raise ConfigError(msg(MessageKey.INVALID_IMPORT_MODE, import_mode=self.import_mode))
         if not self.create_importer_model:
             raise ConfigError(msg(MessageKey.CREATE_IMPORTER_MODEL_REQUIRED_CREATE))
 
-    # 更新模式验证
     def _validate_update(self) -> None:
         if self.import_mode != ImportMode.UPDATE:
             raise ConfigError(msg(MessageKey.INVALID_IMPORT_MODE, import_mode=self.import_mode))
         if not self.update_importer_model:
             raise ConfigError(msg(MessageKey.UPDATE_IMPORTER_MODEL_REQUIRED_UPDATE))
 
-    # 创建或更新模式验证
     def _validate_create_or_update(self) -> None:
         if self.import_mode != ImportMode.CREATE_OR_UPDATE:
             raise ConfigError(msg(MessageKey.INVALID_IMPORT_MODE, import_mode=self.import_mode))
@@ -97,7 +94,7 @@ class ImporterConfig[ContextT, ImporterCreateModelT: BaseModel, ImporterUpdateMo
             raise ConfigError(msg(MessageKey.UPDATE_IMPORTER_MODEL_REQUIRED_CREATE_OR_UPDATE))
         if not self.is_data_exist:
             raise ConfigError(msg(MessageKey.IS_DATA_EXIST_REQUIRED_CREATE_OR_UPDATE))
-        # 创建模型和更新模型的字段必须一致
+        # Create and update models must expose the same schema keys.
         if get_model_field_names(self.create_importer_model) != get_model_field_names(self.update_importer_model):
             raise ConfigError(msg(MessageKey.IMPORTER_MODELS_FIELD_NAMES_MUST_MATCH))
 
@@ -108,7 +105,7 @@ class ImporterConfig[ContextT, ImporterCreateModelT: BaseModel, ImporterUpdateMo
 @dataclass(slots=True)
 class ExporterConfig[ExporterModelT: BaseModel]:
     exporter_model: type[ExporterModelT]
-    # Callable function receive Key as dict key instead of Label.
+    # The converter receives schema keys rather than workbook labels.
     data_converter: DataConverter | None = export_data_converter
 
     storage: ExcelStorage | None = None

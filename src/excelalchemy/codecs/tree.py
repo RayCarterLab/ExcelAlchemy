@@ -9,7 +9,7 @@ from excelalchemy.metadata import FieldMetaInfo
 
 
 class SingleTreeNode(Radio):
-    __name__ = '树形单选'
+    __name__ = 'SingleTreeNode'
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
@@ -31,13 +31,13 @@ class SingleTreeNode(Radio):
         try:
             return field_meta.options_id_map[value.strip()].name
         except KeyError:
-            logging.warning('无法找到树结点 %s 的选项, 返回原值', value)
+            logging.warning('Could not resolve tree option %s; returning the original value', value)
 
         return value if value is not None else ''
 
 
 class MultiTreeNode(MultiCheckbox):
-    __name__ = '树形多选'
+    __name__ = 'MultiTreeNode'
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:

@@ -19,7 +19,7 @@ class ABCExcelAlchemy[
 ](ABC):
     @abstractmethod
     def download_template(self, sample_data: list[ExportRowPayload] | None = None) -> DataUrlStr:
-        """下载导入模版，返回 Data URL，字段顺序与定义的导出模型一致。"""
+        """Render an import template and return it as a data URL."""
 
     @abstractmethod
     def download_template_artifact(
@@ -28,15 +28,15 @@ class ABCExcelAlchemy[
         *,
         filename: str = 'template.xlsx',
     ) -> ExcelArtifact:
-        """下载导入模板，返回结构化 Excel 产物。"""
+        """Render an import template and return a structured Excel artifact."""
 
     @abstractmethod
     async def import_data(self, input_excel_name: str, output_excel_name: str) -> ImportResult:
-        """导入数据"""
+        """Import workbook data and return a structured result."""
 
     @abstractmethod
     def export(self, data: list[ExportRowPayload], keys: Sequence[str] | None = None) -> DataUrlStr:
-        """导出数据，返回 Data URL 形式的 Excel 文件，字段顺序与定义的导出模型一致。"""
+        """Export rows and return the workbook as a data URL."""
 
     @abstractmethod
     def export_artifact(
@@ -46,12 +46,12 @@ class ABCExcelAlchemy[
         *,
         filename: str = 'export.xlsx',
     ) -> ExcelArtifact:
-        """导出数据，返回结构化 Excel 产物。"""
+        """Export rows and return a structured Excel artifact."""
 
     @abstractmethod
     def export_upload(self, output_name: str, data: list[ExportRowPayload], keys: Sequence[str] | None = None) -> UrlStr:
-        """导出数据, 自动将文件上传到配置的存储后端，字段顺序与定义的导出模型一致"""
+        """Export rows and upload the workbook through the configured storage backend."""
 
     @abstractmethod
-    def add_context(self, context: ContextT):
-        """添加上下文"""
+    def add_context(self, context: ContextT) -> None:
+        """Attach runtime context used by importer callbacks."""

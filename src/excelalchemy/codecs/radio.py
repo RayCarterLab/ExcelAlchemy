@@ -12,7 +12,7 @@ from excelalchemy.metadata import FieldMetaInfo
 
 
 class Radio(ExcelFieldCodec, str):
-    __name__ = '单选框组'
+    __name__ = 'SingleChoice'
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:

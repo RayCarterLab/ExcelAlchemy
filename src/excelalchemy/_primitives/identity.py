@@ -27,31 +27,31 @@ class _IntegerIdentity(int):
 
 
 class Label(_StringIdentity):
-    """Excel 的列名"""
+    """Workbook header label."""
 
 
 class UniqueLabel(Label):
-    """Excel 唯一的列名"""
+    """Fully qualified workbook header label."""
 
 
 class Key(_StringIdentity):
-    """Python 模型的键名"""
+    """Schema key used by the Python model."""
 
 
 class UniqueKey(Key):
-    """Python 模型唯一的键名"""
+    """Fully qualified schema key."""
 
 
 class RowIndex(_IntegerIdentity):
-    """Excel 的行索引, 从 0 开始"""
+    """Zero-based workbook row index."""
 
 
 class ColumnIndex(_IntegerIdentity):
-    """Excel 的列索引, 从 0 开始"""
+    """Zero-based workbook column index."""
 
 
 class OptionId(_StringIdentity):
-    """选项 ID"""
+    """Selection option identifier."""
 
 
 class DataUrlStr(_StringIdentity):
@@ -63,4 +63,4 @@ class Base64Str(DataUrlStr):
 
 
 class UrlStr(_StringIdentity):
-    """URL 字符串"""
+    """Generic URL string."""

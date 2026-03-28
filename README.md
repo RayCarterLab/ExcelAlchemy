@@ -1,14 +1,80 @@
 # ExcelAlchemy
 
+[![CI](https://github.com/RayCarterLab/ExcelAlchemy/actions/workflows/ci.yml/badge.svg)](https://github.com/RayCarterLab/ExcelAlchemy/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-3776AB)
+![Lint](https://img.shields.io/badge/lint-ruff-D7FF64)
+![Typing](https://img.shields.io/badge/typing-pyright-2C6BED)
+
 [中文 README](./README_cn.md) · [About](./ABOUT.md) · [Architecture](./docs/architecture.md) · [Locale Policy](./docs/locale.md) · [Changelog](./CHANGELOG.md) · [Migration Notes](./MIGRATIONS.md)
 
 ExcelAlchemy is a schema-driven Excel import/export library for Python.
-It turns Pydantic models into Excel templates, validates spreadsheet input back into application data, and keeps the import/export workflow explicit, typed, and extensible.
+It turns Pydantic models into Excel templates, validates spreadsheet input back into application data, and keeps the workflow explicit, typed, locale-aware, and extensible.
 
 This repository is also a design artifact.
 It documents a series of deliberate engineering choices: `src/` layout, Pydantic v2 migration, pandas removal, pluggable storage, `uv`-based workflows, and locale-aware workbook output.
 
 The current release track being prepared is `2.0.0rc1`, the first public release candidate for ExcelAlchemy 2.0.
+
+## Screenshots
+
+| Template | Import Result |
+| --- | --- |
+| ![Excel template screenshot](./images/001_sample_template.png) | ![Excel import result screenshot](./images/002_import_result.png) |
+
+## Minimal Example
+
+```python
+from pydantic import BaseModel
+
+from excelalchemy import ExcelAlchemy, FieldMeta, ImporterConfig, Number, String
+
+
+class Importer(BaseModel):
+    age: Number = FieldMeta(label='Age', order=1)
+    name: String = FieldMeta(label='Name', order=2)
+
+
+alchemy = ExcelAlchemy(ImporterConfig(Importer, locale='en'))
+template = alchemy.download_template_artifact(filename='people-template.xlsx')
+
+excel_bytes = template.as_bytes()
+template_data_url = template.as_data_url()  # compatibility path for older browser integrations
+```
+
+## Modern Annotated Example
+
+```python
+from typing import Annotated
+
+from pydantic import BaseModel, Field
+
+from excelalchemy import Email, ExcelAlchemy, ExcelMeta, ImporterConfig
+
+
+class Importer(BaseModel):
+    email: Annotated[
+        Email,
+        Field(min_length=10),
+        ExcelMeta(label='Email', order=1, hint='Use your work email'),
+    ]
+
+
+alchemy = ExcelAlchemy(ImporterConfig(Importer, locale='en'))
+template = alchemy.download_template_artifact(filename='people-template.xlsx')
+```
+
+For browser downloads, prefer `template.as_bytes()` with a `Blob`, or return the bytes from your backend with
+`Content-Disposition: attachment`. A top-level navigation to a long `data:` URL is less reliable in modern browsers.
+
+## Highlights
+
+- Pydantic v2-based schema extraction and validation
+- Locale-aware workbook text with `locale='zh-CN' | 'en'`
+- Pluggable storage via `ExcelStorage`
+- No pandas runtime dependency
+- Python 3.12-3.14 support, with 3.14 as the primary target
+- `uv`-based development and CI workflow
+- Contract tests that protect import/export behavior during refactors
 
 ## What This Project Is
 
@@ -34,16 +100,6 @@ ExcelAlchemy treats Excel as a typed contract:
 - field metadata defines the workbook experience
 - import execution is separated from parsing
 - storage is an interchangeable strategy, not a hard-coded implementation
-
-## Highlights
-
-- Pydantic v2-based schema extraction and validation
-- Locale-aware workbook text with `locale='zh-CN' | 'en'`
-- Pluggable storage via `ExcelStorage`
-- No pandas runtime dependency
-- Python 3.12-3.14 support, with 3.14 as the primary target
-- `uv`-based development and CI workflow
-- Contract tests that protect import/export behavior during refactors
 
 ## Architecture
 
@@ -115,51 +171,6 @@ If you want the built-in Minio backend:
 pip install "ExcelAlchemy[minio]"
 ```
 
-## Minimal Example
-
-```python
-from pydantic import BaseModel
-
-from excelalchemy import ExcelAlchemy, FieldMeta, ImporterConfig, Number, String
-
-
-class Importer(BaseModel):
-    age: Number = FieldMeta(label='Age', order=1)
-    name: String = FieldMeta(label='Name', order=2)
-
-
-alchemy = ExcelAlchemy(ImporterConfig(Importer, locale='en'))
-template = alchemy.download_template_artifact(filename='people-template.xlsx')
-
-excel_bytes = template.as_bytes()
-template_data_url = template.as_data_url()  # compatibility path for older browser integrations
-```
-
-## Modern Annotated Example
-
-```python
-from typing import Annotated
-
-from pydantic import BaseModel, Field
-
-from excelalchemy import Email, ExcelAlchemy, ExcelMeta, ImporterConfig
-
-
-class Importer(BaseModel):
-    email: Annotated[
-        Email,
-        Field(min_length=10),
-        ExcelMeta(label='Email', order=1, hint='Use your work email'),
-    ]
-
-
-alchemy = ExcelAlchemy(ImporterConfig(Importer, locale='en'))
-template = alchemy.download_template_artifact(filename='people-template.xlsx')
-```
-
-For browser downloads, prefer `template.as_bytes()` with a `Blob`, or return the bytes from your backend with
-`Content-Disposition: attachment`. A top-level navigation to a long `data:` URL is less reliable in modern browsers.
-
 ## Locale-Aware Workbook Output
 
 `locale` affects workbook-facing display text such as:
@@ -204,7 +215,7 @@ alchemy = ExcelAlchemy(
 result = await alchemy.import_data("people.xlsx", "people-result.xlsx")
 ```
 
-## Storage Extension Point
+## Storage Protocol
 
 Storage is modeled as a protocol, not a product decision.
 
@@ -256,6 +267,12 @@ This is what made the Pydantic v2 migration practical without rewriting the publ
 The public object should stay small.
 The internal object graph can evolve.
 `ExcelAlchemy` is the facade; parsing, rendering, execution, storage, and schema layout are delegated to separate collaborators.
+
+### Why a storage protocol?
+
+Excel workflows should not be locked to Minio, S3, or any one persistence strategy.
+`ExcelStorage` keeps the boundary stable while allowing object storage, local filesystem adapters, in-memory test doubles,
+and custom infrastructure integrations to share the same import/export contract.
 
 ## Evolution
 

@@ -21,7 +21,7 @@ def remove_excel_prefix(content: str) -> str:
 
 
 def flatten(data: Mapping[str, object], level: list[str] | None = None) -> dict[str, object]:
-    """平铺嵌套的字典
+    """Flatten a nested mapping into unique-header paths.
 
     >>> flatten( {'a': {'b': {'c': 12}}})  # dotted path expansion
     {'a.b.c': 12}
@@ -38,7 +38,7 @@ def flatten(data: Mapping[str, object], level: list[str] | None = None) -> dict[
 
 
 def value_is_nan(value: Any) -> bool:
-    """判断 value 是否为空单元格或 NaN。"""
+    """Return whether a worksheet value should be treated as empty or NaN."""
     if value is None:
         return True
 
