@@ -3,7 +3,7 @@ import io
 from typing import Any
 
 from openpyxl import load_workbook
-from openpyxl.cell.cell import Cell
+from openpyxl.cell.cell import Cell, MergedCell
 from openpyxl.workbook.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
@@ -38,7 +38,7 @@ def list_data_validations(worksheet: Worksheet) -> list[tuple[str | None, str]]:
     return [(validation.formula1, str(validation.sqref)) for validation in worksheet.data_validations.dataValidation]
 
 
-def get_fill_color(cell: Cell) -> str | None:
+def get_fill_color(cell: Cell | MergedCell) -> str | None:
     color = cell.fill.start_color.rgb or cell.fill.fgColor.rgb or cell.fill.start_color.index
     return _normalize_color(color)
 

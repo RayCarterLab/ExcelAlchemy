@@ -1,13 +1,14 @@
 import logging
+from collections.abc import Mapping
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 import pendulum
 from pendulum import DateTime
 from pydantic import BaseModel
 
-from excelalchemy._internal.constants import DATE_FORMAT_TO_PYTHON_MAPPING, MILLISECOND_TO_SECOND, DataRangeOption
-from excelalchemy._internal.identity import Key
+from excelalchemy._primitives.constants import DATE_FORMAT_TO_PYTHON_MAPPING, MILLISECOND_TO_SECOND, DataRangeOption
+from excelalchemy._primitives.identity import Key
 from excelalchemy.codecs.base import CompositeExcelFieldCodec
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
@@ -61,52 +62,40 @@ class DateRange(CompositeExcelFieldCodec):
         )
 
     @classmethod
-    def parse_input(cls, value: dict[str, str] | Any, field_meta: FieldMetaInfo) -> dict[str, DateTime | None] | Any:
-        match value:
-            case dict():
-                try:
-                    start_str, end_str = value.get('start'), value.get('end')
-                    start_time = (
-                        pendulum.parse(start_str).replace(  # type: ignore
-                            tzinfo=field_meta.timezone,
-                        )
-                        if start_str
-                        else None
-                    )
-                    end_time = (
-                        pendulum.parse(end_str).replace(  # type: ignore
-                            tzinfo=field_meta.timezone,
-                        )
-                        if end_str
-                        else None
-                    )
+    def parse_input(cls, value: object, field_meta: FieldMetaInfo) -> object:
+        mapping = cls._coerce_mapping(value)
+        if mapping is not None:
+            try:
+                return {
+                    'start': cls._parse_optional_datetime(mapping.get('start'), field_meta),
+                    'end': cls._parse_optional_datetime(mapping.get('end'), field_meta),
+                }
+            except Exception as exc:
+                logging.warning('Could not parse value %s for field %s. Reason: %s', value, cls.__name__, exc)
+                return value
 
-                    return {'start': start_time, 'end': end_time}
-                except Exception as e:
-                    logging.warning('Could not parse value %s for field %s. Reason: %s', value, cls.__name__, e)
-                    return value
-            case datetime():
+        if isinstance(value, datetime):
+            return value
+
+        if isinstance(value, str):
+            try:
+                return cls._parse_datetime_text(value, field_meta)
+            except Exception as exc:
+                logging.warning('Could not parse value %s for field %s. Reason: %s', value, cls.__name__, exc)
                 return value
-            case str():
-                try:
-                    datetime_value = pendulum.parse(value).replace(tzinfo=field_meta.timezone)  # type: ignore
-                except Exception as e:
-                    logging.warning('Could not parse value %s for field %s. Reason: %s', value, cls.__name__, e)
-                    return value
-                return datetime_value
-            case _:
-                return value
+
+        return value
 
     @classmethod
     def normalize_import_value(
         cls,
-        value: dict[str, DateTime | None] | Any,
+        value: object,
         field_meta: FieldMetaInfo,
     ) -> 'DateRange':
         try:
             parsed = DateRange.model_validate(value)
-            parsed.start = parsed.start.replace(tzinfo=field_meta.timezone) if parsed.start else parsed.start
-            parsed.end = parsed.end.replace(tzinfo=field_meta.timezone) if parsed.end else parsed.end
+            parsed.start = pendulum.instance(parsed.start, tz=field_meta.timezone) if parsed.start else None
+            parsed.end = pendulum.instance(parsed.end, tz=field_meta.timezone) if parsed.end else None
         except Exception as exc:
             raise ValueError(msg(MessageKey.INVALID_INPUT)) from exc
 
@@ -132,7 +121,7 @@ class DateRange(CompositeExcelFieldCodec):
             return parsed
 
     @classmethod
-    def format_display_value(cls, value: dict[str, str] | str | Any | None, field_meta: FieldMetaInfo) -> str:
+    def format_display_value(cls, value: object | None, field_meta: FieldMetaInfo) -> str:
         if value is None or value == '':
             return ''
         date_format = field_meta.must_date_format
@@ -144,25 +133,57 @@ class DateRange(CompositeExcelFieldCodec):
         if isinstance(value, datetime):
             return value.strftime(py_date_format)
 
-        if isinstance(value, dict):
-            return cls.__deserialize__dict(py_date_format, value)
+        mapping = cls._coerce_mapping(value)
+        if mapping is not None:
+            return cls.__deserialize__dict(py_date_format, mapping)
 
         logging.warning('%s could not be deserialized; returning the original value', cls.__name__)
-        return value if value is not None else ''
+        return str(value)
 
     @classmethod
-    def __deserialize__dict(cls, py_date_format: str, value: dict[str, Any]) -> str:
-        start, end = value['start'], value['end']
+    def __deserialize__dict(cls, py_date_format: str, value: Mapping[str, object]) -> str:
+        start = cls._format_boundary(value['start'], py_date_format)
+        end = cls._format_boundary(value['end'], py_date_format)
+        return start + ' - ' + end
+
+    @staticmethod
+    def _format_boundary(value: object, py_date_format: str) -> str:
+        start = value
         if isinstance(start, datetime):
             start = start.strftime(py_date_format)
         elif isinstance(start, (int, float)):
             start = datetime.fromtimestamp(start / MILLISECOND_TO_SECOND).strftime(py_date_format)
+        return str(start)
 
-        if isinstance(end, datetime):
-            end = end.strftime(py_date_format)
-        elif isinstance(end, (int, float)):
-            end = datetime.fromtimestamp(end / MILLISECOND_TO_SECOND).strftime(py_date_format)
-        return start + ' - ' + end
+    @staticmethod
+    def _coerce_mapping(value: object) -> Mapping[str, object] | None:
+        if not isinstance(value, Mapping):
+            return None
+
+        raw_mapping = cast(Mapping[object, object], value)
+        mapping: dict[str, object] = {}
+        for key, item in raw_mapping.items():
+            if not isinstance(key, str):
+                return None
+            mapping[key] = item
+        return mapping
+
+    @staticmethod
+    def _parse_optional_datetime(value: object, field_meta: FieldMetaInfo) -> DateTime | None:
+        if value is None or value == '':
+            return None
+        if not isinstance(value, str):
+            raise TypeError(f'Expected a string date value, got {type(value)}')
+        return DateRange._parse_datetime_text(value, field_meta)
+
+    @staticmethod
+    def _parse_datetime_text(value: str, field_meta: FieldMetaInfo) -> DateTime:
+        parsed = pendulum.parse(value)
+        if isinstance(parsed, DateTime):
+            return parsed.replace(tzinfo=field_meta.timezone)
+        if isinstance(parsed, datetime):
+            return pendulum.instance(parsed).replace(tzinfo=field_meta.timezone)
+        raise ValueError(msg(MessageKey.INVALID_INPUT))
 
 
 DateRangeCodec = DateRange

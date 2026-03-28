@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class FileRegistry(str, Enum):
+class FileRegistry(StrEnum):
     TEST_HEADER_INVALID_INPUT = 'test_header_invalid_input'
     TEST_BOOLEAN_INPUT = 'test_boolean_input'
 

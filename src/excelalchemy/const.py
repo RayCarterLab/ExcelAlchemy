@@ -1,4 +1,4 @@
 """Compatibility re-exports for lower-level constant definitions."""
 
-from excelalchemy._internal.constants import *  # noqa: F403
+from excelalchemy._primitives.constants import *  # noqa: F403
 

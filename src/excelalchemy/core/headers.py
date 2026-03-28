@@ -1,7 +1,10 @@
 """Header parsing and validation helpers for import workbooks."""
 
-from excelalchemy._internal.header_models import ExcelHeader
-from excelalchemy._internal.identity import Label, UniqueLabel
+from collections.abc import Container, Sequence
+from typing import cast
+
+from excelalchemy._primitives.header_models import ExcelHeader
+from excelalchemy._primitives.identity import Label, UniqueLabel
 from excelalchemy.config import ImportMode
 from excelalchemy.core.table import WorksheetTable
 from excelalchemy.exceptions import ConfigError
@@ -28,6 +31,14 @@ class ExcelHeaderParser:
             return self._extract_merged(header_df)
         return self._extract_simple(header_df)
 
+    def extract_simple(self, header_df: WorksheetTable) -> list[ExcelHeader]:
+        """Parse one simple header row without merged-header detection."""
+        return self._extract_simple(header_df)
+
+    def extract_merged(self, header_df: WorksheetTable) -> list[ExcelHeader]:
+        """Parse a two-row merged header block without auto-detection."""
+        return self._extract_merged(header_df)
+
     def _extract_simple(self, header_df: WorksheetTable) -> list[ExcelHeader]:
         return [ExcelHeader(label=Label(col), parent_label=Label(col)) for col in header_df.iloc[0].tolist()]
 
@@ -52,7 +63,7 @@ class ExcelHeaderParser:
                 if value_is_nan(child_value):
                     child_value = parent_value
                 current_header = ExcelHeader(label=Label(child_value), parent_label=Label(value))
-                last_header, next_offset = value, 1
+                last_header, next_offset = str(value), 1
             headers.append(current_header)
 
         return headers
@@ -70,7 +81,7 @@ class ExcelHeaderParser:
                 raise ConfigError(msg(MessageKey.UNSUPPORTED_COLUMN_NAME, unique_label=header.unique_label))
             columns.append(header.unique_label)
 
-        df.columns = columns  # type: ignore[assignment]
+        df.columns = columns
         return df
 
 
@@ -99,7 +110,7 @@ class ExcelHeaderValidator:
 
         schema_label_set = set(schema_labels)
         input_label_set = set(input_labels)
-        unrecognized = self._ordered_difference(input_labels, schema_label_set)
+        unrecognized = [Label(label) for label in self._ordered_difference(input_labels, schema_label_set)]
 
         missing_primary: list[Label] = []
         if import_mode == ImportMode.UPDATE:
@@ -115,22 +126,22 @@ class ExcelHeaderValidator:
         )
 
     @staticmethod
-    def _ordered_difference(values: list[Label], allowed: set[Label]) -> list[Label]:
+    def _ordered_difference[T](values: Sequence[T], allowed: Container[T]) -> list[T]:
         seen: set[Label] = set()
-        result: list[Label] = []
+        result: list[T] = []
         for value in values:
             if value in allowed or value in seen:
                 continue
-            seen.add(value)
+            seen.add(cast(Label, value))
             result.append(value)
         return result
 
     @staticmethod
-    def _ordered_missing(
-        expected: list[Label],
-        actual: set[Label],
+    def _ordered_missing[T](
+        expected: Sequence[T],
+        actual: Container[T],
         *,
-        excluded: set[Label] | None = None,
-    ) -> list[Label]:
+        excluded: Container[T] | None = None,
+    ) -> list[T]:
         excluded = excluded or set()
         return [value for value in expected if value not in actual and value not in excluded]

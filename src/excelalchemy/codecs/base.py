@@ -1,15 +1,15 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
 
-from excelalchemy._internal.identity import Key
+from excelalchemy._primitives.identity import Key
 
 if TYPE_CHECKING:
     from excelalchemy.metadata import FieldMetaInfo
-else:
-    FieldMetaInfo = Any
 
 
 class ExcelFieldCodec(ABC):
@@ -68,7 +68,7 @@ class ExcelFieldCodec(ABC):
         return core_schema.any_schema()
 
 
-class CompositeExcelFieldCodec(ExcelFieldCodec, dict):
+class CompositeExcelFieldCodec(ExcelFieldCodec, dict[str, object]):
     """Excel codec for fields that expand into multiple worksheet columns."""
 
     @classmethod

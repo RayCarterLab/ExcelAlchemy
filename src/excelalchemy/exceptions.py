@@ -2,8 +2,8 @@
 
 from typing import Any
 
-from excelalchemy._internal.constants import UNIQUE_HEADER_CONNECTOR
-from excelalchemy._internal.identity import Label, UniqueLabel
+from excelalchemy._primitives.constants import UNIQUE_HEADER_CONNECTOR
+from excelalchemy._primitives.identity import Label, UniqueLabel
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import message as msg
 

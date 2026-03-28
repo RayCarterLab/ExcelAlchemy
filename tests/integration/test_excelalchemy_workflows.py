@@ -393,7 +393,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         result = alchemy.export(data)
         assert result is not None
 
-        df, has_merged_header = alchemy._gen_export_df(data)
+        _, has_merged_header = alchemy._gen_export_df(data)
         assert has_merged_header is True
 
     async def test_import_returns_success_for_merged_header_workbook(self):
@@ -451,7 +451,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
             name: str = FieldMeta(label='姓名')
 
         with self.assertRaises(ConfigError) as cm:
-            ExcelAlchemy(NotImporterConfigModel)
+            ExcelAlchemy(cast(Any, NotImporterConfigModel))
 
         self.assertEqual(str(cm.exception), 'Export mode requires an ExporterConfig instance')
 

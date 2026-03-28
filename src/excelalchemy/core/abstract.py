@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from collections.abc import Sequence
 
 from pydantic import BaseModel
 
-from excelalchemy._internal.identity import Base64Str, Key, UrlStr
+from excelalchemy._primitives.identity import DataUrlStr, UrlStr
+from excelalchemy._primitives.payloads import ExportRowPayload
 from excelalchemy.artifacts import ExcelArtifact
 from excelalchemy.results import ImportResult
 
@@ -17,13 +18,13 @@ class ABCExcelAlchemy[
     ExporterModelT: BaseModel,
 ](ABC):
     @abstractmethod
-    def download_template(self, sample_data: list[dict[str, Any]] | None = None) -> str:
-        """下载导入模版, Excel 字段顺序与定义的导出模型一致"""
+    def download_template(self, sample_data: list[ExportRowPayload] | None = None) -> DataUrlStr:
+        """下载导入模版，返回 Data URL，字段顺序与定义的导出模型一致。"""
 
     @abstractmethod
     def download_template_artifact(
         self,
-        sample_data: list[dict[str, Any]] | None = None,
+        sample_data: list[ExportRowPayload] | None = None,
         *,
         filename: str = 'template.xlsx',
     ) -> ExcelArtifact:
@@ -34,21 +35,21 @@ class ABCExcelAlchemy[
         """导入数据"""
 
     @abstractmethod
-    def export(self, data: list[dict[str, Any]], keys: list[Key] | None = None) -> Base64Str:
-        """导出数据，返回 base64 编码的 excel 文件, 字段顺序与定义的导出模型一致"""
+    def export(self, data: list[ExportRowPayload], keys: Sequence[str] | None = None) -> DataUrlStr:
+        """导出数据，返回 Data URL 形式的 Excel 文件，字段顺序与定义的导出模型一致。"""
 
     @abstractmethod
     def export_artifact(
         self,
-        data: list[dict[str, Any]],
-        keys: list[Key] | None = None,
+        data: list[ExportRowPayload],
+        keys: Sequence[str] | None = None,
         *,
         filename: str = 'export.xlsx',
     ) -> ExcelArtifact:
         """导出数据，返回结构化 Excel 产物。"""
 
     @abstractmethod
-    def export_upload(self, output_name: str, data: list[dict[str, Any]], keys: list[Key] | None = None) -> UrlStr:
+    def export_upload(self, output_name: str, data: list[ExportRowPayload], keys: Sequence[str] | None = None) -> UrlStr:
         """导出数据, 自动将文件上传到配置的存储后端，字段顺序与定义的导出模型一致"""
 
     @abstractmethod

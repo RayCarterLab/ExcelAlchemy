@@ -1,8 +1,7 @@
 from typing import Any
 
-from excelalchemy._internal.constants import CharacterSet
+from excelalchemy._primitives.constants import CharacterSet
 from excelalchemy.codecs.base import ExcelFieldCodec
-from excelalchemy.exceptions import ProgrammaticError
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
 from excelalchemy.i18n.messages import message as msg
@@ -110,9 +109,8 @@ class String(str, ExcelFieldCodec):
         parsed = str(value)
         errors: list[str] = []
 
-        if field_meta.importer_max_length is not None:
-            if len(parsed) > field_meta.importer_max_length:
-                errors.append(msg(MessageKey.MAX_LENGTH_CHARACTERS, max_length=field_meta.importer_max_length))
+        if field_meta.importer_max_length is not None and len(parsed) > field_meta.importer_max_length:
+            errors.append(msg(MessageKey.MAX_LENGTH_CHARACTERS, max_length=field_meta.importer_max_length))
 
         errors.extend(cls.__check_character_set__(parsed, field_meta))
 
@@ -124,9 +122,6 @@ class String(str, ExcelFieldCodec):
     @classmethod
     def __check_character_set__(cls, value: str, field_meta: FieldMetaInfo) -> list[str]:
         errors: list[str] = []
-        if field_meta.character_set is None:
-            raise ProgrammaticError(msg(MessageKey.CHARACTER_SET_NOT_CONFIGURED))
-
         for single_character in value:
             if not any(_CHARACTER_SET_TO_VALIDATOR[cs](single_character) for cs in field_meta.character_set):
                 errors.append(

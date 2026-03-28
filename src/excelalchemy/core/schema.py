@@ -2,14 +2,15 @@
 
 import itertools
 from collections import defaultdict
+from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from itertools import chain
-from typing import Iterable, cast
+from typing import cast
 
 from pydantic import BaseModel
 
-from excelalchemy._internal.constants import DEFAULT_FIELD_META_ORDER
-from excelalchemy._internal.identity import Key, Label, UniqueKey, UniqueLabel
+from excelalchemy._primitives.constants import DEFAULT_FIELD_META_ORDER
+from excelalchemy._primitives.identity import Key, Label, UniqueKey, UniqueLabel
 from excelalchemy.exceptions import ConfigError, ExcelCellError, ExcelRowError
 from excelalchemy.helper.pydantic import extract_pydantic_model
 from excelalchemy.i18n.messages import MessageKey
@@ -105,19 +106,21 @@ class ExcelSchemaLayout:
             return [field_meta.label for field_meta in self.ordered_field_meta]
         return [self.unique_key_to_field_meta[key].label for key in selected_keys]
 
-    def select_output_excel_keys(self, keys: list[Key] | None = None) -> list[UniqueKey]:
+    def select_output_excel_keys(self, keys: Sequence[str] | None = None) -> list[UniqueKey]:
         """Expand parent keys into concrete flattened keys while preserving layout order."""
         if not keys:
             return [field_meta.unique_key for field_meta in self.ordered_field_meta]
 
         selected_field_meta: list[FieldMetaInfo] = []
-        for key in keys:
-            if key in self.unique_key_to_field_meta:
-                selected_field_meta.append(self.unique_key_to_field_meta[UniqueKey(key)])
-            elif key in self.parent_key_to_field_metas:
-                selected_field_meta.extend(self.parent_key_to_field_metas[key])
+        for requested_key in keys:
+            unique_key = UniqueKey(requested_key)
+            parent_key = Key(requested_key)
+            if unique_key in self.unique_key_to_field_meta:
+                selected_field_meta.append(self.unique_key_to_field_meta[unique_key])
+            elif parent_key in self.parent_key_to_field_metas:
+                selected_field_meta.extend(self.parent_key_to_field_metas[parent_key])
             else:
-                raise ValueError(msg(MessageKey.INVALID_KEY, key=key))
+                raise ValueError(msg(MessageKey.INVALID_KEY, **{'key': requested_key}))
 
         return [field_meta.unique_key for field_meta in self._sort_field_meta(selected_field_meta)]
 

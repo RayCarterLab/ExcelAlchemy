@@ -1,7 +1,8 @@
 import math
-from typing import Any
+from collections.abc import Mapping, Sequence
+from typing import Any, cast
 
-from excelalchemy._internal.constants import UNIQUE_HEADER_CONNECTOR
+from excelalchemy._primitives.constants import UNIQUE_HEADER_CONNECTOR
 
 EXCEL_MEDIA_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 EXCEL_PREFIX = f'data:{EXCEL_MEDIA_TYPE};base64'
@@ -19,19 +20,20 @@ def remove_excel_prefix(content: str) -> str:
     return content.removeprefix(prefix)
 
 
-def flatten(data: dict[str, Any], level: list[Any] | None = None) -> dict[str, Any]:
+def flatten(data: Mapping[str, object], level: list[str] | None = None) -> dict[str, object]:
     """平铺嵌套的字典
 
     >>> flatten( {'a': {'b': {'c': 12}}})  # dotted path expansion
     {'a.b.c': 12}
     """
-    tmp_dict = {}
+    tmp_dict: dict[str, object] = {}
     level = level or []
     for key, val in data.items():
-        if isinstance(val, dict):
-            tmp_dict.update(flatten(val, level + [key]))
+        if isinstance(val, Mapping):
+            nested = cast(Mapping[str, object], val)
+            tmp_dict.update(flatten(nested, [*level, key]))
         else:
-            tmp_dict[f'{UNIQUE_HEADER_CONNECTOR}'.join(level + [key])] = val
+            tmp_dict[f'{UNIQUE_HEADER_CONNECTOR}'.join([*level, key])] = val
     return tmp_dict
 
 
@@ -43,7 +45,8 @@ def value_is_nan(value: Any) -> bool:
     if isinstance(value, float) and math.isnan(value):
         return True
 
-    if isinstance(value, list | tuple):
-        return any(value_is_nan(item) for item in value)
+    if isinstance(value, Sequence) and not isinstance(value, str):
+        items = cast(Sequence[object], value)
+        return any(value_is_nan(item) for item in items)
 
     return False

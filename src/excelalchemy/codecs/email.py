@@ -1,4 +1,4 @@
-from typing import Any
+from typing import ClassVar
 
 from pydantic import EmailStr, TypeAdapter
 
@@ -9,10 +9,10 @@ from excelalchemy.metadata import FieldMetaInfo
 
 
 class Email(String):
-    _validator = TypeAdapter(EmailStr)
+    _validator: ClassVar[TypeAdapter[EmailStr]] = TypeAdapter(EmailStr)
 
     @classmethod
-    def normalize_import_value(cls, value: Any, field_meta: FieldMetaInfo) -> str:
+    def normalize_import_value(cls, value: object, field_meta: FieldMetaInfo) -> str:
         # Try to parse the value as a string
         try:
             parsed = str(value)

@@ -149,11 +149,11 @@ Use `locale='zh-CN' | 'en'` to control workbook-facing display text without chan
 - `src/excelalchemy/metadata.py`: Excel-specific field metadata and declaration helpers
 - `src/excelalchemy/config.py`: importer/exporter configuration models
 - `src/excelalchemy/exceptions.py`: public exception types
-- `src/excelalchemy/_internal/identity.py`: internal typed string and index wrappers used across the core layer
-- `src/excelalchemy/_internal/constants.py`: internal constant and enum definitions
+- `src/excelalchemy/_primitives/identity.py`: private typed string and index wrappers used across the core layer
+- `src/excelalchemy/_primitives/constants.py`: private constant and enum definitions
 - `src/excelalchemy/results.py`: import/export result models
-- `src/excelalchemy/_internal/header_models.py`: internal workbook header model objects
-- `src/excelalchemy/_internal/deprecation.py`: internal deprecation helpers used by compatibility shims
+- `src/excelalchemy/_primitives/header_models.py`: private workbook header model objects
+- `src/excelalchemy/_primitives/deprecation.py`: private deprecation helpers used by compatibility shims
 - `src/excelalchemy/types/`: compatibility import layer for pre-refactor paths
 - `src/excelalchemy/exc.py`, `src/excelalchemy/identity.py`, `src/excelalchemy/header_models.py`, `src/excelalchemy/const.py`: compatibility or low-level facade modules kept at the package root
 

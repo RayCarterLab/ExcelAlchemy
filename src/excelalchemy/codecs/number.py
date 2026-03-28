@@ -11,7 +11,8 @@ from excelalchemy.metadata import FieldMetaInfo
 
 def canonicalize_decimal(value: Decimal, digits_limit: int | None) -> Decimal:
     """将 Decimal 转换为指定精度的 Decimal"""
-    if digits_limit is not None and abs(value.as_tuple().exponent) != digits_limit:  # type: ignore[arg-type]
+    exponent = value.as_tuple().exponent
+    if digits_limit is not None and isinstance(exponent, int) and abs(exponent) != digits_limit:
         try:
             value = Decimal(value).quantize(
                 Decimal(f'0.{"0" * digits_limit}'),
@@ -29,9 +30,6 @@ def transform_decimal(value: Decimal | int | float | None) -> float | int | None
 
     if isinstance(value, (int, float)):
         return value
-
-    if not isinstance(value, Decimal):
-        raise TypeError(f'Expected Decimal, got {type(value)}')
 
     if value.as_tuple().exponent == 0:
         return int(value)
@@ -58,11 +56,13 @@ class Number(Decimal, ExcelFieldCodec):
     def parse_input(cls, value: str | int | float | None, field_meta: FieldMetaInfo) -> Decimal | Any:
         if isinstance(value, str):
             value = value.strip()
+        if value is None:
+            return ''
         try:
-            return transform_decimal(Decimal(value))  # type: ignore[arg-type]
+            return transform_decimal(Decimal(str(value)))
         except Exception as exc:
             logging.warning('ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s', cls.__name__, value, exc)
-            return str(value) if value is not None else ''
+            return str(value)
 
     @classmethod
     def format_display_value(cls, value: str | None | Any, field_meta: FieldMetaInfo) -> str:
@@ -134,7 +134,7 @@ class Number(Decimal, ExcelFieldCodec):
         if parsed is None:
             raise ValueError(msg(MessageKey.INVALID_NUMBER_ENTER_NUMBER))
         # 初始化一个错误信息列表。
-        errors: list[str] = cls.__check_range__(value, field_meta)
+        errors: list[str] = cls.__check_range__(parsed, field_meta)
         if errors:
             raise ValueError(*errors)
         parsed = canonicalize_decimal(parsed, field_meta.fraction_digits)

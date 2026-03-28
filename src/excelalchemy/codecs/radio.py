@@ -1,8 +1,8 @@
 import logging
 from typing import Any
 
-from excelalchemy._internal.constants import MULTI_CHECKBOX_SEPARATOR
-from excelalchemy._internal.identity import OptionId
+from excelalchemy._primitives.constants import MULTI_CHECKBOX_SEPARATOR
+from excelalchemy._primitives.identity import OptionId
 from excelalchemy.codecs.base import ExcelFieldCodec
 from excelalchemy.exceptions import ProgrammaticError
 from excelalchemy.i18n.messages import MessageKey

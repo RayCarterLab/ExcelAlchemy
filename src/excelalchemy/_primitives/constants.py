@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
-from excelalchemy._internal.identity import Key, Label, OptionId
+from excelalchemy._primitives.identity import Key, Label, OptionId
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
 
@@ -45,7 +45,7 @@ type ListStr = list[str]
 type IntStr = int | str
 
 
-class CharacterSet(str, Enum):
+class CharacterSet(StrEnum):
     CHINESE = 'CHINESE'
     NUMBER = 'NUMBER'
     LOWERCASE_LETTERS = 'LOWERCASE_LETTERS'
@@ -53,14 +53,14 @@ class CharacterSet(str, Enum):
     SPECIAL_SYMBOLS = 'SPECIAL_SYMBOLS'
 
 
-class DateFormat(str, Enum):
+class DateFormat(StrEnum):
     YEAR = 'YEAR'
     MONTH = 'MONTH'
     DAY = 'DAY'
     MINUTE = 'MINUTE'
 
 
-class DataRangeOption(str, Enum):
+class DataRangeOption(StrEnum):
     NONE = 'NONE'
     PRE = 'PRE'
     NEXT = 'NEXT'

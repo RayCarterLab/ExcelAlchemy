@@ -7,19 +7,20 @@ from math import ceil
 from typing import Any, BinaryIO, cast
 
 from openpyxl import Workbook
+from openpyxl.cell.cell import Cell
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill, numbers
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
-from excelalchemy._internal.constants import (
+from excelalchemy._primitives.constants import (
     BACKGROUND_ERROR_COLOR,
     BACKGROUND_REQUIRED_COLOR,
     CHARACTER_WIDTH,
     DEFAULT_SHEET_NAME,
     FONT_READ_COLOR,
 )
-from excelalchemy._internal.identity import Base64Str, ColumnIndex, Label, RowIndex, UniqueLabel
+from excelalchemy._primitives.identity import ColumnIndex, DataUrlStr, Label, RowIndex, UniqueLabel
 from excelalchemy.core.table import WorksheetTable
 from excelalchemy.exceptions import ExcelCellError
 from excelalchemy.i18n.messages import MessageKey
@@ -52,13 +53,17 @@ def _create_workbook(sheet_name: str) -> tuple[Workbook, Worksheet]:
     return workbook, worksheet
 
 
-def _encode_workbook(workbook: Workbook, file: BinaryIO, *, close_file: bool) -> str:
+def _worksheet_cell(worksheet: Worksheet, *, row: int, column: int) -> Cell:
+    return cast(Cell, worksheet.cell(row=row, column=column))
+
+
+def _encode_workbook(workbook: Workbook, file: BinaryIO, *, close_file: bool) -> DataUrlStr:
     workbook.save(file)
     file.seek(0)
     content = base64.b64encode(file.read()).decode()
     if close_file:
         file.close()
-    return add_excel_prefix(content)
+    return DataUrlStr(add_excel_prefix(content))
 
 
 def _build_comment(field_meta: FieldMetaInfo) -> Comment | None:
@@ -74,7 +79,7 @@ def _build_comment(field_meta: FieldMetaInfo) -> Comment | None:
     )
 
 
-def _style_header_cell(cell, field_meta: FieldMetaInfo) -> None:
+def _style_header_cell(cell: Cell, field_meta: FieldMetaInfo) -> None:
     comment = _build_comment(field_meta)
     if comment is not None:
         cell.comment = comment
@@ -85,14 +90,14 @@ def _style_header_cell(cell, field_meta: FieldMetaInfo) -> None:
     cell.number_format = numbers.FORMAT_TEXT
 
 
-def _style_child_header_cell(cell) -> None:
+def _style_child_header_cell(cell: Cell) -> None:
     cell.font = Font(bold=True)
     cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
     cell.number_format = numbers.FORMAT_TEXT
 
 
 def _write_header_hint(worksheet: Worksheet, *, column_count: int) -> None:
-    cell = worksheet.cell(row=HEADER_HINT_ROW_INDEX, column=HEADER_HINT_COL_INDEX)
+    cell = _worksheet_cell(worksheet, row=HEADER_HINT_ROW_INDEX, column=HEADER_HINT_COL_INDEX)
     cell.value = dmsg(MessageKey.HEADER_HINT)
     cell.font = Font(size=16)
     cell.alignment = Alignment(wrap_text=True)
@@ -120,8 +125,8 @@ def _write_simple_header(
         start=column_write_offset + OPENPYXL_EXCEL_INDEX_START_AT,
     ):
         field_meta = field_meta_mapping[cast(UniqueLabel, column)]
-        cell = worksheet.cell(row=header_row_index, column=openpyxl_col_index)
-        cell.value = column
+        cell = _worksheet_cell(worksheet, row=header_row_index, column=openpyxl_col_index)
+        cell.value = str(column)
         _style_header_cell(cell, field_meta)
 
 
@@ -169,8 +174,8 @@ def _write_horizontally_merged_header(
         if field_meta.parent_label is None:
             raise RuntimeError(msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME))
         if field_meta.label != field_meta.parent_label and field_meta.offset == 0:
-            cell = worksheet.cell(row=start_row, column=openpyxl_col_index)
-            cell.value = field_meta.parent_label
+            cell = _worksheet_cell(worksheet, row=start_row, column=openpyxl_col_index)
+            cell.value = str(field_meta.parent_label)
             cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
             worksheet.merge_cells(
                 start_row=start_row,
@@ -199,8 +204,8 @@ def _write_merged_header(
     child_row_index = row_write_offset + OPENPYXL_EXCEL_INDEX_START_AT + 1
     child_headers = df.iloc[0].tolist()
     for column_index, child_value in enumerate(child_headers, start=OPENPYXL_EXCEL_INDEX_START_AT):
-        cell = worksheet.cell(row=child_row_index, column=column_index + column_write_offset)
-        cell.value = child_value
+        cell = _worksheet_cell(worksheet, row=child_row_index, column=column_index + column_write_offset)
+        cell.value = str(child_value)
         _style_child_header_cell(cell)
 
     start_row = row_write_offset + OPENPYXL_EXCEL_INDEX_START_AT
@@ -254,7 +259,7 @@ def _mark_error(
 
             openpyxl_col_index = col_index + column_write_offset + OPENPYXL_EXCEL_INDEX_START_AT
             openpyxl_row_index = row_index + row_write_offset + OPENPYXL_EXCEL_INDEX_START_AT
-            cell = worksheet.cell(row=openpyxl_row_index, column=openpyxl_col_index)
+            cell = _worksheet_cell(worksheet, row=openpyxl_row_index, column=openpyxl_col_index)
             cell.fill = PatternFill(
                 start_color=BACKGROUND_ERROR_COLOR,
                 end_color=BACKGROUND_ERROR_COLOR,
@@ -279,7 +284,7 @@ def _write_value(
             openpyxl_col_index = column_index + column_write_offset + OPENPYXL_EXCEL_INDEX_START_AT
             openpyxl_row_index = row_index + row_write_offset + OPENPYXL_EXCEL_INDEX_START_AT
 
-            cell = worksheet.cell(row=openpyxl_row_index, column=openpyxl_col_index)
+            cell = _worksheet_cell(worksheet, row=openpyxl_row_index, column=openpyxl_col_index)
             cell.value = _get_parsed_value(df, row_index, column_index, field_meta_mapping)
             cell.number_format = numbers.FORMAT_TEXT
             cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
@@ -332,7 +337,7 @@ def render_simple_header_excel(
     file: BinaryIO | None = None,
     close_file: bool = True,
     column_write_offset: int = 0,
-) -> str:
+) -> DataUrlStr:
     if file is None:
         close_file = True
 
@@ -365,7 +370,7 @@ def render_merged_header_excel(
     file: BinaryIO | None = None,
     close_file: bool = True,
     column_write_offset: int = 0,
-) -> str:
+) -> DataUrlStr:
     if file is None:
         close_file = True
 
@@ -399,7 +404,7 @@ def render_data_excel(
     file: BinaryIO | None = None,
     close_file: bool = True,
     has_merged_header: bool = False,
-) -> Base64Str:
+) -> DataUrlStr:
     if file is None:
         close_file = True
 
@@ -433,4 +438,4 @@ def render_data_excel(
         table_data_start_index=table_data_start_index,
     )
 
-    return Base64Str(_encode_workbook(workbook, tmp, close_file=close_file))
+    return _encode_workbook(workbook, tmp, close_file=close_file)

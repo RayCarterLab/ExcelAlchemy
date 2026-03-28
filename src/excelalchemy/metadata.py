@@ -3,13 +3,15 @@
 import copy
 import datetime
 import logging
+from collections.abc import Callable, Mapping, Set
 from functools import cached_property
-from typing import AbstractSet, Any, Callable
+from typing import Any, Self, cast
 
 from pydantic import BaseModel, Field
-from pydantic.fields import FieldInfo, PydanticUndefined
+from pydantic.fields import FieldInfo
+from pydantic_core import PydanticUndefined
 
-from excelalchemy._internal.constants import (
+from excelalchemy._primitives.constants import (
     DATE_FORMAT_TO_HINT_MAPPING,
     DATE_FORMAT_TO_PYTHON_MAPPING,
     DEFAULT_FIELD_META_ORDER,
@@ -22,7 +24,7 @@ from excelalchemy._internal.constants import (
     IntStr,
     Option,
 )
-from excelalchemy._internal.identity import Key, Label, OptionId, UniqueKey, UniqueLabel
+from excelalchemy._primitives.identity import Key, Label, OptionId, UniqueKey, UniqueLabel
 from excelalchemy.codecs.base import ExcelFieldCodec, UndefinedFieldCodec
 from excelalchemy.exceptions import ConfigError, ProgrammaticError
 from excelalchemy.i18n.messages import MessageKey
@@ -30,6 +32,8 @@ from excelalchemy.i18n.messages import display_message as dmsg
 from excelalchemy.i18n.messages import message as msg
 
 EXCEL_FIELD_METADATA_KEY = 'excelalchemy_metadata'
+type FieldDefaultFactory = Callable[[], object]
+type FieldIncludeExclude = Set[IntStr] | bool | None
 
 
 class PatchFieldMeta(BaseModel):
@@ -103,10 +107,10 @@ class FieldMetaInfo:
         self.importer_max_items = max_items
         self.importer_unique_items = unique_items
 
-    def clone(self) -> 'FieldMetaInfo':
+    def clone(self) -> Self:
         return copy.copy(self)
 
-    def inherited_from(self, parent: 'FieldMetaInfo') -> 'FieldMetaInfo':
+    def inherited_from(self, parent: Self) -> Self:
         runtime = self.clone()
         runtime.order = parent.order
         runtime.character_set = runtime.character_set or parent.character_set
@@ -126,7 +130,7 @@ class FieldMetaInfo:
         parent_key: Key,
         key: Key,
         offset: int,
-    ) -> 'FieldMetaInfo':
+    ) -> Self:
         runtime = self.clone()
         runtime.required = required
         runtime.excel_codec = excel_codec
@@ -330,7 +334,12 @@ def _resolve_declared_field_metadata(field_info: FieldInfo) -> FieldMetaInfo:
         if isinstance(item, FieldMetaInfo):
             return item
 
-    metadata = (field_info.json_schema_extra or {}).get(EXCEL_FIELD_METADATA_KEY)
+    json_schema_extra = field_info.json_schema_extra
+    if not isinstance(json_schema_extra, Mapping):
+        raise ProgrammaticError(msg(MessageKey.FIELD_DEFINITIONS_MUST_USE_FIELDMETA))
+
+    json_schema_mapping = cast(Mapping[str, object], json_schema_extra)
+    metadata = json_schema_mapping.get(EXCEL_FIELD_METADATA_KEY)
     if not isinstance(metadata, FieldMetaInfo):
         raise ProgrammaticError(msg(MessageKey.FIELD_DEFINITIONS_MUST_USE_FIELDMETA))
     return metadata
@@ -400,9 +409,6 @@ def _build_excel_metadata(
     min_length: int | None = None,
     max_length: int | None = None,
 ) -> FieldMetaInfo:
-    if fraction_digits is not None and not isinstance(fraction_digits, int):
-        raise ValueError(msg(MessageKey.FRACTION_DIGITS_MUST_BE_INTEGER))
-
     return FieldMetaInfo(
         label=label,
         is_primary_key=is_primary_key,
@@ -487,7 +493,7 @@ def ExcelMeta(
 # pylint: disable=invalid-name
 # pylint: disable=too-many-locals
 def FieldMeta(
-    default: Any = PydanticUndefined,
+    default: object = PydanticUndefined,
     *,
     label: str,
     is_primary_key: bool = False,
@@ -503,12 +509,12 @@ def FieldMeta(
     options: list[Option] | None = None,
     unit: str | None = None,
     hint: str | None = None,
-    default_factory: Callable[[], Any] | None = None,
+    default_factory: FieldDefaultFactory | None = None,
     alias: str | None = None,
     title: str | None = None,
     description: str | None = None,
-    exclude: AbstractSet[IntStr] | Any = None,
-    include: AbstractSet[IntStr] | Any = None,
+    exclude: FieldIncludeExclude = None,
+    include: FieldIncludeExclude = None,
     const: bool | None = None,
     ge: float | None = None,
     le: float | None = None,
@@ -525,7 +531,7 @@ def FieldMeta(
     regex: str | None = None,
     discriminator: str | None = None,
     repr: bool = True,
-    **extra: Any,
+    **extra: object,
 ) -> Any:
     metadata = _build_excel_metadata(
         label=label,
@@ -553,7 +559,7 @@ def FieldMeta(
         max_length=max_length,
     )
 
-    json_schema_extra = {EXCEL_FIELD_METADATA_KEY: metadata} | extra
+    json_schema_extra: dict[str, Any] = {EXCEL_FIELD_METADATA_KEY: metadata} | extra
     if include is not None:
         json_schema_extra['include'] = include
     if const is not None:

@@ -1,8 +1,8 @@
 import logging
-from typing import Any, cast
+from typing import cast
 
-from excelalchemy._internal.constants import MULTI_CHECKBOX_SEPARATOR
-from excelalchemy._internal.identity import OptionId
+from excelalchemy._primitives.constants import MULTI_CHECKBOX_SEPARATOR
+from excelalchemy._primitives.identity import OptionId
 from excelalchemy.codecs.base import ExcelFieldCodec
 from excelalchemy.exceptions import ProgrammaticError
 from excelalchemy.i18n.messages import MessageKey
@@ -26,10 +26,11 @@ class MultiCheckbox(ExcelFieldCodec, list[str]):
         )
 
     @classmethod
-    def parse_input(cls, value: str | Any, field_meta: FieldMetaInfo) -> list[str] | str:
+    def parse_input(cls, value: object, field_meta: FieldMetaInfo) -> list[str] | object:
         # If the value is a list, convert all items to strings and strip whitespace
         if isinstance(value, list):
-            return [str(item).strip() for item in cast(list[Any], value)]
+            items = cast(list[object], value)
+            return [str(item).strip() for item in items]
 
         # If the value is a string, split it into a list using MULTI_CHECKBOX_SEPARATOR and strip whitespace
         if isinstance(value, str):
@@ -40,21 +41,24 @@ class MultiCheckbox(ExcelFieldCodec, list[str]):
         return value
 
     @classmethod
-    def normalize_import_value(cls, value: list[str] | Any, field_meta: FieldMetaInfo) -> list[str]:  # OptionId
+    def normalize_import_value(cls, value: object, field_meta: FieldMetaInfo) -> list[str]:  # OptionId
         if not isinstance(value, list):
             raise ValueError(msg(MessageKey.OPTION_NOT_FOUND_HEADER_COMMENT))
+
+        items = cast(list[object], value)
+        parsed = [str(item).strip() for item in items]
 
         if field_meta.options is None:
             raise ProgrammaticError(msg(MessageKey.OPTIONS_CANNOT_BE_NONE_FOR_VALUE_TYPE, value_type=cls.__name__))
 
         if not field_meta.options:  # empty
             logging.warning('Field %s of type %s has no options; returning the original value', field_meta.label, cls.__name__)
-            return value
+            return parsed
 
-        if len(value) != len(set(value)):
+        if len(parsed) != len(set(parsed)):
             raise ValueError(msg(MessageKey.OPTIONS_CONTAIN_DUPLICATES))
 
-        result, errors = field_meta.exchange_names_to_option_ids_with_errors(value)
+        result, errors = field_meta.exchange_names_to_option_ids_with_errors(parsed)
 
         if errors:
             raise ValueError(*errors)
@@ -69,7 +73,8 @@ class MultiCheckbox(ExcelFieldCodec, list[str]):
             case str():
                 return value
             case list():
-                option_names = field_meta.exchange_option_ids_to_names(value)
+                option_ids = [OptionId(option_id) for option_id in value]
+                option_names = field_meta.exchange_option_ids_to_names(option_ids)
                 return f'{MULTI_CHECKBOX_SEPARATOR}'.join(option_names)
 
 

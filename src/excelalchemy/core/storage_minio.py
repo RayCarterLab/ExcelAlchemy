@@ -3,15 +3,15 @@
 import base64
 import io
 from datetime import timedelta
-from tempfile import TemporaryFile
 from typing import IO, BinaryIO, cast
 
 from minio import Minio
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
+from pydantic import BaseModel
 from urllib3.response import BaseHTTPResponse
 
-from excelalchemy._internal.identity import UrlStr
+from excelalchemy._primitives.identity import UrlStr
 from excelalchemy.config import ExporterConfig, ImporterConfig
 from excelalchemy.core.storage_protocol import ExcelStorage
 from excelalchemy.core.table import WorksheetTable
@@ -24,7 +24,15 @@ from excelalchemy.util.file import remove_excel_prefix
 class MinioStorageGateway(ExcelStorage):
     """Excel storage strategy backed by a Minio-compatible object store."""
 
-    def __init__(self, config: ImporterConfig | ExporterConfig):
+    def __init__[
+        ContextT,
+        ImporterCreateModelT: BaseModel,
+        ImporterUpdateModelT: BaseModel,
+        ExporterModelT: BaseModel,
+    ](
+        self,
+        config: ImporterConfig[ContextT, ImporterCreateModelT, ImporterUpdateModelT] | ExporterConfig[ExporterModelT],
+    ):
         self.config = config
 
     def read_excel_table(self, input_excel_name: str, *, skiprows: int, sheet_name: str) -> WorksheetTable:
@@ -95,10 +103,7 @@ class MinioStorageGateway(ExcelStorage):
     @staticmethod
     def _construct_file_like_object(response: BaseHTTPResponse) -> IO[bytes]:
         """Construct a file-like object from an object storage response."""
-        tmp = TemporaryFile()
-        tmp.write(response.read())
-        tmp.seek(0)
-        return tmp
+        return io.BytesIO(response.read())
 
     @classmethod
     def _read_file_object(cls, client: Minio, bucket_name: str, filename: str) -> IO[bytes]:

@@ -1,15 +1,17 @@
 import logging
+from collections.abc import Iterable, Sequence
 from functools import cached_property
-from typing import Any, Callable, Iterable, cast
+from typing import cast
 
 from pydantic import BaseModel
 
-from excelalchemy._internal.constants import (
+from excelalchemy._primitives.constants import (
     REASON_COLUMN_KEY,
     RESULT_COLUMN_KEY,
 )
-from excelalchemy._internal.header_models import ExcelHeader
-from excelalchemy._internal.identity import Base64Str, Key, Label, RowIndex, UniqueKey, UniqueLabel, UrlStr
+from excelalchemy._primitives.header_models import ExcelHeader
+from excelalchemy._primitives.identity import DataUrlStr, Label, RowIndex, UniqueKey, UniqueLabel, UrlStr
+from excelalchemy._primitives.payloads import DataConverter, ExportRowPayload, FlatRowPayload, ModelRowPayload
 from excelalchemy.artifacts import ExcelArtifact
 from excelalchemy.codecs.base import SystemReserved
 from excelalchemy.config import ExcelMode, ExporterConfig, ImporterConfig, ImportMode
@@ -84,7 +86,7 @@ class ExcelAlchemy[
         self._layout: ExcelSchemaLayout
         self._issue_tracker: ImportIssueTracker | None = None
         self._row_aggregator: RowAggregator | None = None
-        self._executor: ImportExecutor[ContextT] | None = None
+        self._executor: ImportExecutor[ContextT, ImporterCreateModelT, ImporterUpdateModelT] | None = None
 
         self.__init_from_config__()
 
@@ -115,8 +117,9 @@ class ExcelAlchemy[
         self.df = WorksheetTable()
         self.header_df = WorksheetTable()
         self.__state_df_has_been_loaded__ = False
-        self.__dict__.pop('input_excel_has_merged_header', None)
-        self.__dict__.pop('input_excel_headers', None)
+        runtime_state = vars(self)
+        runtime_state.pop('input_excel_has_merged_header', None)
+        runtime_state.pop('input_excel_headers', None)
 
         self._issue_tracker = ImportIssueTracker(self._layout, self.import_result_field_meta)
         self.cell_errors = self._issue_tracker.cell_errors
@@ -143,7 +146,7 @@ class ExcelAlchemy[
             raise ConfigError(msg(MessageKey.NO_IMPORTER_OR_EXPORTER_MODEL_CONFIGURED))
         return importer_model
 
-    def download_template(self, sample_data: list[dict[str, Any]] | None = None) -> str:
+    def download_template(self, sample_data: list[ExportRowPayload] | None = None) -> DataUrlStr:
         if self.excel_mode != ExcelMode.IMPORT:
             raise ConfigError(msg(MessageKey.IMPORT_MODE_ONLY_METHOD))
 
@@ -158,7 +161,7 @@ class ExcelAlchemy[
 
     def download_template_artifact(
         self,
-        sample_data: list[dict[str, Any]] | None = None,
+        sample_data: list[ExportRowPayload] | None = None,
         *,
         filename: str = 'template.xlsx',
     ) -> ExcelArtifact:
@@ -183,7 +186,7 @@ class ExcelAlchemy[
 
             all_success, success_count, fail_count = True, 0, 0
             for table_row_index, row in self.df.iloc[self.extra_header_count_on_import :].iterrows():
-                aggregate_data = self._aggregate_data(cast(dict[UniqueLabel, Any], row.to_dict()))
+                aggregate_data = self._aggregate_data(cast(FlatRowPayload, row.to_dict()))
                 success = await self._executor.execute(cast(RowIndex, table_row_index), aggregate_data, self.df)
                 all_success = all_success and success
                 success_count, fail_count = (success_count + 1, fail_count) if success else (success_count, fail_count + 1)
@@ -201,7 +204,7 @@ class ExcelAlchemy[
                 fail_count=fail_count,
             )
 
-    def export(self, data: list[dict[str, Any]], keys: list[Key] | None = None) -> Base64Str:
+    def export(self, data: list[ExportRowPayload], keys: Sequence[str] | None = None) -> DataUrlStr:
         with use_display_locale(self.locale):
             df, has_merged_header = self._gen_export_df(data, keys)
             return self._renderer.render_data(
@@ -213,14 +216,14 @@ class ExcelAlchemy[
 
     def export_artifact(
         self,
-        data: list[dict[str, Any]],
-        keys: list[Key] | None = None,
+        data: list[ExportRowPayload],
+        keys: Sequence[str] | None = None,
         *,
         filename: str = 'export.xlsx',
     ) -> ExcelArtifact:
         return ExcelArtifact.from_data_url(self.export(data, keys), filename=filename)
 
-    def export_upload(self, output_name: str, data: list[dict[str, Any]], keys: list[Key] | None = None) -> UrlStr:
+    def export_upload(self, output_name: str, data: list[ExportRowPayload], keys: Sequence[str] | None = None) -> UrlStr:
         return self._upload_file(output_name, self.export(data, keys))
 
     def add_context(self, context: ContextT) -> None:
@@ -280,14 +283,14 @@ class ExcelAlchemy[
     def get_output_child_excel_headers(self, selected_keys: list[UniqueKey] | None = None) -> list[Label]:
         return self._layout.get_output_child_excel_headers(selected_keys)
 
-    def _gen_export_df(self, data: list[dict[str, Any]], keys: list[Key] | None = None) -> tuple[WorksheetTable, bool]:
+    def _gen_export_df(self, data: list[ExportRowPayload], keys: Sequence[str] | None = None) -> tuple[WorksheetTable, bool]:
         if self.excel_mode == ExcelMode.IMPORT:
             logging.info('Export requested while configured in import mode; continuing with exporter_model inference')
 
-        input_keys = keys or list(
-            filter(None, [cast(Key | None, field_meta.parent_key) for field_meta in self.ordered_field_meta])
-        )
-        model_keys = cast(list[Key], get_model_field_names(self.exporter_model))
+        input_keys = list(keys) if keys is not None else [
+            str(field_meta.parent_key) for field_meta in self.ordered_field_meta if field_meta.parent_key is not None
+        ]
+        model_keys = get_model_field_names(self.exporter_model)
         if unrecognized := (set(input_keys) - set(model_keys)):
             logging.warning('Ignoring keys not present in the exporter model: %s (model keys: %s)', unrecognized, model_keys)
 
@@ -306,7 +309,7 @@ class ExcelAlchemy[
         self._read_dataframe(input_excel_name)
         return self._header_validator.validate(self.input_excel_headers, self._layout, self.config.import_mode)
 
-    def _render_import_result_excel(self) -> str:
+    def _render_import_result_excel(self) -> DataUrlStr:
         return self._renderer.render_data(
             self.df,
             field_meta_mapping=self.import_result_label_to_field_meta | self.unique_label_to_field_meta,
@@ -314,7 +317,7 @@ class ExcelAlchemy[
             errors=self.cell_errors,
         )
 
-    def _upload_file(self, output_name: str, content_with_prefix: str) -> UrlStr:
+    def _upload_file(self, output_name: str, content_with_prefix: DataUrlStr) -> UrlStr:
         return self._storage_gateway.upload_excel(output_name, content_with_prefix)
 
     def _order_errors(self, errors: list[ExcelRowError | ExcelCellError]) -> Iterable[ExcelCellError | ExcelRowError]:
@@ -323,7 +326,7 @@ class ExcelAlchemy[
     def _set_columns(self, df: WorksheetTable) -> WorksheetTable:
         return self._header_parser.apply_columns(df, self.input_excel_headers, self.get_output_parent_excel_headers())
 
-    def _select_output_excel_keys(self, keys: list[Key] | None = None) -> list[UniqueKey]:
+    def _select_output_excel_keys(self, keys: Sequence[str] | None = None) -> list[UniqueKey]:
         return self._layout.select_output_excel_keys(keys)
 
     def _read_dataframe(self, input_excel_name: str) -> WorksheetTable:
@@ -341,16 +344,16 @@ class ExcelAlchemy[
 
     def _generate_export_df(
         self,
-        records: list[dict[str, Any]] | None,
+        records: list[ExportRowPayload] | None,
         selected_keys: list[UniqueKey],
-        data_converter: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        data_converter: DataConverter | None = None,
     ) -> WorksheetTable:
-        rows = []
+        rows: list[dict[UniqueLabel, object]] = []
         records = records or []
         for record in records:
-            row = {}
+            row: dict[UniqueLabel, object] = {}
             record = data_converter(record) if data_converter else record
-            for key, value in flatten(record).items():  # type: ignore[arg-type]
+            for key, value in flatten(record).items():
                 if key not in selected_keys:
                     continue
                 field_meta = self.unique_key_to_field_meta[UniqueKey(key)]
@@ -361,18 +364,18 @@ class ExcelAlchemy[
 
     def _export_with_merged_header(
         self,
-        records: list[dict[str, Any]] | None,
+        records: list[ExportRowPayload] | None,
         selected_keys: list[UniqueKey],
-        data_converter: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        data_converter: DataConverter | None = None,
     ) -> WorksheetTable:
         data_df = self._generate_export_df(records, selected_keys, data_converter)
         return data_df.with_prepended_rows([self.get_output_child_excel_headers(selected_keys)])
 
     def _export_with_simple_header(
         self,
-        records: list[dict[str, Any]] | None,
+        records: list[ExportRowPayload] | None,
         selected_keys: list[UniqueKey],
-        data_converter: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        data_converter: DataConverter | None = None,
     ) -> WorksheetTable:
         return self._generate_export_df(records, selected_keys, data_converter)
 
@@ -386,7 +389,7 @@ class ExcelAlchemy[
         )
         return self
 
-    def _aggregate_data(self, row_data: dict[UniqueLabel, Any]) -> dict[Key, Any]:
+    def _aggregate_data(self, row_data: FlatRowPayload) -> ModelRowPayload:
         assert self._row_aggregator is not None
         return self._row_aggregator.aggregate(row_data)
 
@@ -423,15 +426,15 @@ class ExcelAlchemy[
         return self._header_parser.extract(self.header_df)
 
     def _extract_simple_header(self) -> list[ExcelHeader]:
-        return self._header_parser._extract_simple(self.header_df)
+        return self._header_parser.extract_simple(self.header_df)
 
     def _extract_merged_header(self) -> list[ExcelHeader]:
-        return self._header_parser._extract_merged(self.header_df)
+        return self._header_parser.extract_merged(self.header_df)
 
-    def __setattr__(self, key: str, value: Any):
+    def __setattr__(self, key: str, value: object):
         if key == 'config' and hasattr(self, 'config'):
             raise ValueError(msg(MessageKey.CONFIG_ALREADY_INITIALIZED, class_name=self.__class__.__name__))
         object.__setattr__(self, key, value)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'{self.__class__.__name__}(config={self.config!r})'

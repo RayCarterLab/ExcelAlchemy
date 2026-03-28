@@ -1,8 +1,8 @@
 import logging
-from typing import Any
+from typing import cast
 
-from excelalchemy._internal.constants import MULTI_CHECKBOX_SEPARATOR
-from excelalchemy._internal.identity import OptionId
+from excelalchemy._primitives.constants import MULTI_CHECKBOX_SEPARATOR
+from excelalchemy._primitives.identity import OptionId
 from excelalchemy.codecs.multi_checkbox import MultiCheckbox
 from excelalchemy.codecs.radio import Radio
 from excelalchemy.i18n.messages import MessageKey
@@ -21,20 +21,20 @@ class SingleStaff(Radio):
         return f'{dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key))} \n{dmsg(MessageKey.COMMENT_HINT, value=extra_hint)}'
 
     @classmethod
-    def parse_input(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
-        if isinstance(value, str):
-            return value.strip()
-        return value
+    def parse_input(cls, value: object, field_meta: FieldMetaInfo) -> str:
+        return super().parse_input(value, field_meta)
 
     @classmethod
-    def format_display_value(cls, value: Any | None, field_meta: FieldMetaInfo) -> str:
+    def format_display_value(cls, value: object | None, field_meta: FieldMetaInfo) -> str:
         if value is None or value == '':
             return ''
+        if not isinstance(value, str):
+            return str(value)
         try:
-            return field_meta.options_id_map[value.strip()].name
+            return field_meta.options_id_map[OptionId(value.strip())].name
         except KeyError:
             logging.warning('类型【%s】无法为【%s】找到【%s】的选项, 返回原值', cls.__name__, field_meta.label, value)
-        return value if value is not None else ''
+        return value
 
 
 class MultiStaff(MultiCheckbox):
@@ -50,27 +50,29 @@ class MultiStaff(MultiCheckbox):
         )
 
     @classmethod
-    def parse_input(cls, value: str | list[str] | Any, field_meta: FieldMetaInfo) -> Any:
+    def parse_input(cls, value: object, field_meta: FieldMetaInfo) -> object:
         return super().parse_input(value, field_meta)
 
     @classmethod
-    def normalize_import_value(cls, value: Any, field_meta: FieldMetaInfo) -> list[str]:
+    def normalize_import_value(cls, value: object, field_meta: FieldMetaInfo) -> list[str]:
         return super().normalize_import_value(value, field_meta)
 
     @classmethod
-    def format_display_value(cls, value: str | list[OptionId] | Any, field_meta: FieldMetaInfo) -> Any:
+    def format_display_value(cls, value: object, field_meta: FieldMetaInfo) -> str:
         if isinstance(value, str):
             return value
 
         if isinstance(value, list):
-            if len(value) != len(set(value)):
+            items = cast(list[object], value)
+            option_ids = [OptionId(option_id) for option_id in items]
+            if len(option_ids) != len(set(option_ids)):
                 raise ValueError(msg(MessageKey.OPTIONS_CONTAIN_DUPLICATES))
 
-            option_names = field_meta.exchange_option_ids_to_names(value)
+            option_names = field_meta.exchange_option_ids_to_names(option_ids)
             return f'{MULTI_CHECKBOX_SEPARATOR}'.join(option_names)
 
         logging.warning('%s could not be deserialized', cls.__name__)
-        return value
+        return str(value)
 
 
 SingleStaffCodec = SingleStaff

@@ -67,23 +67,54 @@ exclude = [
 ]
 enableTypeIgnoreComments = false
 reportAbstractUsage = false
-reportArgumentType = false
-reportAssignmentType = false
 reportAttributeAccessIssue = false
 reportCallIssue = false
-reportDeprecated = false
-reportGeneralTypeIssues = false
-reportImportCycles = false
-reportMissingTypeArgument = false
-reportMissingTypeStubs = false
 reportPrivateImportUsage = false
 reportRedeclaration = false
-reportUnknownArgumentType = false
-reportUnknownMemberType = false
-reportUnknownParameterType = false
-reportUnknownVariableType = false
-reportUnusedFunction = false
-reportUnusedImport = false
+strict = [
+    'src/excelalchemy/_primitives/constants.py',
+    'src/excelalchemy/_primitives/deprecation.py',
+    'src/excelalchemy/_primitives/header_models.py',
+    'src/excelalchemy/_primitives/identity.py',
+    'src/excelalchemy/_primitives/payloads.py',
+    'src/excelalchemy/artifacts.py',
+    'src/excelalchemy/codecs/base.py',
+    'src/excelalchemy/codecs/boolean.py',
+    'src/excelalchemy/codecs/date.py',
+    'src/excelalchemy/codecs/date_range.py',
+    'src/excelalchemy/codecs/email.py',
+    'src/excelalchemy/codecs/money.py',
+    'src/excelalchemy/codecs/multi_checkbox.py',
+    'src/excelalchemy/codecs/number.py',
+    'src/excelalchemy/codecs/number_range.py',
+    'src/excelalchemy/codecs/organization.py',
+    'src/excelalchemy/codecs/phone_number.py',
+    'src/excelalchemy/codecs/radio.py',
+    'src/excelalchemy/codecs/staff.py',
+    'src/excelalchemy/codecs/string.py',
+    'src/excelalchemy/codecs/tree.py',
+    'src/excelalchemy/codecs/url.py',
+    'src/excelalchemy/config.py',
+    'src/excelalchemy/core/alchemy.py',
+    'src/excelalchemy/core/abstract.py',
+    'src/excelalchemy/core/executor.py',
+    'src/excelalchemy/core/rendering.py',
+    'src/excelalchemy/core/schema.py',
+    'src/excelalchemy/core/storage.py',
+    'src/excelalchemy/core/storage_minio.py',
+    'src/excelalchemy/core/storage_protocol.py',
+    'src/excelalchemy/core/table.py',
+    'src/excelalchemy/core/writer.py',
+    'src/excelalchemy/exceptions.py',
+    'src/excelalchemy/core/headers.py',
+    'src/excelalchemy/core/rows.py',
+    'src/excelalchemy/helper/pydantic.py',
+    'src/excelalchemy/i18n/messages.py',
+    'src/excelalchemy/metadata.py',
+    'src/excelalchemy/results.py',
+    'src/excelalchemy/util/convertor.py',
+    'src/excelalchemy/util/file.py',
+]
 typeCheckingMode = 'basic'
 
 [tool.ruff]
@@ -93,16 +124,17 @@ src = ['src', 'tests']
 extend-exclude = ['files']
 
 [tool.ruff.lint]
-select = ['E', 'F', 'I']
-ignore = ['E501']
+select = ['E', 'F', 'I', 'UP', 'B', 'SIM', 'C4', 'RUF', 'PERF']
+ignore = ['E501', 'RUF001', 'RUF002', 'RUF003']
 
 [tool.ruff.lint.per-file-ignores]
 '**/__init__.py' = ['F401']
-'src/excelalchemy/exc.py' = ['E402']
-'src/excelalchemy/header_models.py' = ['E402']
-'src/excelalchemy/identity.py' = ['E402']
-'src/excelalchemy/types/*.py' = ['E402']
-'src/excelalchemy/types/**/*.py' = ['E402']
+'src/excelalchemy/const.py' = ['RUF100']
+'src/excelalchemy/exc.py' = ['E402', 'RUF100']
+'src/excelalchemy/header_models.py' = ['E402', 'RUF100']
+'src/excelalchemy/identity.py' = ['E402', 'RUF100']
+'src/excelalchemy/types/*.py' = ['E402', 'RUF100']
+'src/excelalchemy/types/**/*.py' = ['E402', 'RUF100']
 
 [tool.ruff.format]
 quote-style = 'preserve'

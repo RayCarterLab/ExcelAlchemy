@@ -1,22 +1,26 @@
 """导入 Excel 的结果"""
 
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from excelalchemy._internal.identity import Label
+from excelalchemy._primitives.identity import Label
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
 from excelalchemy.i18n.messages import message as msg
 
 
-class ValidateRowResult(str, Enum):
+def _empty_labels() -> list[Label]:
+    return []
+
+
+class ValidateRowResult(StrEnum):
     """导入结果"""
 
     SUCCESS = 'SUCCESS'
     FAIL = 'FAIL'
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self is ValidateRowResult.SUCCESS:
             return dmsg(MessageKey.VALIDATE_ROW_SUCCESS)
         return dmsg(MessageKey.VALIDATE_ROW_FAIL)
@@ -37,7 +41,7 @@ class ValidateHeaderResult(BaseModel):
         return bool(self.missing_required)
 
 
-class ValidateResult(str, Enum):
+class ValidateResult(StrEnum):
     """导入结果类型"""
 
     HEADER_INVALID = 'HEADER_INVALID'  # 表头无效
@@ -53,10 +57,10 @@ class ImportResult(BaseModel):
     result: ValidateResult = Field(description='导入结果')
 
     is_required_missing: bool = Field(default=False, description='是否缺失必填表头')
-    missing_required: list[Label] = Field(default_factory=list, description='缺失的必填表头')
-    missing_primary: list[Label] = Field(default_factory=list, description='缺失的关键列')
-    unrecognized: list[Label] = Field(default_factory=list, description='无法识别的表头')
-    duplicated: list[Label] = Field(default_factory=list, description='重复的表头')
+    missing_required: list[Label] = Field(default_factory=_empty_labels, description='缺失的必填表头')
+    missing_primary: list[Label] = Field(default_factory=_empty_labels, description='缺失的关键列')
+    unrecognized: list[Label] = Field(default_factory=_empty_labels, description='无法识别的表头')
+    duplicated: list[Label] = Field(default_factory=_empty_labels, description='重复的表头')
 
     url: str | None = Field(default=None, description='导入结果文件的下载链接, 失败时有值')
     success_count: int = Field(default=0, description='导入成功的数据条数')

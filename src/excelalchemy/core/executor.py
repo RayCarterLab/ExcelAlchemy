@@ -1,10 +1,11 @@
 """Import execution helpers for create, update, and upsert flows."""
 
-from typing import Any, Awaitable, Callable
+from collections.abc import Callable
 
 from pydantic import BaseModel
 
-from excelalchemy._internal.identity import Key, RowIndex
+from excelalchemy._primitives.identity import RowIndex
+from excelalchemy._primitives.payloads import DataConverter, DmlCallback, ImportContext, ModelRowPayload
 from excelalchemy.config import ImporterConfig, ImportMode
 from excelalchemy.exceptions import ConfigError, ExcelCellError, ExcelRowError
 from excelalchemy.helper.pydantic import instantiate_pydantic_model
@@ -15,20 +16,20 @@ from .rows import ImportIssueTracker
 from .table import WorksheetTable
 
 
-class ImportExecutor[ContextT]:
+class ImportExecutor[ContextT, ImporterCreateModelT: BaseModel, ImporterUpdateModelT: BaseModel]:
     """Execute import-side DML while keeping validation and error mapping isolated."""
 
     def __init__(
         self,
-        config: ImporterConfig[Any, Any, Any],
+        config: ImporterConfig[ContextT, ImporterCreateModelT, ImporterUpdateModelT],
         issue_tracker: ImportIssueTracker,
-        get_context: Callable[[], ContextT | None],
+        get_context: Callable[[], ImportContext[ContextT]],
     ):
         self.config = config
         self.issue_tracker = issue_tracker
         self.get_context = get_context
 
-    async def execute(self, row_index: RowIndex, data: dict[Key, Any], df: WorksheetTable) -> bool:
+    async def execute(self, row_index: RowIndex, data: ModelRowPayload, df: WorksheetTable) -> bool:
         """Dispatch one aggregated row to the configured import mode handler."""
         match self.config.import_mode:
             case ImportMode.CREATE:
@@ -39,7 +40,7 @@ class ImportExecutor[ContextT]:
                 return await self._create_or_update(row_index, data, df)
         raise ConfigError(msg(MessageKey.UNSUPPORTED_IMPORT_MODE, import_mode=self.config.import_mode))
 
-    async def _create(self, row_index: RowIndex, data: dict[Key, Any], df: WorksheetTable) -> bool:
+    async def _create(self, row_index: RowIndex, data: ModelRowPayload, df: WorksheetTable) -> bool:
         if self.config.creator is None:
             raise ConfigError(msg(MessageKey.CREATOR_NOT_CONFIGURED))
         if self.config.create_importer_model is None:
@@ -54,7 +55,7 @@ class ImportExecutor[ContextT]:
             self.config.exec_formatter,
         )
 
-    async def _update(self, row_index: RowIndex, data: dict[Key, Any], df: WorksheetTable) -> bool:
+    async def _update(self, row_index: RowIndex, data: ModelRowPayload, df: WorksheetTable) -> bool:
         if self.config.updater is None:
             raise ConfigError(msg(MessageKey.UPDATER_NOT_CONFIGURED))
         if self.config.update_importer_model is None:
@@ -69,7 +70,7 @@ class ImportExecutor[ContextT]:
             self.config.exec_formatter,
         )
 
-    async def _create_or_update(self, row_index: RowIndex, data: dict[Key, Any], df: WorksheetTable) -> bool:
+    async def _create_or_update(self, row_index: RowIndex, data: ModelRowPayload, df: WorksheetTable) -> bool:
         if self.config.is_data_exist is None:
             raise ConfigError(msg(MessageKey.IS_DATA_EXIST_NOT_CONFIGURED))
 
@@ -82,16 +83,16 @@ class ImportExecutor[ContextT]:
     async def _invoke_dml(
         self,
         row_index: RowIndex,
-        data: dict[Key, Any],
+        data: ModelRowPayload,
         df: WorksheetTable,
         importer_model: type[BaseModel],
-        dml_func: Callable[[dict[str, Any], ContextT | None], Awaitable[Any]],
-        data_converter: Callable[[dict[str, Any]], dict[str, Any]] | None,
+        dml_func: DmlCallback[ContextT],
+        data_converter: DataConverter | None,
         exec_formatter: Callable[[Exception], str],
     ) -> bool:
         """Validate one row payload and call the user-supplied DML function."""
         importer_instance_or_errors = instantiate_pydantic_model(data, importer_model)
-        if not isinstance(importer_instance_or_errors, importer_model):
+        if isinstance(importer_instance_or_errors, list):
             validation_errors = importer_instance_or_errors
             cell_errors = [error for error in validation_errors if isinstance(error, ExcelCellError)]
             self.issue_tracker.register_row_error(row_index, validation_errors)
@@ -99,8 +100,7 @@ class ImportExecutor[ContextT]:
                 self.issue_tracker.register_cell_errors(row_index, cell_errors, df)
             return False
 
-        importer_instance = importer_instance_or_errors
-        converted_data = importer_instance.model_dump(exclude_unset=True)
+        converted_data = importer_instance_or_errors.model_dump(exclude_unset=True)
         if data_converter is not None:
             converted_data = data_converter(converted_data)
 

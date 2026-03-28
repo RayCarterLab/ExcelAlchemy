@@ -1,7 +1,8 @@
 import logging
-from typing import Any
+from typing import cast
 
-from excelalchemy._internal.constants import MULTI_CHECKBOX_SEPARATOR
+from excelalchemy._primitives.constants import MULTI_CHECKBOX_SEPARATOR
+from excelalchemy._primitives.identity import OptionId
 from excelalchemy.codecs.multi_checkbox import MultiCheckbox
 from excelalchemy.codecs.radio import Radio
 from excelalchemy.i18n.messages import MessageKey
@@ -19,19 +20,19 @@ class SingleOrganization(Radio):
         return '\n'.join([dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key)), dmsg(MessageKey.COMMENT_HINT, value=extra_hint)])
 
     @classmethod
-    def parse_input(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
-        if isinstance(value, str):
-            return value.strip()
-        return value
+    def parse_input(cls, value: object, field_meta: FieldMetaInfo) -> str:
+        return super().parse_input(value, field_meta)
 
     @classmethod
-    def format_display_value(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
+    def format_display_value(cls, value: object, field_meta: FieldMetaInfo) -> str:
+        if not isinstance(value, str):
+            return '' if value is None else str(value)
         try:
-            return field_meta.options_id_map[value.strip()].name
+            return field_meta.options_id_map[OptionId(value.strip())].name
         except KeyError:
             logging.warning('无法找到组织 %s 的选项, 返回原值', value)
 
-        return value if value is not None else ''
+        return value
 
 
 class MultiOrganization(MultiCheckbox):
@@ -47,11 +48,11 @@ class MultiOrganization(MultiCheckbox):
         )
 
     @classmethod
-    def parse_input(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
+    def parse_input(cls, value: object, field_meta: FieldMetaInfo) -> object:
         return super().parse_input(value, field_meta)
 
     @classmethod
-    def format_display_value(cls, value: str | list[str] | None | Any, field_meta: FieldMetaInfo) -> str | Any:
+    def format_display_value(cls, value: object | None, field_meta: FieldMetaInfo) -> str:
         if value is None or value == '':
             return ''
 
@@ -59,14 +60,16 @@ class MultiOrganization(MultiCheckbox):
             return value
 
         if isinstance(value, list):
-            option_names = field_meta.exchange_option_ids_to_names(value)
+            items = cast(list[object], value)
+            option_ids = [OptionId(option_id) for option_id in items]
+            option_names = field_meta.exchange_option_ids_to_names(option_ids)
             return MULTI_CHECKBOX_SEPARATOR.join(map(str, option_names))
 
         logging.warning('%s 反序列化失败', cls.__name__)
-        return value
+        return str(value)
 
     @classmethod
-    def normalize_import_value(cls, value: Any, field_meta: FieldMetaInfo) -> list[str]:
+    def normalize_import_value(cls, value: object, field_meta: FieldMetaInfo) -> list[str]:
         return super().normalize_import_value(value, field_meta)
 
 

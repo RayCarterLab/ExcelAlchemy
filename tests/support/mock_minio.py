@@ -3,7 +3,7 @@ import os
 from copy import copy
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Any
+from typing import Any, ClassVar
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.worksheet.cell_range import CellRange
@@ -15,10 +15,10 @@ from tests.support.registry import FileRegistry
 class LocalMockMinio:
     """有合并表头的内容直接使用文件"""
 
-    storage: dict[str, Any] = {}
+    storage: ClassVar[dict[str, Any]] = {}
     bucket_name: str = 'test'
 
-    mock_excel_data: dict[str, Any] = {
+    mock_excel_data: ClassVar[dict[str, Any]] = {
         FileRegistry.TEST_HEADER_INVALID_INPUT: [
             {
                 '不存在的表头': '是',
@@ -108,19 +108,19 @@ class LocalMockMinio:
         automatically add HEADER_HINT to first row
         """
         for filename, data in self.mock_excel_data.items():
-            f = NamedTemporaryFile(suffix='.xlsx', delete=False)
-            f.close()  # 关键：先关闭，避免 Windows 文件锁问题
+            with NamedTemporaryFile(suffix='.xlsx', delete=False) as temporary_file:
+                temporary_filename = temporary_file.name
 
             workbook = self._build_workbook(data)
-            workbook.save(f.name)
+            workbook.save(temporary_filename)
             workbook.close()
 
-            with open(f.name, 'rb') as rf:
+            with open(temporary_filename, 'rb') as rf:
                 file_bytes = rf.read()
 
             data = io.BytesIO(file_bytes)
             length = len(file_bytes)
-            self.put_object(self.bucket_name, filename, data, length, f.name)
+            self.put_object(self.bucket_name, filename, data, length, temporary_filename)
 
     def _build_workbook(self, data: str | list[dict[str, Any]]):
         if isinstance(data, str):
@@ -202,7 +202,7 @@ class LocalMockMinio:
         return copy(self.storage[filename]['data'])  # use copy to avoid close(), so it can be read multiple times
 
     def __del__(self):
-        for filename, data in self.storage.items():
+        for data in self.storage.values():
             if isinstance(data['file'], str) and os.path.exists(data['file']):
                 os.remove(data['file'])
 

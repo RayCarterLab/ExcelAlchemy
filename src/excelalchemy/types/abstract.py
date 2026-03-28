@@ -1,6 +1,6 @@
 """Compatibility shim for ``excelalchemy.types.abstract``."""
 
-from excelalchemy._internal.deprecation import warn_compat_import
+from excelalchemy._primitives.deprecation import warn_compat_import
 
 warn_compat_import('excelalchemy.types.abstract', 'excelalchemy.codecs.base')
 

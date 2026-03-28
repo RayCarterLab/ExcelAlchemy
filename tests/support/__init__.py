@@ -14,15 +14,15 @@ from tests.support.workbook import (
 
 __all__ = [
     'BaseTestCase',
-    'decode_prefixed_excel_to_workbook',
     'FileRegistry',
+    'InMemoryExcelStorage',
+    'LocalMockMinio',
+    'decode_prefixed_excel_to_workbook',
     'get_fill_color',
     'get_font_color',
-    'InMemoryExcelStorage',
     'list_data_validations',
     'list_merge_ranges',
     'load_binary_excel_to_workbook',
-    'LocalMockMinio',
     'local_minio',
     'worksheet_matrix',
 ]

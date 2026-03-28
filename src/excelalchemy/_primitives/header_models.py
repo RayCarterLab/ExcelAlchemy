@@ -3,8 +3,8 @@
 from pydantic import BaseModel
 from pydantic.fields import Field
 
-from excelalchemy._internal.constants import UNIQUE_HEADER_CONNECTOR
-from excelalchemy._internal.identity import Label, UniqueLabel
+from excelalchemy._primitives.constants import UNIQUE_HEADER_CONNECTOR
+from excelalchemy._primitives.identity import Label, UniqueLabel
 
 
 class ExcelHeader(BaseModel):

@@ -5,7 +5,7 @@ from typing import Any, cast
 import pendulum
 from pendulum import DateTime
 
-from excelalchemy._internal.constants import DATE_FORMAT_TO_HINT_MAPPING, MILLISECOND_TO_SECOND, DataRangeOption
+from excelalchemy._primitives.constants import DATE_FORMAT_TO_HINT_MAPPING, MILLISECOND_TO_SECOND, DataRangeOption
 from excelalchemy.codecs.base import ExcelFieldCodec
 from excelalchemy.exceptions import ConfigError
 from excelalchemy.i18n.messages import MessageKey

@@ -2,7 +2,7 @@
 
 from typing import Protocol, runtime_checkable
 
-from excelalchemy._internal.identity import UrlStr
+from excelalchemy._primitives.identity import UrlStr
 from excelalchemy.core.table import WorksheetTable
 
 

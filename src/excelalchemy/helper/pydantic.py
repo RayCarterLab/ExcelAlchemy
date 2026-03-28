@@ -1,11 +1,13 @@
+from collections.abc import Generator, Iterable, Mapping
 from dataclasses import dataclass
 from types import UnionType
-from typing import Any, Generator, Iterable, cast, get_args, get_origin
+from typing import Any, Union, cast, get_args, get_origin
 
 from pydantic import BaseModel, ValidationError
-from pydantic.fields import FieldInfo, PydanticUndefined
+from pydantic.fields import FieldInfo
+from pydantic_core import PydanticUndefined
 
-from excelalchemy._internal.identity import Key
+from excelalchemy._primitives.identity import Key
 from excelalchemy.codecs.base import CompositeExcelFieldCodec, ExcelFieldCodec
 from excelalchemy.exceptions import ExcelCellError, ExcelRowError, ProgrammaticError
 from excelalchemy.i18n.messages import MessageKey
@@ -28,7 +30,7 @@ class PydanticFieldAdapter:
     def excel_codec(self) -> type[Any]:
         annotation = self.annotation
         origin = get_origin(annotation)
-        if origin in (UnionType, getattr(__import__('typing'), 'Union')):
+        if origin in (UnionType, Union):
             args = [arg for arg in get_args(annotation) if arg is not type(None)]
             if len(args) != 1:
                 raise ProgrammaticError(msg(MessageKey.UNSUPPORTED_FIELD_TYPE_DECLARATION, annotation=annotation))
@@ -55,9 +57,7 @@ class PydanticFieldAdapter:
             return declared.required
         if self.raw_field.default is not PydanticUndefined or self.raw_field.default_factory is not None:
             return False
-        if self.allows_none:
-            return False
-        return True
+        return not self.allows_none
 
     @property
     def declared_metadata(self) -> FieldMetaInfo:
@@ -115,8 +115,8 @@ def get_model_field_names(model: type[BaseModel]) -> list[str]:
     return PydanticModelAdapter(model).field_names()
 
 
-def instantiate_pydantic_model[ModelT: BaseModel](  # noqa: C901
-    data: dict[Key, Any],
+def instantiate_pydantic_model[ModelT: BaseModel](
+    data: Mapping[str, Any],
     model: type[ModelT],
 ) -> ModelT | list[ExcelCellError | ExcelRowError]:
     """实例化 Pydantic 模型, 并返回错误."""
@@ -126,7 +126,7 @@ def instantiate_pydantic_model[ModelT: BaseModel](  # noqa: C901
     failed_fields: set[str] = set()
 
     for field_adapter in model_adapter.fields():
-        raw_value = data.get(Key(field_adapter.name), PydanticUndefined)
+        raw_value = data.get(field_adapter.name, PydanticUndefined)
         if raw_value is PydanticUndefined:
             continue
 
@@ -196,7 +196,7 @@ def _model_validate[ModelT: BaseModel](
     failed_fields: set[str],
 ) -> ModelT | list[ExcelCellError | ExcelRowError]:
     try:
-        return cast(ModelT, model.model_validate(data))
+        return model.model_validate(data)
     except ValidationError as exc:
         return _map_validation_error(exc, model_adapter, failed_fields)
 

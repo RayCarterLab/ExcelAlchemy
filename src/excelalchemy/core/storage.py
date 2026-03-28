@@ -2,6 +2,8 @@
 
 from typing import TYPE_CHECKING, Any
 
+from pydantic import BaseModel
+
 from excelalchemy.config import ExporterConfig, ImporterConfig
 from excelalchemy.core.storage_protocol import ExcelStorage
 from excelalchemy.exceptions import ConfigError
@@ -22,7 +24,14 @@ class MissingStorageGateway(ExcelStorage):
         raise ConfigError(msg(MessageKey.NO_STORAGE_BACKEND_CONFIGURED))
 
 
-def build_storage_gateway(config: ImporterConfig | ExporterConfig) -> ExcelStorage:
+def build_storage_gateway[
+    ContextT,
+    ImporterCreateModelT: BaseModel,
+    ImporterUpdateModelT: BaseModel,
+    ExporterModelT: BaseModel,
+](
+    config: ImporterConfig[ContextT, ImporterCreateModelT, ImporterUpdateModelT] | ExporterConfig[ExporterModelT],
+) -> ExcelStorage:
     """Build the default storage strategy for one ExcelAlchemy config."""
     storage = getattr(config, 'storage', None)
     if storage is not None:
