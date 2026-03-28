@@ -16,10 +16,7 @@ from excelalchemy.results import ValidateRowResult
 
 class TestI18nMessages:
     def test_message_formats_templates(self):
-        assert (
-            message(MessageKey.ENTER_DATE_FORMAT, date_format='yyyy/mm/dd')
-            == 'Enter a date in yyyy/mm/dd format'
-        )
+        assert message(MessageKey.ENTER_DATE_FORMAT, date_format='yyyy/mm/dd') == 'Enter a date in yyyy/mm/dd format'
 
     def test_message_falls_back_to_default_locale(self):
         assert (
@@ -29,7 +26,10 @@ class TestI18nMessages:
 
     def test_display_message_uses_context_locale(self):
         with use_display_locale('en'):
-            assert display_message(MessageKey.RESULT_COLUMN_LABEL) == 'Validation result\nDelete this column before re-uploading'
+            assert (
+                display_message(MessageKey.RESULT_COLUMN_LABEL)
+                == 'Validation result\nDelete this column before re-uploading'
+            )
             assert str(ValidateRowResult.FAIL) == 'Validation failed'
 
     def test_public_locale_policy_constants_are_stable(self):

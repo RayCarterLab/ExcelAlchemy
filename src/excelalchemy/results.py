@@ -57,12 +57,22 @@ class ImportResult(BaseModel):
     result: ValidateResult = Field(description='Overall import result.')
 
     is_required_missing: bool = Field(default=False, description='Whether required headers are missing.')
-    missing_required: list[Label] = Field(default_factory=_empty_labels, description='Required headers missing from the workbook.')
-    missing_primary: list[Label] = Field(default_factory=_empty_labels, description='Primary-key headers missing from the workbook.')
-    unrecognized: list[Label] = Field(default_factory=_empty_labels, description='Headers present in the workbook but unknown to the schema.')
-    duplicated: list[Label] = Field(default_factory=_empty_labels, description='Headers that appear more than once in the workbook.')
+    missing_required: list[Label] = Field(
+        default_factory=_empty_labels, description='Required headers missing from the workbook.'
+    )
+    missing_primary: list[Label] = Field(
+        default_factory=_empty_labels, description='Primary-key headers missing from the workbook.'
+    )
+    unrecognized: list[Label] = Field(
+        default_factory=_empty_labels, description='Headers present in the workbook but unknown to the schema.'
+    )
+    duplicated: list[Label] = Field(
+        default_factory=_empty_labels, description='Headers that appear more than once in the workbook.'
+    )
 
-    url: str | None = Field(default=None, description='Download URL for the import result workbook when one is produced.')
+    url: str | None = Field(
+        default=None, description='Download URL for the import result workbook when one is produced.'
+    )
     success_count: int = Field(default=0, description='Number of rows imported successfully.')
     fail_count: int = Field(default=0, description='Number of rows that failed to import.')
 

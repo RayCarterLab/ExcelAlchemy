@@ -310,15 +310,47 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
                 6: [ExcelCellError(label=Label('出生日期'), message='Enter a date in yyyy format')],
                 7: [ExcelCellError(label=Label('邮箱'), message='Enter a valid email address')],
                 18: [ExcelCellError(label=Label('网址'), message='Enter a valid URL')],
-                9: [ExcelCellError(label=Label('爱好'), message='Option not found; check the header comment for valid values')],
-                10: [ExcelCellError(label=Label('公司'), message='Option not found; check the header comment for valid values')],
-                11: [ExcelCellError(label=Label('经理'), message='Option not found; check the header comment for valid values')],
-                12: [ExcelCellError(label=Label('部门'), message='Option not found; check the header comment for valid values')],
-                17: [ExcelCellError(label=Label('团队'), message='Option not found; check the field comment for valid values')],
+                9: [
+                    ExcelCellError(
+                        label=Label('爱好'), message='Option not found; check the header comment for valid values'
+                    )
+                ],
+                10: [
+                    ExcelCellError(
+                        label=Label('公司'), message='Option not found; check the header comment for valid values'
+                    )
+                ],
+                11: [
+                    ExcelCellError(
+                        label=Label('经理'), message='Option not found; check the header comment for valid values'
+                    )
+                ],
+                12: [
+                    ExcelCellError(
+                        label=Label('部门'), message='Option not found; check the header comment for valid values'
+                    )
+                ],
+                17: [
+                    ExcelCellError(
+                        label=Label('团队'), message='Option not found; check the field comment for valid values'
+                    )
+                ],
                 13: [ExcelCellError(label=Label('电话'), message='Enter a valid phone number')],
-                14: [ExcelCellError(label=Label('单选'), message='Option not found; check the field comment for valid values')],
-                15: [ExcelCellError(label=Label('老板'), message='Option not found; check the field comment for valid values')],
-                16: [ExcelCellError(label=Label('领导'), message='Option not found; check the field comment for valid values')],
+                14: [
+                    ExcelCellError(
+                        label=Label('单选'), message='Option not found; check the field comment for valid values'
+                    )
+                ],
+                15: [
+                    ExcelCellError(
+                        label=Label('老板'), message='Option not found; check the field comment for valid values'
+                    )
+                ],
+                16: [
+                    ExcelCellError(
+                        label=Label('领导'), message='Option not found; check the field comment for valid values'
+                    )
+                ],
             }
         }
 

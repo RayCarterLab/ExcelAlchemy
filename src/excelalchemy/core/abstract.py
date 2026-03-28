@@ -49,7 +49,9 @@ class ABCExcelAlchemy[
         """Export rows and return a structured Excel artifact."""
 
     @abstractmethod
-    def export_upload(self, output_name: str, data: list[ExportRowPayload], keys: Sequence[str] | None = None) -> UrlStr:
+    def export_upload(
+        self, output_name: str, data: list[ExportRowPayload], keys: Sequence[str] | None = None
+    ) -> UrlStr:
         """Export rows and upload the workbook through the configured storage backend."""
 
     @abstractmethod

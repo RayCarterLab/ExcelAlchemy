@@ -36,7 +36,9 @@ class RowAggregator:
             field_meta = self.layout.unique_label_to_field_meta[unique_label]
 
             if field_meta.key is None or field_meta.parent_key is None:
-                raise ConfigError(msg(MessageKey.FIELD_META_RUNTIME_KEY_MISSING, field_meta_type=type(field_meta).__name__))
+                raise ConfigError(
+                    msg(MessageKey.FIELD_META_RUNTIME_KEY_MISSING, field_meta_type=type(field_meta).__name__)
+                )
 
             if value_is_nan(value):
                 if self.import_mode in {ImportMode.UPDATE, ImportMode.CREATE_OR_UPDATE}:

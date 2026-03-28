@@ -200,9 +200,7 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.PARENT_LABEL_EMPTY_RUNTIME: 'parent_label cannot be empty at runtime',
         MessageKey.PARENT_KEY_EMPTY_RUNTIME: 'parent_key cannot be empty at runtime',
         MessageKey.KEY_EMPTY_RUNTIME: 'key cannot be empty at runtime',
-        MessageKey.DUPLICATE_FIELD_ORDER_DEFINITIONS: (
-            'Duplicate field order definitions found: {duplicate_order}'
-        ),
+        MessageKey.DUPLICATE_FIELD_ORDER_DEFINITIONS: ('Duplicate field order definitions found: {duplicate_order}'),
         MessageKey.INVALID_KEY: 'Invalid key: {key}',
         MessageKey.NO_STORAGE_BACKEND_CONFIGURED: (
             'No storage backend is configured; pass storage=... or install and configure ExcelAlchemy[minio]'
@@ -210,15 +208,9 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.MINIO_CLIENT_NOT_CONFIGURED: 'minio client is not configured',
         MessageKey.WORKSHEET_NOT_FOUND: 'Worksheet named {sheet_name!r} not found',
         MessageKey.PRIMARY_KEY_MUST_BE_UNIQUE: 'Primary key fields must be unique',
-        MessageKey.PRIMARY_KEY_AND_UNIQUE_MUST_BE_REQUIRED: (
-            'Primary key and unique fields must be required'
-        ),
-        MessageKey.OPTION_NOT_FOUND_HEADER_COMMENT: (
-            'Option not found; check the header comment for valid values'
-        ),
-        MessageKey.OPTION_NOT_FOUND_FIELD_COMMENT: (
-            'Option not found; check the field comment for valid values'
-        ),
+        MessageKey.PRIMARY_KEY_AND_UNIQUE_MUST_BE_REQUIRED: ('Primary key and unique fields must be required'),
+        MessageKey.OPTION_NOT_FOUND_HEADER_COMMENT: ('Option not found; check the header comment for valid values'),
+        MessageKey.OPTION_NOT_FOUND_FIELD_COMMENT: ('Option not found; check the field comment for valid values'),
         MessageKey.DATE_FORMAT_EMPTY_RUNTIME: 'date_format cannot be empty at runtime',
         MessageKey.FIELD_DEFINITIONS_MUST_USE_FIELDMETA: (
             'Field definitions must be created with FieldMeta or Annotated[..., ExcelMeta(...)]'
@@ -306,9 +298,7 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
             'Enter the staff name and employee ID, for example "Zhang San/001". '
             'Use "、" to separate multiple selections.'
         ),
-        MessageKey.SINGLE_TREE_HINT: (
-            'Enter the full tree path, for example "Company/Department/Sub-department".'
-        ),
+        MessageKey.SINGLE_TREE_HINT: ('Enter the full tree path, for example "Company/Department/Sub-department".'),
         MessageKey.MULTI_TREE_HINT: (
             'Enter the full path including the root node. Use "/" between levels, for example '
             '"Level 1/Level 2/Option 1". Use "，" to separate multiple selections.'
@@ -368,7 +358,7 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.LABEL_END_DATE: '结束日期',
         MessageKey.LABEL_MINIMUM_VALUE: '最小值',
         MessageKey.LABEL_MAXIMUM_VALUE: '最大值',
-    }
+    },
 }
 
 

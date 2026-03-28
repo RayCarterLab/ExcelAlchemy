@@ -32,7 +32,12 @@ class Date(ExcelFieldCodec, datetime):
     @classmethod
     def parse_input(cls, value: str | DateTime | Any, field_meta: FieldMetaInfo) -> datetime | Any:
         if isinstance(value, DateTime):
-            logging.info('Codec %s received a parsed datetime for %s; returning it unchanged: %s', cls.__name__, field_meta.label, value)
+            logging.info(
+                'Codec %s received a parsed datetime for %s; returning it unchanged: %s',
+                cls.__name__,
+                field_meta.label,
+                value,
+            )
             return value
 
         if not field_meta.date_format:
@@ -44,7 +49,12 @@ class Date(ExcelFieldCodec, datetime):
             dt: DateTime = cast(DateTime, pendulum.parse(v))
             return dt.replace(tzinfo=field_meta.timezone)
         except Exception as exc:
-            logging.warning('ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s', cls.__name__, value, exc)
+            logging.warning(
+                'ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s',
+                cls.__name__,
+                value,
+                exc,
+            )
             return value
 
     @classmethod

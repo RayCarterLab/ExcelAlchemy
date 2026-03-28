@@ -8,4 +8,3 @@ warn_compat_import(
 )
 
 from excelalchemy._primitives.header_models import *  # noqa: F403
-

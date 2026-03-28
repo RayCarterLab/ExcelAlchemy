@@ -34,7 +34,9 @@ class MultiCheckbox(ExcelFieldCodec, list[str]):
         if isinstance(value, str):
             return [item.strip() for item in value.split(MULTI_CHECKBOX_SEPARATOR)]
 
-        logging.warning('ValueType <%s> could not parse Excel input %s; returning the original value', cls.__name__, value)
+        logging.warning(
+            'ValueType <%s> could not parse Excel input %s; returning the original value', cls.__name__, value
+        )
         return value
 
     @classmethod
@@ -49,7 +51,9 @@ class MultiCheckbox(ExcelFieldCodec, list[str]):
             raise ProgrammaticError(msg(MessageKey.OPTIONS_CANNOT_BE_NONE_FOR_VALUE_TYPE, value_type=cls.__name__))
 
         if not field_meta.options:  # empty
-            logging.warning('Field %s of type %s has no options; returning the original value', field_meta.label, cls.__name__)
+            logging.warning(
+                'Field %s of type %s has no options; returning the original value', field_meta.label, cls.__name__
+            )
             return parsed
 
         if len(parsed) != len(set(parsed)):

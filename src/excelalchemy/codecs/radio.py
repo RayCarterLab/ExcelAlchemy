@@ -60,7 +60,9 @@ class Radio(ExcelFieldCodec, str):
             raise ProgrammaticError(msg(MessageKey.OPTIONS_CANNOT_BE_NONE_FOR_SELECTION_FIELDS))
 
         if not field_meta.options:  # empty
-            logging.warning('Field %s of type %s has no options; returning the original value', field_meta.label, cls.__name__)
+            logging.warning(
+                'Field %s of type %s has no options; returning the original value', field_meta.label, cls.__name__
+            )
             return parsed
 
         if parsed in field_meta.options_id_map:

@@ -16,8 +16,14 @@ class SingleOrganization(Radio):
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
         extra_hint = field_meta.hint or dmsg(MessageKey.SINGLE_ORGANIZATION_HINT)
-        value_key = MessageKey.COMMENT_REQUIRED_VALUE_REQUIRED if field_meta.required else MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL
-        return '\n'.join([dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key)), dmsg(MessageKey.COMMENT_HINT, value=extra_hint)])
+        value_key = (
+            MessageKey.COMMENT_REQUIRED_VALUE_REQUIRED
+            if field_meta.required
+            else MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL
+        )
+        return '\n'.join(
+            [dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key)), dmsg(MessageKey.COMMENT_HINT, value=extra_hint)]
+        )
 
     @classmethod
     def parse_input(cls, value: object, field_meta: FieldMetaInfo) -> str:

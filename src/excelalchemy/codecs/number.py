@@ -61,7 +61,12 @@ class Number(Decimal, ExcelFieldCodec):
         try:
             return transform_decimal(Decimal(str(value)))
         except Exception as exc:
-            logging.warning('ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s', cls.__name__, value, exc)
+            logging.warning(
+                'ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s',
+                cls.__name__,
+                value,
+                exc,
+            )
             return str(value)
 
     @classmethod
@@ -72,7 +77,12 @@ class Number(Decimal, ExcelFieldCodec):
         try:
             return str(transform_decimal(Decimal(value)))
         except Exception as exc:
-            logging.warning('ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s', cls.__name__, value, exc)
+            logging.warning(
+                'ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s',
+                cls.__name__,
+                value,
+                exc,
+            )
             return str(value)
 
     @classmethod

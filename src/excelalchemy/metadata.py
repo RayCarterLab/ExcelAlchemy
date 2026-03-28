@@ -248,7 +248,9 @@ class FieldMetaInfo:
 
     @property
     def comment_required(self) -> str:
-        value_key = MessageKey.COMMENT_REQUIRED_VALUE_REQUIRED if self.required else MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL
+        value_key = (
+            MessageKey.COMMENT_REQUIRED_VALUE_REQUIRED if self.required else MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL
+        )
         return dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key))
 
     @property
@@ -290,7 +292,9 @@ class FieldMetaInfo:
 
     @property
     def comment_unique(self) -> str:
-        value_key = MessageKey.COMMENT_UNIQUE_VALUE_UNIQUE if self.unique else MessageKey.COMMENT_UNIQUE_VALUE_NON_UNIQUE
+        value_key = (
+            MessageKey.COMMENT_UNIQUE_VALUE_UNIQUE if self.unique else MessageKey.COMMENT_UNIQUE_VALUE_NON_UNIQUE
+        )
         return dmsg(MessageKey.COMMENT_UNIQUE, value=dmsg(value_key))
 
     @property

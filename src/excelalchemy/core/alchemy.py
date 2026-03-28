@@ -157,7 +157,9 @@ class ExcelAlchemy[
                 df = self._export_with_merged_header(sample_data, keys)
             else:
                 df = self._export_with_simple_header(sample_data, keys)
-            return self._renderer.render_template(df, self.unique_label_to_field_meta, has_merged_header=has_merged_header)
+            return self._renderer.render_template(
+                df, self.unique_label_to_field_meta, has_merged_header=has_merged_header
+            )
 
     def download_template_artifact(
         self,
@@ -190,7 +192,9 @@ class ExcelAlchemy[
                 aggregate_data = self._aggregate_data(cast(FlatRowPayload, row.to_dict()))
                 success = await self._executor.execute(RowIndex(table_row_index), aggregate_data, self.df)
                 all_success = all_success and success
-                success_count, fail_count = (success_count + 1, fail_count) if success else (success_count, fail_count + 1)
+                success_count, fail_count = (
+                    (success_count + 1, fail_count) if success else (success_count, fail_count + 1)
+                )
 
             url = None
             if not all_success:
@@ -224,7 +228,9 @@ class ExcelAlchemy[
     ) -> ExcelArtifact:
         return ExcelArtifact.from_data_url(self.export(data, keys), filename=filename)
 
-    def export_upload(self, output_name: str, data: list[ExportRowPayload], keys: Sequence[str] | None = None) -> UrlStr:
+    def export_upload(
+        self, output_name: str, data: list[ExportRowPayload], keys: Sequence[str] | None = None
+    ) -> UrlStr:
         return self._upload_file(output_name, self.export(data, keys))
 
     def add_context(self, context: ContextT) -> None:
@@ -284,16 +290,26 @@ class ExcelAlchemy[
     def get_output_child_excel_headers(self, selected_keys: list[UniqueKey] | None = None) -> list[Label]:
         return self._layout.get_output_child_excel_headers(selected_keys)
 
-    def _gen_export_df(self, data: list[ExportRowPayload], keys: Sequence[str] | None = None) -> tuple[WorksheetTable, bool]:
+    def _gen_export_df(
+        self, data: list[ExportRowPayload], keys: Sequence[str] | None = None
+    ) -> tuple[WorksheetTable, bool]:
         if self.excel_mode == ExcelMode.IMPORT:
             logging.info('Export requested while configured in import mode; continuing with exporter_model inference')
 
-        input_keys = list(keys) if keys is not None else [
-            str(field_meta.parent_key) for field_meta in self.ordered_field_meta if field_meta.parent_key is not None
-        ]
+        input_keys = (
+            list(keys)
+            if keys is not None
+            else [
+                str(field_meta.parent_key)
+                for field_meta in self.ordered_field_meta
+                if field_meta.parent_key is not None
+            ]
+        )
         model_keys = get_model_field_names(self.exporter_model)
         if unrecognized := (set(input_keys) - set(model_keys)):
-            logging.warning('Ignoring keys not present in the exporter model: %s (model keys: %s)', unrecognized, model_keys)
+            logging.warning(
+                'Ignoring keys not present in the exporter model: %s (model keys: %s)', unrecognized, model_keys
+            )
 
         selected_keys = self._select_output_excel_keys(list(set(input_keys).intersection(set(model_keys))))
         has_merged_header = self.has_merged_header(selected_keys)

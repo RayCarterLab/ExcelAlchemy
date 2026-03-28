@@ -96,7 +96,9 @@ class ExcelHeaderValidator:
     ) -> ValidateHeaderResult:
         """Return the full header validation result consumed by the facade."""
         required_labels = [field_meta.unique_label for field_meta in layout.ordered_field_meta if field_meta.required]
-        primary_labels = [field_meta.unique_label for field_meta in layout.ordered_field_meta if field_meta.is_primary_key]
+        primary_labels = [
+            field_meta.unique_label for field_meta in layout.ordered_field_meta if field_meta.is_primary_key
+        ]
         schema_labels = [field_meta.unique_label for field_meta in layout.ordered_field_meta]
         input_labels = [header.unique_label for header in headers]
 

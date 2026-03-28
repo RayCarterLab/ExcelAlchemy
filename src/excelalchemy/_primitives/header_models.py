@@ -11,7 +11,9 @@ class ExcelHeader(BaseModel):
     """Normalized workbook header extracted from user input."""
 
     label: Label = Field(description='Workbook header label.')
-    parent_label: Label = Field(description='Parent workbook header label. Falls back to the label itself for flat headers.')
+    parent_label: Label = Field(
+        description='Parent workbook header label. Falls back to the label itself for flat headers.'
+    )
     offset: int = Field(default=0, description='Child-column offset under a merged parent header.')
 
     @property

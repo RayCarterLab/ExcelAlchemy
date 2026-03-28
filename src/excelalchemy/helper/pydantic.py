@@ -169,9 +169,7 @@ def _extract_pydantic_model(model: PydanticModelAdapter) -> Generator[FieldMetaI
             yield field_adapter.runtime_metadata()
 
         else:
-            raise ProgrammaticError(
-                msg(MessageKey.VALUE_TYPE_DECLARATION_UNSUPPORTED, value_type=excel_codec)
-            )
+            raise ProgrammaticError(msg(MessageKey.VALUE_TYPE_DECLARATION_UNSUPPORTED, value_type=excel_codec))
 
 
 def _handle_error(

@@ -68,7 +68,12 @@ class NumberRange(CompositeExcelFieldCodec):
                 return ''
             return str(transform_decimal(canonicalize_decimal(parsed, field_meta.fraction_digits)))
         except Exception as exc:
-            logging.warning('ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s', cls.__name__, value, exc)
+            logging.warning(
+                'ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s',
+                cls.__name__,
+                value,
+                exc,
+            )
             return str(value)
 
     @classmethod

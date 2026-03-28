@@ -289,7 +289,9 @@ def _write_value(
             cell.number_format = numbers.FORMAT_TEXT
             cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
 
-            if dmsg(MessageKey.RESULT_COLUMN_LABEL) == df.columns[column_index] and cell.value == str(ValidateRowResult.FAIL):
+            if dmsg(MessageKey.RESULT_COLUMN_LABEL) == df.columns[column_index] and cell.value == str(
+                ValidateRowResult.FAIL
+            ):
                 cell.font = Font(color=FONT_READ_COLOR)
 
             col_width_mapping[ColumnIndex(openpyxl_col_index)] = max(

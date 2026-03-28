@@ -61,7 +61,9 @@ class TestPydanticContracts:
         wrong_domain = instantiate_pydantic_model({'name': 'long-enough-address@openai.com'}, FieldValidatedModel)
 
         assert isinstance(too_short, list)
-        assert too_short == [ExcelCellError(label=Label('邮箱'), message='Value should have at least 20 items after validation, not 6')]
+        assert too_short == [
+            ExcelCellError(label=Label('邮箱'), message='Value should have at least 20 items after validation, not 6')
+        ]
 
         assert isinstance(wrong_domain, list)
         assert wrong_domain == [ExcelCellError(label=Label('邮箱'), message='Value error, must use the company domain')]
@@ -140,4 +142,6 @@ class TestPydanticContracts:
         assert declared_metadata.importer_min_length == 20
         assert [meta.unique_label for meta in metas] == ['邮箱', '停留时间·开始日期', '停留时间·结束日期']
         assert isinstance(result, list)
-        assert result == [ExcelCellError(label=Label('邮箱'), message='Value should have at least 20 items after validation, not 6')]
+        assert result == [
+            ExcelCellError(label=Label('邮箱'), message='Value should have at least 20 items after validation, not 6')
+        ]

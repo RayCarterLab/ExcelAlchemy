@@ -17,7 +17,11 @@ class SingleStaff(Radio):
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
         extra_hint = field_meta.hint or dmsg(MessageKey.SINGLE_STAFF_HINT)
-        value_key = MessageKey.COMMENT_REQUIRED_VALUE_REQUIRED if field_meta.required else MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL
+        value_key = (
+            MessageKey.COMMENT_REQUIRED_VALUE_REQUIRED
+            if field_meta.required
+            else MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL
+        )
         return f'{dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key))} \n{dmsg(MessageKey.COMMENT_HINT, value=extra_hint)}'
 
     @classmethod

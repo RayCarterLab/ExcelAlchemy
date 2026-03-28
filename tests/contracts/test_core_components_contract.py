@@ -39,7 +39,9 @@ class TestCoreComponentContracts:
             travel_range: DateRange = FieldMeta(label='出行时间', order=2, date_format=DateFormat.DAY)
 
         layout = ExcelSchemaLayout.from_model(DualRangeImporter)
-        header_df = WorksheetTable(rows=[['停留时间', None, '出行时间', None], ['开始日期', '结束日期', '开始日期', '结束日期']])
+        header_df = WorksheetTable(
+            rows=[['停留时间', None, '出行时间', None], ['开始日期', '结束日期', '开始日期', '结束日期']]
+        )
         parser = ExcelHeaderParser()
         validator = ExcelHeaderValidator()
 
