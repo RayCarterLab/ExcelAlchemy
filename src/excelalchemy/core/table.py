@@ -77,7 +77,12 @@ class _WorksheetILoc:
 
 
 class WorksheetTable:
-    """A minimal 2D table API that mirrors the table features ExcelAlchemy actually uses."""
+    """A minimal internal 2D table API for ExcelAlchemy's workbook pipeline.
+
+    It intentionally implements only the small subset of table operations that the
+    core import/export flow needs. It is not intended to behave like a pandas
+    drop-in replacement.
+    """
 
     def __init__(
         self,
@@ -140,6 +145,12 @@ class WorksheetTable:
         return WorksheetTable(columns=self.columns, rows=self._rows[row_slice])
 
     def reset_index(self, *, drop: bool = False) -> WorksheetTable:
+        """Return the same rows with a fresh positional index.
+
+        The method only supports ``drop=True`` because ``WorksheetTable`` keeps a
+        simple implicit positional index and does not model pandas-style index
+        columns.
+        """
         if not drop:
             raise NotImplementedError('WorksheetTable only supports reset_index(drop=True)')
         return WorksheetTable(columns=self.columns, rows=self._rows)

@@ -122,8 +122,6 @@ class Number(Decimal, ExcelFieldCodec):
                 errors.append(msg(MessageKey.NUMBER_BETWEEN_NEG_INF_AND_MAX, maximum=field_meta.importer_le))
             elif field_meta.importer_ge:
                 errors.append(msg(MessageKey.NUMBER_BETWEEN_MIN_AND_POS_INF, minimum=field_meta.importer_ge))
-            else:
-                pass
 
         return errors
 

@@ -244,6 +244,8 @@ Use the built-in Minio implementation when you want it, but the library no longe
 ### Why no pandas?
 
 ExcelAlchemy uses `openpyxl` plus an internal `WorksheetTable` abstraction.
+`WorksheetTable` is intentionally narrow and only models the operations the core
+workflow needs; it is not a pandas-compatible public table layer.
 The project was not using pandas for analysis, joins, or vectorized computation; it was mostly using it as a transport layer.
 Removing pandas:
 
