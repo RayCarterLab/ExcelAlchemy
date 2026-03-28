@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Python 3.14
         uses: actions/setup-python@v6
@@ -56,7 +56,7 @@ jobs:
         run: echo "name=python-package-dists" >> "$GITHUB_OUTPUT"
 
       - name: Upload package distributions
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.artifact-meta.outputs.name }}
           path: dist/
@@ -72,7 +72,7 @@ jobs:
 
     steps:
       - name: Download package distributions
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ needs.build-and-verify.outputs.artifact-name }}
           path: dist/
