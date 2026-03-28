@@ -1,11 +1,13 @@
+import io
 from typing import cast
 
 from minio import Minio
+from openpyxl import load_workbook
 
 from excelalchemy import ExcelAlchemy, ImporterConfig, ValidateResult
 from excelalchemy.const import BACKGROUND_ERROR_COLOR, REASON_COLUMN_LABEL, RESULT_COLUMN_LABEL
 from tests.support import BaseTestCase, FileRegistry, get_fill_color, load_binary_excel_to_workbook
-from tests.support.contract_models import SimpleContractImporter, creator, failing_creator
+from tests.support.contract_models import MergedContractImporter, SimpleContractImporter, creator, failing_creator
 
 
 class TestImportContracts(BaseTestCase):
@@ -139,3 +141,35 @@ class TestImportContracts(BaseTestCase):
         assert worksheet['A2'].value == 'Validation result\nDelete this column before re-uploading'
         assert worksheet['B2'].value == 'Failure reason\nDelete this column before re-uploading'
         assert worksheet['A3'].value == 'Validation failed'
+
+    async def test_import_result_workbook_marks_merged_header_failures_on_the_correct_data_row(self):
+        input_name = 'contract-merged-invalid-input.xlsx'
+        output_name = 'contract-merged-invalid-output.xlsx'
+        self.minio.storage.pop(output_name, None)
+
+        source_content = self.minio.storage[FileRegistry.TEST_IMPORT_WITH_MERGE_HEADER]['data'].getvalue()
+        workbook = load_workbook(io.BytesIO(source_content))
+        worksheet = workbook['Sheet1']
+        worksheet['E4'] = 'not-a-date'
+
+        buffer = io.BytesIO()
+        workbook.save(buffer)
+        workbook.close()
+        buffer.seek(0)
+        self.minio.put_object(self.minio.bucket_name, input_name, buffer, len(buffer.getvalue()))
+
+        alchemy = ExcelAlchemy(ImporterConfig(MergedContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+
+        result = await alchemy.import_data(
+            input_excel_name=input_name,
+            output_excel_name=output_name,
+        )
+
+        assert result.result == ValidateResult.DATA_INVALID
+
+        result_workbook = load_binary_excel_to_workbook(self.minio.storage[output_name]['data'].getvalue())
+        result_worksheet = result_workbook['Sheet1']
+
+        assert result_worksheet['A4'].value == '校验不通过'
+        assert isinstance(result_worksheet['B4'].value, str)
+        assert '【出生日期】' in result_worksheet['B4'].value

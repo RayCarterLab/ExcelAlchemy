@@ -1,25 +1,32 @@
 # ExcelAlchemy
 
 [![CI](https://github.com/RayCarterLab/ExcelAlchemy/actions/workflows/ci.yml/badge.svg)](https://github.com/RayCarterLab/ExcelAlchemy/actions/workflows/ci.yml)
+[![Codecov](https://codecov.io/gh/RayCarterLab/ExcelAlchemy/graph/badge.svg)](https://app.codecov.io/gh/RayCarterLab/ExcelAlchemy)
 ![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-3776AB)
 ![Lint](https://img.shields.io/badge/lint-ruff-D7FF64)
 ![Typing](https://img.shields.io/badge/typing-pyright-2C6BED)
 
 [中文 README](./README_cn.md) · [About](./ABOUT.md) · [Architecture](./docs/architecture.md) · [Locale Policy](./docs/locale.md) · [Changelog](./CHANGELOG.md) · [Migration Notes](./MIGRATIONS.md)
 
-ExcelAlchemy is a schema-driven Excel import/export library for Python.
-It turns Pydantic models into Excel templates, validates spreadsheet input back into application data, and keeps the workflow explicit, typed, locale-aware, and extensible.
+ExcelAlchemy is a schema-driven Python library for Excel import and export workflows.
+It turns Pydantic models into typed workbook contracts: generate templates, validate uploads, map failures back to rows
+and cells, and produce locale-aware result workbooks.
 
 This repository is also a design artifact.
-It documents a series of deliberate engineering choices: `src/` layout, Pydantic v2 migration, pandas removal, pluggable storage, `uv`-based workflows, and locale-aware workbook output.
+It documents a series of deliberate engineering choices: `src/` layout, Pydantic v2 migration, pandas removal,
+pluggable storage, `uv`-based workflows, and locale-aware workbook output.
 
 The current release track being prepared is `2.0.0rc1`, the first public release candidate for ExcelAlchemy 2.0.
 
 ## Screenshots
 
+These screenshots are generated from the repository itself using
+[`scripts/generate_portfolio_assets.py`](./scripts/generate_portfolio_assets.py).
+They show the English workbook locale because it is the clearest presentation for the public-facing README.
+
 | Template | Import Result |
 | --- | --- |
-| ![Excel template screenshot](./images/001_sample_template.png) | ![Excel import result screenshot](./images/002_import_result.png) |
+| ![Excel template screenshot](./images/portfolio-template-en.png) | ![Excel import result screenshot](./images/portfolio-import-result-en.png) |
 
 ## Minimal Example
 
@@ -70,6 +77,7 @@ For browser downloads, prefer `template.as_bytes()` with a `Blob`, or return the
 
 - Pydantic v2-based schema extraction and validation
 - Locale-aware workbook text with `locale='zh-CN' | 'en'`
+- Row-level failure reporting and cell-level error marking
 - Pluggable storage via `ExcelStorage`
 - No pandas runtime dependency
 - Python 3.12-3.14 support, with 3.14 as the primary target

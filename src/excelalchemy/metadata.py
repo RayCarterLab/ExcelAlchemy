@@ -334,6 +334,12 @@ def _resolve_declared_field_metadata(field_info: FieldInfo) -> FieldMetaInfo:
         if isinstance(item, FieldMetaInfo):
             return item
 
+    if isinstance(field_info.default, FieldMetaInfo):
+        raise ProgrammaticError(
+            'Annotated fields must place ExcelMeta(...) inside Annotated metadata; '
+            'use `field: Annotated[T, Field(...), ExcelMeta(...)]`'
+        )
+
     json_schema_extra = field_info.json_schema_extra
     if not isinstance(json_schema_extra, Mapping):
         raise ProgrammaticError(msg(MessageKey.FIELD_DEFINITIONS_MUST_USE_FIELDMETA))

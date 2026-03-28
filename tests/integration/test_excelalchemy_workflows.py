@@ -433,6 +433,21 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
             'Field definitions must be created with FieldMeta or Annotated[..., ExcelMeta(...)]',
         )
 
+    async def test_misplaced_excelmeta_default_raises_helpful_programmatic_error(self):
+        class MisplacedAnnotatedExcelMetaModel(BaseModel):
+            name: Annotated[str, Field(min_length=3)] = cast(str, ExcelMeta(label='Name', order=1))
+
+        config = ImporterConfig(MisplacedAnnotatedExcelMetaModel, creator=self.creator, minio=cast(Minio, self.minio))
+
+        with self.assertRaises(ProgrammaticError) as cm:
+            ExcelAlchemy(config)
+
+        self.assertEqual(
+            str(cm.exception),
+            'Annotated fields must place ExcelMeta(...) inside Annotated metadata; '
+            'use `field: Annotated[T, Field(...), ExcelMeta(...)]`',
+        )
+
     async def test_annotated_excel_meta_definition_can_build_template(self):
         class AnnotatedImporter(BaseModel):
             email: Annotated[Email, Field(min_length=10), ExcelMeta(label='邮箱', order=1)]

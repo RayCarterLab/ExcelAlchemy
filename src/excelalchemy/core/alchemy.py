@@ -185,9 +185,10 @@ class ExcelAlchemy[
             self.df = self.df.reset_index(drop=True)
 
             all_success, success_count, fail_count = True, 0, 0
-            for table_row_index, row in self.df.iloc[self.extra_header_count_on_import :].iterrows():
+            for table_row_index in range(self.extra_header_count_on_import, len(self.df)):
+                row = self.df.row_at(table_row_index)
                 aggregate_data = self._aggregate_data(cast(FlatRowPayload, row.to_dict()))
-                success = await self._executor.execute(cast(RowIndex, table_row_index), aggregate_data, self.df)
+                success = await self._executor.execute(RowIndex(table_row_index), aggregate_data, self.df)
                 all_success = all_success and success
                 success_count, fail_count = (success_count + 1, fail_count) if success else (success_count, fail_count + 1)
 
