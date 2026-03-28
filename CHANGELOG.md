@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog and versioned according to PEP 440.
 
+## [2.0.0] - 2026-03-28
+
+This release promotes the validated 2.0 release candidate to the first stable public
+release of ExcelAlchemy 2.0.
+
+### Changed
+
+- Promoted the 2.0 line from release candidate to stable
+- Finalized release-facing documentation, badges, and portfolio screenshots
+- Finalized the GitHub Actions coverage upload path for optional Codecov integration
+
 ## [2.0.0rc1] - 2026-03-27
 
 This release candidate marks the first public preview of the ExcelAlchemy 2.0 line.

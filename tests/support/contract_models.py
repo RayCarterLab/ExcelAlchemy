@@ -101,7 +101,7 @@ def sample_simple_export_row() -> dict[str, Any]:
         'address': '北京市朝阳区',
         'is_active': True,
         'birth_date': datetime.datetime(2021, 1, 1),
-        'email': 'noreply@icloud.com',
+        'email': 'noreply@example.com',
         'price': 100,
         'web': 'https://www.baidu.com',
         'hobby': ['1', '2'],

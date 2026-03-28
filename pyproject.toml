@@ -5,12 +5,12 @@ build-backend = 'flit_core.buildapi'
 [project]
 name = 'ExcelAlchemy'
 description = 'A Python library for reading and writing Excel files with Pydantic-based schemas.'
-authors = [{ name = 'Ray', email = 'hrui835@gmail.com' }]
+authors = [{ name = 'Ray' }]
 readme = 'README.md'
 license = { file = 'LICENSE' }
 keywords = ['excel', 'openpyxl', 'pydantic', 'minio', 'schema']
 classifiers = [
-    'Development Status :: 4 - Beta',
+    'Development Status :: 4 - Production/Stable',
     'Intended Audience :: Developers',
     'License :: OSI Approved :: MIT License',
     'Operating System :: OS Independent',

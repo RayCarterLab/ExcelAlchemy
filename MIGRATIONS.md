@@ -6,7 +6,7 @@ ExcelAlchemy 2.0 keeps the public workflow recognizable, but the project has cha
 meaningfully in platform support, dependencies, and architecture.
 
 This guide focuses on what users are most likely to notice when upgrading from the
-`1.x` line to `2.0.0rc1` and later `2.0.0`.
+`1.x` line to `2.0.0`.
 
 ## Platform Support
 
@@ -106,4 +106,4 @@ Additional top-level module guidance:
 2. Upgrade your project to Pydantic v2.
 3. Decide whether you need `ExcelAlchemy[minio]` or a custom `storage=...` implementation.
 4. If you expose templates or import result workbooks to English-speaking users, set `locale='en'`.
-5. Run your import/export flows against the release candidate before moving to the final `2.0.0`.
+5. Run your import/export flows against `2.0.0` in a staging environment before promoting it in production.

@@ -77,7 +77,7 @@ jobs:
     permissions:
       contents: read
     env:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      CODECOV_TOKEN: ${{ secrets.CODECOVEXCELALCHEMY }}
     strategy:
       fail-fast: false
       matrix:

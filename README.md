@@ -16,7 +16,7 @@ This repository is also a design artifact.
 It documents a series of deliberate engineering choices: `src/` layout, Pydantic v2 migration, pandas removal,
 pluggable storage, `uv`-based workflows, and locale-aware workbook output.
 
-The current release track being prepared is `2.0.0rc1`, the first public release candidate for ExcelAlchemy 2.0.
+The current stable release line is `2.0.0`, the first public stable release of ExcelAlchemy 2.0.
 
 ## At a Glance
 

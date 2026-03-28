@@ -54,7 +54,7 @@ class LocalMockMinio:
         ],
         FileRegistry.TEST_EMAIL_CORRECT_FORMAT: [
             {
-                '邮箱': 'excelalchemy@163.com',
+                '邮箱': 'person@example.com',
             },
         ],
         FileRegistry.TEST_SIMPLE_IMPORT: [
@@ -64,13 +64,13 @@ class LocalMockMinio:
                 '地址': '北京市',
                 '是否启用': '是',
                 '出生日期': '2021-01-01',
-                '邮箱': 'noreply@icloud.com',
+                '邮箱': 'noreply@example.com',
                 '价格': 100.0,
                 '爱好': '篮球',
                 '公司': '阿里巴巴',
                 '经理': '李四',
                 '部门': '研发部',
-                '电话': '13223658966',
+                '电话': '13800138000',
                 '单选': '选项1',
                 '老板': '马云',
                 '领导': '张三',
