@@ -1,0 +1,109 @@
+# Migration Notes
+
+## Upgrading To 2.0
+
+ExcelAlchemy 2.0 keeps the public workflow recognizable, but the project has changed
+meaningfully in platform support, dependencies, and architecture.
+
+This guide focuses on what users are most likely to notice when upgrading from the
+`1.x` line to `2.0.0`.
+
+## Platform Support
+
+- Python 3.10 and 3.11 are no longer supported
+- Supported versions are now Python 3.12, 3.13, and 3.14
+- Python 3.14 is the primary support target
+
+## Pydantic
+
+- ExcelAlchemy now targets Pydantic v2
+- Internal field extraction and validation integration were redesigned around adapter boundaries
+
+If your application is still pinned to Pydantic v1, upgrade that dependency before upgrading ExcelAlchemy.
+
+## Storage
+
+### What changed
+
+- Minio is no longer a mandatory dependency
+- Storage is now modeled as the `ExcelStorage` protocol
+- The built-in Minio backend is still available, but as an optional extra
+
+### New install patterns
+
+Base install:
+
+```bash
+pip install ExcelAlchemy
+```
+
+Install with built-in Minio support:
+
+```bash
+pip install "ExcelAlchemy[minio]"
+```
+
+### Recommended configuration pattern
+
+Prefer explicit storage objects:
+
+```python
+from excelalchemy import ExporterConfig
+from excelalchemy.core.storage_minio import MinioStorageGateway
+
+config = ExporterConfig(
+    ExporterModel,
+    storage=MinioStorageGateway(minio_client, bucket_name='excel-files'),
+)
+```
+
+### Legacy compatibility
+
+The older `minio=..., bucket_name=..., url_expires=...` configuration style is still accepted for compatibility, but it is no longer the preferred shape of the API.
+
+## pandas
+
+- ExcelAlchemy no longer uses or installs `pandas` at runtime
+- Workbook IO is now based on `openpyxl` and an internal `WorksheetTable`
+
+If your application depended on pandas being installed as an indirect dependency, install it explicitly in your own project.
+
+## Runtime And Workbook Language
+
+- Runtime exceptions are standardized in English
+- Workbook-facing display text is locale-aware
+- Supported display locales currently include `zh-CN` and `en`
+
+Example:
+
+```python
+config = ImporterConfig(ImporterModel, creator=create_func, locale='en')
+```
+
+## Module Paths
+
+- `excelalchemy.types.*` and `excelalchemy.types.value.*` are deprecated compatibility imports in the 2.x line
+- those imports now emit `ExcelAlchemyDeprecationWarning`
+- the compatibility layer will be removed in ExcelAlchemy 3.0
+
+Prefer the new module layout:
+
+- `excelalchemy.metadata`
+- `excelalchemy.results`
+- `excelalchemy.config`
+- `excelalchemy.codecs`
+- the `excelalchemy` package root for common public types such as `Label`, `Key`, and `UrlStr`
+
+Additional top-level module guidance:
+
+- `excelalchemy.exceptions` is the stable replacement for `excelalchemy.exc`
+- `excelalchemy.identity` is now a compatibility import; prefer `from excelalchemy import Label, Key, UrlStr, ...`
+- `excelalchemy.header_models` is internal and should not be imported in application code
+
+## Recommended Upgrade Checklist
+
+1. Upgrade your Python runtime to 3.12+.
+2. Upgrade your project to Pydantic v2.
+3. Decide whether you need `ExcelAlchemy[minio]` or a custom `storage=...` implementation.
+4. If you expose templates or import result workbooks to English-speaking users, set `locale='en'`.
+5. Run your import/export flows against `2.0.0` in a staging environment before promoting it in production.

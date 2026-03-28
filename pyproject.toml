@@ -1,44 +1,61 @@
 [build-system]
-requires = ['flit_core >=3.2,<4']
+requires = ['flit_core >=3.12,<4']
 build-backend = 'flit_core.buildapi'
 
 [project]
 name = 'ExcelAlchemy'
-authors = [{ name = '何睿', email = 'hrui835@gmail.com' }]
+description = 'Schema-driven Python library for typed Excel import/export workflows with Pydantic and locale-aware workbooks.'
+authors = [{ name = 'Ray' }]
 readme = 'README.md'
 license = { file = 'LICENSE' }
-classifiers = ['License :: OSI Approved :: MIT License']
-dynamic = ['version', 'description']
-requires-python = '>=3.10'
+keywords = ['excel', 'openpyxl', 'pydantic', 'minio', 'schema']
+classifiers = [
+    'Development Status :: 5 - Production/Stable',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: MIT License',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
+    'Programming Language :: Python :: 3.14',
+    'Topic :: Office/Business :: Financial :: Spreadsheet',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+]
+dynamic = ['version']
+requires-python = '>=3.12'
 dependencies = [
-    'pandas >=2.0.0, <2.1.0',
-    'minio >=7.0.0, <8',
-    'pydantic[email] >=1.9, <2',
-    'openpyxl >=3.0.10, <4',
-    'pendulum >=2.1.2, <3',
+    'pydantic[email] >=2.12, <3',
+    'openpyxl >=3.1.5, <4',
+    'pendulum >=3.2.0, <4',
 ]
 
 [tool.flit.module]
 name = 'excelalchemy'
 
 [project.urls]
-Home = 'https://github.com/SundayWindy/excelalchemy'
+Home = 'https://github.com/RayCarterLab/ExcelAlchemy'
+Repository = 'https://github.com/RayCarterLab/ExcelAlchemy'
+Documentation = 'https://github.com/RayCarterLab/ExcelAlchemy#readme'
+Issues = 'https://github.com/RayCarterLab/ExcelAlchemy/issues'
 
 [project.optional-dependencies]
+minio = [
+    'minio >=7.2.20, <8',
+]
 development = [
-    'pandas-stubs',
-    'black',
-    'isort',
-    'mypy',
-    'pylint',
+    'minio >=7.2.20, <8',
     'pre-commit',
-    'pyright==1.1.299',
+    'pyright==1.1.408',
     'pytest',
     'coverage',
     'pytest-cov',
+    'ruff',
 ]
 
 [tool.pyright]
+include = ['src/excelalchemy', 'tests']
 exclude = [
     '.venv',
     'venv',
@@ -46,81 +63,93 @@ exclude = [
     '**/.mypy_cache',
     '**/__pycache__',
     '**/.pytest_cache',
+    'src/excelalchemy/types/field.py',
 ]
-ignore = ['pandas']
 enableTypeIgnoreComments = false
-reportUnusedFunction = false
-typeCheckingMode = 'strict'
-reportUnusedImport = false
-reportMissingTypeStubs = false
-reportUnknownVariableType = false
-
-
-extension-pkg-whitelist = ['pydantic', 'pendulum']
-
-[tool.pylint.basic]
-attr-rgx = '^[_a-z][a-z0-9_]*$'        # snake_case
-variable-rgx = '^[_a-z][a-z0-9_]*$'    # snake_case
-argument-rgx = '^[_a-z][a-z0-9_]*$'    # snake_case
-class-rgx = '^(_?[A-Z][a-zA-Z0-9]*)*$'
-method-rgx = '^[_a-z][a-z0-9_]*$'      # snake_case
-
-
-[tool.pylint.'MESSAGES CONTROL']
-disable = [
-    'missing-module-docstring',
-    'missing-function-docstring',
-    'missing-class-docstring',
-    'too-many-instance-attributes',
-    'too-many-arguments',
-    'too-few-public-methods',
-    'too-many-public-methods',
-    'no-else-return',
-    'no-else-raise',
-    'fixme',
-    'duplicate-code',
-    'redefined-builtin',
-    'broad-except',
-    'abstract-class-instantiated'
+reportAbstractUsage = false
+reportAttributeAccessIssue = false
+reportCallIssue = false
+reportPrivateImportUsage = false
+reportRedeclaration = false
+strict = [
+    'src/excelalchemy/_primitives/constants.py',
+    'src/excelalchemy/_primitives/deprecation.py',
+    'src/excelalchemy/_primitives/header_models.py',
+    'src/excelalchemy/_primitives/identity.py',
+    'src/excelalchemy/_primitives/payloads.py',
+    'src/excelalchemy/artifacts.py',
+    'src/excelalchemy/codecs/base.py',
+    'src/excelalchemy/codecs/boolean.py',
+    'src/excelalchemy/codecs/date.py',
+    'src/excelalchemy/codecs/date_range.py',
+    'src/excelalchemy/codecs/email.py',
+    'src/excelalchemy/codecs/money.py',
+    'src/excelalchemy/codecs/multi_checkbox.py',
+    'src/excelalchemy/codecs/number.py',
+    'src/excelalchemy/codecs/number_range.py',
+    'src/excelalchemy/codecs/organization.py',
+    'src/excelalchemy/codecs/phone_number.py',
+    'src/excelalchemy/codecs/radio.py',
+    'src/excelalchemy/codecs/staff.py',
+    'src/excelalchemy/codecs/string.py',
+    'src/excelalchemy/codecs/tree.py',
+    'src/excelalchemy/codecs/url.py',
+    'src/excelalchemy/config.py',
+    'src/excelalchemy/core/alchemy.py',
+    'src/excelalchemy/core/abstract.py',
+    'src/excelalchemy/core/executor.py',
+    'src/excelalchemy/core/rendering.py',
+    'src/excelalchemy/core/schema.py',
+    'src/excelalchemy/core/storage.py',
+    'src/excelalchemy/core/storage_minio.py',
+    'src/excelalchemy/core/storage_protocol.py',
+    'src/excelalchemy/core/table.py',
+    'src/excelalchemy/core/writer.py',
+    'src/excelalchemy/exceptions.py',
+    'src/excelalchemy/core/headers.py',
+    'src/excelalchemy/core/rows.py',
+    'src/excelalchemy/helper/pydantic.py',
+    'src/excelalchemy/i18n/messages.py',
+    'src/excelalchemy/metadata.py',
+    'src/excelalchemy/results.py',
+    'src/excelalchemy/util/convertor.py',
+    'src/excelalchemy/util/file.py',
 ]
+typeCheckingMode = 'basic'
 
-
-[tool.pylint.'MASTER']
-jobs = 4
-score = false
-ignore-paths = [
-    '.git/',
-    'venv/',
-    '.venv/',
-    '.mypy_cache/',
-    '__pycache__/',
-    '.pytest_cache/',
-    'tests/',
-    'dist/',
-]
-extension-pkg-whitelist = [
-    'pydantic',
-    'pandas',
-    'pendulum',
-
-]
-
-
-[tool.black]
+[tool.ruff]
 line-length = 120
-skip-string-normalization = true
+target-version = 'py312'
+src = ['src', 'tests']
+extend-exclude = ['files']
 
+[tool.ruff.lint]
+select = ['E', 'F', 'I', 'UP', 'B', 'SIM', 'C4', 'RUF', 'PERF']
+ignore = ['E501', 'RUF001', 'RUF002', 'RUF003']
 
-[tool.pylint.'FORMAT']
-max-line-length = 120
+[tool.ruff.lint.per-file-ignores]
+'**/__init__.py' = ['F401']
+'src/excelalchemy/const.py' = ['RUF100']
+'src/excelalchemy/exc.py' = ['E402', 'RUF100']
+'src/excelalchemy/header_models.py' = ['E402', 'RUF100']
+'src/excelalchemy/identity.py' = ['E402', 'RUF100']
+'src/excelalchemy/types/*.py' = ['E402', 'RUF100']
+'src/excelalchemy/types/**/*.py' = ['E402', 'RUF100']
 
-[tool.isort]
-skip_gitignore = true
-profile = 'black'
-line_length = 120
-indent = '    '
-no_lines_before = 'LOCALFOLDER'
-force_single_line = true
+[tool.ruff.format]
+quote-style = 'preserve'
+indent-style = 'space'
+line-ending = 'auto'
 
-[tool.mypy]
-ignore_missing_imports = true
+[tool.pytest.ini_options]
+addopts = ['--import-mode=importlib']
+testpaths = ['tests']
+
+[tool.coverage.run]
+branch = true
+source = ['excelalchemy']
+
+[tool.coverage.report]
+fail_under = 85
+skip_covered = true
+show_missing = true

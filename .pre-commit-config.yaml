@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
       - id: check-case-conflict
@@ -8,76 +8,14 @@ repos:
       - id: check-json
       - id: check-merge-conflict
       - id: check-toml
-      - id: double-quote-string-fixer
       - id: fix-byte-order-marker
       - id: end-of-file-fixer
       - id: trailing-whitespace
 
-  - repo: https://github.com/best-doctor/pre-commit-hooks
-    rev: v1.0.11
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.7
     hooks:
-    - id: mccabe-complexity
-      name: Check functions complexity
-      language: python
-    - id: line-count
-      name: Check number of lines in python files
-      language: python
-
-
-  - repo: https://github.com/ambv/black
-    rev: 23.3.0
-    hooks:
-    - id: black
-
-  - repo: local
-    hooks:
-    - id: isort
-      name: isort
-      entry: isort
-      args:
-        - .
-      language: system
-      pass_filenames: false
-
-  - repo: https://github.com/MarcoGorelli/absolufy-imports
-    rev: v0.3.1
-    hooks:
-    - id: absolufy-imports
-
-  - repo: https://github.com/PyCQA/pylint
-    rev: v3.0.0a6
-    hooks:
-    - id: pylint
-      name: pylint
-      entry: pylint
-      language: system
-      pass_filenames: false
-      args:
-        - excelalchemy
-
-  - repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.9.0
-    hooks:
-    - id: reorder-python-imports
-      name: Reorder imports
-      pass_filenames: false
-
-  - repo: local
-    hooks:
-    - id: pyright
-      name: pyright
-      entry: pyright
-      language: system
-      pass_filenames: false
-      args:
-        - excelalchemy
-
-  - repo: local
-    hooks:
-      - id: mypy
-        name: mypy
-        entry: mypy
+      - id: ruff-check
         args:
-          - excelalchemy
-        pass_filenames: false
-        language: system
+          - --fix
+      - id: ruff-format
