@@ -84,9 +84,10 @@ class ExcelHeaderValidator:
         import_mode: ImportMode,
     ) -> ValidateHeaderResult:
         """Return the full header validation result consumed by the facade."""
-        required_labels = [field_meta.label for field_meta in layout.ordered_field_meta if field_meta.required]
-        primary_labels = [field_meta.label for field_meta in layout.ordered_field_meta if field_meta.is_primary_key]
-        input_labels = [header.label for header in headers]
+        required_labels = [field_meta.unique_label for field_meta in layout.ordered_field_meta if field_meta.required]
+        primary_labels = [field_meta.unique_label for field_meta in layout.ordered_field_meta if field_meta.is_primary_key]
+        schema_labels = [field_meta.unique_label for field_meta in layout.ordered_field_meta]
+        input_labels = [header.unique_label for header in headers]
 
         visited: set[Label] = set()
         duplicated: list[Label] = []
@@ -95,12 +96,15 @@ class ExcelHeaderValidator:
                 duplicated.append(label)
             else:
                 visited.add(label)
-        unrecognized = list(set(input_labels) - set(field_meta.label for field_meta in layout.ordered_field_meta))
+
+        schema_label_set = set(schema_labels)
+        input_label_set = set(input_labels)
+        unrecognized = self._ordered_difference(input_labels, schema_label_set)
 
         missing_primary: list[Label] = []
         if import_mode == ImportMode.UPDATE:
-            missing_primary = list(set(primary_labels) - set(input_labels))
-        missing_required = list(set(required_labels) - set(input_labels) - set(missing_primary))
+            missing_primary = self._ordered_missing(primary_labels, input_label_set)
+        missing_required = self._ordered_missing(required_labels, input_label_set, excluded=set(missing_primary))
 
         return ValidateHeaderResult(
             unrecognized=unrecognized,
@@ -109,3 +113,24 @@ class ExcelHeaderValidator:
             missing_primary=missing_primary,
             is_valid=not (missing_required or unrecognized or duplicated or missing_primary),
         )
+
+    @staticmethod
+    def _ordered_difference(values: list[Label], allowed: set[Label]) -> list[Label]:
+        seen: set[Label] = set()
+        result: list[Label] = []
+        for value in values:
+            if value in allowed or value in seen:
+                continue
+            seen.add(value)
+            result.append(value)
+        return result
+
+    @staticmethod
+    def _ordered_missing(
+        expected: list[Label],
+        actual: set[Label],
+        *,
+        excluded: set[Label] | None = None,
+    ) -> list[Label]:
+        excluded = excluded or set()
+        return [value for value in expected if value not in actual and value not in excluded]

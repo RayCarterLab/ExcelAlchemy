@@ -110,6 +110,20 @@ class ExcelAlchemy[
         self.unique_key_to_field_meta = self._layout.unique_key_to_field_meta
         self.ordered_field_meta = self._layout.ordered_field_meta
 
+    def _reset_import_runtime_state(self) -> None:
+        self.df = WorksheetTable()
+        self.header_df = WorksheetTable()
+        self.__state_df_has_been_loaded__ = False
+        self.__dict__.pop('input_excel_has_merged_header', None)
+        self.__dict__.pop('input_excel_headers', None)
+
+        self._issue_tracker = ImportIssueTracker(self._layout, self.import_result_field_meta)
+        self.cell_errors = self._issue_tracker.cell_errors
+        self.row_errors = self._issue_tracker.row_errors
+
+        if isinstance(self.config, ImporterConfig):
+            self._executor = ImportExecutor(self.config, self._issue_tracker, lambda: self.context)
+
     def __get_importer_model__(self) -> type[ImporterCreateModelT] | type[ImporterUpdateModelT] | type[ExporterModelT]:
         importer_model = None
         if self.excel_mode == ExcelMode.IMPORT:
@@ -143,9 +157,11 @@ class ExcelAlchemy[
 
     async def import_data(self, input_excel_name: str, output_excel_name: str) -> ImportResult:
         assert isinstance(self.config, ImporterConfig)
-        assert self._executor is not None
         if self.excel_mode != ExcelMode.IMPORT:
             raise ConfigError(msg(MessageKey.IMPORT_MODE_ONLY_METHOD))
+
+        self._reset_import_runtime_state()
+        assert self._executor is not None
 
         with use_display_locale(self.locale):
             validate_header = self._validate_header(input_excel_name)

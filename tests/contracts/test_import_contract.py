@@ -5,7 +5,7 @@ from minio import Minio
 from excelalchemy import ExcelAlchemy, ImporterConfig, ValidateResult
 from excelalchemy.const import BACKGROUND_ERROR_COLOR, REASON_COLUMN_LABEL, RESULT_COLUMN_LABEL
 from tests.support import BaseTestCase, FileRegistry, get_fill_color, load_binary_excel_to_workbook
-from tests.support.contract_models import SimpleContractImporter, creator
+from tests.support.contract_models import SimpleContractImporter, creator, failing_creator
 
 
 class TestImportContracts(BaseTestCase):
@@ -36,6 +36,24 @@ class TestImportContracts(BaseTestCase):
         assert set(result.unrecognized) == {'不存在的表头'}
         assert '年龄' in set(result.missing_required)
         assert output_name not in self.minio.storage
+
+    async def test_import_data_reloads_workbook_state_on_each_run(self):
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+
+        first_result = await alchemy.import_data(
+            input_excel_name=FileRegistry.TEST_HEADER_INVALID_INPUT,
+            output_excel_name='contract-first-header-invalid.xlsx',
+        )
+        second_result = await alchemy.import_data(
+            input_excel_name=FileRegistry.TEST_SIMPLE_IMPORT,
+            output_excel_name='contract-second-success.xlsx',
+        )
+
+        assert first_result.result == ValidateResult.HEADER_INVALID
+        assert second_result.result == ValidateResult.SUCCESS
+        assert second_result.success_count == 1
+        assert second_result.fail_count == 0
+        assert second_result.url is None
 
     async def test_import_data_uploads_result_workbook_for_invalid_rows(self):
         output_name = 'contract-data-invalid.xlsx'
@@ -86,6 +104,23 @@ class TestImportContracts(BaseTestCase):
         row_colors = [get_fill_color(cell) for cell in worksheet[3]]
 
         assert BACKGROUND_ERROR_COLOR in row_colors
+
+    async def test_import_result_workbook_marks_business_cell_errors_in_red(self):
+        output_name = 'contract-data-invalid-business-cell.xlsx'
+        self.minio.storage.pop(output_name, None)
+        alchemy = ExcelAlchemy(
+            ImporterConfig(SimpleContractImporter, creator=failing_creator, minio=cast(Minio, self.minio))
+        )
+
+        await alchemy.import_data(
+            input_excel_name=FileRegistry.TEST_SIMPLE_IMPORT,
+            output_excel_name=output_name,
+        )
+        workbook = load_binary_excel_to_workbook(self.minio.storage[output_name]['data'].getvalue())
+        worksheet = workbook['Sheet1']
+
+        assert worksheet['B3'].value == '1、【姓名】Simulated failure'
+        assert get_fill_color(worksheet['D3']) == BACKGROUND_ERROR_COLOR
 
     async def test_import_result_workbook_supports_english_display_locale(self):
         output_name = 'contract-data-invalid-english.xlsx'

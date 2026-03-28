@@ -106,6 +106,7 @@ class ImportExecutor[ContextT]:
             await dml_func(converted_data, self.get_context())
         except ExcelCellError as error:
             self.issue_tracker.register_row_error(row_index, error)
+            self.issue_tracker.register_cell_errors(row_index, [error], df)
             return False
         except Exception as error:
             self.issue_tracker.register_row_error(row_index, ExcelRowError(exec_formatter(error)))

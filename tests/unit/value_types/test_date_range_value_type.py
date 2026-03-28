@@ -34,7 +34,7 @@ class TestDateRangeValueType(BaseTestCase):
         # ExcelAlchemy 任务需要的表头是 DateRange.model_items（开始日期，结束日期）
         # 但是 Excel 读到的表头是 日期范围
         assert result.result == ValidateResult.HEADER_INVALID, '导入失败'
-        assert sorted(result.missing_required) == sorted(['开始日期', '结束日期'])
+        assert sorted(result.missing_required) == sorted(['日期范围·开始日期', '日期范围·结束日期'])
         assert result.unrecognized == ['日期范围']
 
     async def test_import_returns_header_invalid_when_merged_header_loses_leading_child(self):
@@ -52,7 +52,7 @@ class TestDateRangeValueType(BaseTestCase):
             input_excel_name=FileRegistry.TEST_DATE_RANGE_MISSING_INPUT_AFTER, output_excel_name='result.xlsx'
         )
         assert result.result == ValidateResult.HEADER_INVALID, '导入失败'
-        assert sorted(result.missing_required) == sorted(['结束日期'])
+        assert sorted(result.missing_required) == sorted(['日期范围·结束日期'])
         assert result.unrecognized == ['日期范围']
 
     async def test_date_range_value_type_exposes_comment_and_boundaries(self):

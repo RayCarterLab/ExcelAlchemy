@@ -14,7 +14,8 @@ def add_excel_prefix(content: str) -> str:
 
 def remove_excel_prefix(content: str) -> str:
     """Remove Excel prefixes for base64 content string."""
-    return content.lstrip(f'{EXCEL_PREFIX},')
+    prefix = f'{EXCEL_PREFIX},'
+    return content.removeprefix(prefix)
 
 
 def flatten(data: dict[str, Any], level: list[Any] | None = None) -> dict[str, Any]:

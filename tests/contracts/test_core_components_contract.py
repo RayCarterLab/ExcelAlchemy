@@ -1,3 +1,6 @@
+from pydantic import BaseModel
+
+from excelalchemy import DateFormat, DateRange, FieldMeta
 from excelalchemy.core.alchemy import REASON_COLUMN, RESULT_COLUMN
 from excelalchemy.core.headers import ExcelHeaderParser, ExcelHeaderValidator
 from excelalchemy.core.rows import ImportIssueTracker, RowAggregator
@@ -30,6 +33,30 @@ class TestCoreComponentContracts:
         result = validator.validate(headers, layout, ImportMode.CREATE)
 
         assert [header.unique_label for header in headers] == layout.get_output_parent_excel_headers()
+        assert result.is_valid is True
+
+    def test_header_validator_accepts_merged_headers_with_repeated_child_labels_under_different_parents(self):
+        class DualRangeImporter(BaseModel):
+            stay_range: DateRange = FieldMeta(label='停留时间', order=1, date_format=DateFormat.DAY)
+            travel_range: DateRange = FieldMeta(label='出行时间', order=2, date_format=DateFormat.DAY)
+
+        layout = ExcelSchemaLayout.from_model(DualRangeImporter)
+        header_df = WorksheetTable(rows=[['停留时间', None, '出行时间', None], ['开始日期', '结束日期', '开始日期', '结束日期']])
+        parser = ExcelHeaderParser()
+        validator = ExcelHeaderValidator()
+
+        headers = parser.extract(header_df)
+        result = validator.validate(headers, layout, ImportMode.CREATE)
+
+        assert [header.unique_label for header in headers] == [
+            '停留时间·开始日期',
+            '停留时间·结束日期',
+            '出行时间·开始日期',
+            '出行时间·结束日期',
+        ]
+        assert result.duplicated == []
+        assert result.unrecognized == []
+        assert result.missing_required == []
         assert result.is_valid is True
 
     def test_row_aggregator_groups_composite_cells_back_into_parent_payload(self):
