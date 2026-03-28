@@ -27,6 +27,8 @@ is intended to validate the release pipeline before the final `2.0.0` release.
 - Switched local development, CI, and release workflows to `uv`
 - Split the former monolithic orchestration layer into focused internal components
 - Rewrote the main documentation as architecture-focused project pages
+- Deprecated the legacy `excelalchemy.types.*` import paths in favor of `excelalchemy.metadata`, `excelalchemy.results`, `excelalchemy.config`, `excelalchemy.codecs`, and public types re-exported from the package root
+- Promoted `excelalchemy.exceptions` as the stable exception module and converted `excelalchemy.exc`, `excelalchemy.identity`, and `excelalchemy.header_models` into explicit compatibility layers
 
 ### Removed
 

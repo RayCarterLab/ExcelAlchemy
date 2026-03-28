@@ -3,8 +3,9 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from excelalchemy.types.identity import Base64Str, Key, UrlStr
-from excelalchemy.types.result import ImportResult
+from excelalchemy._internal.identity import Base64Str, Key, UrlStr
+from excelalchemy.artifacts import ExcelArtifact
+from excelalchemy.results import ImportResult
 
 
 class ABCExcelAlchemy[
@@ -20,12 +21,31 @@ class ABCExcelAlchemy[
         """下载导入模版, Excel 字段顺序与定义的导出模型一致"""
 
     @abstractmethod
+    def download_template_artifact(
+        self,
+        sample_data: list[dict[str, Any]] | None = None,
+        *,
+        filename: str = 'template.xlsx',
+    ) -> ExcelArtifact:
+        """下载导入模板，返回结构化 Excel 产物。"""
+
+    @abstractmethod
     async def import_data(self, input_excel_name: str, output_excel_name: str) -> ImportResult:
         """导入数据"""
 
     @abstractmethod
     def export(self, data: list[dict[str, Any]], keys: list[Key] | None = None) -> Base64Str:
         """导出数据，返回 base64 编码的 excel 文件, 字段顺序与定义的导出模型一致"""
+
+    @abstractmethod
+    def export_artifact(
+        self,
+        data: list[dict[str, Any]],
+        keys: list[Key] | None = None,
+        *,
+        filename: str = 'export.xlsx',
+    ) -> ExcelArtifact:
+        """导出数据，返回结构化 Excel 产物。"""
 
     @abstractmethod
     def export_upload(self, output_name: str, data: list[dict[str, Any]], keys: list[Key] | None = None) -> UrlStr:

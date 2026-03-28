@@ -2,8 +2,8 @@
 
 from typing import Protocol, runtime_checkable
 
+from excelalchemy._internal.identity import UrlStr
 from excelalchemy.core.table import WorksheetTable
-from excelalchemy.types.identity import UrlStr
 
 
 @runtime_checkable

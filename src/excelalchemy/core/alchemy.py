@@ -4,10 +4,15 @@ from typing import Any, Callable, Iterable, cast
 
 from pydantic import BaseModel
 
-from excelalchemy.const import (
+from excelalchemy._internal.constants import (
     REASON_COLUMN_KEY,
     RESULT_COLUMN_KEY,
 )
+from excelalchemy._internal.header_models import ExcelHeader
+from excelalchemy._internal.identity import Base64Str, Key, Label, RowIndex, UniqueKey, UniqueLabel, UrlStr
+from excelalchemy.artifacts import ExcelArtifact
+from excelalchemy.codecs.base import SystemReserved
+from excelalchemy.config import ExcelMode, ExporterConfig, ImporterConfig, ImportMode
 from excelalchemy.core.abstract import ABCExcelAlchemy
 from excelalchemy.core.executor import ImportExecutor
 from excelalchemy.core.headers import ExcelHeaderParser, ExcelHeaderValidator
@@ -17,17 +22,13 @@ from excelalchemy.core.schema import ExcelSchemaLayout
 from excelalchemy.core.storage import build_storage_gateway
 from excelalchemy.core.storage_protocol import ExcelStorage
 from excelalchemy.core.table import WorksheetTable
-from excelalchemy.exc import ConfigError, ExcelCellError, ExcelRowError
+from excelalchemy.exceptions import ConfigError, ExcelCellError, ExcelRowError
 from excelalchemy.helper.pydantic import get_model_field_names
 from excelalchemy.i18n.messages import MessageKey, use_display_locale
 from excelalchemy.i18n.messages import display_message as dmsg
 from excelalchemy.i18n.messages import message as msg
-from excelalchemy.types.abstract import SystemReserved
-from excelalchemy.types.alchemy import ExcelMode, ExporterConfig, ImporterConfig, ImportMode
-from excelalchemy.types.field import FieldMetaInfo
-from excelalchemy.types.header import ExcelHeader
-from excelalchemy.types.identity import Base64Str, Key, Label, RowIndex, UniqueKey, UniqueLabel, UrlStr
-from excelalchemy.types.result import ImportResult, ValidateHeaderResult, ValidateResult
+from excelalchemy.metadata import FieldMetaInfo
+from excelalchemy.results import ImportResult, ValidateHeaderResult, ValidateResult
 from excelalchemy.util.file import flatten
 
 HEADER_HINT_LINE_COUNT = 1
@@ -35,12 +36,12 @@ HEADER_HINT_LINE_COUNT = 1
 RESULT_COLUMN = FieldMetaInfo(label=dmsg(MessageKey.RESULT_COLUMN_LABEL, locale='zh-CN'))
 RESULT_COLUMN.parent_label = RESULT_COLUMN.label
 RESULT_COLUMN.key = RESULT_COLUMN.parent_key = RESULT_COLUMN_KEY
-RESULT_COLUMN.value_type = SystemReserved
+RESULT_COLUMN.excel_codec = SystemReserved
 
 REASON_COLUMN = FieldMetaInfo(label=dmsg(MessageKey.REASON_COLUMN_LABEL, locale='zh-CN'))
 REASON_COLUMN.parent_label = REASON_COLUMN.label
 REASON_COLUMN.key = REASON_COLUMN.parent_key = REASON_COLUMN_KEY
-REASON_COLUMN.value_type = SystemReserved
+REASON_COLUMN.excel_codec = SystemReserved
 
 
 class ExcelAlchemy[
@@ -155,6 +156,14 @@ class ExcelAlchemy[
                 df = self._export_with_simple_header(sample_data, keys)
             return self._renderer.render_template(df, self.unique_label_to_field_meta, has_merged_header=has_merged_header)
 
+    def download_template_artifact(
+        self,
+        sample_data: list[dict[str, Any]] | None = None,
+        *,
+        filename: str = 'template.xlsx',
+    ) -> ExcelArtifact:
+        return ExcelArtifact.from_data_url(self.download_template(sample_data), filename=filename)
+
     async def import_data(self, input_excel_name: str, output_excel_name: str) -> ImportResult:
         assert isinstance(self.config, ImporterConfig)
         if self.excel_mode != ExcelMode.IMPORT:
@@ -201,6 +210,15 @@ class ExcelAlchemy[
                 has_merged_header=has_merged_header,
                 errors={},
             )
+
+    def export_artifact(
+        self,
+        data: list[dict[str, Any]],
+        keys: list[Key] | None = None,
+        *,
+        filename: str = 'export.xlsx',
+    ) -> ExcelArtifact:
+        return ExcelArtifact.from_data_url(self.export(data, keys), filename=filename)
 
     def export_upload(self, output_name: str, data: list[dict[str, Any]], keys: list[Key] | None = None) -> UrlStr:
         return self._upload_file(output_name, self.export(data, keys))
@@ -336,7 +354,7 @@ class ExcelAlchemy[
                 if key not in selected_keys:
                     continue
                 field_meta = self.unique_key_to_field_meta[UniqueKey(key)]
-                row[field_meta.unique_label] = field_meta.value_type.deserialize(value, field_meta)
+                row[field_meta.unique_label] = field_meta.excel_codec.format_display_value(value, field_meta)
             rows.append(row)
 
         return WorksheetTable(columns=self.get_output_parent_excel_headers(selected_keys), rows=rows)
@@ -389,12 +407,12 @@ class ExcelAlchemy[
         result_column = FieldMetaInfo(label=dmsg(MessageKey.RESULT_COLUMN_LABEL, locale=self.locale))
         result_column.parent_label = result_column.label
         result_column.key = result_column.parent_key = RESULT_COLUMN_KEY
-        result_column.value_type = SystemReserved
+        result_column.excel_codec = SystemReserved
 
         reason_column = FieldMetaInfo(label=dmsg(MessageKey.REASON_COLUMN_LABEL, locale=self.locale))
         reason_column.parent_label = reason_column.label
         reason_column.key = reason_column.parent_key = REASON_COLUMN_KEY
-        reason_column.value_type = SystemReserved
+        reason_column.excel_codec = SystemReserved
 
         return [result_column, reason_column]
 

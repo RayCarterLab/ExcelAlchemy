@@ -3,13 +3,13 @@
 from collections import defaultdict
 from typing import Any, cast
 
-from excelalchemy.exc import ConfigError, ExcelCellError, ExcelRowError
+from excelalchemy._internal.identity import ColumnIndex, Key, RowIndex, UniqueLabel
+from excelalchemy.config import ImportMode
+from excelalchemy.exceptions import ConfigError, ExcelCellError, ExcelRowError
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import message as msg
-from excelalchemy.types.alchemy import ImportMode
-from excelalchemy.types.field import FieldMetaInfo
-from excelalchemy.types.identity import ColumnIndex, Key, RowIndex, UniqueLabel
-from excelalchemy.types.result import ValidateRowResult
+from excelalchemy.metadata import FieldMetaInfo
+from excelalchemy.results import ValidateRowResult
 from excelalchemy.util.file import value_is_nan
 
 from .schema import ExcelSchemaLayout
@@ -52,11 +52,11 @@ class RowAggregator:
         serialized: dict[Key, Any] = {}
         for parent_key, value in aggregated.items():
             field_metas = self.layout.parent_key_to_field_metas[parent_key]
-            validator = field_metas[0]
+            codec_field = field_metas[0]
             if value is None:
                 serialized[parent_key] = None
             else:
-                serialized[parent_key] = validator.value_type.serialize(value, validator)
+                serialized[parent_key] = codec_field.excel_codec.parse_input(value, codec_field)
         return serialized
 
 

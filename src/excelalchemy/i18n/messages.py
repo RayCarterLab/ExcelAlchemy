@@ -146,7 +146,7 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.UNSUPPORTED_FIELD_TYPE_DECLARATION: 'Unsupported field type declaration: {annotation}',
         MessageKey.THIS_FIELD_IS_REQUIRED: 'This field is required',
         MessageKey.VALUE_TYPE_DECLARATION_UNSUPPORTED: (
-            'Field definitions must use a ValueType or ComplexValueType subclass; {value_type} is not supported'
+            'Field definitions must use an ExcelFieldCodec or CompositeExcelFieldCodec subclass; {value_type} is not supported'
         ),
         MessageKey.INVALID_INPUT: 'Invalid input',
         MessageKey.INVALID_IMPORT_MODE: 'Invalid import mode: {import_mode}',
@@ -189,7 +189,7 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.FIELD_META_RUNTIME_KEY_MISSING: '{field_meta_type} is missing runtime key/parent_key',
         MessageKey.FIELD_NOT_FOUND: 'Could not find a field for {unique_label}',
         MessageKey.COLUMN_NOT_FOUND: (
-            'Could not find a column for {unique_label}; the value_type definition may be invalid'
+            'Could not find a column for {unique_label}; the codec definition may be invalid'
         ),
         MessageKey.NO_FIELD_METADATA_EXTRACTED: (
             'No field metadata was extracted; check whether the model defines any fields'
@@ -220,7 +220,9 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
             'Option not found; check the field comment for valid values'
         ),
         MessageKey.DATE_FORMAT_EMPTY_RUNTIME: 'date_format cannot be empty at runtime',
-        MessageKey.FIELD_DEFINITIONS_MUST_USE_FIELDMETA: 'Field definitions must be created with FieldMeta',
+        MessageKey.FIELD_DEFINITIONS_MUST_USE_FIELDMETA: (
+            'Field definitions must be created with FieldMeta or Annotated[..., ExcelMeta(...)]'
+        ),
         MessageKey.FRACTION_DIGITS_MUST_BE_INTEGER: 'fraction_digits must be an integer',
         MessageKey.DATE_FORMAT_NOT_CONFIGURED: 'date_format is not configured',
         MessageKey.ENTER_DATE_FORMAT: 'Enter a date in {date_format} format',
@@ -241,7 +243,7 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.OPTIONS_CANNOT_BE_NONE_FOR_SELECTION_FIELDS: (
             'options cannot be None when validating RADIO / MULTI_CHECKBOX / SELECT fields'
         ),
-        MessageKey.OPTIONS_CANNOT_BE_NONE_FOR_VALUE_TYPE: 'options cannot be None when validating {value_type}',
+        MessageKey.OPTIONS_CANNOT_BE_NONE_FOR_VALUE_TYPE: 'options cannot be None when validating codec {value_type}',
         MessageKey.OPTIONS_CONTAIN_DUPLICATES: 'Options contain duplicates',
         MessageKey.CHARACTER_SET_NOT_CONFIGURED: 'character_set is not configured',
         MessageKey.MAX_LENGTH_CHARACTERS: 'The maximum length is {max_length} characters',

@@ -1,29 +1,7 @@
-from typing import Any
+"""Compatibility shim for ``excelalchemy.types.value.email``."""
 
-from pydantic import EmailStr, TypeAdapter
+from excelalchemy._internal.deprecation import warn_compat_import
 
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import message as msg
-from excelalchemy.types.field import FieldMetaInfo
-from excelalchemy.types.value.string import String
+warn_compat_import('excelalchemy.types.value.email', 'excelalchemy.codecs.email')
 
-
-class Email(String):
-    _validator = TypeAdapter(EmailStr)
-
-    @classmethod
-    def __validate__(cls, value: Any, field_meta: FieldMetaInfo) -> str:
-        # Try to parse the value as a string
-        try:
-            parsed = str(value)
-        except Exception as exc:
-            raise ValueError(msg(MessageKey.VALID_EMAIL_REQUIRED)) from exc
-
-        # Validate the parsed string as an email address
-        try:
-            cls._validator.validate_python(parsed)
-        except Exception as exc:
-            raise ValueError(msg(MessageKey.VALID_EMAIL_REQUIRED)) from exc
-
-        # Return the parsed string if validation succeeds
-        return parsed
+from excelalchemy.codecs.email import *  # noqa: F403

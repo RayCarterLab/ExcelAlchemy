@@ -1,9 +1,10 @@
 import math
 from typing import Any
 
-from excelalchemy.const import UNIQUE_HEADER_CONNECTOR
+from excelalchemy._internal.constants import UNIQUE_HEADER_CONNECTOR
 
-EXCEL_PREFIX = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64'
+EXCEL_MEDIA_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+EXCEL_PREFIX = f'data:{EXCEL_MEDIA_TYPE};base64'
 
 
 def add_excel_prefix(content: str) -> str:

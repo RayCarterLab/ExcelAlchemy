@@ -3,9 +3,9 @@ from base64 import b64decode
 
 from openpyxl import load_workbook
 
+from excelalchemy import UrlStr
 from excelalchemy.core.storage_protocol import ExcelStorage
 from excelalchemy.core.table import WorksheetTable
-from excelalchemy.types.identity import UrlStr
 
 
 class InMemoryExcelStorage(ExcelStorage):

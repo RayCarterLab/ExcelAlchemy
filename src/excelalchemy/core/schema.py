@@ -8,13 +8,13 @@ from typing import Iterable, cast
 
 from pydantic import BaseModel
 
-from excelalchemy.const import DEFAULT_FIELD_META_ORDER
-from excelalchemy.exc import ConfigError, ExcelCellError, ExcelRowError
+from excelalchemy._internal.constants import DEFAULT_FIELD_META_ORDER
+from excelalchemy._internal.identity import Key, Label, UniqueKey, UniqueLabel
+from excelalchemy.exceptions import ConfigError, ExcelCellError, ExcelRowError
 from excelalchemy.helper.pydantic import extract_pydantic_model
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import message as msg
-from excelalchemy.types.field import FieldMetaInfo
-from excelalchemy.types.identity import Key, Label, UniqueKey, UniqueLabel
+from excelalchemy.metadata import FieldMetaInfo
 
 
 class ExcelSchemaLayout:

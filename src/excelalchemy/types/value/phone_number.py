@@ -1,20 +1,7 @@
-import re
-from typing import Any
+"""Compatibility shim for ``excelalchemy.types.value.phone_number``."""
 
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import message as msg
-from excelalchemy.types.field import FieldMetaInfo
-from excelalchemy.types.value.string import String
+from excelalchemy._internal.deprecation import warn_compat_import
 
-PHONE_NUMBER_PATTERN = re.compile(r'^((0\d{2,3}-\d{7,8})|(1[3456789]\d{9}))$')
+warn_compat_import('excelalchemy.types.value.phone_number', 'excelalchemy.codecs.phone_number')
 
-
-class PhoneNumber(String):
-    @classmethod
-    def __validate__(cls, value: Any, field_meta: FieldMetaInfo) -> str:
-        parsed = str(value)
-
-        if not PHONE_NUMBER_PATTERN.match(parsed):
-            raise ValueError(msg(MessageKey.VALID_PHONE_NUMBER_REQUIRED))
-
-        return parsed
+from excelalchemy.codecs.phone_number import *  # noqa: F403

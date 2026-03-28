@@ -80,6 +80,26 @@ Example:
 config = ImporterConfig(ImporterModel, creator=create_func, locale='en')
 ```
 
+## Module Paths
+
+- `excelalchemy.types.*` and `excelalchemy.types.value.*` are deprecated compatibility imports in the 2.x line
+- those imports now emit `ExcelAlchemyDeprecationWarning`
+- the compatibility layer will be removed in ExcelAlchemy 3.0
+
+Prefer the new module layout:
+
+- `excelalchemy.metadata`
+- `excelalchemy.results`
+- `excelalchemy.config`
+- `excelalchemy.codecs`
+- the `excelalchemy` package root for common public types such as `Label`, `Key`, and `UrlStr`
+
+Additional top-level module guidance:
+
+- `excelalchemy.exceptions` is the stable replacement for `excelalchemy.exc`
+- `excelalchemy.identity` is now a compatibility import; prefer `from excelalchemy import Label, Key, UrlStr, ...`
+- `excelalchemy.header_models` is internal and should not be imported in application code
+
 ## Recommended Upgrade Checklist
 
 1. Upgrade your Python runtime to 3.12+.

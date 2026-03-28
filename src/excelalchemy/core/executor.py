@@ -4,12 +4,12 @@ from typing import Any, Awaitable, Callable
 
 from pydantic import BaseModel
 
-from excelalchemy.exc import ConfigError, ExcelCellError, ExcelRowError
+from excelalchemy._internal.identity import Key, RowIndex
+from excelalchemy.config import ImporterConfig, ImportMode
+from excelalchemy.exceptions import ConfigError, ExcelCellError, ExcelRowError
 from excelalchemy.helper.pydantic import instantiate_pydantic_model
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import message as msg
-from excelalchemy.types.alchemy import ImporterConfig, ImportMode
-from excelalchemy.types.identity import Key, RowIndex
 
 from .rows import ImportIssueTracker
 from .table import WorksheetTable
@@ -92,9 +92,11 @@ class ImportExecutor[ContextT]:
         """Validate one row payload and call the user-supplied DML function."""
         importer_instance_or_errors = instantiate_pydantic_model(data, importer_model)
         if not isinstance(importer_instance_or_errors, importer_model):
-            errors: list[ExcelCellError] = importer_instance_or_errors  # type: ignore[assignment]
-            self.issue_tracker.register_row_error(row_index, errors)
-            self.issue_tracker.register_cell_errors(row_index, errors, df)
+            validation_errors = importer_instance_or_errors
+            cell_errors = [error for error in validation_errors if isinstance(error, ExcelCellError)]
+            self.issue_tracker.register_row_error(row_index, validation_errors)
+            if cell_errors:
+                self.issue_tracker.register_cell_errors(row_index, cell_errors, df)
             return False
 
         importer_instance = importer_instance_or_errors

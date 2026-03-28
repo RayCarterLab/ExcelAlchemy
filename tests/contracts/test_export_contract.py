@@ -3,7 +3,7 @@ from typing import cast
 from minio import Minio
 
 from excelalchemy import ExcelAlchemy, ExporterConfig
-from tests.support import BaseTestCase, decode_prefixed_excel_to_workbook
+from tests.support import BaseTestCase, decode_prefixed_excel_to_workbook, load_binary_excel_to_workbook
 from tests.support.contract_models import (
     MergedContractImporter,
     SimpleContractImporter,
@@ -19,6 +19,22 @@ class TestExportContracts(BaseTestCase):
         content = alchemy.export([sample_simple_export_row()])
 
         assert content.startswith('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,')
+
+    async def test_export_artifact_returns_binary_excel_payload(self):
+        alchemy = ExcelAlchemy(ExporterConfig(SimpleContractImporter, minio=cast(Minio, self.minio)))
+
+        artifact = alchemy.export_artifact([sample_simple_export_row()], filename='people-export.xlsx')
+        workbook = load_binary_excel_to_workbook(artifact.as_bytes())
+        worksheet = workbook['Sheet1']
+
+        assert artifact.filename == 'people-export.xlsx'
+        assert artifact.media_type == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        assert artifact.as_bytes().startswith(b'PK')
+        assert artifact.as_data_url().startswith(
+            'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,'
+        )
+        assert worksheet['A2'].value == '年龄'
+        assert worksheet['A3'].value == '18'
 
     async def test_export_returns_only_selected_columns_when_keys_are_provided(self):
         alchemy = ExcelAlchemy(ExporterConfig(SimpleContractImporter, minio=cast(Minio, self.minio)))

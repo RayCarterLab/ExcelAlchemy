@@ -12,21 +12,21 @@ from openpyxl.styles import Alignment, Font, PatternFill, numbers
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
-from excelalchemy.const import (
+from excelalchemy._internal.constants import (
     BACKGROUND_ERROR_COLOR,
     BACKGROUND_REQUIRED_COLOR,
     CHARACTER_WIDTH,
     DEFAULT_SHEET_NAME,
     FONT_READ_COLOR,
 )
+from excelalchemy._internal.identity import Base64Str, ColumnIndex, Label, RowIndex, UniqueLabel
 from excelalchemy.core.table import WorksheetTable
-from excelalchemy.exc import ExcelCellError
+from excelalchemy.exceptions import ExcelCellError
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
 from excelalchemy.i18n.messages import message as msg
-from excelalchemy.types.field import FieldMetaInfo
-from excelalchemy.types.identity import Base64Str, ColumnIndex, Label, RowIndex, UniqueLabel
-from excelalchemy.types.result import ValidateRowResult
+from excelalchemy.metadata import FieldMetaInfo
+from excelalchemy.results import ValidateRowResult
 from excelalchemy.util.file import add_excel_prefix, value_is_nan
 
 OPENPYXL_EXCEL_INDEX_START_AT = 1
@@ -62,7 +62,7 @@ def _encode_workbook(workbook: Workbook, file: BinaryIO, *, close_file: bool) ->
 
 
 def _build_comment(field_meta: FieldMetaInfo) -> Comment | None:
-    comment_text = field_meta.value_type.comment(field_meta)
+    comment_text = field_meta.excel_codec.build_comment(field_meta)
     if not comment_text:
         return None
 
@@ -236,7 +236,7 @@ def _get_parsed_value(
         return str(cell_value)
 
     field_meta = field_meta_mapping[col_label]
-    parsed_value = field_meta.value_type.deserialize(cell_value, field_meta)
+    parsed_value = field_meta.excel_codec.format_display_value(cell_value, field_meta)
     return str(parsed_value)
 
 

@@ -1,5 +1,5 @@
 from excelalchemy import Label, ValidateResult
-from excelalchemy.types.result import ImportResult, ValidateHeaderResult
+from excelalchemy.results import ImportResult, ValidateHeaderResult
 
 
 class TestResultContracts:

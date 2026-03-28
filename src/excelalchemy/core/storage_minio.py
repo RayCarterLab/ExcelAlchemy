@@ -11,13 +11,13 @@ from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 from urllib3.response import BaseHTTPResponse
 
+from excelalchemy._internal.identity import UrlStr
+from excelalchemy.config import ExporterConfig, ImporterConfig
 from excelalchemy.core.storage_protocol import ExcelStorage
 from excelalchemy.core.table import WorksheetTable
-from excelalchemy.exc import ConfigError
+from excelalchemy.exceptions import ConfigError
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import message as msg
-from excelalchemy.types.alchemy import ExporterConfig, ImporterConfig
-from excelalchemy.types.identity import UrlStr
 from excelalchemy.util.file import remove_excel_prefix
 
 

@@ -1,5 +1,4 @@
-from excelalchemy import ExcelCellError, Label
-from excelalchemy.exc import ExcelRowError
+from excelalchemy import ExcelCellError, ExcelRowError, Label
 from tests.support import BaseTestCase
 
 

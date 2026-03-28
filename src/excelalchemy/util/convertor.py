@@ -1,8 +1,8 @@
 import re
 from typing import Any
 
-from excelalchemy.const import FIELD_DATA_KEY
-from excelalchemy.types.identity import Key
+from excelalchemy._internal.constants import FIELD_DATA_KEY
+from excelalchemy._internal.identity import Key
 
 
 def import_data_converter(data: dict[str, Any]) -> dict[str, Any]:  # noqa: C901

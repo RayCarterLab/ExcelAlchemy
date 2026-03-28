@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from typing import Annotated
+
+from pydantic import BaseModel, Field
 
 from excelalchemy import (
     ConfigError,
@@ -6,6 +8,8 @@ from excelalchemy import (
     Date,
     DateFormat,
     Email,
+    EmailCodec,
+    ExcelMeta,
     FieldMeta,
     Number,
     Option,
@@ -316,7 +320,20 @@ class TestFieldMetadata(BaseTestCase):
             )
 
         alchemy = self.build_alchemy(Importer)
+        assert alchemy.ordered_field_meta[0].excel_codec is Email
+        assert alchemy.ordered_field_meta[0].value_type is EmailCodec
         assert repr(alchemy.ordered_field_meta[0]) == (
-            "FieldMeta(label='邮箱', order=1, value_type='Email', required=True, "
+            "FieldMeta(label='邮箱', order=1, excel_codec='Email', required=True, "
             "unique=True, comment_required='必填性：必填', comment_unique='唯一性：唯一')"
         )
+
+    async def test_excelmeta_supports_annotated_field_declarations(self):
+        class Importer(BaseModel):
+            email: Annotated[Email, Field(max_length=10), ExcelMeta(label='邮箱', order=1)]
+
+        alchemy = self.build_alchemy(Importer)
+        field_meta = alchemy.ordered_field_meta[0]
+
+        assert field_meta.label == '邮箱'
+        assert field_meta.excel_codec is Email
+        assert field_meta.comment_max_length == '最大长度：10'

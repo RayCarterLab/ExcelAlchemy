@@ -97,7 +97,7 @@ flowchart LR
 
 ### Metadata
 
-`src/excelalchemy/types/field.py`
+`src/excelalchemy/metadata.py`
 
 - owns Excel field metadata
 - exposes workbook comment fragments
@@ -123,9 +123,17 @@ flowchart LR
 
 Implement `ExcelStorage` when you want a different backend.
 
-### Custom Value Types
+### Custom Field Codecs
 
-Implement a new `ABCValueType` or `ComplexABCValueType` when you want custom workbook semantics.
+Implement a new `ExcelFieldCodec` or `CompositeExcelFieldCodec` when you want custom workbook semantics.
+Built-in field annotations keep concise aliases like `Email` and `DateRange`, while the `*Codec` names expose the adapter role more explicitly.
+
+### Field Declaration Styles
+
+Both declaration styles are supported:
+
+- `FieldMeta(...)` as the concise compatibility-friendly syntax sugar
+- `Annotated[T, Field(...), ExcelMeta(...)]` as the more explicit Pydantic v2-first style
 
 ### Data Conversion
 
@@ -134,6 +142,28 @@ Use `data_converter` when the workbook schema should not map 1:1 to backend payl
 ### Locale
 
 Use `locale='zh-CN' | 'en'` to control workbook-facing display text without changing runtime exception language.
+
+## Module Layout
+
+- `src/excelalchemy/codecs/`: built-in Excel field codecs and codec base abstractions
+- `src/excelalchemy/metadata.py`: Excel-specific field metadata and declaration helpers
+- `src/excelalchemy/config.py`: importer/exporter configuration models
+- `src/excelalchemy/exceptions.py`: public exception types
+- `src/excelalchemy/_internal/identity.py`: internal typed string and index wrappers used across the core layer
+- `src/excelalchemy/_internal/constants.py`: internal constant and enum definitions
+- `src/excelalchemy/results.py`: import/export result models
+- `src/excelalchemy/_internal/header_models.py`: internal workbook header model objects
+- `src/excelalchemy/_internal/deprecation.py`: internal deprecation helpers used by compatibility shims
+- `src/excelalchemy/types/`: compatibility import layer for pre-refactor paths
+- `src/excelalchemy/exc.py`, `src/excelalchemy/identity.py`, `src/excelalchemy/header_models.py`, `src/excelalchemy/const.py`: compatibility or low-level facade modules kept at the package root
+
+Compatibility policy:
+
+- `excelalchemy.types.*` and `excelalchemy.types.value.*` remain available throughout the 2.x line
+- those imports emit `ExcelAlchemyDeprecationWarning` at import time
+- the compatibility layer is scheduled for removal in ExcelAlchemy 3.0
+- `excelalchemy.exc` now points to the public `excelalchemy.exceptions` module
+- `excelalchemy.identity` and `excelalchemy.header_models` remain as 2.x compatibility imports; prefer the package root or internal modules only
 
 ## Architectural Intent
 

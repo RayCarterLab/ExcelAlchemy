@@ -1,13 +1,13 @@
 """Header parsing and validation helpers for import workbooks."""
 
+from excelalchemy._internal.header_models import ExcelHeader
+from excelalchemy._internal.identity import Label, UniqueLabel
+from excelalchemy.config import ImportMode
 from excelalchemy.core.table import WorksheetTable
-from excelalchemy.exc import ConfigError
+from excelalchemy.exceptions import ConfigError
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import message as msg
-from excelalchemy.types.alchemy import ImportMode
-from excelalchemy.types.header import ExcelHeader
-from excelalchemy.types.identity import Label, UniqueLabel
-from excelalchemy.types.result import ValidateHeaderResult
+from excelalchemy.results import ValidateHeaderResult
 from excelalchemy.util.file import value_is_nan
 
 from .schema import ExcelSchemaLayout

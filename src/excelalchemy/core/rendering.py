@@ -2,11 +2,11 @@
 
 from typing import cast
 
+from excelalchemy._internal.identity import Base64Str, ColumnIndex, RowIndex, UniqueLabel
 from excelalchemy.core.table import WorksheetTable
 from excelalchemy.core.writer import render_data_excel, render_merged_header_excel, render_simple_header_excel
-from excelalchemy.exc import ExcelCellError
-from excelalchemy.types.field import FieldMetaInfo
-from excelalchemy.types.identity import Base64Str, ColumnIndex, RowIndex, UniqueLabel
+from excelalchemy.exceptions import ExcelCellError
+from excelalchemy.metadata import FieldMetaInfo
 
 
 class ExcelRenderer:

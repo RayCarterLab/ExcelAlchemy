@@ -2,11 +2,11 @@
 
 from typing import TYPE_CHECKING, Any
 
+from excelalchemy.config import ExporterConfig, ImporterConfig
 from excelalchemy.core.storage_protocol import ExcelStorage
-from excelalchemy.exc import ConfigError
+from excelalchemy.exceptions import ConfigError
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import message as msg
-from excelalchemy.types.alchemy import ExporterConfig, ImporterConfig
 
 if TYPE_CHECKING:
     from excelalchemy.core.storage_minio import MinioStorageGateway

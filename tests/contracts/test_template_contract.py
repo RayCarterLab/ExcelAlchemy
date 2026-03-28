@@ -10,6 +10,7 @@ from tests.support import (
     get_fill_color,
     list_data_validations,
     list_merge_ranges,
+    load_binary_excel_to_workbook,
 )
 from tests.support.contract_models import MergedContractImporter, SimpleContractImporter, creator
 
@@ -21,6 +22,21 @@ class TestTemplateContracts(BaseTestCase):
         content = alchemy.download_template()
 
         assert content.startswith('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,')
+
+    async def test_download_template_artifact_returns_binary_excel_payload(self):
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+
+        artifact = alchemy.download_template_artifact(filename='people-template.xlsx')
+        workbook = load_binary_excel_to_workbook(artifact.as_bytes())
+        worksheet = workbook['Sheet1']
+
+        assert artifact.filename == 'people-template.xlsx'
+        assert artifact.media_type == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        assert artifact.as_bytes().startswith(b'PK')
+        assert artifact.as_data_url().startswith(
+            'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,'
+        )
+        assert worksheet['A2'].value == '年龄'
 
     async def test_download_template_returns_sample_rows_with_user_visible_values(self):
         alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))

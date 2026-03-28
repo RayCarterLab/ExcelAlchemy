@@ -129,8 +129,36 @@ class Importer(BaseModel):
 
 
 alchemy = ExcelAlchemy(ImporterConfig(Importer, locale='en'))
-template_base64 = alchemy.download_template()
+template = alchemy.download_template_artifact(filename='people-template.xlsx')
+
+excel_bytes = template.as_bytes()
+template_data_url = template.as_data_url()  # compatibility path for older browser integrations
 ```
+
+## Modern Annotated Example
+
+```python
+from typing import Annotated
+
+from pydantic import BaseModel, Field
+
+from excelalchemy import Email, ExcelAlchemy, ExcelMeta, ImporterConfig
+
+
+class Importer(BaseModel):
+    email: Annotated[
+        Email,
+        Field(min_length=10),
+        ExcelMeta(label='Email', order=1, hint='Use your work email'),
+    ]
+
+
+alchemy = ExcelAlchemy(ImporterConfig(Importer, locale='en'))
+template = alchemy.download_template_artifact(filename='people-template.xlsx')
+```
+
+For browser downloads, prefer `template.as_bytes()` with a `Blob`, or return the bytes from your backend with
+`Content-Disposition: attachment`. A top-level navigation to a long `data:` URL is less reliable in modern browsers.
 
 ## Locale-Aware Workbook Output
 
@@ -158,8 +186,8 @@ class Importer(BaseModel):
     name: String = FieldMeta(label='Name', order=2)
 
 
-zh_template = ExcelAlchemy(ImporterConfig(Importer, locale='zh-CN')).download_template()
-en_template = ExcelAlchemy(ImporterConfig(Importer, locale='en')).download_template()
+zh_template = ExcelAlchemy(ImporterConfig(Importer, locale='zh-CN')).download_template_artifact()
+en_template = ExcelAlchemy(ImporterConfig(Importer, locale='en')).download_template_artifact()
 ```
 
 The same `locale` also controls import result workbooks:
@@ -181,9 +209,8 @@ result = await alchemy.import_data("people.xlsx", "people-result.xlsx")
 Storage is modeled as a protocol, not a product decision.
 
 ```python
-from excelalchemy import ExcelAlchemy, ExcelStorage, ExporterConfig
+from excelalchemy import ExcelAlchemy, ExcelStorage, ExporterConfig, UrlStr
 from excelalchemy.core.table import WorksheetTable
-from excelalchemy.types.identity import UrlStr
 
 
 class InMemoryExcelStorage(ExcelStorage):

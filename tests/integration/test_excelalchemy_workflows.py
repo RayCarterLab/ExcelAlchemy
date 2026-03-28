@@ -1,9 +1,9 @@
 import datetime
 import random
-from typing import Any, cast
+from typing import Annotated, Any, cast
 
 from minio import Minio
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from excelalchemy import (
     Boolean,
@@ -14,6 +14,7 @@ from excelalchemy import (
     Email,
     ExcelAlchemy,
     ExcelCellError,
+    ExcelMeta,
     ExporterConfig,
     FieldMeta,
     ImporterConfig,
@@ -427,7 +428,23 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         config = ImporterConfig(EmptyFieldMetaModel, creator=self.creator, minio=cast(Minio, self.minio))
         with self.assertRaises(ProgrammaticError) as cm:
             ExcelAlchemy(config)
-        self.assertEqual(str(cm.exception), 'Field definitions must be created with FieldMeta')
+        self.assertEqual(
+            str(cm.exception),
+            'Field definitions must be created with FieldMeta or Annotated[..., ExcelMeta(...)]',
+        )
+
+    async def test_annotated_excel_meta_definition_can_build_template(self):
+        class AnnotatedImporter(BaseModel):
+            email: Annotated[Email, Field(min_length=10), ExcelMeta(label='邮箱', order=1)]
+
+        config = ImporterConfig(AnnotatedImporter, creator=self.creator, minio=cast(Minio, self.minio))
+        alchemy = ExcelAlchemy(config)
+
+        template = alchemy.download_template()
+
+        self.assertTrue(
+            template.startswith('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,')
+        )
 
     async def test_passing_non_config_object_raises_config_error(self):
         class NotImporterConfigModel(BaseModel):

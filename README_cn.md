@@ -108,8 +108,14 @@ class Importer(BaseModel):
 
 
 alchemy = ExcelAlchemy(ImporterConfig(Importer))
-template_base64 = alchemy.download_template()
+template = alchemy.download_template_artifact(filename='people-template.xlsx')
+
+excel_bytes = template.as_bytes()
+template_data_url = template.as_data_url()  # 兼容旧的浏览器集成方式
 ```
+
+浏览器下载时，优先使用 `excel_bytes` 构造 `Blob`，或者让后端直接返回二进制并带上
+`Content-Disposition: attachment`。现代浏览器对超长 `data:` URL 的顶层导航并不稳定。
 
 ## 选择模板 / 结果语言
 
@@ -138,8 +144,8 @@ class Importer(BaseModel):
     name: String = FieldMeta(label='Name', order=2)
 
 
-template_zh = ExcelAlchemy(ImporterConfig(Importer, locale='zh-CN')).download_template()
-template_en = ExcelAlchemy(ImporterConfig(Importer, locale='en')).download_template()
+template_zh = ExcelAlchemy(ImporterConfig(Importer, locale='zh-CN')).download_template_artifact()
+template_en = ExcelAlchemy(ImporterConfig(Importer, locale='en')).download_template_artifact()
 ```
 
 导入结果工作簿也会使用同一个 `locale`：
@@ -161,9 +167,8 @@ result = await alchemy.import_data("people.xlsx", "people-result.xlsx")
 ExcelAlchemy 接受任何实现了 `ExcelStorage` 协议的存储后端。
 
 ```python
-from excelalchemy import ExcelAlchemy, ExcelStorage, ExporterConfig
+from excelalchemy import ExcelAlchemy, ExcelStorage, ExporterConfig, UrlStr
 from excelalchemy.core.table import WorksheetTable
-from excelalchemy.types.identity import UrlStr
 
 
 class InMemoryExcelStorage(ExcelStorage):

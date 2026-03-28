@@ -16,6 +16,16 @@ class TestConvertersAndSchemaExtraction(IsolatedAsyncioTestCase):
         template = alchemy.download_template()
         assert template is not None and len(template) > 100
 
+    def test_download_template_artifact_returns_bytes_and_data_url_views(self):
+        alchemy = ExcelAlchemy(ImporterConfig(self.Importer))
+        artifact = alchemy.download_template_artifact(filename='schema-template.xlsx')
+
+        assert artifact.filename == 'schema-template.xlsx'
+        assert artifact.as_bytes().startswith(b'PK')
+        assert artifact.as_data_url().startswith(
+            'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,'
+        )
+
     def test_extract_pydantic_model_returns_field_metadata(self):
         field_metas = extract_pydantic_model(self.Importer)
         self.assertIsNotNone(field_metas)

@@ -1,70 +1,7 @@
-import logging
-from typing import Any
+"""Compatibility shim for ``excelalchemy.types.value.organization``."""
 
-from excelalchemy.const import MULTI_CHECKBOX_SEPARATOR
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import display_message as dmsg
-from excelalchemy.types.field import FieldMetaInfo
-from excelalchemy.types.value.multi_checkbox import MultiCheckbox
-from excelalchemy.types.value.radio import Radio
+from excelalchemy._internal.deprecation import warn_compat_import
 
+warn_compat_import('excelalchemy.types.value.organization', 'excelalchemy.codecs.organization')
 
-class SingleOrganization(Radio):
-    __name__ = '组织单选'
-
-    @classmethod
-    def comment(cls, field_meta: FieldMetaInfo) -> str:
-        extra_hint = field_meta.hint or dmsg(MessageKey.SINGLE_ORGANIZATION_HINT)
-        value_key = MessageKey.COMMENT_REQUIRED_VALUE_REQUIRED if field_meta.required else MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL
-        return '\n'.join([dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key)), dmsg(MessageKey.COMMENT_HINT, value=extra_hint)])
-
-    @classmethod
-    def serialize(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
-        if isinstance(value, str):
-            return value.strip()
-        return value
-
-    @classmethod
-    def deserialize(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
-        try:
-            return field_meta.options_id_map[value.strip()].name
-        except KeyError:
-            logging.warning('无法找到组织 %s 的选项, 返回原值', value)
-
-        return value if value is not None else ''
-
-
-class MultiOrganization(MultiCheckbox):
-    __name__ = '组织多选'
-
-    @classmethod
-    def comment(cls, field_meta: FieldMetaInfo) -> str:
-        return '\n'.join(
-            [
-                field_meta.comment_required,
-                dmsg(MessageKey.COMMENT_HINT, value=field_meta.hint or dmsg(MessageKey.MULTI_ORGANIZATION_HINT)),
-            ]
-        )
-
-    @classmethod
-    def serialize(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
-        return super().serialize(value, field_meta)
-
-    @classmethod
-    def deserialize(cls, value: str | list[str] | None | Any, field_meta: FieldMetaInfo) -> str | Any:
-        if value is None or value == '':
-            return ''
-
-        if isinstance(value, str):
-            return value
-
-        if isinstance(value, list):
-            option_names = field_meta.exchange_option_ids_to_names(value)
-            return MULTI_CHECKBOX_SEPARATOR.join(map(str, option_names))
-
-        logging.warning('%s 反序列化失败', cls.__name__)
-        return value
-
-    @classmethod
-    def __validate__(cls, value: Any, field_meta: FieldMetaInfo) -> list[str]:
-        return super().__validate__(value, field_meta)
+from excelalchemy.codecs.organization import *  # noqa: F403

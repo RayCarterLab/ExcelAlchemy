@@ -1,10 +1,7 @@
-"""ExcelAlchemy value types，用于生成 pydantic 的模型时，用于标记字段的类型"""
+"""Compatibility shim for ``excelalchemy.types.value``."""
 
-from excelalchemy.types.abstract import ABCValueType
+from excelalchemy._internal.deprecation import warn_compat_import
 
-EXCEL_CHOICE_VALUE_TYPE: dict[type[ABCValueType], type[ABCValueType]] = {}
+warn_compat_import('excelalchemy.types.value', 'excelalchemy.codecs')
 
-
-def excel_choice(value_type: type[ABCValueType]) -> type[ABCValueType]:
-    EXCEL_CHOICE_VALUE_TYPE[value_type] = value_type
-    return value_type
+from excelalchemy.codecs import *  # noqa: F403

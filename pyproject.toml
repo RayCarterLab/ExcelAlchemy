@@ -98,6 +98,11 @@ ignore = ['E501']
 
 [tool.ruff.lint.per-file-ignores]
 '**/__init__.py' = ['F401']
+'src/excelalchemy/exc.py' = ['E402']
+'src/excelalchemy/header_models.py' = ['E402']
+'src/excelalchemy/identity.py' = ['E402']
+'src/excelalchemy/types/*.py' = ['E402']
+'src/excelalchemy/types/**/*.py' = ['E402']
 
 [tool.ruff.format]
 quote-style = 'preserve'
