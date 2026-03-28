@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog and versioned according to PEP 440.
 
+## [2.0.0.post1] - 2026-03-28
+
+This post-release updates the package presentation and release metadata for the
+stable ExcelAlchemy 2.0 line without changing the core import/export behavior.
+
+### Changed
+
+- Added a dedicated PyPI-friendly long description via `README-pypi.md`
+- Switched package metadata to use the PyPI-specific README
+- Replaced relative README assets with PyPI-safe absolute image and document links
+- Tuned Codecov status behavior for large release PRs and compatibility shim files
+
 ## [2.0.0] - 2026-03-28
 
 This release promotes the validated 2.0 release candidate to the first stable public

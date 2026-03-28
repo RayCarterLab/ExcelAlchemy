@@ -6,7 +6,7 @@ build-backend = 'flit_core.buildapi'
 name = 'ExcelAlchemy'
 description = 'Schema-driven Python library for typed Excel import/export workflows with Pydantic and locale-aware workbooks.'
 authors = [{ name = 'Ray' }]
-readme = 'README.md'
+readme = { file = 'README-pypi.md', content-type = 'text/markdown' }
 license = { file = 'LICENSE' }
 keywords = ['excel', 'openpyxl', 'pydantic', 'minio', 'schema']
 classifiers = [
