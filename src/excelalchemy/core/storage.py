@@ -26,17 +26,17 @@ class MissingStorageGateway(ExcelStorage):
 
 def build_storage_gateway[
     ContextT,
-    ImporterCreateModelT: BaseModel,
-    ImporterUpdateModelT: BaseModel,
-    ExporterModelT: BaseModel,
+    ImportCreateModelT: BaseModel,
+    ImportUpdateModelT: BaseModel,
+    ExportModelT: BaseModel,
 ](
-    config: ImporterConfig[ContextT, ImporterCreateModelT, ImporterUpdateModelT] | ExporterConfig[ExporterModelT],
+    config: ImporterConfig[ContextT, ImportCreateModelT, ImportUpdateModelT] | ExporterConfig[ExportModelT],
 ) -> ExcelStorage:
     """Build the default storage strategy for one ExcelAlchemy config."""
-    storage = getattr(config, 'storage', None)
-    if storage is not None:
-        return storage
-    if getattr(config, 'minio', None) is not None:
+    storage_options = config.storage_options
+    if storage_options.storage is not None:
+        return storage_options.storage
+    if storage_options.minio is not None:
         from excelalchemy.core.storage_minio import MinioStorageGateway
 
         return MinioStorageGateway(config)

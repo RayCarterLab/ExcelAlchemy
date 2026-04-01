@@ -26,23 +26,24 @@ class MinioStorageGateway(ExcelStorage):
 
     def __init__[
         ContextT,
-        ImporterCreateModelT: BaseModel,
-        ImporterUpdateModelT: BaseModel,
-        ExporterModelT: BaseModel,
+        ImportCreateModelT: BaseModel,
+        ImportUpdateModelT: BaseModel,
+        ExportModelT: BaseModel,
     ](
         self,
-        config: ImporterConfig[ContextT, ImporterCreateModelT, ImporterUpdateModelT] | ExporterConfig[ExporterModelT],
+        config: ImporterConfig[ContextT, ImportCreateModelT, ImportUpdateModelT] | ExporterConfig[ExportModelT],
     ):
         self.config = config
+        self.storage_options = config.storage_options
 
     def read_excel_table(self, input_excel_name: str, *, skiprows: int, sheet_name: str) -> WorksheetTable:
         """Read one workbook object from Minio into a worksheet table."""
-        if self.config.minio is None:
+        if self.storage_options.minio is None:
             raise ConfigError(msg(MessageKey.MINIO_CLIENT_NOT_CONFIGURED))
 
         file_object = self._read_file_object(
-            self.config.minio,
-            self.config.bucket_name,
+            self.storage_options.minio,
+            self.storage_options.bucket_name,
             input_excel_name,
         )
 
@@ -61,14 +62,14 @@ class MinioStorageGateway(ExcelStorage):
 
     def upload_excel(self, output_name: str, content_with_prefix: str) -> UrlStr:
         """Upload one rendered workbook and return its signed URL."""
-        if self.config.minio is None:
+        if self.storage_options.minio is None:
             raise ConfigError(msg(MessageKey.MINIO_CLIENT_NOT_CONFIGURED))
         url = self._upload_file_object(
-            self.config.minio,
-            self.config.bucket_name,
+            self.storage_options.minio,
+            self.storage_options.bucket_name,
             output_name,
             remove_excel_prefix(content_with_prefix),
-            self.config.url_expires,
+            self.storage_options.url_expires,
         )
         return UrlStr(url)
 

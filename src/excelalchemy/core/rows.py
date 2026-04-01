@@ -89,16 +89,21 @@ class ImportIssueTracker:
         else:
             self.row_errors[row_index].append(error)
 
-    def register_cell_errors(self, row_index: RowIndex, errors: list[ExcelCellError], df: WorksheetTable) -> None:
+    def register_cell_errors(
+        self,
+        row_index: RowIndex,
+        errors: list[ExcelCellError],
+        worksheet_table: WorksheetTable,
+    ) -> None:
         """Map cell errors from schema labels to rendered workbook coordinates."""
         for error in errors:
-            for index in self._column_indices(df, error.unique_label):
+            for index in self._column_indices(worksheet_table, error.unique_label):
                 column_index = cast(ColumnIndex, index + len(self.import_result_field_meta))
                 self.cell_errors.setdefault(row_index, {}).setdefault(column_index, []).append(error)
 
     def add_result_columns(
         self,
-        df: WorksheetTable,
+        worksheet_table: WorksheetTable,
         *,
         result_unique_label: UniqueLabel,
         reason_unique_label: UniqueLabel,
@@ -108,7 +113,7 @@ class ImportIssueTracker:
         result: list[str] = []
         reason: list[str] = []
 
-        for index in df.index[extra_header_count_on_import:]:
+        for index in worksheet_table.index[extra_header_count_on_import:]:
             row_errors = self.row_errors.get(RowIndex(index))
             if not row_errors:
                 result.append(str(ValidateRowResult.SUCCESS))
@@ -125,20 +130,20 @@ class ImportIssueTracker:
             result = [str(result_unique_label), *result]
             reason = [str(reason_unique_label), *reason]
 
-        df.insert(loc=0, column=reason_unique_label, value=reason)
-        df.insert(loc=0, column=result_unique_label, value=result)
+        worksheet_table.insert(loc=0, column=reason_unique_label, value=reason)
+        worksheet_table.insert(loc=0, column=result_unique_label, value=result)
 
-    def _column_indices(self, df: WorksheetTable, unique_label: UniqueLabel) -> Iterator[ColumnIndex]:
+    def _column_indices(self, worksheet_table: WorksheetTable, unique_label: UniqueLabel) -> Iterator[ColumnIndex]:
         if unique_label not in self.layout.unique_label_to_field_meta:
             if unique_label not in self.layout.parent_label_to_field_metas:
                 raise ValueError(msg(MessageKey.FIELD_NOT_FOUND, unique_label=unique_label))
 
             for field_meta in self.layout.parent_label_to_field_metas[unique_label]:
-                yield from self._single_column_index(df, field_meta.unique_label)
+                yield from self._single_column_index(worksheet_table, field_meta.unique_label)
             return
 
-        yield from self._single_column_index(df, unique_label)
+        yield from self._single_column_index(worksheet_table, unique_label)
 
     @staticmethod
-    def _single_column_index(df: WorksheetTable, unique_label: UniqueLabel) -> Iterator[ColumnIndex]:
-        yield ColumnIndex(df.columns.get_loc(unique_label))
+    def _single_column_index(worksheet_table: WorksheetTable, unique_label: UniqueLabel) -> Iterator[ColumnIndex]:
+        yield ColumnIndex(worksheet_table.columns.get_loc(unique_label))
