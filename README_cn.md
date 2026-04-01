@@ -5,7 +5,7 @@
 ExcelAlchemy 是一个面向 Excel 导入导出的 schema-first Python 库。
 它的核心思路不是“读写表格文件”，而是“把 Excel 当成一种带约束的业务契约”。
 
-当前稳定发布版本是 `2.0.0.post1`，也就是 ExcelAlchemy 2.0 稳定线的首个 post-release 更新。
+当前稳定发布版本是 `2.1.0`，它在稳定的 ExcelAlchemy 2.x 线上继续推进了内部架构整理和命名收口。
 
 你用 Pydantic 模型定义结构，用 `FieldMeta` 定义 Excel 元数据，用显式的导入/导出流程去完成模板生成、数据校验、错误回写和后端集成。
 

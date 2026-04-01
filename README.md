@@ -16,7 +16,7 @@ This repository is also a design artifact.
 It documents a series of deliberate engineering choices: `src/` layout, Pydantic v2 migration, pandas removal,
 pluggable storage, `uv`-based workflows, and locale-aware workbook output.
 
-The current stable release line is `2.0.0.post1`, the first post-release update to the stable ExcelAlchemy 2.0 line.
+The current stable release line is `2.1.0`, which continues the stable ExcelAlchemy 2.x line with internal architecture cleanup and naming improvements.
 
 ## At a Glance
 
