@@ -73,9 +73,7 @@ class WorkbookPresentationMeta:
 
     character_set: set[CharacterSet] = field(default_factory=lambda: set(CharacterSet))
     fraction_digits: int | None = None
-    timezone: datetime.timezone = field(
-        default_factory=lambda: datetime.timezone(datetime.timedelta(hours=8), 'CST')
-    )
+    timezone: datetime.timezone = field(default_factory=lambda: datetime.timezone(datetime.timedelta(hours=8), 'CST'))
     date_format: DateFormat | None = None
     date_range_option: DataRangeOption | None = None
     options: list[Option] | None = None
