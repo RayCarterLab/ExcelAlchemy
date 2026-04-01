@@ -112,7 +112,7 @@ def _write_header_hint(worksheet: Worksheet, *, column_count: int) -> None:
 
 def _write_simple_header(
     worksheet: Worksheet,
-    df: WorksheetTable,
+    worksheet_table: WorksheetTable,
     field_meta_mapping: dict[UniqueLabel, FieldMetaInfo],
     *,
     column_write_offset: int = 0,
@@ -121,7 +121,7 @@ def _write_simple_header(
     header_row_index = row_write_offset + OPENPYXL_EXCEL_INDEX_START_AT
 
     for openpyxl_col_index, column in enumerate(
-        df.columns[column_write_offset:],
+        worksheet_table.columns[column_write_offset:],
         start=column_write_offset + OPENPYXL_EXCEL_INDEX_START_AT,
     ):
         field_meta = field_meta_mapping[cast(UniqueLabel, column)]
@@ -132,14 +132,14 @@ def _write_simple_header(
 
 def _write_vertically_merged_header(
     worksheet: Worksheet,
-    df: WorksheetTable,
+    worksheet_table: WorksheetTable,
     field_meta_mapping: dict[UniqueLabel, FieldMetaInfo],
     *,
     start_row: int,
     column_write_offset: int,
 ) -> None:
     for openpyxl_col_index, column in enumerate(
-        df.columns[column_write_offset:],
+        worksheet_table.columns[column_write_offset:],
         start=column_write_offset + OPENPYXL_EXCEL_INDEX_START_AT,
     ):
         field_meta = field_meta_mapping[cast(UniqueLabel, column)]
@@ -154,7 +154,7 @@ def _write_vertically_merged_header(
 
 def _write_horizontally_merged_header(
     worksheet: Worksheet,
-    df: WorksheetTable,
+    worksheet_table: WorksheetTable,
     field_meta_mapping: dict[UniqueLabel, FieldMetaInfo],
     *,
     start_row: int,
@@ -167,7 +167,7 @@ def _write_horizontally_merged_header(
         counter[field_meta.parent_label] += 1
 
     for openpyxl_col_index, column in enumerate(
-        df.columns[column_write_offset:],
+        worksheet_table.columns[column_write_offset:],
         start=column_write_offset + OPENPYXL_EXCEL_INDEX_START_AT,
     ):
         field_meta = field_meta_mapping[cast(UniqueLabel, column)]
@@ -187,7 +187,7 @@ def _write_horizontally_merged_header(
 
 def _write_merged_header(
     worksheet: Worksheet,
-    df: WorksheetTable,
+    worksheet_table: WorksheetTable,
     field_meta_mapping: dict[UniqueLabel, FieldMetaInfo],
     *,
     column_write_offset: int = 0,
@@ -195,14 +195,14 @@ def _write_merged_header(
 ) -> None:
     _write_simple_header(
         worksheet,
-        df,
+        worksheet_table,
         field_meta_mapping,
         column_write_offset=column_write_offset,
         row_write_offset=row_write_offset,
     )
 
     child_row_index = row_write_offset + OPENPYXL_EXCEL_INDEX_START_AT + 1
-    child_headers = df.iloc[0].tolist()
+    child_headers = worksheet_table.iloc[0].tolist()
     for column_index, child_value in enumerate(child_headers, start=OPENPYXL_EXCEL_INDEX_START_AT):
         cell = _worksheet_cell(worksheet, row=child_row_index, column=column_index + column_write_offset)
         cell.value = str(child_value)
@@ -211,14 +211,14 @@ def _write_merged_header(
     start_row = row_write_offset + OPENPYXL_EXCEL_INDEX_START_AT
     _write_vertically_merged_header(
         worksheet,
-        df,
+        worksheet_table,
         field_meta_mapping,
         start_row=start_row,
         column_write_offset=column_write_offset,
     )
     _write_horizontally_merged_header(
         worksheet,
-        df,
+        worksheet_table,
         field_meta_mapping,
         start_row=start_row,
         column_write_offset=column_write_offset,
@@ -226,17 +226,17 @@ def _write_merged_header(
 
 
 def _get_parsed_value(
-    df: WorksheetTable,
+    worksheet_table: WorksheetTable,
     row_index: int,
     col_index: int,
     field_meta_mapping: dict[UniqueLabel, FieldMetaInfo],
 ) -> str:
-    cell_value: str | Any | None = df.iloc[row_index, col_index]
+    cell_value: str | Any | None = worksheet_table.iloc[row_index, col_index]
 
     if value_is_nan(cell_value):
         return ''
 
-    col_label = cast(UniqueLabel, df.columns[col_index])
+    col_label = cast(UniqueLabel, worksheet_table.columns[col_index])
     if col_label not in field_meta_mapping:
         return str(cell_value)
 
@@ -269,7 +269,7 @@ def _mark_error(
 
 
 def _write_value(
-    df: WorksheetTable,
+    worksheet_table: WorksheetTable,
     worksheet: Worksheet,
     field_meta_mapping: dict[UniqueLabel, FieldMetaInfo],
     *,
@@ -279,17 +279,17 @@ def _write_value(
 ) -> None:
     col_width_mapping: dict[ColumnIndex, float] = defaultdict(float)
 
-    for row_index in range(table_data_start_index, df.shape[0]):
-        for column_index in range(df.shape[1]):
+    for row_index in range(table_data_start_index, worksheet_table.shape[0]):
+        for column_index in range(worksheet_table.shape[1]):
             openpyxl_col_index = column_index + column_write_offset + OPENPYXL_EXCEL_INDEX_START_AT
             openpyxl_row_index = row_index + row_write_offset + OPENPYXL_EXCEL_INDEX_START_AT
 
             cell = _worksheet_cell(worksheet, row=openpyxl_row_index, column=openpyxl_col_index)
-            cell.value = _get_parsed_value(df, row_index, column_index, field_meta_mapping)
+            cell.value = _get_parsed_value(worksheet_table, row_index, column_index, field_meta_mapping)
             cell.number_format = numbers.FORMAT_TEXT
             cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
 
-            if dmsg(MessageKey.RESULT_COLUMN_LABEL) == df.columns[column_index] and cell.value == str(
+            if dmsg(MessageKey.RESULT_COLUMN_LABEL) == worksheet_table.columns[column_index] and cell.value == str(
                 ValidateRowResult.FAIL
             ):
                 cell.font = Font(color=FONT_READ_COLOR)
@@ -297,7 +297,7 @@ def _write_value(
             col_width_mapping[ColumnIndex(openpyxl_col_index)] = max(
                 col_width_mapping[ColumnIndex(openpyxl_col_index)],
                 max(len(str(part)) for part in str(cell.value).split('\n')),
-                len(str(df.columns[column_index])),
+                len(str(worksheet_table.columns[column_index])),
             )
 
     for openpyxl_col_index, width in col_width_mapping.items():
@@ -308,7 +308,7 @@ def _write_value(
 
 def _write_value_mark_error(
     worksheet: Worksheet,
-    df: WorksheetTable,
+    worksheet_table: WorksheetTable,
     errors: dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]],
     field_meta_mapping: dict[UniqueLabel, FieldMetaInfo],
     *,
@@ -323,7 +323,7 @@ def _write_value_mark_error(
         row_write_offset=row_write_offset,
     )
     _write_value(
-        df,
+        worksheet_table,
         worksheet,
         field_meta_mapping,
         table_data_start_index=table_data_start_index,
@@ -333,7 +333,7 @@ def _write_value_mark_error(
 
 
 def render_simple_header_excel(
-    df: WorksheetTable,
+    worksheet_table: WorksheetTable,
     field_meta_mapping: dict[UniqueLabel, FieldMetaInfo],
     sheet_name: str = DEFAULT_SHEET_NAME,
     file: BinaryIO | None = None,
@@ -345,16 +345,16 @@ def render_simple_header_excel(
 
     tmp = _get_file(file)
     workbook, worksheet = _create_workbook(sheet_name)
-    _write_header_hint(worksheet, column_count=len(df.columns))
+    _write_header_hint(worksheet, column_count=len(worksheet_table.columns))
     _write_simple_header(
         worksheet,
-        df,
+        worksheet_table,
         field_meta_mapping,
         column_write_offset=column_write_offset,
         row_write_offset=HEADER_HINT_LINE_COUNT,
     )
     _write_value(
-        df,
+        worksheet_table,
         worksheet,
         field_meta_mapping,
         table_data_start_index=0,
@@ -366,7 +366,7 @@ def render_simple_header_excel(
 
 
 def render_merged_header_excel(
-    df: WorksheetTable,
+    worksheet_table: WorksheetTable,
     field_meta_mapping: dict[UniqueLabel, FieldMetaInfo],
     sheet_name: str = DEFAULT_SHEET_NAME,
     file: BinaryIO | None = None,
@@ -378,16 +378,16 @@ def render_merged_header_excel(
 
     tmp = _get_file(file)
     workbook, worksheet = _create_workbook(sheet_name)
-    _write_header_hint(worksheet, column_count=len(df.columns))
+    _write_header_hint(worksheet, column_count=len(worksheet_table.columns))
     _write_merged_header(
         worksheet,
-        df,
+        worksheet_table,
         field_meta_mapping,
         column_write_offset=column_write_offset,
         row_write_offset=HEADER_HINT_LINE_COUNT,
     )
     _write_value(
-        df,
+        worksheet_table,
         worksheet,
         field_meta_mapping,
         table_data_start_index=1,
@@ -399,7 +399,7 @@ def render_merged_header_excel(
 
 
 def render_data_excel(
-    df: WorksheetTable,
+    worksheet_table: WorksheetTable,
     errors: dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]],
     field_meta_mapping: dict[UniqueLabel, FieldMetaInfo],
     sheet_name: str = DEFAULT_SHEET_NAME,
@@ -412,13 +412,13 @@ def render_data_excel(
 
     tmp = _get_file(file)
     workbook, worksheet = _create_workbook(sheet_name)
-    _write_header_hint(worksheet, column_count=len(df.columns))
+    _write_header_hint(worksheet, column_count=len(worksheet_table.columns))
 
     if has_merged_header:
         table_data_start_index = 1
         _write_merged_header(
             worksheet,
-            df,
+            worksheet_table,
             field_meta_mapping,
             row_write_offset=HEADER_HINT_LINE_COUNT,
         )
@@ -426,14 +426,14 @@ def render_data_excel(
         table_data_start_index = 0
         _write_simple_header(
             worksheet,
-            df,
+            worksheet_table,
             field_meta_mapping,
             row_write_offset=HEADER_HINT_LINE_COUNT,
         )
 
     _write_value_mark_error(
         worksheet,
-        df,
+        worksheet_table,
         errors,
         field_meta_mapping,
         row_write_offset=HEADER_HINT_LINE_COUNT + SIMPLE_HEADER_ROW_COUNT,

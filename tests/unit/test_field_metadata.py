@@ -337,3 +337,38 @@ class TestFieldMetadata(BaseTestCase):
         assert field_meta.label == '邮箱'
         assert field_meta.excel_codec is Email
         assert field_meta.comment_max_length == '最大长度：10'
+
+    async def test_field_metadata_exposes_split_internal_layers(self):
+        class Importer(BaseModel):
+            email: Email = FieldMeta(
+                label='邮箱',
+                order=1,
+                unique=True,
+                hint='请输入邮箱',
+                max_length=10,
+            )
+
+        alchemy = self.build_alchemy(Importer)
+        field_meta = alchemy.ordered_field_meta[0]
+
+        assert field_meta.declared_meta.label == '邮箱'
+        assert field_meta.declared_meta.unique
+        assert field_meta.runtime_binding.parent_label == '邮箱'
+        assert field_meta.runtime_binding.parent_key == 'email'
+        assert field_meta.presentation_meta.hint == '请输入邮箱'
+        assert field_meta.import_constraints.max_length == 10
+
+    async def test_clone_keeps_split_internal_layers_independent(self):
+        class Importer(BaseModel):
+            email: Email = FieldMeta(label='邮箱', order=1, hint='原始提示')
+
+        alchemy = self.build_alchemy(Importer)
+        original = alchemy.ordered_field_meta[0]
+        cloned = original.clone()
+        cloned.hint = '新提示'
+        cloned.parent_label = '父'
+
+        assert original.hint == '原始提示'
+        assert original.parent_label == '邮箱'
+        assert cloned.hint == '新提示'
+        assert cloned.parent_label == '父'

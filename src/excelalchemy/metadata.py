@@ -4,6 +4,7 @@ import copy
 import datetime
 import logging
 from collections.abc import Callable, Mapping, Set
+from dataclasses import dataclass, field
 from functools import cached_property
 from typing import Any, Self, cast
 
@@ -43,6 +44,60 @@ class PatchFieldMeta(BaseModel):
     options: list[Option] | None = None
 
 
+@dataclass(slots=True)
+class DeclaredFieldMeta:
+    """Static workbook field declaration supplied by user code."""
+
+    label: Label
+    is_primary_key: bool
+    unique: bool
+    ignore_import: bool
+    required: bool | None
+    order: int
+
+
+@dataclass(slots=True)
+class RuntimeFieldBinding:
+    """Runtime identity assigned after schema extraction flattens the model."""
+
+    parent_label: Label | None = None
+    key: Key | None = None
+    parent_key: Key | None = None
+    offset: int = DEFAULT_FIELD_META_ORDER
+    excel_codec: type[ExcelFieldCodec] = UndefinedFieldCodec
+
+
+@dataclass(slots=True)
+class WorkbookPresentationMeta:
+    """Workbook-facing comment and formatting metadata."""
+
+    character_set: set[CharacterSet] = field(default_factory=lambda: set(CharacterSet))
+    fraction_digits: int | None = None
+    timezone: datetime.timezone = field(
+        default_factory=lambda: datetime.timezone(datetime.timedelta(hours=8), 'CST')
+    )
+    date_format: DateFormat | None = None
+    date_range_option: DataRangeOption | None = None
+    options: list[Option] | None = None
+    unit: str | None = None
+    hint: str | None = None
+
+
+@dataclass(slots=True)
+class ImportConstraints:
+    """Importer-side validation hints mirrored from Pydantic constraints."""
+
+    ge: float | None = None
+    le: float | None = None
+    max_digits: int | None = None
+    decimal_places: int | None = None
+    min_items: int | None = None
+    max_items: int | None = None
+    unique_items: bool | None = None
+    min_length: int | None = None
+    max_length: int | None = None
+
+
 class FieldMetaInfo:
     """Excel field metadata independent from any validation backend."""
 
@@ -73,42 +128,39 @@ class FieldMetaInfo:
         min_length: int | None = None,
         max_length: int | None = None,
     ) -> None:
-        self.label = Label(label)
-        self.is_primary_key = is_primary_key
-        self.parent_label: Label | None = None
-
-        self.key: Key | None = None
-        self.parent_key: Key | None = None
-
-        self.offset = DEFAULT_FIELD_META_ORDER
-        self._excel_codec: type[ExcelFieldCodec] = UndefinedFieldCodec
-        self.unique = unique or is_primary_key
-
-        self.required = required
-        self.ignore_import = ignore_import
-        self.order = order
-
-        self.character_set = character_set or set(CharacterSet)
-        self.fraction_digits = fraction_digits
-        self.timezone = timezone or datetime.timezone(datetime.timedelta(hours=8), 'CST')
-        self.date_format = date_format
-        self.date_range_option = date_range_option
-        self.options = options
-        self.unit = unit
-        self.hint = hint
-
-        self.importer_ge = ge
-        self.importer_le = le
-        self.importer_max_digits = max_digits
-        self.importer_decimal_places = decimal_places
-        self.importer_min_length = min_length
-        self.importer_max_length = max_length
-        self.importer_min_items = min_items
-        self.importer_max_items = max_items
-        self.importer_unique_items = unique_items
+        self.declared_meta = DeclaredFieldMeta(
+            label=Label(label),
+            is_primary_key=is_primary_key,
+            unique=unique or is_primary_key,
+            ignore_import=ignore_import,
+            required=required,
+            order=order,
+        )
+        self.runtime_binding = RuntimeFieldBinding()
+        self.presentation_meta = WorkbookPresentationMeta(
+            character_set=character_set or set(CharacterSet),
+            fraction_digits=fraction_digits,
+            timezone=timezone or datetime.timezone(datetime.timedelta(hours=8), 'CST'),
+            date_format=date_format,
+            date_range_option=date_range_option,
+            options=options,
+            unit=unit,
+            hint=hint,
+        )
+        self.import_constraints = ImportConstraints(
+            ge=ge,
+            le=le,
+            max_digits=max_digits,
+            decimal_places=decimal_places,
+            min_items=min_items,
+            max_items=max_items,
+            unique_items=unique_items,
+            min_length=min_length,
+            max_length=max_length,
+        )
 
     def clone(self) -> Self:
-        return copy.copy(self)
+        return copy.deepcopy(self)
 
     def inherited_from(self, parent: Self) -> Self:
         runtime = self.clone()
@@ -142,11 +194,11 @@ class FieldMetaInfo:
 
     @property
     def excel_codec(self) -> type[ExcelFieldCodec]:
-        return self._excel_codec
+        return self.runtime_binding.excel_codec
 
     @excel_codec.setter
     def excel_codec(self, value: type[ExcelFieldCodec]) -> None:
-        self._excel_codec = value
+        self.runtime_binding.excel_codec = value
 
     @property
     def value_type(self) -> type[ExcelFieldCodec]:
@@ -326,6 +378,222 @@ class FieldMetaInfo:
         )
 
     __str__ = __repr__
+
+    @property
+    def label(self) -> Label:
+        return self.declared_meta.label
+
+    @label.setter
+    def label(self, value: str | Label) -> None:
+        self.declared_meta.label = Label(value)
+
+    @property
+    def is_primary_key(self) -> bool:
+        return self.declared_meta.is_primary_key
+
+    @is_primary_key.setter
+    def is_primary_key(self, value: bool) -> None:
+        self.declared_meta.is_primary_key = value
+
+    @property
+    def unique(self) -> bool:
+        return self.declared_meta.unique
+
+    @unique.setter
+    def unique(self, value: bool) -> None:
+        self.declared_meta.unique = value
+
+    @property
+    def ignore_import(self) -> bool:
+        return self.declared_meta.ignore_import
+
+    @ignore_import.setter
+    def ignore_import(self, value: bool) -> None:
+        self.declared_meta.ignore_import = value
+
+    @property
+    def required(self) -> bool | None:
+        return self.declared_meta.required
+
+    @required.setter
+    def required(self, value: bool | None) -> None:
+        self.declared_meta.required = value
+
+    @property
+    def order(self) -> int:
+        return self.declared_meta.order
+
+    @order.setter
+    def order(self, value: int) -> None:
+        self.declared_meta.order = value
+
+    @property
+    def parent_label(self) -> Label | None:
+        return self.runtime_binding.parent_label
+
+    @parent_label.setter
+    def parent_label(self, value: Label | None) -> None:
+        self.runtime_binding.parent_label = value
+
+    @property
+    def key(self) -> Key | None:
+        return self.runtime_binding.key
+
+    @key.setter
+    def key(self, value: Key | None) -> None:
+        self.runtime_binding.key = value
+
+    @property
+    def parent_key(self) -> Key | None:
+        return self.runtime_binding.parent_key
+
+    @parent_key.setter
+    def parent_key(self, value: Key | None) -> None:
+        self.runtime_binding.parent_key = value
+
+    @property
+    def offset(self) -> int:
+        return self.runtime_binding.offset
+
+    @offset.setter
+    def offset(self, value: int) -> None:
+        self.runtime_binding.offset = value
+
+    @property
+    def character_set(self) -> set[CharacterSet]:
+        return self.presentation_meta.character_set
+
+    @character_set.setter
+    def character_set(self, value: set[CharacterSet]) -> None:
+        self.presentation_meta.character_set = value
+
+    @property
+    def fraction_digits(self) -> int | None:
+        return self.presentation_meta.fraction_digits
+
+    @fraction_digits.setter
+    def fraction_digits(self, value: int | None) -> None:
+        self.presentation_meta.fraction_digits = value
+
+    @property
+    def timezone(self) -> datetime.timezone:
+        return self.presentation_meta.timezone
+
+    @timezone.setter
+    def timezone(self, value: datetime.timezone) -> None:
+        self.presentation_meta.timezone = value
+
+    @property
+    def date_format(self) -> DateFormat | None:
+        return self.presentation_meta.date_format
+
+    @date_format.setter
+    def date_format(self, value: DateFormat | None) -> None:
+        self.presentation_meta.date_format = value
+
+    @property
+    def date_range_option(self) -> DataRangeOption | None:
+        return self.presentation_meta.date_range_option
+
+    @date_range_option.setter
+    def date_range_option(self, value: DataRangeOption | None) -> None:
+        self.presentation_meta.date_range_option = value
+
+    @property
+    def options(self) -> list[Option] | None:
+        return self.presentation_meta.options
+
+    @options.setter
+    def options(self, value: list[Option] | None) -> None:
+        self.presentation_meta.options = value
+
+    @property
+    def unit(self) -> str | None:
+        return self.presentation_meta.unit
+
+    @unit.setter
+    def unit(self, value: str | None) -> None:
+        self.presentation_meta.unit = value
+
+    @property
+    def hint(self) -> str | None:
+        return self.presentation_meta.hint
+
+    @hint.setter
+    def hint(self, value: str | None) -> None:
+        self.presentation_meta.hint = value
+
+    @property
+    def importer_ge(self) -> float | None:
+        return self.import_constraints.ge
+
+    @importer_ge.setter
+    def importer_ge(self, value: float | None) -> None:
+        self.import_constraints.ge = value
+
+    @property
+    def importer_le(self) -> float | None:
+        return self.import_constraints.le
+
+    @importer_le.setter
+    def importer_le(self, value: float | None) -> None:
+        self.import_constraints.le = value
+
+    @property
+    def importer_max_digits(self) -> int | None:
+        return self.import_constraints.max_digits
+
+    @importer_max_digits.setter
+    def importer_max_digits(self, value: int | None) -> None:
+        self.import_constraints.max_digits = value
+
+    @property
+    def importer_decimal_places(self) -> int | None:
+        return self.import_constraints.decimal_places
+
+    @importer_decimal_places.setter
+    def importer_decimal_places(self, value: int | None) -> None:
+        self.import_constraints.decimal_places = value
+
+    @property
+    def importer_min_length(self) -> int | None:
+        return self.import_constraints.min_length
+
+    @importer_min_length.setter
+    def importer_min_length(self, value: int | None) -> None:
+        self.import_constraints.min_length = value
+
+    @property
+    def importer_max_length(self) -> int | None:
+        return self.import_constraints.max_length
+
+    @importer_max_length.setter
+    def importer_max_length(self, value: int | None) -> None:
+        self.import_constraints.max_length = value
+
+    @property
+    def importer_min_items(self) -> int | None:
+        return self.import_constraints.min_items
+
+    @importer_min_items.setter
+    def importer_min_items(self, value: int | None) -> None:
+        self.import_constraints.min_items = value
+
+    @property
+    def importer_max_items(self) -> int | None:
+        return self.import_constraints.max_items
+
+    @importer_max_items.setter
+    def importer_max_items(self, value: int | None) -> None:
+        self.import_constraints.max_items = value
+
+    @property
+    def importer_unique_items(self) -> bool | None:
+        return self.import_constraints.unique_items
+
+    @importer_unique_items.setter
+    def importer_unique_items(self, value: bool | None) -> None:
+        self.import_constraints.unique_items = value
 
 
 def extract_declared_field_metadata(field_info: FieldInfo) -> FieldMetaInfo:

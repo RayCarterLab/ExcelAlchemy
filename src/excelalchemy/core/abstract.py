@@ -11,11 +11,9 @@ from excelalchemy.results import ImportResult
 
 class ABCExcelAlchemy[
     ContextT,
-    ImporterCreateModelT: BaseModel,
-    ImporterUpdateModelT: BaseModel,
-    CreateModelT: BaseModel,
-    UpdateModelT: BaseModel,
-    ExporterModelT: BaseModel,
+    ImportCreateModelT: BaseModel,
+    ImportUpdateModelT: BaseModel,
+    ExportModelT: BaseModel,
 ](ABC):
     @abstractmethod
     def download_template(self, sample_data: list[ExportRowPayload] | None = None) -> DataUrlStr:

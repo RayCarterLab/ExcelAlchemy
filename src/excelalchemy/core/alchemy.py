@@ -1,6 +1,5 @@
 import logging
-from collections.abc import Iterable, Sequence
-from functools import cached_property
+from collections.abc import Sequence
 from typing import cast
 
 from pydantic import BaseModel
@@ -10,16 +9,15 @@ from excelalchemy._primitives.constants import (
     RESULT_COLUMN_KEY,
 )
 from excelalchemy._primitives.header_models import ExcelHeader
-from excelalchemy._primitives.identity import DataUrlStr, Label, RowIndex, UniqueKey, UniqueLabel, UrlStr
-from excelalchemy._primitives.payloads import DataConverter, ExportRowPayload, FlatRowPayload, ModelRowPayload
+from excelalchemy._primitives.identity import ColumnIndex, DataUrlStr, Label, RowIndex, UniqueKey, UniqueLabel, UrlStr
+from excelalchemy._primitives.payloads import DataConverter, ExportRowPayload
 from excelalchemy.artifacts import ExcelArtifact
 from excelalchemy.codecs.base import SystemReserved
 from excelalchemy.config import ExcelMode, ExporterConfig, ImporterConfig, ImportMode
 from excelalchemy.core.abstract import ABCExcelAlchemy
-from excelalchemy.core.executor import ImportExecutor
 from excelalchemy.core.headers import ExcelHeaderParser, ExcelHeaderValidator
+from excelalchemy.core.import_session import ImportSession, build_import_result_field_meta
 from excelalchemy.core.rendering import ExcelRenderer
-from excelalchemy.core.rows import ImportIssueTracker, RowAggregator
 from excelalchemy.core.schema import ExcelSchemaLayout
 from excelalchemy.core.storage import build_storage_gateway
 from excelalchemy.core.storage_protocol import ExcelStorage
@@ -30,7 +28,7 @@ from excelalchemy.i18n.messages import MessageKey, use_display_locale
 from excelalchemy.i18n.messages import display_message as dmsg
 from excelalchemy.i18n.messages import message as msg
 from excelalchemy.metadata import FieldMetaInfo
-from excelalchemy.results import ImportResult, ValidateHeaderResult, ValidateResult
+from excelalchemy.results import ImportResult
 from excelalchemy.util.file import flatten
 
 HEADER_HINT_LINE_COUNT = 1
@@ -48,33 +46,30 @@ REASON_COLUMN.excel_codec = SystemReserved
 
 class ExcelAlchemy[
     ContextT,
-    ImporterCreateModelT: BaseModel,
-    ImporterUpdateModelT: BaseModel,
-    CreateModelT: BaseModel,
-    UpdateModelT: BaseModel,
-    ExporterModelT: BaseModel,
+    ImportCreateModelT: BaseModel,
+    ImportUpdateModelT: BaseModel,
+    ExportModelT: BaseModel,
 ](
     ABCExcelAlchemy[
         ContextT,
-        ImporterCreateModelT,
-        ImporterUpdateModelT,
-        CreateModelT,
-        UpdateModelT,
-        ExporterModelT,
+        ImportCreateModelT,
+        ImportUpdateModelT,
+        ExportModelT,
     ]
 ):
     def __init__(
         self,
-        config: ImporterConfig[ContextT, ImporterCreateModelT, ImporterUpdateModelT] | ExporterConfig[ExporterModelT],
+        config: ImporterConfig[ContextT, ImportCreateModelT, ImportUpdateModelT] | ExporterConfig[ExportModelT],
     ):
-        self.df = WorksheetTable()
-        self.header_df = WorksheetTable()
+        runtime_config = cast(object, config)
+        if not isinstance(runtime_config, (ImporterConfig, ExporterConfig)):
+            raise ConfigError(msg(MessageKey.EXPORT_MODE_CONFIG_REQUIRED, config_name=ExporterConfig.__name__))
         self.config = config
-        self.context: ContextT | None = None
-        self.locale = getattr(config, 'locale', 'zh-CN')
-        self.__state_df_has_been_loaded__ = False
+        self.locale = config.schema_options.locale
+        self._context: ContextT | None = getattr(config.behavior, 'context', None)
+        self._last_import_session: ImportSession[ContextT, ImportCreateModelT, ImportUpdateModelT] | None = None
 
-        self.import_result_field_meta = self._build_import_result_field_meta()
+        self.import_result_field_meta = build_import_result_field_meta(locale=self.locale)
         self.import_result_label_to_field_meta = {
             field_meta.unique_label: field_meta for field_meta in self.import_result_field_meta
         }
@@ -84,26 +79,14 @@ class ExcelAlchemy[
         self._renderer = ExcelRenderer()
         self._storage_gateway: ExcelStorage = build_storage_gateway(config)
         self._layout: ExcelSchemaLayout
-        self._issue_tracker: ImportIssueTracker | None = None
-        self._row_aggregator: RowAggregator | None = None
-        self._executor: ImportExecutor[ContextT, ImporterCreateModelT, ImporterUpdateModelT] | None = None
 
         self.__init_from_config__()
 
     def __init_from_config__(self) -> None:
-        self.context = getattr(self.config, 'context', None)
         model = self.__get_importer_model__()
         with use_display_locale(self.locale):
             self._layout = ExcelSchemaLayout.from_model(model)
         self.__sync_layout_state__()
-
-        self._issue_tracker = ImportIssueTracker(self._layout, self.import_result_field_meta)
-        self.cell_errors = self._issue_tracker.cell_errors
-        self.row_errors = self._issue_tracker.row_errors
-
-        if isinstance(self.config, ImporterConfig):
-            self._row_aggregator = RowAggregator(self._layout, self.config.import_mode)
-            self._executor = ImportExecutor(self.config, self._issue_tracker, lambda: self.context)
 
     def __sync_layout_state__(self) -> None:
         self.field_metas = self._layout.field_metas
@@ -113,34 +96,19 @@ class ExcelAlchemy[
         self.unique_key_to_field_meta = self._layout.unique_key_to_field_meta
         self.ordered_field_meta = self._layout.ordered_field_meta
 
-    def _reset_import_runtime_state(self) -> None:
-        self.df = WorksheetTable()
-        self.header_df = WorksheetTable()
-        self.__state_df_has_been_loaded__ = False
-        runtime_state = vars(self)
-        runtime_state.pop('input_excel_has_merged_header', None)
-        runtime_state.pop('input_excel_headers', None)
-
-        self._issue_tracker = ImportIssueTracker(self._layout, self.import_result_field_meta)
-        self.cell_errors = self._issue_tracker.cell_errors
-        self.row_errors = self._issue_tracker.row_errors
-
-        if isinstance(self.config, ImporterConfig):
-            self._executor = ImportExecutor(self.config, self._issue_tracker, lambda: self.context)
-
-    def __get_importer_model__(self) -> type[ImporterCreateModelT] | type[ImporterUpdateModelT] | type[ExporterModelT]:
+    def __get_importer_model__(self) -> type[ImportCreateModelT] | type[ImportUpdateModelT] | type[ExportModelT]:
         importer_model = None
         if self.excel_mode == ExcelMode.IMPORT:
             if not isinstance(self.config, ImporterConfig):
                 raise ConfigError(msg(MessageKey.IMPORT_MODE_CONFIG_REQUIRED, config_name=ImporterConfig.__name__))
-            if self.config.import_mode in (ImportMode.CREATE, ImportMode.CREATE_OR_UPDATE):
-                importer_model = self.config.create_importer_model  # type: ignore[assignment]
-            elif self.config.import_mode == ImportMode.UPDATE:
-                importer_model = self.config.update_importer_model  # type: ignore[assignment]
+            if self.config.behavior.import_mode in (ImportMode.CREATE, ImportMode.CREATE_OR_UPDATE):
+                importer_model = self.config.schema_options.create_importer_model  # type: ignore[assignment]
+            elif self.config.behavior.import_mode == ImportMode.UPDATE:
+                importer_model = self.config.schema_options.update_importer_model  # type: ignore[assignment]
         elif self.excel_mode == ExcelMode.EXPORT:
             if not isinstance(self.config, ExporterConfig):
                 raise ConfigError(msg(MessageKey.EXPORT_MODE_CONFIG_REQUIRED, config_name=ExporterConfig.__name__))
-            importer_model = self.config.exporter_model  # type: ignore[assignment]
+            importer_model = self.config.schema_options.exporter_model  # type: ignore[assignment]
 
         if importer_model is None:
             raise ConfigError(msg(MessageKey.NO_IMPORTER_OR_EXPORTER_MODEL_CONFIGURED))
@@ -154,11 +122,13 @@ class ExcelAlchemy[
             keys = self._select_output_excel_keys()
             has_merged_header = self.has_merged_header(keys)
             if has_merged_header:
-                df = self._export_with_merged_header(sample_data, keys)
+                worksheet_table = self._export_with_merged_header(sample_data, keys)
             else:
-                df = self._export_with_simple_header(sample_data, keys)
+                worksheet_table = self._export_with_simple_header(sample_data, keys)
             return self._renderer.render_template(
-                df, self.unique_label_to_field_meta, has_merged_header=has_merged_header
+                worksheet_table,
+                self.unique_label_to_field_meta,
+                has_merged_header=has_merged_header,
             )
 
     def download_template_artifact(
@@ -174,46 +144,15 @@ class ExcelAlchemy[
         if self.excel_mode != ExcelMode.IMPORT:
             raise ConfigError(msg(MessageKey.IMPORT_MODE_ONLY_METHOD))
 
-        self._reset_import_runtime_state()
-        assert self._executor is not None
-
-        with use_display_locale(self.locale):
-            validate_header = self._validate_header(input_excel_name)
-            if not validate_header.is_valid:
-                return ImportResult.from_validate_header_result(validate_header)
-
-            self.df = self.df.iloc[1:]
-            self._set_columns(self.df)
-            self.df = self.df.reset_index(drop=True)
-
-            all_success, success_count, fail_count = True, 0, 0
-            for table_row_index in range(self.extra_header_count_on_import, len(self.df)):
-                row = self.df.row_at(table_row_index)
-                aggregate_data = self._aggregate_data(cast(FlatRowPayload, row.to_dict()))
-                success = await self._executor.execute(RowIndex(table_row_index), aggregate_data, self.df)
-                all_success = all_success and success
-                success_count, fail_count = (
-                    (success_count + 1, fail_count) if success else (success_count, fail_count + 1)
-                )
-
-            url = None
-            if not all_success:
-                self._add_result_column()
-                content_with_prefix = self._render_import_result_excel()
-                url = self._upload_file(output_excel_name, content_with_prefix)
-
-            return ImportResult(
-                result=(ValidateResult.DATA_INVALID, ValidateResult.SUCCESS)[int(all_success)],
-                url=url,
-                success_count=success_count,
-                fail_count=fail_count,
-            )
+        session = self._new_import_session()
+        self._last_import_session = session
+        return await session.run(input_excel_name, output_excel_name)
 
     def export(self, data: list[ExportRowPayload], keys: Sequence[str] | None = None) -> DataUrlStr:
         with use_display_locale(self.locale):
-            df, has_merged_header = self._gen_export_df(data, keys)
+            worksheet_table, has_merged_header = self._gen_export_df(data, keys)
             return self._renderer.render_data(
-                df,
+                worksheet_table,
                 field_meta_mapping=self.unique_label_to_field_meta,
                 has_merged_header=has_merged_header,
                 errors={},
@@ -234,21 +173,57 @@ class ExcelAlchemy[
         return self._upload_file(output_name, self.export(data, keys))
 
     def add_context(self, context: ContextT) -> None:
-        if self.context is not None:
+        if self._context is not None:
             logging.warning('An existing conversion context is being replaced')
-        self.context = context
+        self._context = context
+        if self._last_import_session is not None:
+            self._last_import_session.context = context
 
-    @cached_property
+    @property
+    def context(self) -> ContextT | None:
+        return self._context
+
+    @property
+    def df(self) -> WorksheetTable:
+        """Backward-compatible alias for worksheet_table."""
+        if self._last_import_session is None:
+            return WorksheetTable()
+        return self._last_import_session.worksheet_table
+
+    @property
+    def worksheet_table(self) -> WorksheetTable:
+        return self.df
+
+    @property
+    def header_df(self) -> WorksheetTable:
+        """Backward-compatible alias for header_table."""
+        if self._last_import_session is None:
+            return WorksheetTable()
+        return self._last_import_session.header_table
+
+    @property
+    def header_table(self) -> WorksheetTable:
+        return self.header_df
+
+    @property
+    def cell_errors(self) -> dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]]:
+        if self._last_import_session is None:
+            return {}
+        return self._last_import_session.cell_errors
+
+    @property
+    def row_errors(self) -> dict[RowIndex, list[ExcelRowError | ExcelCellError]]:
+        if self._last_import_session is None:
+            return {}
+        return self._last_import_session.row_errors
+
+    @property
     def input_excel_has_merged_header(self) -> bool:
-        if not self.__state_df_has_been_loaded__:
-            raise ConfigError(msg(MessageKey.WORKSHEET_TABLE_NOT_LOADED))
-        return self._header_parser.has_merged_header(self.header_df)
+        return self._require_last_import_session().input_excel_has_merged_header
 
-    @cached_property
+    @property
     def input_excel_headers(self) -> list[ExcelHeader]:
-        if not self.__state_df_has_been_loaded__:
-            raise ConfigError(msg(MessageKey.WORKSHEET_TABLE_NOT_LOADED))
-        return self._header_parser.extract(self.header_df)
+        return self._require_last_import_session().input_excel_headers
 
     @property
     def excel_mode(self) -> ExcelMode:
@@ -260,26 +235,22 @@ class ExcelAlchemy[
     def extra_header_count_on_import(self) -> int:
         if self.excel_mode != ExcelMode.IMPORT:
             raise ConfigError(msg(MessageKey.IMPORT_MODE_ONLY_PROPERTY))
-
-        for input_excel_label in self.input_excel_headers:
-            if input_excel_label.label != input_excel_label.parent_label:
-                return 1
-        return 0
+        return self._require_last_import_session().extra_header_count_on_import
 
     @property
-    def exporter_model(self) -> type[ExporterModelT]:
+    def exporter_model(self) -> type[ExportModelT]:
         if isinstance(self.config, ImporterConfig):
-            if self.config.create_importer_model and self.config.update_importer_model:
+            if self.config.schema_options.create_importer_model and self.config.schema_options.update_importer_model:
                 raise ConfigError(msg(MessageKey.EXPORTER_MODEL_INFERENCE_CONFLICT))
-            if self.config.create_importer_model:
+            if self.config.schema_options.create_importer_model:
                 logging.info('Inferring exporter_model from create_importer_model')
-                return cast(type[ExporterModelT], self.config.create_importer_model)
-            if self.config.update_importer_model:
+                return cast(type[ExportModelT], self.config.schema_options.create_importer_model)
+            if self.config.schema_options.update_importer_model:
                 logging.info('Inferring exporter_model from update_importer_model')
-                return cast(type[ExporterModelT], self.config.update_importer_model)
+                return cast(type[ExportModelT], self.config.schema_options.update_importer_model)
             raise ConfigError(msg(MessageKey.EXPORTER_MODEL_CANNOT_BE_INFERRED))
 
-        return self.config.exporter_model
+        return self.config.schema_options.exporter_model
 
     def has_merged_header(self, selected_keys: list[UniqueKey]) -> bool:
         return self._layout.has_merged_header(selected_keys)
@@ -314,50 +285,17 @@ class ExcelAlchemy[
         selected_keys = self._select_output_excel_keys(list(set(input_keys).intersection(set(model_keys))))
         has_merged_header = self.has_merged_header(selected_keys)
         if has_merged_header:
-            df = self._export_with_merged_header(data, selected_keys, self.config.data_converter)
+            worksheet_table = self._export_with_merged_header(data, selected_keys, self.config.behavior.data_converter)
         else:
-            df = self._export_with_simple_header(data, selected_keys, self.config.data_converter)
-        return df, has_merged_header
-
-    def _validate_header(self, input_excel_name: str) -> ValidateHeaderResult:
-        if self.excel_mode != ExcelMode.IMPORT:
-            raise ConfigError(msg(MessageKey.IMPORT_MODE_ONLY_METHOD))
-        assert isinstance(self.config, ImporterConfig)
-        self._read_dataframe(input_excel_name)
-        return self._header_validator.validate(self.input_excel_headers, self._layout, self.config.import_mode)
-
-    def _render_import_result_excel(self) -> DataUrlStr:
-        return self._renderer.render_data(
-            self.df,
-            field_meta_mapping=self.import_result_label_to_field_meta | self.unique_label_to_field_meta,
-            has_merged_header=self.input_excel_has_merged_header,
-            errors=self.cell_errors,
-        )
-
-    def _upload_file(self, output_name: str, content_with_prefix: DataUrlStr) -> UrlStr:
-        return self._storage_gateway.upload_excel(output_name, content_with_prefix)
-
-    def _order_errors(self, errors: list[ExcelRowError | ExcelCellError]) -> Iterable[ExcelCellError | ExcelRowError]:
-        return self._layout.order_errors(errors)
-
-    def _set_columns(self, df: WorksheetTable) -> WorksheetTable:
-        return self._header_parser.apply_columns(df, self.input_excel_headers, self.get_output_parent_excel_headers())
+            worksheet_table = self._export_with_simple_header(
+                data,
+                selected_keys,
+                self.config.behavior.data_converter,
+            )
+        return worksheet_table, has_merged_header
 
     def _select_output_excel_keys(self, keys: Sequence[str] | None = None) -> list[UniqueKey]:
         return self._layout.select_output_excel_keys(keys)
-
-    def _read_dataframe(self, input_excel_name: str) -> WorksheetTable:
-        assert isinstance(self.config, ImporterConfig)
-        if not self.__state_df_has_been_loaded__:
-            df = self._storage_gateway.read_excel_table(
-                input_excel_name,
-                skiprows=HEADER_HINT_LINE_COUNT,
-                sheet_name=self.config.sheet_name,
-            )
-            self.df = df
-            self.header_df = df.head(2)
-            self.__state_df_has_been_loaded__ = True
-        return self.df
 
     def _generate_export_df(
         self,
@@ -396,57 +334,28 @@ class ExcelAlchemy[
     ) -> WorksheetTable:
         return self._generate_export_df(records, selected_keys, data_converter)
 
-    def _add_result_column(self):
-        assert self._issue_tracker is not None
-        self._issue_tracker.add_result_columns(
-            self.df,
-            result_unique_label=self.import_result_field_meta[0].unique_label,
-            reason_unique_label=self.import_result_field_meta[1].unique_label,
-            extra_header_count_on_import=self.extra_header_count_on_import,
+    def _new_import_session(self) -> ImportSession[ContextT, ImportCreateModelT, ImportUpdateModelT]:
+        assert isinstance(self.config, ImporterConfig)
+        return ImportSession(
+            config=self.config,
+            layout=self._layout,
+            storage_gateway=self._storage_gateway,
+            header_parser=self._header_parser,
+            header_validator=self._header_validator,
+            renderer=self._renderer,
+            import_result_field_meta=self.import_result_field_meta,
+            import_result_label_to_field_meta=self.import_result_label_to_field_meta,
+            locale=self.locale,
+            context=self._context,
         )
-        return self
 
-    def _aggregate_data(self, row_data: FlatRowPayload) -> ModelRowPayload:
-        assert self._row_aggregator is not None
-        return self._row_aggregator.aggregate(row_data)
+    def _require_last_import_session(self) -> ImportSession[ContextT, ImportCreateModelT, ImportUpdateModelT]:
+        if self._last_import_session is None:
+            raise ConfigError(msg(MessageKey.WORKSHEET_TABLE_NOT_LOADED))
+        return self._last_import_session
 
-    def _register_row_error(
-        self,
-        row_index: RowIndex,
-        error: ExcelRowError | ExcelCellError | list[ExcelRowError | ExcelCellError] | list[ExcelCellError],
-    ):
-        assert self._issue_tracker is not None
-        self._issue_tracker.register_row_error(row_index, error)
-
-    def _register_cell_errors(self, row_index: RowIndex, errors: list[ExcelCellError]):
-        assert self._issue_tracker is not None
-        self._issue_tracker.register_cell_errors(row_index, errors, self.df)
-        return self
-
-    def _build_import_result_field_meta(self) -> list[FieldMetaInfo]:
-        result_column = FieldMetaInfo(label=dmsg(MessageKey.RESULT_COLUMN_LABEL, locale=self.locale))
-        result_column.parent_label = result_column.label
-        result_column.key = result_column.parent_key = RESULT_COLUMN_KEY
-        result_column.excel_codec = SystemReserved
-
-        reason_column = FieldMetaInfo(label=dmsg(MessageKey.REASON_COLUMN_LABEL, locale=self.locale))
-        reason_column.parent_label = reason_column.label
-        reason_column.key = reason_column.parent_key = REASON_COLUMN_KEY
-        reason_column.excel_codec = SystemReserved
-
-        return [result_column, reason_column]
-
-    def _excel_has_merged_header(self) -> bool:
-        return self._header_parser.has_merged_header(self.header_df)
-
-    def _extract_header(self) -> list[ExcelHeader]:
-        return self._header_parser.extract(self.header_df)
-
-    def _extract_simple_header(self) -> list[ExcelHeader]:
-        return self._header_parser.extract_simple(self.header_df)
-
-    def _extract_merged_header(self) -> list[ExcelHeader]:
-        return self._header_parser.extract_merged(self.header_df)
+    def _upload_file(self, output_name: str, content_with_prefix: DataUrlStr) -> UrlStr:
+        return self._storage_gateway.upload_excel(output_name, content_with_prefix)
 
     def __setattr__(self, key: str, value: object):
         if key == 'config' and hasattr(self, 'config'):

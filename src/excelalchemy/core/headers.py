@@ -19,37 +19,37 @@ from .schema import ExcelSchemaLayout
 class ExcelHeaderParser:
     """Parse raw worksheet header rows into normalized header objects."""
 
-    def has_merged_header(self, header_df: WorksheetTable) -> bool:
+    def has_merged_header(self, header_table: WorksheetTable) -> bool:
         """Detect whether the workbook uses a merged two-row header."""
-        return any(value_is_nan(value) for value in header_df.iloc[0].tolist()) or any(
-            header_df.iloc[0].str.startswith('Unnamed')
+        return any(value_is_nan(value) for value in header_table.iloc[0].tolist()) or any(
+            header_table.iloc[0].str.startswith('Unnamed')
         )
 
-    def extract(self, header_df: WorksheetTable) -> list[ExcelHeader]:
+    def extract(self, header_table: WorksheetTable) -> list[ExcelHeader]:
         """Parse either a simple header row or a merged header block."""
-        if self.has_merged_header(header_df):
-            return self._extract_merged(header_df)
-        return self._extract_simple(header_df)
+        if self.has_merged_header(header_table):
+            return self._extract_merged(header_table)
+        return self._extract_simple(header_table)
 
-    def extract_simple(self, header_df: WorksheetTable) -> list[ExcelHeader]:
+    def extract_simple(self, header_table: WorksheetTable) -> list[ExcelHeader]:
         """Parse one simple header row without merged-header detection."""
-        return self._extract_simple(header_df)
+        return self._extract_simple(header_table)
 
-    def extract_merged(self, header_df: WorksheetTable) -> list[ExcelHeader]:
+    def extract_merged(self, header_table: WorksheetTable) -> list[ExcelHeader]:
         """Parse a two-row merged header block without auto-detection."""
-        return self._extract_merged(header_df)
+        return self._extract_merged(header_table)
 
-    def _extract_simple(self, header_df: WorksheetTable) -> list[ExcelHeader]:
-        return [ExcelHeader(label=Label(col), parent_label=Label(col)) for col in header_df.iloc[0].tolist()]
+    def _extract_simple(self, header_table: WorksheetTable) -> list[ExcelHeader]:
+        return [ExcelHeader(label=Label(col), parent_label=Label(col)) for col in header_table.iloc[0].tolist()]
 
-    def _extract_merged(self, header_df: WorksheetTable) -> list[ExcelHeader]:
+    def _extract_merged(self, header_table: WorksheetTable) -> list[ExcelHeader]:
         headers: list[ExcelHeader] = []
         last_header: str | None = None
         next_offset = 1
 
-        for column_index, value in header_df.iloc[0].items():
+        for column_index, value in header_table.iloc[0].items():
             parent_value = value
-            child_value = header_df.iloc[1][column_index]
+            child_value = header_table.iloc[1][column_index]
             if value_is_nan(parent_value) or (isinstance(parent_value, str) and parent_value.startswith('Unnamed')):
                 if value_is_nan(child_value):
                     raise ValueError(msg(MessageKey.INVALID_MERGED_HEADER_CHILD_EMPTY))
@@ -70,7 +70,7 @@ class ExcelHeaderParser:
 
     def apply_columns(
         self,
-        df: WorksheetTable,
+        worksheet_table: WorksheetTable,
         headers: list[ExcelHeader],
         allowed_labels: list[UniqueLabel],
     ) -> WorksheetTable:
@@ -81,8 +81,8 @@ class ExcelHeaderParser:
                 raise ConfigError(msg(MessageKey.UNSUPPORTED_COLUMN_NAME, unique_label=header.unique_label))
             columns.append(header.unique_label)
 
-        df.columns = columns
-        return df
+        worksheet_table.columns = columns
+        return worksheet_table
 
 
 class ExcelHeaderValidator:

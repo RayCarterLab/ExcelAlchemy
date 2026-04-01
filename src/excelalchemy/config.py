@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, Self
 
@@ -15,7 +15,7 @@ from excelalchemy.exceptions import ConfigError
 from excelalchemy.helper.pydantic import get_model_field_names
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import message as msg
-from excelalchemy.util.convertor import export_data_converter, import_data_converter
+from excelalchemy.util.converter import export_data_converter, import_data_converter
 
 if TYPE_CHECKING:
     from minio import Minio
@@ -34,10 +34,67 @@ class ImportMode(StrEnum):
     CREATE_OR_UPDATE = 'CREATE_OR_UPDATE'
 
 
+@dataclass(slots=True, frozen=True)
+class StorageOptions:
+    """Normalized storage backend settings shared by importer and exporter configs."""
+
+    storage: ExcelStorage | None
+    minio: Minio | None
+    bucket_name: str
+    url_expires: int
+
+    @property
+    def has_explicit_storage(self) -> bool:
+        return self.storage is not None
+
+    @property
+    def has_legacy_minio(self) -> bool:
+        return self.minio is not None
+
+
+@dataclass(slots=True, frozen=True)
+class ImporterSchemaOptions[ImportCreateModelT: BaseModel, ImportUpdateModelT: BaseModel]:
+    """Schema declaration and workbook presentation settings for imports."""
+
+    create_importer_model: type[ImportCreateModelT] | None
+    update_importer_model: type[ImportUpdateModelT] | None
+    sheet_name: str
+    locale: str
+
+
+@dataclass(slots=True, frozen=True)
+class ImportBehavior[ContextT]:
+    """Execution callbacks and import workflow policy."""
+
+    data_converter: DataConverter | None
+    creator: DmlCallback[ContextT] | None
+    updater: DmlCallback[ContextT] | None
+    context: ImportContext[ContextT]
+    is_data_exist: ExistenceCheckCallback[ContextT] | None
+    exec_formatter: Callable[[Exception], str]
+    import_mode: ImportMode
+
+
+@dataclass(slots=True, frozen=True)
+class ExporterSchemaOptions[ExportModelT: BaseModel]:
+    """Schema declaration and workbook presentation settings for exports."""
+
+    exporter_model: type[ExportModelT]
+    sheet_name: str
+    locale: str
+
+
+@dataclass(slots=True, frozen=True)
+class ExportBehavior:
+    """Execution behavior used when rendering export rows."""
+
+    data_converter: DataConverter | None
+
+
 @dataclass(slots=True)
-class ImporterConfig[ContextT, ImporterCreateModelT: BaseModel, ImporterUpdateModelT: BaseModel]:
-    create_importer_model: type[ImporterCreateModelT] | None = None
-    update_importer_model: type[ImporterUpdateModelT] | None = None
+class ImporterConfig[ContextT, ImportCreateModelT: BaseModel, ImportUpdateModelT: BaseModel]:
+    create_importer_model: type[ImportCreateModelT] | None = None
+    update_importer_model: type[ImportUpdateModelT] | None = None
 
     # The converter receives schema keys rather than workbook labels.
     data_converter: DataConverter | None = import_data_converter
@@ -57,6 +114,11 @@ class ImporterConfig[ContextT, ImporterCreateModelT: BaseModel, ImporterUpdateMo
     locale: str = 'zh-CN'
 
     sheet_name: str = 'Sheet1'
+    schema_options: ImporterSchemaOptions[ImportCreateModelT, ImportUpdateModelT] = field(
+        init=False, repr=False
+    )
+    behavior: ImportBehavior[ContextT] = field(init=False, repr=False)
+    storage_options: StorageOptions = field(init=False, repr=False)
 
     def validate_model(self) -> Self:
         if self.import_mode not in ImportMode.__members__.values():
@@ -100,11 +162,32 @@ class ImporterConfig[ContextT, ImporterCreateModelT: BaseModel, ImporterUpdateMo
 
     def __post_init__(self) -> None:
         self.validate_model()
+        self.schema_options = ImporterSchemaOptions(
+            create_importer_model=self.create_importer_model,
+            update_importer_model=self.update_importer_model,
+            sheet_name=self.sheet_name,
+            locale=self.locale,
+        )
+        self.behavior = ImportBehavior(
+            data_converter=self.data_converter,
+            creator=self.creator,
+            updater=self.updater,
+            context=self.context,
+            is_data_exist=self.is_data_exist,
+            exec_formatter=self.exec_formatter,
+            import_mode=self.import_mode,
+        )
+        self.storage_options = StorageOptions(
+            storage=self.storage,
+            minio=self.minio,
+            bucket_name=self.bucket_name,
+            url_expires=self.url_expires,
+        )
 
 
 @dataclass(slots=True)
-class ExporterConfig[ExporterModelT: BaseModel]:
-    exporter_model: type[ExporterModelT]
+class ExporterConfig[ExportModelT: BaseModel]:
+    exporter_model: type[ExportModelT]
     # The converter receives schema keys rather than workbook labels.
     data_converter: DataConverter | None = export_data_converter
 
@@ -115,6 +198,9 @@ class ExporterConfig[ExporterModelT: BaseModel]:
     locale: str = 'zh-CN'
 
     sheet_name: str = 'Sheet1'
+    schema_options: ExporterSchemaOptions[ExportModelT] = field(init=False, repr=False)
+    behavior: ExportBehavior = field(init=False, repr=False)
+    storage_options: StorageOptions = field(init=False, repr=False)
 
     def validate_model(self) -> Self:
         if not self.exporter_model:
@@ -123,3 +209,15 @@ class ExporterConfig[ExporterModelT: BaseModel]:
 
     def __post_init__(self) -> None:
         self.validate_model()
+        self.schema_options = ExporterSchemaOptions(
+            exporter_model=self.exporter_model,
+            sheet_name=self.sheet_name,
+            locale=self.locale,
+        )
+        self.behavior = ExportBehavior(data_converter=self.data_converter)
+        self.storage_options = StorageOptions(
+            storage=self.storage,
+            minio=self.minio,
+            bucket_name=self.bucket_name,
+            url_expires=self.url_expires,
+        )

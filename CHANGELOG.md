@@ -4,6 +4,57 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog and versioned according to PEP 440.
 
+## [2.1.0] - Unreleased
+
+This release continues the 2.x line with internal architecture cleanup, naming
+improvements, and stronger separation between long-lived facade state and
+single-run import workflow state.
+
+### Added
+
+- Added `ImportSession` as the one-shot import workflow runtime that keeps
+  worksheet state, header parsing state, issue tracking, and executor state out
+  of the long-lived `ExcelAlchemy` facade
+- Added normalized internal config layers:
+  `ImporterSchemaOptions`, `ImportBehavior`, `ExporterSchemaOptions`,
+  `ExportBehavior`, and `StorageOptions`
+- Added internal metadata layers:
+  `DeclaredFieldMeta`, `RuntimeFieldBinding`, `WorkbookPresentationMeta`, and
+  `ImportConstraints`
+- Added targeted regression tests for config normalization and split metadata
+  layering
+
+### Changed
+
+- Refactored `ExcelAlchemy.import_data()` to delegate import execution to
+  `ImportSession` while keeping the 2.x public API unchanged
+- Reduced facade responsibility so `ExcelAlchemy` now primarily owns durable
+  configuration and collaborator wiring rather than import-run state
+- Normalized storage resolution so internal code now reads `storage_options`
+  instead of scattering direct reads of `storage`, `minio`, `bucket_name`, and
+  `url_expires`
+- Updated import execution to consume normalized `schema_options` and
+  `behavior` objects instead of treating config as an all-in-one bus
+- Split `FieldMetaInfo` into internal declaration, runtime, presentation, and
+  constraint layers while preserving the existing `FieldMeta(...)` and
+  `ExcelMeta(...)` entry points
+- Improved internal naming by moving the primary worksheet variable vocabulary
+  from `df/header_df` to `worksheet_table/header_table`
+- Renamed `excelalchemy.util.convertor` to
+  `excelalchemy.util.converter`; the old path now remains as a deprecated
+  compatibility shim
+- Simplified generic type parameter names across the config, facade, storage,
+  executor, and import-session layers to better reflect their roles
+
+### Compatibility Notes
+
+- `df` and `header_df` remain available as backward-compatible aliases on the
+  facade and import session, but new internal code should prefer
+  `worksheet_table` and `header_table`
+- `excelalchemy.util.convertor` remains importable in 2.x and now emits the
+  standard deprecation warning that points to `excelalchemy.util.converter`
+- No public import/export workflow API was removed in this release
+
 ## [2.0.0.post1] - 2026-03-28
 
 This post-release updates the package presentation and release metadata for the
