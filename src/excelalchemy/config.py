@@ -114,9 +114,7 @@ class ImporterConfig[ContextT, ImportCreateModelT: BaseModel, ImportUpdateModelT
     locale: str = 'zh-CN'
 
     sheet_name: str = 'Sheet1'
-    schema_options: ImporterSchemaOptions[ImportCreateModelT, ImportUpdateModelT] = field(
-        init=False, repr=False
-    )
+    schema_options: ImporterSchemaOptions[ImportCreateModelT, ImportUpdateModelT] = field(init=False, repr=False)
     behavior: ImportBehavior[ContextT] = field(init=False, repr=False)
     storage_options: StorageOptions = field(init=False, repr=False)
 
