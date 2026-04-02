@@ -4,11 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog and versioned according to PEP 440.
 
-## [2.1.0] - Unreleased
+## [2.1.0] - 2026-04-02
 
-This release continues the 2.x line with internal architecture cleanup, naming
-improvements, and stronger separation between long-lived facade state and
-single-run import workflow state.
+This release continues the stable 2.x line with internal architecture cleanup,
+clearer naming, and a stronger separation between the long-lived facade and the
+single-run import workflow runtime.
 
 ### Added
 
@@ -54,6 +54,14 @@ single-run import workflow state.
 - `excelalchemy.util.convertor` remains importable in 2.x and now emits the
   standard deprecation warning that points to `excelalchemy.util.converter`
 - No public import/export workflow API was removed in this release
+
+### Release Summary
+
+- `ExcelAlchemy` is now a lighter facade, with single-run import state handled
+  by `ImportSession`
+- internal configuration now has clearer schema, behavior, and storage layers
+- metadata internals are more structured without forcing users to rewrite
+  existing `FieldMeta(...)` or `ExcelMeta(...)` declarations
 
 ## [2.0.0.post1] - 2026-03-28
 
