@@ -15,6 +15,16 @@ from excelalchemy.i18n.messages import message as msg
 from excelalchemy.metadata import FieldMetaInfo, extract_declared_field_metadata
 
 
+def _resolve_excel_codec_type(annotation: object) -> type[ExcelFieldCodec]:
+    if isinstance(annotation, type):
+        if issubclass(annotation, ExcelFieldCodec):
+            return annotation
+        unsupported = repr(cast(object, annotation))
+    else:
+        unsupported = str(annotation)
+    raise ProgrammaticError(msg(MessageKey.VALUE_TYPE_DECLARATION_UNSUPPORTED, value_type=unsupported))
+
+
 @dataclass(frozen=True)
 class PydanticFieldAdapter:
     """Provide a stable view over one Pydantic field."""
@@ -34,9 +44,9 @@ class PydanticFieldAdapter:
             args = [arg for arg in get_args(annotation) if arg is not type(None)]
             if len(args) != 1:
                 raise ProgrammaticError(msg(MessageKey.UNSUPPORTED_FIELD_TYPE_DECLARATION, annotation=annotation))
-            return cast(type[ExcelFieldCodec], args[0])
+            return _resolve_excel_codec_type(args[0])
 
-        return cast(type[ExcelFieldCodec], annotation)
+        return _resolve_excel_codec_type(annotation)
 
     @property
     def value_type(self) -> type[ExcelFieldCodec]:

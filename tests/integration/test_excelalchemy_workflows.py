@@ -493,6 +493,25 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
             template.startswith('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,')
         )
 
+    async def test_annotated_native_python_type_with_excelmeta_raises_programmatic_error(self):
+        class UnsupportedAnnotatedImporter(BaseModel):
+            name: Annotated[str, Field(min_length=3), ExcelMeta(label='Name', order=1)]
+
+        config = ImporterConfig(
+            UnsupportedAnnotatedImporter,
+            creator=self.creator,
+            minio=cast(Minio, self.minio),
+        )
+
+        with self.assertRaises(ProgrammaticError) as cm:
+            ExcelAlchemy(config)
+
+        self.assertEqual(
+            str(cm.exception),
+            'Field definitions must use an ExcelFieldCodec or CompositeExcelFieldCodec subclass; '
+            "<class 'str'> is not supported",
+        )
+
     async def test_passing_non_config_object_raises_config_error(self):
         class NotImporterConfigModel(BaseModel):
             name: str = FieldMeta(label='姓名')
