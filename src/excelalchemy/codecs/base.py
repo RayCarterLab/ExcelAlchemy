@@ -11,6 +11,13 @@ from excelalchemy._primitives.identity import Key
 if TYPE_CHECKING:
     from excelalchemy.metadata import FieldMetaInfo
 
+# These aliases remain `Any` intentionally because codec subclasses narrow their
+# accepted workbook values heavily. Using `object` here makes every override
+# incompatible under pyright's method override rules.
+type WorkbookInputValue = Any
+type WorkbookDisplayValue = Any
+type NormalizedImportValue = Any
+
 
 class ExcelFieldCodec(ABC):
     """Excel-facing field adapter responsible for comments, parsing, formatting, and normalization."""
@@ -22,17 +29,17 @@ class ExcelFieldCodec(ABC):
 
     @classmethod
     @abstractmethod
-    def parse_input(cls, value: Any, field_meta: FieldMetaInfo) -> Any:  # value is always not None
+    def parse_input(cls, value: WorkbookInputValue, field_meta: FieldMetaInfo) -> WorkbookInputValue:
         """Parse workbook input into the intermediate Python value consumed by the import pipeline."""
 
     @classmethod
     @abstractmethod
-    def format_display_value(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
+    def format_display_value(cls, value: WorkbookDisplayValue, field_meta: FieldMetaInfo) -> WorkbookDisplayValue:
         """Format a raw worksheet value back into a user-recognizable display value."""
 
     @classmethod
     @abstractmethod
-    def normalize_import_value(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
+    def normalize_import_value(cls, value: WorkbookInputValue, field_meta: FieldMetaInfo) -> NormalizedImportValue:
         """Validate and normalize parsed input before handing it to the Pydantic layer."""
 
     @classmethod
@@ -41,24 +48,24 @@ class ExcelFieldCodec(ABC):
         return cls.build_comment(field_meta)
 
     @classmethod
-    def serialize(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
+    def serialize(cls, value: WorkbookInputValue, field_meta: FieldMetaInfo) -> WorkbookInputValue:
         """Backward-compatible alias for parse_input()."""
         return cls.parse_input(value, field_meta)
 
     @classmethod
-    def deserialize(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
+    def deserialize(cls, value: WorkbookDisplayValue, field_meta: FieldMetaInfo) -> WorkbookDisplayValue:
         """Backward-compatible alias for format_display_value()."""
         return cls.format_display_value(value, field_meta)
 
     @classmethod
-    def __validate__(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
+    def __validate__(cls, value: WorkbookInputValue, field_meta: FieldMetaInfo) -> NormalizedImportValue:
         """Backward-compatible alias for normalize_import_value()."""
         return cls.normalize_import_value(value, field_meta)
 
     @classmethod
     def __get_pydantic_core_schema__(
         cls,
-        source_type: Any,
+        source_type: object,
         handler: GetCoreSchemaHandler,
     ) -> core_schema.CoreSchema:
         # ExcelAlchemy runs metadata-aware validation in its adapter layer.
@@ -88,15 +95,23 @@ class SystemReserved(ExcelFieldCodec):
         return ''
 
     @classmethod
-    def parse_input(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
+    def parse_input(cls, value: WorkbookInputValue, field_meta: FieldMetaInfo) -> WorkbookInputValue:
         return value
 
     @classmethod
-    def format_display_value(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
+    def format_display_value(
+        cls,
+        value: WorkbookDisplayValue,
+        field_meta: FieldMetaInfo,
+    ) -> WorkbookDisplayValue:
         return value
 
     @classmethod
-    def normalize_import_value(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
+    def normalize_import_value(
+        cls,
+        value: WorkbookInputValue,
+        field_meta: FieldMetaInfo,
+    ) -> NormalizedImportValue:
         return value
 
 
@@ -108,15 +123,23 @@ class Undefined(ExcelFieldCodec):
         return ''
 
     @classmethod
-    def parse_input(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
+    def parse_input(cls, value: WorkbookInputValue, field_meta: FieldMetaInfo) -> WorkbookInputValue:
         return value
 
     @classmethod
-    def format_display_value(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
+    def format_display_value(
+        cls,
+        value: WorkbookDisplayValue,
+        field_meta: FieldMetaInfo,
+    ) -> WorkbookDisplayValue:
         return value
 
     @classmethod
-    def normalize_import_value(cls, value: Any, field_meta: FieldMetaInfo) -> Any:
+    def normalize_import_value(
+        cls,
+        value: WorkbookInputValue,
+        field_meta: FieldMetaInfo,
+    ) -> NormalizedImportValue:
         return value
 
 

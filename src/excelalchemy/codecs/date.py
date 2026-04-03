@@ -1,12 +1,17 @@
 import logging
 from datetime import datetime
-from typing import Any, cast
+from typing import cast
 
 import pendulum
 from pendulum import DateTime
 
 from excelalchemy._primitives.constants import DATE_FORMAT_TO_HINT_MAPPING, MILLISECOND_TO_SECOND, DataRangeOption
-from excelalchemy.codecs.base import ExcelFieldCodec
+from excelalchemy.codecs.base import (
+    ExcelFieldCodec,
+    NormalizedImportValue,
+    WorkbookDisplayValue,
+    WorkbookInputValue,
+)
 from excelalchemy.exceptions import ConfigError
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import message as msg
@@ -18,36 +23,44 @@ class Date(ExcelFieldCodec, datetime):
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
-        if not field_meta.date_format:
+        declared = field_meta.declared
+        presentation = field_meta.presentation
+        if not presentation.date_format:
             raise ConfigError(msg(MessageKey.DATE_FORMAT_NOT_CONFIGURED))
         return '\n'.join(
             [
-                field_meta.comment_required,
-                field_meta.comment_date_format,
-                field_meta.comment_date_range_option,
-                field_meta.comment_hint,
+                declared.comment_required,
+                presentation.comment_date_format,
+                presentation.comment_date_range_option,
+                presentation.comment_hint,
             ]
         )
 
     @classmethod
-    def parse_input(cls, value: str | DateTime | Any, field_meta: FieldMetaInfo) -> datetime | Any:
+    def parse_input(
+        cls,
+        value: str | DateTime | WorkbookInputValue,
+        field_meta: FieldMetaInfo,
+    ) -> datetime | WorkbookInputValue:
+        declared = field_meta.declared
+        presentation = field_meta.presentation
         if isinstance(value, DateTime):
             logging.info(
                 'Codec %s received a parsed datetime for %s; returning it unchanged: %s',
                 cls.__name__,
-                field_meta.label,
+                declared.label,
                 value,
             )
             return value
 
-        if not field_meta.date_format:
+        if not presentation.date_format:
             raise ConfigError(msg(MessageKey.DATE_FORMAT_NOT_CONFIGURED))
 
         value = str(value).strip()
         try:
             v = value.replace('/', '-')  # pendulum does not accept "/" as a date separator here.
             dt: DateTime = cast(DateTime, pendulum.parse(v))
-            return dt.replace(tzinfo=field_meta.timezone)
+            return dt.replace(tzinfo=presentation.timezone)
         except Exception as exc:
             logging.warning(
                 'ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s',
@@ -58,27 +71,31 @@ class Date(ExcelFieldCodec, datetime):
             return value
 
     @classmethod
-    def format_display_value(cls, value: str | datetime | None | Any, field_meta: FieldMetaInfo) -> str:
+    def format_display_value(
+        cls,
+        value: str | datetime | WorkbookDisplayValue | None,
+        field_meta: FieldMetaInfo,
+    ) -> str:
+        presentation = field_meta.presentation
         match value:
             case None | '':
                 return ''
             case datetime():
-                return value.strftime(field_meta.python_date_format)
+                return value.strftime(presentation.python_date_format)
             case int() | float():
-                return datetime.fromtimestamp(int(value) / MILLISECOND_TO_SECOND).strftime(
-                    field_meta.python_date_format
-                )
+                return datetime.fromtimestamp(int(value) / MILLISECOND_TO_SECOND).strftime(presentation.python_date_format)
             case _:
                 return str(value) if value is not None else ''
 
     @classmethod
-    def normalize_import_value(cls, value: Any, field_meta: FieldMetaInfo) -> int:
-        if field_meta.date_format is None:
+    def normalize_import_value(cls, value: WorkbookInputValue, field_meta: FieldMetaInfo) -> NormalizedImportValue:
+        presentation = field_meta.presentation
+        if presentation.date_format is None:
             raise ConfigError(msg(MessageKey.DATE_FORMAT_NOT_CONFIGURED))
 
         if not isinstance(value, datetime):
             raise ValueError(
-                msg(MessageKey.ENTER_DATE_FORMAT, date_format=DATE_FORMAT_TO_HINT_MAPPING[field_meta.date_format])
+                msg(MessageKey.ENTER_DATE_FORMAT, date_format=DATE_FORMAT_TO_HINT_MAPPING[presentation.date_format])
             )
 
         parsed = cls._parse_date(value, field_meta)
@@ -91,17 +108,19 @@ class Date(ExcelFieldCodec, datetime):
 
     @staticmethod
     def _parse_date(v: datetime, field_meta: FieldMetaInfo) -> datetime:
-        format_ = field_meta.python_date_format
+        presentation = field_meta.presentation
+        format_ = presentation.python_date_format
         parsed = datetime.strptime(v.strftime(format_), format_)
-        parsed = parsed.replace(tzinfo=field_meta.timezone)
+        parsed = parsed.replace(tzinfo=presentation.timezone)
         return parsed
 
     @staticmethod
     def _validate_date_range(parsed: datetime, field_meta: FieldMetaInfo) -> list[str]:
-        now = datetime.now(tz=field_meta.timezone)
+        presentation = field_meta.presentation
+        now = datetime.now(tz=presentation.timezone)
         errors: list[str] = []
 
-        match field_meta.date_range_option:
+        match presentation.date_range_option:
             case DataRangeOption.PRE:
                 if parsed > now:
                     errors.append(msg(MessageKey.DATE_MUST_BE_EARLIER_THAN_NOW))

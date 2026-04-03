@@ -20,6 +20,23 @@ the Pydantic adapter layer.
 - Added a regression test for unsupported annotated declarations to prevent
   native Python annotations from slipping through the workbook schema path
 
+### Changed
+
+- Clarified `FieldMetaInfo` as a compatibility facade over layered metadata
+  objects instead of treating it as the primary internal metadata model
+- Moved more core consumers and built-in codecs onto the layered metadata
+  objects (`declared`, `runtime`, `presentation`, and `constraints`)
+- Continued reducing the effective responsibility carried by the flat
+  `FieldMetaInfo` compatibility surface in the 2.x implementation
+- Concentrated necessary dynamic typing boundaries into explicit aliases in the
+  codec and metadata layers instead of leaving ad hoc `Any` usage scattered
+  across the codebase
+- Replaced a number of remaining loose `Any` annotations in the runtime path
+  with more explicit `object` or workbook-boundary aliases where the behavior
+  was already concrete
+- Added smoke coverage for the repository examples so the annotated schema and
+  custom storage examples are exercised directly in tests
+
 ### Compatibility Notes
 
 - No public import or export workflow API was removed in this release
@@ -27,12 +44,18 @@ the Pydantic adapter layer.
   to work unchanged
 - Unsupported native annotations with `ExcelMeta(...)` now fail early with the
   intended `ProgrammaticError`
+- `FieldMeta(...)` and `ExcelMeta(...)` remain the stable public metadata entry
+  points while internal metadata continues to consolidate behind them
 
 ### Release Summary
 
 - unsupported annotated declarations now fail with the intended error again
 - codec resolution is stricter and easier to reason about
 - the validation fix is protected by an explicit integration regression test
+- metadata internals continue to move toward layered objects rather than a flat
+  central record
+- runtime typing boundaries are more explicit without changing the public API
+- repository examples now have direct smoke coverage in the test suite
 
 ## [2.2.2] - 2026-04-03
 

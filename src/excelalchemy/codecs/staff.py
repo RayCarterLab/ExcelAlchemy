@@ -16,10 +16,12 @@ class SingleStaff(Radio):
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
-        extra_hint = field_meta.hint or dmsg(MessageKey.SINGLE_STAFF_HINT)
+        declared = field_meta.declared
+        presentation = field_meta.presentation
+        extra_hint = presentation.hint or dmsg(MessageKey.SINGLE_STAFF_HINT)
         value_key = (
             MessageKey.COMMENT_REQUIRED_VALUE_REQUIRED
-            if field_meta.required
+            if declared.effective_required
             else MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL
         )
         return f'{dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key))} \n{dmsg(MessageKey.COMMENT_HINT, value=extra_hint)}'
@@ -30,18 +32,20 @@ class SingleStaff(Radio):
 
     @classmethod
     def format_display_value(cls, value: object | None, field_meta: FieldMetaInfo) -> str:
+        declared = field_meta.declared
+        presentation = field_meta.presentation
         if value is None or value == '':
             return ''
         if not isinstance(value, str):
             return str(value)
         try:
-            return field_meta.options_id_map[OptionId(value.strip())].name
+            return presentation.options_id_map(field_label=declared.label)[OptionId(value.strip())].name
         except KeyError:
             logging.warning(
                 'Type %s could not resolve option %s for field %s; returning the original value',
                 cls.__name__,
                 value,
-                field_meta.label,
+                declared.label,
             )
         return value
 
@@ -51,10 +55,12 @@ class MultiStaff(MultiCheckbox):
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
+        declared = field_meta.declared
+        presentation = field_meta.presentation
         return '\n'.join(
             [
-                field_meta.comment_required,
-                dmsg(MessageKey.COMMENT_HINT, value=field_meta.hint or dmsg(MessageKey.MULTI_STAFF_HINT)),
+                declared.comment_required,
+                dmsg(MessageKey.COMMENT_HINT, value=presentation.hint or dmsg(MessageKey.MULTI_STAFF_HINT)),
             ]
         )
 
@@ -68,6 +74,8 @@ class MultiStaff(MultiCheckbox):
 
     @classmethod
     def format_display_value(cls, value: object, field_meta: FieldMetaInfo) -> str:
+        declared = field_meta.declared
+        presentation = field_meta.presentation
         if isinstance(value, str):
             return value
 
@@ -77,7 +85,7 @@ class MultiStaff(MultiCheckbox):
             if len(option_ids) != len(set(option_ids)):
                 raise ValueError(msg(MessageKey.OPTIONS_CONTAIN_DUPLICATES))
 
-            option_names = field_meta.exchange_option_ids_to_names(option_ids)
+            option_names = presentation.exchange_option_ids_to_names(option_ids, field_label=declared.label)
             return f'{MULTI_CHECKBOX_SEPARATOR}'.join(option_names)
 
         logging.warning('%s could not be deserialized', cls.__name__)

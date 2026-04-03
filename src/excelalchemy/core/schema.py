@@ -44,13 +44,15 @@ class ExcelSchemaLayout:
 
     def _build_indexes(self) -> None:
         for field_meta in self.ordered_field_meta:
-            if field_meta.parent_label is None:
+            runtime = field_meta.runtime
+
+            if runtime.parent_label is None:
                 raise ConfigError(msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME))
-            if field_meta.parent_key is None:
+            if runtime.parent_key is None:
                 raise ConfigError(msg(MessageKey.PARENT_KEY_EMPTY_RUNTIME))
 
-            self.parent_label_to_field_metas.setdefault(field_meta.parent_label, []).append(field_meta)
-            self.parent_key_to_field_metas.setdefault(field_meta.parent_key, []).append(field_meta)
+            self.parent_label_to_field_metas.setdefault(runtime.parent_label, []).append(field_meta)
+            self.parent_key_to_field_metas.setdefault(runtime.parent_key, []).append(field_meta)
             self.unique_key_to_field_meta[field_meta.unique_key] = field_meta
             self.unique_label_to_field_meta[field_meta.unique_label] = field_meta
 
@@ -58,8 +60,10 @@ class ExcelSchemaLayout:
     def _check_field_meta_order(field_metas: list[FieldMetaInfo]) -> None:
         order_to_field_meta: dict[int, set[Label]] = defaultdict(set)
         for field_meta in field_metas:
-            assert field_meta.parent_label is not None
-            order_to_field_meta[field_meta.order].add(field_meta.parent_label)
+            runtime = field_meta.runtime
+            declared = field_meta.declared
+            assert runtime.parent_label is not None
+            order_to_field_meta[declared.order].add(runtime.parent_label)
         duplicate_order = [v for k, v in order_to_field_meta.items() if len(v) > 1 and k != DEFAULT_FIELD_META_ORDER]
         if duplicate_order:
             raise ConfigError(
@@ -73,24 +77,26 @@ class ExcelSchemaLayout:
     def _sort_field_meta(cls, field_metas: list[FieldMetaInfo]) -> list[FieldMetaInfo]:
         orders: dict[Label, int] = {}
         for idx, field_meta in enumerate(field_metas):
-            assert field_meta.parent_label is not None
-            if field_meta.order == DEFAULT_FIELD_META_ORDER:
-                orders[field_meta.parent_label] = idx
+            runtime = field_meta.runtime
+            declared = field_meta.declared
+            assert runtime.parent_label is not None
+            if declared.order == DEFAULT_FIELD_META_ORDER:
+                orders[runtime.parent_label] = idx
             else:
-                orders[field_meta.parent_label] = field_meta.order
+                orders[runtime.parent_label] = declared.order
 
         return sorted(
             field_metas,
             key=lambda x: (
-                orders.get(cast(Label, x.parent_label), Decimal('Infinity')),
-                x.offset,
+                orders.get(cast(Label, x.runtime.parent_label), Decimal('Infinity')),
+                x.runtime.offset,
             ),
         )
 
     def has_merged_header(self, selected_keys: list[UniqueKey]) -> bool:
         """Return whether the selected keys need a two-row merged header."""
         return any(
-            self.unique_key_to_field_meta[key].label != self.unique_key_to_field_meta[key].parent_label
+            self.unique_key_to_field_meta[key].declared.label != self.unique_key_to_field_meta[key].runtime.parent_label
             for key in selected_keys
         )
 
@@ -103,8 +109,8 @@ class ExcelSchemaLayout:
     def get_output_child_excel_headers(self, selected_keys: list[UniqueKey] | None = None) -> list[Label]:
         """Return the child labels used in the second header row for merged exports."""
         if not selected_keys:
-            return [field_meta.label for field_meta in self.ordered_field_meta]
-        return [self.unique_key_to_field_meta[key].label for key in selected_keys]
+            return [field_meta.declared.label for field_meta in self.ordered_field_meta]
+        return [self.unique_key_to_field_meta[key].declared.label for key in selected_keys]
 
     def select_output_excel_keys(self, keys: Sequence[str] | None = None) -> list[UniqueKey]:
         """Expand parent keys into concrete flattened keys while preserving layout order."""

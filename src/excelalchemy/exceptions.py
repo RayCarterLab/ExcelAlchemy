@@ -1,7 +1,5 @@
 """Public exception types raised by ExcelAlchemy."""
 
-from typing import Any
-
 from excelalchemy._primitives.constants import UNIQUE_HEADER_CONNECTOR
 from excelalchemy._primitives.identity import Label, UniqueLabel
 from excelalchemy.i18n.messages import MessageKey
@@ -14,14 +12,14 @@ class ExcelCellError(Exception):
     message = msg(MessageKey.EXCEL_IMPORT_ERROR)
     label: Label
     parent_label: Label | None
-    detail: dict[str, Any]
+    detail: dict[str, object]
 
     def __init__(
         self,
         message: str,
         label: Label,
         parent_label: Label | None = None,
-        **kwargs: Any,
+        **kwargs: object,
     ):
         super().__init__(message, label, parent_label)
         self.message = message or self.message
@@ -63,7 +61,7 @@ class ExcelRowError(Exception):
     def __init__(
         self,
         message: str,
-        **kwargs: Any,
+        **kwargs: object,
     ):
         super().__init__(message)
         self.message = message or self.message

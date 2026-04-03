@@ -63,10 +63,11 @@ class NumberRange(CompositeExcelFieldCodec):
         if value is None or value == '':
             return ''
         try:
+            presentation = field_meta.presentation
             parsed = cls._parse_decimal_boundary(value)
             if parsed is None:
                 return ''
-            return str(transform_decimal(canonicalize_decimal(parsed, field_meta.fraction_digits)))
+            return str(transform_decimal(canonicalize_decimal(parsed, presentation.fraction_digits)))
         except Exception as exc:
             logging.warning(
                 'ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s',
@@ -132,10 +133,11 @@ class NumberRange(CompositeExcelFieldCodec):
 
     @staticmethod
     def _canonicalize_boundary(value: object, field_meta: FieldMetaInfo) -> Decimal | None:
+        presentation = field_meta.presentation
         parsed = NumberRange._parse_decimal_boundary(value)
         if parsed is None:
             return None
-        return canonicalize_decimal(parsed, field_meta.fraction_digits)
+        return canonicalize_decimal(parsed, presentation.fraction_digits)
 
 
 NumberRangeCodec = NumberRange

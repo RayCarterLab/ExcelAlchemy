@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
 
 from excelalchemy._primitives.identity import Key, Label, OptionId
 from excelalchemy.i18n.messages import MessageKey
@@ -38,8 +37,6 @@ MILLISECOND_TO_SECOND = 1000
 MAX_OPTIONS_COUNT = 100
 
 DEFAULT_FIELD_META_ORDER = -1
-type DictStrAny = dict[str, Any]
-type DictAny = dict[Any, Any]
 type SetStr = set[str]
 type ListStr = list[str]
 type IntStr = int | str

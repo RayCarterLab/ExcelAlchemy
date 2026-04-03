@@ -1,6 +1,6 @@
 """A Python Library for Reading and Writing Excel Files"""
 
-__version__ = '2.2.3'
+__version__ = '2.2.4'
 from excelalchemy._primitives.constants import CharacterSet, DataRangeOption, DateFormat, Option
 from excelalchemy._primitives.deprecation import ExcelAlchemyDeprecationWarning
 from excelalchemy._primitives.identity import (

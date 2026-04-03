@@ -35,6 +35,9 @@ from excelalchemy.i18n.messages import message as msg
 EXCEL_FIELD_METADATA_KEY = 'excelalchemy_metadata'
 type FieldDefaultFactory = Callable[[], object]
 type FieldIncludeExclude = Set[IntStr] | bool | None
+type FieldSchemaExtra = dict[str, Any]
+type FieldKwargs = dict[str, Any]
+type FieldFactoryReturn = Any
 
 
 def _normalize_character_set(character_set: set[CharacterSet] | None) -> frozenset[CharacterSet]:
@@ -65,6 +68,28 @@ class DeclaredFieldMeta:
     required: bool | None
     order: int
 
+    @property
+    def effective_required(self) -> bool | None:
+        if self.is_primary_key or self.unique:
+            return True
+        return self.required
+
+    @property
+    def comment_required(self) -> str:
+        value_key = (
+            MessageKey.COMMENT_REQUIRED_VALUE_REQUIRED
+            if self.effective_required
+            else MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL
+        )
+        return dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key))
+
+    @property
+    def comment_unique(self) -> str:
+        value_key = (
+            MessageKey.COMMENT_UNIQUE_VALUE_UNIQUE if self.unique else MessageKey.COMMENT_UNIQUE_VALUE_NON_UNIQUE
+        )
+        return dmsg(MessageKey.COMMENT_UNIQUE, value=dmsg(value_key))
+
 
 @dataclass(slots=True, frozen=True)
 class RuntimeFieldBinding:
@@ -75,6 +100,22 @@ class RuntimeFieldBinding:
     parent_key: Key | None = None
     offset: int = DEFAULT_FIELD_META_ORDER
     excel_codec: type[ExcelFieldCodec] = UndefinedFieldCodec
+
+    def make_unique_label(self, *, label: Label) -> UniqueLabel:
+        if self.parent_label is None:
+            raise RuntimeError(msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME))
+        unique_label = (
+            f'{self.parent_label}{UNIQUE_HEADER_CONNECTOR}{label}' if self.parent_label != label else label
+        )
+        return UniqueLabel(unique_label)
+
+    def make_unique_key(self, *, key: Key | None) -> UniqueKey:
+        if self.parent_key is None:
+            raise RuntimeError(msg(MessageKey.PARENT_KEY_EMPTY_RUNTIME))
+        if key is None:
+            raise RuntimeError(msg(MessageKey.KEY_EMPTY_RUNTIME))
+        unique_key = f'{self.parent_key}{UNIQUE_HEADER_CONNECTOR}{key}' if self.parent_key != key else key
+        return UniqueKey(unique_key)
 
 
 @dataclass(slots=True, frozen=True)
@@ -89,6 +130,111 @@ class WorkbookPresentationMeta:
     options: tuple[Option, ...] | None = None
     unit: str | None = None
     hint: str | None = None
+
+    @property
+    def comment_date_format(self) -> str:
+        if self.date_format is None:
+            return ''
+        return dmsg(MessageKey.COMMENT_DATE_FORMAT, value=DATE_FORMAT_TO_HINT_MAPPING[self.date_format])
+
+    @property
+    def comment_date_range_option(self) -> str:
+        if self.date_range_option is None:
+            return dmsg(MessageKey.COMMENT_DATE_RANGE_OPTION, value=dmsg(MessageKey.DATE_RANGE_OPTION_NONE_DISPLAY))
+        option_mapping = {
+            DataRangeOption.PRE: MessageKey.DATE_RANGE_OPTION_PRE_DISPLAY,
+            DataRangeOption.NEXT: MessageKey.DATE_RANGE_OPTION_NEXT_DISPLAY,
+            DataRangeOption.NONE: MessageKey.DATE_RANGE_OPTION_NONE_DISPLAY,
+        }
+        return dmsg(MessageKey.COMMENT_DATE_RANGE_OPTION, value=dmsg(option_mapping[self.date_range_option]))
+
+    @property
+    def comment_hint(self) -> str:
+        if self.hint is None:
+            return ''
+        return dmsg(MessageKey.COMMENT_HINT, value=self.hint)
+
+    @property
+    def comment_options(self) -> str:
+        if self.options is None:
+            return ''
+        return dmsg(MessageKey.COMMENT_OPTIONS, value=MULTI_CHECKBOX_SEPARATOR.join(option.name for option in self.options))
+
+    @property
+    def comment_fraction_digits(self) -> str:
+        return dmsg(MessageKey.COMMENT_FRACTION_DIGITS, value=self.fraction_digits or 0)
+
+    @property
+    def comment_unit(self) -> str:
+        return dmsg(MessageKey.COMMENT_UNIT, value=self.unit or dmsg(MessageKey.COMMENT_UNIT_VALUE_NONE))
+
+    @property
+    def must_date_format(self) -> DateFormat:
+        if self.date_format is None:
+            raise ConfigError(msg(MessageKey.DATE_FORMAT_EMPTY_RUNTIME))
+        return self.date_format
+
+    @property
+    def python_date_format(self) -> str:
+        return DATE_FORMAT_TO_PYTHON_MAPPING[self.must_date_format]
+
+    def options_id_map(self, *, field_label: Label) -> dict[OptionId, Option]:
+        if self.options is None:
+            return {}
+        if len(self.options) > MAX_OPTIONS_COUNT:
+            logging.warning(
+                'Field "%s" defines %s options; please confirm that this is intentional because options are not meant for large datasets',
+                field_label,
+                len(self.options),
+            )
+        return {option.id: option for option in self.options}
+
+    def options_name_map(self, *, field_label: Label) -> dict[str, Option]:
+        if self.options is None:
+            return {}
+        if len(self.options) > MAX_OPTIONS_COUNT:
+            logging.warning(
+                'Field "%s" defines %s options; please confirm that this is intentional because options are not meant for large datasets',
+                field_label,
+                len(self.options),
+            )
+        return {option.name: option for option in self.options}
+
+    def exchange_option_ids_to_names(
+        self,
+        option_ids: list[str] | list[OptionId],
+        *,
+        field_label: Label,
+    ) -> list[str]:
+        option_id_map = self.options_id_map(field_label=field_label)
+        option_names: list[str] = []
+
+        for option_id in option_ids:
+            normalized_id = OptionId(option_id)
+            try:
+                option_names.append(option_id_map[normalized_id].name)
+            except KeyError:
+                logging.warning('Could not find option id %s; returning the original value', normalized_id)
+                option_names.append(normalized_id)
+
+        return option_names
+
+    def exchange_names_to_option_ids_with_errors(
+        self,
+        names: list[str],
+        *,
+        field_label: Label,
+    ) -> tuple[list[str], list[str]]:
+        option_name_map = self.options_name_map(field_label=field_label)
+        errors: list[str] = []
+        result: list[str] = []
+        for name in names:
+            option = option_name_map.get(name)
+            if option is None:
+                errors.append(msg(MessageKey.OPTION_NOT_FOUND_HEADER_COMMENT))
+            else:
+                result.append(option.id)
+        return result, errors
 
 
 @dataclass(slots=True, frozen=True)
@@ -105,9 +251,29 @@ class ImportConstraints:
     min_length: int | None = None
     max_length: int | None = None
 
+    @property
+    def comment_max_length(self) -> str:
+        return dmsg(
+            MessageKey.COMMENT_MAX_LENGTH,
+            value=self.max_length or dmsg(MessageKey.COMMENT_MAX_LENGTH_VALUE_UNLIMITED),
+        )
+
 
 class FieldMetaInfo:
-    """Excel field metadata independent from any validation backend."""
+    """Compatibility facade over layered Excel metadata objects.
+
+    The public 2.x API still exposes a single ``FieldMetaInfo`` object because
+    ``FieldMeta(...)`` and ``ExcelMeta(...)`` are intentionally concise. The
+    actual metadata state, however, is split across:
+
+    - ``DeclaredFieldMeta`` for declaration semantics
+    - ``RuntimeFieldBinding`` for flattened runtime identity
+    - ``WorkbookPresentationMeta`` for workbook-facing hints and formatting
+    - ``ImportConstraints`` for importer-side validation hints
+
+    New internal code should prefer these layer objects over treating
+    ``FieldMetaInfo`` as a flat mutable record.
+    """
 
     def __init__(
         self,
@@ -201,6 +367,22 @@ class FieldMetaInfo:
         return runtime
 
     @property
+    def declared(self) -> DeclaredFieldMeta:
+        return self.declared_meta
+
+    @property
+    def runtime(self) -> RuntimeFieldBinding:
+        return self.runtime_binding
+
+    @property
+    def presentation(self) -> WorkbookPresentationMeta:
+        return self.presentation_meta
+
+    @property
+    def constraints(self) -> ImportConstraints:
+        return self.import_constraints
+
+    @property
     def excel_codec(self) -> type[ExcelFieldCodec]:
         return self.runtime_binding.excel_codec
 
@@ -239,140 +421,70 @@ class FieldMetaInfo:
             raise ValueError(msg(MessageKey.PRIMARY_KEY_AND_UNIQUE_MUST_BE_REQUIRED))
 
     def exchange_option_ids_to_names(self, option_ids: list[str] | list[OptionId]) -> list[str]:
-        option_names: list[str] = []
-
-        for option_id in option_ids:
-            option_id = OptionId(option_id)
-            try:
-                option_names.append(self.options_id_map[option_id].name)
-            except KeyError:
-                logging.warning('Could not find option id %s; returning the original value', option_id)
-                option_names.append(option_id)
-
-        return option_names
+        return self.presentation_meta.exchange_option_ids_to_names(option_ids, field_label=self.label)
 
     def exchange_names_to_option_ids_with_errors(self, names: list[str]) -> tuple[list[str], list[str]]:
-        errors: list[str] = []
-        result: list[str] = []
-        for name in names:
-            option = self.options_name_map.get(name)
-            if option is None:
-                errors.append(msg(MessageKey.OPTION_NOT_FOUND_HEADER_COMMENT))
-            else:
-                result.append(option.id)
-        return result, errors
+        return self.presentation_meta.exchange_names_to_option_ids_with_errors(names, field_label=self.label)
 
     @property
     def unique_label(self) -> UniqueLabel:
-        if self.parent_label is None:
-            raise RuntimeError(msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME))
-        label = (
-            f'{self.parent_label}{UNIQUE_HEADER_CONNECTOR}{self.label}'
-            if self.parent_label != self.label
-            else self.label
-        )
-        return UniqueLabel(label)
+        return self.runtime_binding.make_unique_label(label=self.label)
 
     @property
     def unique_key(self) -> UniqueKey:
-        if self.parent_key is None:
-            raise RuntimeError(msg(MessageKey.PARENT_KEY_EMPTY_RUNTIME))
-        if self.key is None:
-            raise RuntimeError(msg(MessageKey.KEY_EMPTY_RUNTIME))
-        key = f'{self.parent_key}{UNIQUE_HEADER_CONNECTOR}{self.key}' if self.parent_key != self.key else self.key
-        return UniqueKey(key)
+        return self.runtime_binding.make_unique_key(key=self.key)
 
     @cached_property
     def options_id_map(self) -> dict[OptionId, Option]:
-        if self.options is None:
-            return {}
-        if len(self.options) > MAX_OPTIONS_COUNT:
-            logging.warning(
-                'Field "%s" defines %s options; please confirm that this is intentional because options are not meant for large datasets',
-                self.label,
-                len(self.options),
-            )
-        return {option.id: option for option in self.options}
+        return self.presentation_meta.options_id_map(field_label=self.label)
 
     @cached_property
     def options_name_map(self) -> dict[str, Option]:
-        if self.options is None:
-            return {}
-        if len(self.options) > MAX_OPTIONS_COUNT:
-            logging.warning(
-                'Field "%s" defines %s options; please confirm that this is intentional because options are not meant for large datasets',
-                self.label,
-                len(self.options),
-            )
-        return {option.name: option for option in self.options}
+        return self.presentation_meta.options_name_map(field_label=self.label)
 
     @property
     def comment_required(self) -> str:
-        value_key = (
-            MessageKey.COMMENT_REQUIRED_VALUE_REQUIRED if self.required else MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL
-        )
-        return dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key))
+        return self.declared_meta.comment_required
 
     @property
     def comment_date_format(self) -> str:
-        if self.date_format is None:
-            return ''
-        return dmsg(MessageKey.COMMENT_DATE_FORMAT, value=DATE_FORMAT_TO_HINT_MAPPING[self.date_format])
+        return self.presentation_meta.comment_date_format
 
     @property
     def comment_date_range_option(self) -> str:
-        if self.date_range_option is None:
-            return dmsg(MessageKey.COMMENT_DATE_RANGE_OPTION, value=dmsg(MessageKey.DATE_RANGE_OPTION_NONE_DISPLAY))
-        option_mapping = {
-            DataRangeOption.PRE: MessageKey.DATE_RANGE_OPTION_PRE_DISPLAY,
-            DataRangeOption.NEXT: MessageKey.DATE_RANGE_OPTION_NEXT_DISPLAY,
-            DataRangeOption.NONE: MessageKey.DATE_RANGE_OPTION_NONE_DISPLAY,
-        }
-        return dmsg(MessageKey.COMMENT_DATE_RANGE_OPTION, value=dmsg(option_mapping[self.date_range_option]))
+        return self.presentation_meta.comment_date_range_option
 
     @property
     def comment_hint(self) -> str:
-        if self.hint is None:
-            return ''
-        return dmsg(MessageKey.COMMENT_HINT, value=self.hint)
+        return self.presentation_meta.comment_hint
 
     @property
     def comment_options(self) -> str:
-        if self.options is None:
-            return ''
-        return dmsg(MessageKey.COMMENT_OPTIONS, value=MULTI_CHECKBOX_SEPARATOR.join(x.name for x in self.options))
+        return self.presentation_meta.comment_options
 
     @property
     def comment_fraction_digits(self) -> str:
-        return dmsg(MessageKey.COMMENT_FRACTION_DIGITS, value=self.fraction_digits or 0)
+        return self.presentation_meta.comment_fraction_digits
 
     @property
     def comment_unit(self) -> str:
-        return dmsg(MessageKey.COMMENT_UNIT, value=self.unit or dmsg(MessageKey.COMMENT_UNIT_VALUE_NONE))
+        return self.presentation_meta.comment_unit
 
     @property
     def comment_unique(self) -> str:
-        value_key = (
-            MessageKey.COMMENT_UNIQUE_VALUE_UNIQUE if self.unique else MessageKey.COMMENT_UNIQUE_VALUE_NON_UNIQUE
-        )
-        return dmsg(MessageKey.COMMENT_UNIQUE, value=dmsg(value_key))
+        return self.declared_meta.comment_unique
 
     @property
     def comment_max_length(self) -> str:
-        return dmsg(
-            MessageKey.COMMENT_MAX_LENGTH,
-            value=self.importer_max_length or dmsg(MessageKey.COMMENT_MAX_LENGTH_VALUE_UNLIMITED),
-        )
+        return self.import_constraints.comment_max_length
 
     @property
     def must_date_format(self) -> DateFormat:
-        if self.date_format is None:
-            raise ConfigError(msg(MessageKey.DATE_FORMAT_EMPTY_RUNTIME))
-        return self.date_format
+        return self.presentation_meta.must_date_format
 
     @property
     def python_date_format(self) -> str:
-        return DATE_FORMAT_TO_PYTHON_MAPPING[self.must_date_format]
+        return self.presentation_meta.python_date_format
 
     def __repr__(self) -> str:
         return (
@@ -820,7 +932,8 @@ def FieldMeta(
     discriminator: str | None = None,
     repr: bool = True,
     **extra: object,
-) -> Any:
+) -> FieldFactoryReturn:
+    """Compatibility wrapper over pydantic.Field for workbook-aware declarations."""
     metadata = _build_excel_metadata(
         label=label,
         is_primary_key=is_primary_key,
@@ -847,7 +960,7 @@ def FieldMeta(
         max_length=max_length,
     )
 
-    json_schema_extra: dict[str, Any] = {EXCEL_FIELD_METADATA_KEY: metadata} | extra
+    json_schema_extra: FieldSchemaExtra = {EXCEL_FIELD_METADATA_KEY: metadata} | dict(extra)
     if include is not None:
         json_schema_extra['include'] = include
     if const is not None:
@@ -859,7 +972,7 @@ def FieldMeta(
     if unique_items is not None:
         json_schema_extra['unique_items'] = unique_items
 
-    field_kwargs: dict[str, Any] = {
+    field_kwargs: FieldKwargs = {
         'repr': repr,
         'json_schema_extra': json_schema_extra,
     }

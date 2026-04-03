@@ -178,14 +178,43 @@ pip install "ExcelAlchemy[minio]"
 Practical examples live in the repository:
 
 - [`examples/annotated_schema.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/annotated_schema.py)
+- [`examples/employee_import_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/employee_import_workflow.py)
+- [`examples/create_or_update_import.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/create_or_update_import.py)
+- [`examples/date_and_range_fields.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/date_and_range_fields.py)
+- [`examples/selection_fields.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/selection_fields.py)
 - [`examples/custom_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/custom_storage.py)
+- [`examples/export_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/export_workflow.py)
+- [`examples/minio_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/minio_storage.py)
 - [`examples/fastapi_upload.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_upload.py)
+- [`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)
+
+If you want the recommended reading order, start with
+[`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md).
 
 ## Public API Boundaries
 
 If you want to know which modules are stable public entry points versus
 compatibility shims or internal modules, see
 [`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md).
+
+## Import Inspection Names
+
+When you inspect import-run state from the facade, prefer the clearer 2.2 names:
+
+- `alchemy.worksheet_table`
+- `alchemy.header_table`
+- `alchemy.cell_error_map`
+- `alchemy.row_error_map`
+
+The older aliases:
+
+- `alchemy.df`
+- `alchemy.header_df`
+- `alchemy.cell_errors`
+- `alchemy.row_errors`
+
+still work in the 2.x line as compatibility paths, but new application code
+should use the clearer names above.
 
 ## Locale-Aware Workbook Output
 
@@ -316,7 +345,7 @@ The short version:
 | Topic | v1-style risk | Current v2 design |
 | --- | --- | --- |
 | Field access | Tight coupling to `__fields__` / `ModelField` | Adapter over `model_fields` |
-| Metadata ownership | Excel metadata mixed with validation internals | `FieldMetaInfo` owns Excel metadata |
+| Metadata ownership | Excel metadata mixed with validation internals | `FieldMetaInfo` is a compatibility facade over layered Excel metadata |
 | Validation integration | Deep reliance on internals | Adapter + explicit runtime validation |
 | Upgrade path | Brittle | Layered |
 

@@ -124,6 +124,19 @@ Additional top-level module guidance:
 - `excelalchemy.header_models` is internal and should not be imported in application code
 - `docs/public-api.md` summarizes stable public modules, compatibility modules, and internal modules
 
+## Import Inspection Names
+
+The 2.2 line also clarifies the recommended names for inspecting import-run
+state from the facade:
+
+- prefer `worksheet_table` over `df`
+- prefer `header_table` over `header_df`
+- prefer `cell_error_map` over `cell_errors`
+- prefer `row_error_map` over `row_errors`
+
+The old names still work as compatibility aliases in the 2.x line, but new
+code should use the clearer names above.
+
 ## Recommended Upgrade Checklist
 
 1. Upgrade your Python runtime to 3.12+.

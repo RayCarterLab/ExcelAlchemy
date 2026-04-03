@@ -305,6 +305,11 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         assert result is not None
         assert result.result == ValidateResult.DATA_INVALID
 
+        assert alchemy.worksheet_table is alchemy.df
+        assert alchemy.header_table is alchemy.header_df
+        assert alchemy.cell_error_map == alchemy.cell_errors
+        assert alchemy.row_error_map == alchemy.row_errors
+
         assert alchemy.cell_errors == {
             0: {
                 6: [ExcelCellError(label=Label('出生日期'), message='Enter a date in yyyy format')],

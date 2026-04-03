@@ -34,8 +34,9 @@ class RowAggregator:
         for unique_label_raw, value in row_data.items():
             unique_label = UniqueLabel(unique_label_raw)
             field_meta = self.layout.unique_label_to_field_meta[unique_label]
+            runtime = field_meta.runtime
 
-            if field_meta.key is None or field_meta.parent_key is None:
+            if runtime.key is None or runtime.parent_key is None:
                 raise ConfigError(
                     msg(MessageKey.FIELD_META_RUNTIME_KEY_MISSING, field_meta_type=type(field_meta).__name__)
                 )
@@ -46,11 +47,11 @@ class RowAggregator:
                 else:
                     continue
 
-            if field_meta.parent_key == field_meta.key:
-                aggregated[str(field_meta.key)] = value
+            if runtime.parent_key == runtime.key:
+                aggregated[str(runtime.key)] = value
             else:
-                parent_key = str(field_meta.parent_key)
-                child_key = str(field_meta.key)
+                parent_key = str(runtime.parent_key)
+                child_key = str(runtime.key)
                 nested = aggregated.setdefault(parent_key, {})
                 if not isinstance(nested, dict):
                     raise TypeError(f'Expected nested payload mapping for {parent_key!r}, got {type(nested)}')

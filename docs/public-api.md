@@ -34,6 +34,9 @@ These modules are the recommended import paths for application code:
   The recommended backend configuration pattern in the 2.x line.
 - `ExcelArtifact`
   The recommended return shape when you need bytes, base64, or data URLs.
+- import inspection names:
+  Prefer `worksheet_table`, `header_table`, `cell_error_map`, and
+  `row_error_map` when reading import-run state from the facade.
 
 ## Compatibility Modules In 2.x
 
@@ -92,3 +95,10 @@ direction is:
   and `excelalchemy.codecs`
 - backend integration through `ExcelStorage`
 - internal orchestration and helper modules treated as implementation details
+
+For import-run state naming, the long-term direction is also:
+
+- clear facade inspection names such as `worksheet_table`, `header_table`,
+  `cell_error_map`, and `row_error_map`
+- older aliases such as `df`, `header_df`, `cell_errors`, and `row_errors`
+  retained only as 2.x compatibility paths

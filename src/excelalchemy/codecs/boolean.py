@@ -1,8 +1,7 @@
 import logging
-from typing import Any
 
 from excelalchemy.codecs import excel_choice_codec
-from excelalchemy.codecs.base import ExcelFieldCodec
+from excelalchemy.codecs.base import ExcelFieldCodec, WorkbookDisplayValue, WorkbookInputValue
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
 from excelalchemy.i18n.messages import message as msg
@@ -31,19 +30,26 @@ class Boolean(ExcelFieldCodec):
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
+        declared = field_meta.declared
+        presentation = field_meta.presentation
         return '\n'.join(
             [
-                field_meta.comment_required,
-                field_meta.comment_hint,
+                declared.comment_required,
+                presentation.comment_hint,
             ]
         )
 
     @classmethod
-    def parse_input(cls, value: Any, field_meta: FieldMetaInfo) -> str:
+    def parse_input(cls, value: WorkbookInputValue, field_meta: FieldMetaInfo) -> str:
         return str(value).strip()
 
     @classmethod
-    def format_display_value(cls, value: bool | str | None | Any, field_meta: FieldMetaInfo) -> str:
+    def format_display_value(
+        cls,
+        value: bool | str | WorkbookDisplayValue | None,
+        field_meta: FieldMetaInfo,
+    ) -> str:
+        declared = field_meta.declared
         if value is None or value == '':
             return cls._false_display()
 
@@ -64,14 +70,14 @@ class Boolean(ExcelFieldCodec):
                 'Type %s could not deserialize %s for field %s; returning the default value %s',
                 cls.__name__,
                 value,
-                field_meta.label,
+                declared.label,
                 cls._false_display(),
             )
 
         return cls._true_display() if str(value) in cls._true_values() else cls._false_display()
 
     @classmethod
-    def normalize_import_value(cls, value: str | bool | Any, field_meta: FieldMetaInfo) -> bool:
+    def normalize_import_value(cls, value: str | bool | WorkbookInputValue, field_meta: FieldMetaInfo) -> bool:
         if isinstance(value, bool):
             return value
 

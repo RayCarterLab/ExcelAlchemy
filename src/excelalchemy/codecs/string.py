@@ -1,7 +1,5 @@
-from typing import Any
-
 from excelalchemy._primitives.constants import CharacterSet
-from excelalchemy.codecs.base import ExcelFieldCodec
+from excelalchemy.codecs.base import ExcelFieldCodec, WorkbookDisplayValue, WorkbookInputValue
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
 from excelalchemy.i18n.messages import message as msg
@@ -85,22 +83,25 @@ def _format_character_set_names(cs: set[CharacterSet]) -> str:
 class String(str, ExcelFieldCodec):
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
+        declared = field_meta.declared
+        constraints = field_meta.constraints
+        presentation = field_meta.presentation
         return '\n'.join(
             [
-                field_meta.comment_unique,
-                field_meta.comment_required,
-                field_meta.comment_max_length,
+                declared.comment_unique,
+                declared.comment_required,
+                constraints.comment_max_length,
                 dmsg(MessageKey.COMMENT_STRING_ALLOWED_CONTENT),
-                field_meta.comment_hint,
+                presentation.comment_hint,
             ]
         )
 
     @classmethod
-    def parse_input(cls, value: Any, field_meta: FieldMetaInfo) -> str:
+    def parse_input(cls, value: WorkbookInputValue, field_meta: FieldMetaInfo) -> str:
         return str(value).strip()
 
     @classmethod
-    def format_display_value(cls, value: str | None | Any, field_meta: FieldMetaInfo) -> str:
+    def format_display_value(cls, value: WorkbookDisplayValue | None, field_meta: FieldMetaInfo) -> str:
         return str(value).strip() if value is not None else ''
 
     # mccabe-complexity: 12
@@ -108,9 +109,10 @@ class String(str, ExcelFieldCodec):
     def normalize_import_value(cls, value: str, field_meta: FieldMetaInfo) -> str:
         parsed = str(value)
         errors: list[str] = []
+        constraints = field_meta.constraints
 
-        if field_meta.importer_max_length is not None and len(parsed) > field_meta.importer_max_length:
-            errors.append(msg(MessageKey.MAX_LENGTH_CHARACTERS, max_length=field_meta.importer_max_length))
+        if constraints.max_length is not None and len(parsed) > constraints.max_length:
+            errors.append(msg(MessageKey.MAX_LENGTH_CHARACTERS, max_length=constraints.max_length))
 
         errors.extend(cls.__check_character_set__(parsed, field_meta))
 
@@ -122,12 +124,14 @@ class String(str, ExcelFieldCodec):
     @classmethod
     def __check_character_set__(cls, value: str, field_meta: FieldMetaInfo) -> list[str]:
         errors: list[str] = []
+        presentation = field_meta.presentation
+        character_set = set(presentation.character_set)
         for single_character in value:
-            if not any(_CHARACTER_SET_TO_VALIDATOR[cs](single_character) for cs in field_meta.character_set):
+            if not any(_CHARACTER_SET_TO_VALIDATOR[cs](single_character) for cs in character_set):
                 errors.append(
                     msg(
                         MessageKey.ONLY_CHARACTER_SET_ALLOWED,
-                        character_set_names=_format_character_set_names(field_meta.character_set),
+                        character_set_names=_format_character_set_names(character_set),
                     )
                 )
                 break

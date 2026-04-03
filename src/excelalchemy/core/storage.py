@@ -1,6 +1,6 @@
 """Storage factory for resolving ExcelAlchemy storage strategies."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
@@ -43,7 +43,7 @@ def build_storage_gateway[
     return MissingStorageGateway()
 
 
-def __getattr__(name: str) -> Any:
+def __getattr__(name: str) -> object:
     if name == 'MinioStorageGateway':
         from excelalchemy.core.storage_minio import MinioStorageGateway
 
