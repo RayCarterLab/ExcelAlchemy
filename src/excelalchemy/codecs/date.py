@@ -83,7 +83,9 @@ class Date(ExcelFieldCodec, datetime):
             case datetime():
                 return value.strftime(presentation.python_date_format)
             case int() | float():
-                return datetime.fromtimestamp(int(value) / MILLISECOND_TO_SECOND).strftime(presentation.python_date_format)
+                return datetime.fromtimestamp(int(value) / MILLISECOND_TO_SECOND).strftime(
+                    presentation.python_date_format
+                )
             case _:
                 return str(value) if value is not None else ''
 

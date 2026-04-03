@@ -104,9 +104,7 @@ class RuntimeFieldBinding:
     def make_unique_label(self, *, label: Label) -> UniqueLabel:
         if self.parent_label is None:
             raise RuntimeError(msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME))
-        unique_label = (
-            f'{self.parent_label}{UNIQUE_HEADER_CONNECTOR}{label}' if self.parent_label != label else label
-        )
+        unique_label = f'{self.parent_label}{UNIQUE_HEADER_CONNECTOR}{label}' if self.parent_label != label else label
         return UniqueLabel(unique_label)
 
     def make_unique_key(self, *, key: Key | None) -> UniqueKey:
@@ -158,7 +156,9 @@ class WorkbookPresentationMeta:
     def comment_options(self) -> str:
         if self.options is None:
             return ''
-        return dmsg(MessageKey.COMMENT_OPTIONS, value=MULTI_CHECKBOX_SEPARATOR.join(option.name for option in self.options))
+        return dmsg(
+            MessageKey.COMMENT_OPTIONS, value=MULTI_CHECKBOX_SEPARATOR.join(option.name for option in self.options)
+        )
 
     @property
     def comment_fraction_digits(self) -> str:
