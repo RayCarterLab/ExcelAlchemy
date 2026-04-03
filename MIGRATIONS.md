@@ -51,7 +51,7 @@ Prefer explicit storage objects:
 from excelalchemy import ExporterConfig
 from excelalchemy.core.storage_minio import MinioStorageGateway
 
-config = ExporterConfig(
+config = ExporterConfig.for_storage(
     ExporterModel,
     storage=MinioStorageGateway(minio_client, bucket_name='excel-files'),
 )
@@ -59,7 +59,30 @@ config = ExporterConfig(
 
 ### Legacy compatibility
 
-The older `minio=..., bucket_name=..., url_expires=...` configuration style is still accepted for compatibility, but it is no longer the preferred shape of the API.
+The older `minio=..., bucket_name=..., url_expires=...` configuration style is still accepted for compatibility, but it is no longer the preferred shape of the API and now emits a deprecation warning in the 2.x line.
+
+### Recommended importer constructors
+
+The 2.2 line also adds more explicit constructors for common importer modes:
+
+```python
+config = ImporterConfig.for_create(ImporterModel, creator=create_func, storage=storage)
+```
+
+```python
+config = ImporterConfig.for_update(ImporterModel, updater=update_func, storage=storage)
+```
+
+```python
+config = ImporterConfig.for_create_or_update(
+    create_importer_model=CreateModel,
+    update_importer_model=UpdateModel,
+    is_data_exist=is_data_exist,
+    creator=create_func,
+    updater=update_func,
+    storage=storage,
+)
+```
 
 ## pandas
 
@@ -99,6 +122,7 @@ Additional top-level module guidance:
 - `excelalchemy.exceptions` is the stable replacement for `excelalchemy.exc`
 - `excelalchemy.identity` is now a compatibility import; prefer `from excelalchemy import Label, Key, UrlStr, ...`
 - `excelalchemy.header_models` is internal and should not be imported in application code
+- `docs/public-api.md` summarizes stable public modules, compatibility modules, and internal modules
 
 ## Recommended Upgrade Checklist
 

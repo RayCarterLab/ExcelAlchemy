@@ -4,6 +4,43 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog and versioned according to PEP 440.
 
+## [2.2.2] - Unreleased
+
+This release continues the stable 2.x line with stronger developer ergonomics,
+clearer public API guidance, and better release-time smoke coverage.
+
+### Added
+
+- Added repository examples for:
+  `Annotated` schema declarations, custom storage integration, and FastAPI
+  upload flows
+- Added `docs/public-api.md` to document stable public modules, compatibility
+  modules, and internal modules
+- Added `scripts/smoke_package.py` so release workflows can smoke-test template
+  generation, import execution, and export generation from an installed package
+
+### Changed
+
+- Updated the release workflow to run package-level smoke tests after wheel and
+  source-distribution installation
+- Updated `README.md`, `README_cn.md`, and `MIGRATIONS.md` to point users
+  toward examples, public API guidance, and the recommended config/storage
+  patterns
+
+### Compatibility Notes
+
+- No public import or export workflow API was removed in this release
+- The new examples and docs clarify recommended public paths without changing
+  existing 2.x compatibility behavior
+
+### Release Summary
+
+- the repository now includes real integration examples instead of relying only
+  on README snippets
+- public API boundaries are documented explicitly
+- release publishing now includes stronger smoke coverage for installed
+  packages
+
 ## [2.2.1] - Unreleased
 
 This release continues the stable 2.x line with deeper metadata layering,
