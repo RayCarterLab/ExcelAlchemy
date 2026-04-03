@@ -38,6 +38,17 @@ jobs:
           rm -rf dist
           uv build
 
+      - name: Verify release tag matches package version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          PACKAGE_VERSION="$(uv run python -c "import excelalchemy; print(excelalchemy.__version__)")"
+          NORMALIZED_TAG="${RELEASE_TAG#v}"
+          if [ "$PACKAGE_VERSION" != "$NORMALIZED_TAG" ]; then
+            echo "Release tag ($RELEASE_TAG) does not match excelalchemy.__version__ ($PACKAGE_VERSION)"
+            exit 1
+          fi
+
       - name: Check package metadata
         run: uvx twine check dist/*
 
