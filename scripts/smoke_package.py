@@ -1,0 +1,99 @@
+"""Release smoke test for installed ExcelAlchemy packages."""
+
+from __future__ import annotations
+
+import asyncio
+import io
+from base64 import b64decode
+
+from openpyxl import load_workbook
+from pydantic import BaseModel
+
+from excelalchemy import ExcelAlchemy, ExcelStorage, ExporterConfig, FieldMeta, ImporterConfig, Number, String, UrlStr
+from excelalchemy.core.table import WorksheetTable
+
+
+class SmokeImporter(BaseModel):
+    full_name: String = FieldMeta(label='Full name', order=1)
+    age: Number = FieldMeta(label='Age', order=2)
+
+
+class InMemorySmokeStorage(ExcelStorage):
+    def __init__(self) -> None:
+        self.fixtures: dict[str, bytes] = {}
+        self.uploaded: dict[str, bytes] = {}
+
+    def read_excel_table(self, input_excel_name: str, *, skiprows: int, sheet_name: str) -> WorksheetTable:
+        workbook = load_workbook(io.BytesIO(self.fixtures[input_excel_name]), data_only=True)
+        try:
+            worksheet = workbook[sheet_name]
+            rows = [
+                [None if value is None else str(value) for value in row]
+                for row in worksheet.iter_rows(
+                    min_row=skiprows + 1,
+                    max_row=worksheet.max_row,
+                    max_col=worksheet.max_column,
+                    values_only=True,
+                )
+            ]
+        finally:
+            workbook.close()
+
+        while rows and all(value is None for value in rows[-1]):
+            rows.pop()
+
+        return WorksheetTable(rows=rows)
+
+    def upload_excel(self, output_name: str, content_with_prefix: str) -> UrlStr:
+        _, payload = content_with_prefix.split(',', 1)
+        self.uploaded[output_name] = b64decode(payload)
+        return UrlStr(f'memory://{output_name}')
+
+
+async def _create_employee(row: dict[str, object], context: object) -> dict[str, object]:
+    return row
+
+
+def _build_import_fixture(storage: InMemorySmokeStorage, template_bytes: bytes) -> None:
+    workbook = load_workbook(io.BytesIO(template_bytes))
+    try:
+        worksheet = workbook['Sheet1']
+        worksheet['A3'] = 'TaylorChen'
+        worksheet['B3'] = '32'
+
+        buffer = io.BytesIO()
+        workbook.save(buffer)
+        storage.fixtures['smoke-input.xlsx'] = buffer.getvalue()
+    finally:
+        workbook.close()
+
+
+async def main() -> None:
+    storage = InMemorySmokeStorage()
+
+    importer = ExcelAlchemy(
+        ImporterConfig.for_create(
+            SmokeImporter,
+            creator=_create_employee,
+            storage=storage,
+            locale='en',
+        )
+    )
+    template = importer.download_template_artifact(filename='smoke-template.xlsx')
+    assert len(template.as_bytes()) > 0
+
+    _build_import_fixture(storage, template.as_bytes())
+    import_result = await importer.import_data('smoke-input.xlsx', 'smoke-result.xlsx')
+    assert import_result.success_count == 1
+    assert import_result.fail_count == 0
+
+    exporter = ExcelAlchemy(ExporterConfig.for_storage(SmokeImporter, storage=storage, locale='en'))
+    artifact = exporter.export_artifact(
+        [{'full_name': 'TaylorChen', 'age': 32}],
+        filename='smoke-export.xlsx',
+    )
+    assert len(artifact.as_bytes()) > 0
+
+
+if __name__ == '__main__':
+    asyncio.run(main())

@@ -6,7 +6,7 @@
 ![Lint](https://img.shields.io/badge/lint-ruff-D7FF64)
 ![Typing](https://img.shields.io/badge/typing-pyright-2C6BED)
 
-[中文 README](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README_cn.md) · [About](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/ABOUT.md) · [Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/architecture.md) · [Locale Policy](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/locale.md) · [Changelog](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/CHANGELOG.md) · [Migration Notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/MIGRATIONS.md)
+[中文 README](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README_cn.md) · [About](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/ABOUT.md) · [Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/architecture.md) · [Public API](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md) · [Locale Policy](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/locale.md) · [Changelog](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/CHANGELOG.md) · [Migration Notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/MIGRATIONS.md)
 
 ExcelAlchemy is a schema-driven Python library for Excel import and export workflows.
 It turns Pydantic models into typed workbook contracts: generate templates, validate uploads, map failures back to rows
@@ -16,7 +16,7 @@ This repository is also a design artifact.
 It documents a series of deliberate engineering choices: `src/` layout, Pydantic v2 migration, pandas removal,
 pluggable storage, `uv`-based workflows, and locale-aware workbook output.
 
-The current stable release is `2.1.0`, which continues the ExcelAlchemy 2.x line with a lighter import facade, clearer internal layering, and naming cleanup.
+The current stable release is `2.2.0`, which continues the ExcelAlchemy 2.x line with a lighter import facade, clearer config ergonomics, and a more explicit protocol-first storage story.
 
 ## At a Glance
 
@@ -172,6 +172,20 @@ If you want the built-in Minio backend:
 ```bash
 pip install "ExcelAlchemy[minio]"
 ```
+
+## Examples
+
+Practical examples live in the repository:
+
+- [`examples/annotated_schema.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/annotated_schema.py)
+- [`examples/custom_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/custom_storage.py)
+- [`examples/fastapi_upload.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_upload.py)
+
+## Public API Boundaries
+
+If you want to know which modules are stable public entry points versus
+compatibility shims or internal modules, see
+[`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md).
 
 ## Locale-Aware Workbook Output
 
