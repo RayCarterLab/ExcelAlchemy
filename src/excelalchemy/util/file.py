@@ -1,6 +1,6 @@
 import math
 from collections.abc import Mapping, Sequence
-from typing import Any, cast
+from typing import cast
 
 from excelalchemy._primitives.constants import UNIQUE_HEADER_CONNECTOR
 
@@ -37,7 +37,7 @@ def flatten(data: Mapping[str, object], level: list[str] | None = None) -> dict[
     return tmp_dict
 
 
-def value_is_nan(value: Any) -> bool:
+def value_is_nan(value: object) -> bool:
     """Return whether a worksheet value should be treated as empty or NaN."""
     if value is None:
         return True

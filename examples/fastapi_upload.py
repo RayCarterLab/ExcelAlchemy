@@ -1,7 +1,5 @@
 """FastAPI integration sketch for template download and workbook import."""
 
-from __future__ import annotations
-
 from io import BytesIO
 
 from fastapi import FastAPI, HTTPException, UploadFile

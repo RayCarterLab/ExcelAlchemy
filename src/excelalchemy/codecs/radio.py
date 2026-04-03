@@ -1,9 +1,8 @@
 import logging
-from typing import Any
 
 from excelalchemy._primitives.constants import MULTI_CHECKBOX_SEPARATOR
 from excelalchemy._primitives.identity import OptionId
-from excelalchemy.codecs.base import ExcelFieldCodec
+from excelalchemy.codecs.base import ExcelFieldCodec, WorkbookDisplayValue, WorkbookInputValue
 from excelalchemy.exceptions import ProgrammaticError
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
@@ -16,62 +15,70 @@ class Radio(ExcelFieldCodec, str):
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
-        if not field_meta.options:
-            logging.error('Field %s of type %s must define options', field_meta.label, cls.__name__)
+        declared = field_meta.declared
+        presentation = field_meta.presentation
+        if not presentation.options:
+            logging.error('Field %s of type %s must define options', declared.label, cls.__name__)
 
         return '\n'.join(
             [
-                field_meta.comment_required,
-                field_meta.comment_options,
+                declared.comment_required,
+                presentation.comment_options,
                 dmsg(MessageKey.COMMENT_SELECTION_MODE, value=dmsg(MessageKey.COMMENT_SELECTION_VALUE_SINGLE)),
-                field_meta.comment_hint,
+                presentation.comment_hint,
             ]
         )
 
     @classmethod
-    def parse_input(cls, value: Any, field_meta: FieldMetaInfo) -> str:
+    def parse_input(cls, value: WorkbookInputValue, field_meta: FieldMetaInfo) -> str:
         return str(value).strip()
 
     @classmethod
-    def format_display_value(cls, value: Any | None, field_meta: FieldMetaInfo) -> str:
+    def format_display_value(cls, value: WorkbookDisplayValue | None, field_meta: FieldMetaInfo) -> str:
+        declared = field_meta.declared
+        presentation = field_meta.presentation
         if value is None or value == '':
             return ''
 
         try:
-            return field_meta.options_id_map[value.strip()].name
+            return presentation.options_id_map(field_label=declared.label)[value.strip()].name
         except Exception as exc:
             logging.warning(
                 'Type %s could not resolve option %s for field %s; returning the original value. Reason: %s',
                 cls.__name__,
                 value,
-                field_meta.label,
+                declared.label,
                 exc,
             )
         return value if value is not None else ''
 
     @classmethod
     def normalize_import_value(cls, value: str, field_meta: FieldMetaInfo) -> OptionId | str:  # return Option.id
+        declared = field_meta.declared
+        presentation = field_meta.presentation
         if MULTI_CHECKBOX_SEPARATOR in value:
             raise ValueError(msg(MessageKey.MULTIPLE_SELECTIONS_NOT_SUPPORTED))
 
         parsed = value.strip()
 
-        if field_meta.options is None:
+        if presentation.options is None:
             raise ProgrammaticError(msg(MessageKey.OPTIONS_CANNOT_BE_NONE_FOR_SELECTION_FIELDS))
 
-        if not field_meta.options:  # empty
+        if not presentation.options:  # empty
             logging.warning(
-                'Field %s of type %s has no options; returning the original value', field_meta.label, cls.__name__
+                'Field %s of type %s has no options; returning the original value', declared.label, cls.__name__
             )
             return parsed
 
-        if parsed in field_meta.options_id_map:
+        options_id_map = presentation.options_id_map(field_label=declared.label)
+        if parsed in options_id_map:
             return parsed
 
-        if parsed not in field_meta.options_name_map:
+        options_name_map = presentation.options_name_map(field_label=declared.label)
+        if parsed not in options_name_map:
             raise ValueError(msg(MessageKey.OPTION_NOT_FOUND_FIELD_COMMENT))
 
-        return field_meta.options_name_map[parsed].id
+        return options_name_map[parsed].id
 
 
 SingleChoiceCodec = Radio

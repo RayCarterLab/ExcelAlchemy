@@ -1,7 +1,6 @@
-from typing import Any
-
 from pydantic import HttpUrl, TypeAdapter
 
+from excelalchemy.codecs.base import WorkbookInputValue
 from excelalchemy.codecs.string import String
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import message as msg
@@ -12,7 +11,7 @@ class Url(String):
     _validator = TypeAdapter(HttpUrl)
 
     @classmethod
-    def normalize_import_value(cls, value: Any, field_meta: FieldMetaInfo) -> str:
+    def normalize_import_value(cls, value: WorkbookInputValue, field_meta: FieldMetaInfo) -> str:
         parsed = str(value)
         errors: list[str] = []
 

@@ -4,7 +4,7 @@ import base64
 import io
 from collections import defaultdict
 from math import ceil
-from typing import Any, BinaryIO, cast
+from typing import BinaryIO, cast
 
 from openpyxl import Workbook
 from openpyxl.cell.cell import Cell
@@ -21,7 +21,7 @@ from excelalchemy._primitives.constants import (
     FONT_READ_COLOR,
 )
 from excelalchemy._primitives.identity import ColumnIndex, DataUrlStr, Label, RowIndex, UniqueLabel
-from excelalchemy.core.table import WorksheetTable
+from excelalchemy.core.table import WorksheetTable, WorksheetValue
 from excelalchemy.exceptions import ExcelCellError
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
@@ -83,7 +83,7 @@ def _style_header_cell(cell: Cell, field_meta: FieldMetaInfo) -> None:
     comment = _build_comment(field_meta)
     if comment is not None:
         cell.comment = comment
-    if field_meta.required:
+    if field_meta.declared.effective_required:
         cell.fill = PatternFill(start_color=BACKGROUND_REQUIRED_COLOR, fill_type='solid')
     cell.font = Font(bold=True)
     cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
@@ -143,7 +143,9 @@ def _write_vertically_merged_header(
         start=column_write_offset + OPENPYXL_EXCEL_INDEX_START_AT,
     ):
         field_meta = field_meta_mapping[cast(UniqueLabel, column)]
-        if field_meta.label == field_meta.parent_label:
+        declared = field_meta.declared
+        runtime = field_meta.runtime
+        if declared.label == runtime.parent_label:
             worksheet.merge_cells(
                 start_row=start_row,
                 start_column=openpyxl_col_index,
@@ -162,26 +164,30 @@ def _write_horizontally_merged_header(
 ) -> None:
     counter: dict[Label, int] = defaultdict(int)
     for field_meta in field_meta_mapping.values():
-        if field_meta.parent_label is None:
+        declared = field_meta.declared
+        runtime = field_meta.runtime
+        if runtime.parent_label is None:
             raise RuntimeError(msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME))
-        counter[field_meta.parent_label] += 1
+        counter[runtime.parent_label] += 1
 
     for openpyxl_col_index, column in enumerate(
         worksheet_table.columns[column_write_offset:],
         start=column_write_offset + OPENPYXL_EXCEL_INDEX_START_AT,
     ):
         field_meta = field_meta_mapping[cast(UniqueLabel, column)]
-        if field_meta.parent_label is None:
+        declared = field_meta.declared
+        runtime = field_meta.runtime
+        if runtime.parent_label is None:
             raise RuntimeError(msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME))
-        if field_meta.label != field_meta.parent_label and field_meta.offset == 0:
+        if declared.label != runtime.parent_label and runtime.offset == 0:
             cell = _worksheet_cell(worksheet, row=start_row, column=openpyxl_col_index)
-            cell.value = str(field_meta.parent_label)
+            cell.value = str(runtime.parent_label)
             cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
             worksheet.merge_cells(
                 start_row=start_row,
                 start_column=openpyxl_col_index,
                 end_row=start_row,
-                end_column=openpyxl_col_index + counter[field_meta.parent_label] - 1,
+                end_column=openpyxl_col_index + counter[runtime.parent_label] - 1,
             )
 
 
@@ -231,7 +237,7 @@ def _get_parsed_value(
     col_index: int,
     field_meta_mapping: dict[UniqueLabel, FieldMetaInfo],
 ) -> str:
-    cell_value: str | Any | None = worksheet_table.iloc[row_index, col_index]
+    cell_value: WorksheetValue = worksheet_table.iloc[row_index, col_index]
 
     if value_is_nan(cell_value):
         return ''

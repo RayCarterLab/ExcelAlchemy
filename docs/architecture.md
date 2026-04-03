@@ -99,8 +99,10 @@ flowchart LR
 
 `src/excelalchemy/metadata.py`
 
-- owns Excel field metadata
-- exposes workbook comment fragments
+- exposes `FieldMeta(...)` / `ExcelMeta(...)` as the stable public entry points
+- keeps `FieldMetaInfo` as a compatibility facade for the 2.x line
+- splits the real metadata state into declaration, runtime binding,
+  workbook presentation, and import-constraint layers
 - keeps runtime metadata separate from validation backend internals
 
 ### Pydantic Integration

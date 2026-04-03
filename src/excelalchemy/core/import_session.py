@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 from excelalchemy._primitives.constants import REASON_COLUMN_KEY, RESULT_COLUMN_KEY
 from excelalchemy._primitives.header_models import ExcelHeader
-from excelalchemy._primitives.identity import DataUrlStr, RowIndex, UniqueLabel, UrlStr
+from excelalchemy._primitives.identity import ColumnIndex, DataUrlStr, RowIndex, UniqueLabel, UrlStr
 from excelalchemy._primitives.payloads import FlatRowPayload, ModelRowPayload
 from excelalchemy.codecs.base import SystemReserved
 from excelalchemy.config import ImporterConfig
@@ -22,7 +22,7 @@ from excelalchemy.core.rows import ImportIssueTracker, RowAggregator
 from excelalchemy.core.schema import ExcelSchemaLayout
 from excelalchemy.core.storage_protocol import ExcelStorage
 from excelalchemy.core.table import WorksheetTable
-from excelalchemy.exceptions import ConfigError
+from excelalchemy.exceptions import ConfigError, ExcelCellError, ExcelRowError
 from excelalchemy.i18n.messages import MessageKey, use_display_locale
 from excelalchemy.i18n.messages import display_message as dmsg
 from excelalchemy.i18n.messages import message as msg
@@ -96,7 +96,7 @@ class ImportSession[
 
         self.worksheet_table = WorksheetTable()
         self.header_table = WorksheetTable()
-        self._state_df_has_been_loaded = False
+        self._workbook_loaded = False
 
         self.issue_tracker = ImportIssueTracker(self.layout, self.import_result_field_meta)
         self.row_aggregator = RowAggregator(self.layout, self.behavior.import_mode)
@@ -104,12 +104,22 @@ class ImportSession[
         self._snapshot = ImportSessionSnapshot()
 
     @property
-    def cell_errors(self):
+    def cell_error_map(self) -> dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]]:
         return self.issue_tracker.cell_errors
 
     @property
-    def row_errors(self):
+    def row_error_map(self) -> dict[RowIndex, list[ExcelRowError | ExcelCellError]]:
         return self.issue_tracker.row_errors
+
+    @property
+    def cell_errors(self) -> dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]]:
+        """Backward-compatible alias for cell_error_map."""
+        return self.cell_error_map
+
+    @property
+    def row_errors(self) -> dict[RowIndex, list[ExcelRowError | ExcelCellError]]:
+        """Backward-compatible alias for row_error_map."""
+        return self.row_error_map
 
     @property
     def snapshot(self) -> ImportSessionSnapshot:
@@ -117,13 +127,13 @@ class ImportSession[
 
     @cached_property
     def input_excel_has_merged_header(self) -> bool:
-        if not self._state_df_has_been_loaded:
+        if not self._workbook_loaded:
             raise ConfigError(msg(MessageKey.WORKSHEET_TABLE_NOT_LOADED))
         return self.header_parser.has_merged_header(self.header_table)
 
     @cached_property
     def input_excel_headers(self) -> list[ExcelHeader]:
-        if not self._state_df_has_been_loaded:
+        if not self._workbook_loaded:
             raise ConfigError(msg(MessageKey.WORKSHEET_TABLE_NOT_LOADED))
         return self.header_parser.extract(self.header_table)
 
@@ -203,7 +213,7 @@ class ImportSession[
         return validate_header
 
     def _load_workbook(self, input_excel_name: str) -> WorksheetTable:
-        if not self._state_df_has_been_loaded:
+        if not self._workbook_loaded:
             worksheet_table = self.storage_gateway.read_excel_table(
                 input_excel_name,
                 skiprows=HEADER_HINT_LINE_COUNT,
@@ -211,7 +221,7 @@ class ImportSession[
             )
             self.worksheet_table = worksheet_table
             self.header_table = worksheet_table.head(2)
-            self._state_df_has_been_loaded = True
+            self._workbook_loaded = True
             self._snapshot = replace(self._snapshot, phase=ImportSessionPhase.WORKBOOK_LOADED)
         return self.worksheet_table
 
@@ -260,7 +270,7 @@ class ImportSession[
             self.worksheet_table,
             field_meta_mapping=self.import_result_label_to_field_meta | self.layout.unique_label_to_field_meta,
             has_merged_header=self.input_excel_has_merged_header,
-            errors=self.cell_errors,
+            errors=self.cell_error_map,
         )
 
     def _upload_file(self, output_name: str, content_with_prefix: DataUrlStr) -> UrlStr:

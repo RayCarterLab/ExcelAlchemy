@@ -358,6 +358,32 @@ class TestFieldMetadata(BaseTestCase):
         assert field_meta.runtime_binding.parent_key == 'email'
         assert field_meta.presentation_meta.hint == '请输入邮箱'
         assert field_meta.import_constraints.max_length == 10
+        assert field_meta.declared is field_meta.declared_meta
+        assert field_meta.runtime is field_meta.runtime_binding
+        assert field_meta.presentation is field_meta.presentation_meta
+        assert field_meta.constraints is field_meta.import_constraints
+
+    async def test_split_layers_own_comment_and_option_mapping_logic(self):
+        class Importer(BaseModel):
+            email: Email = FieldMeta(
+                label='邮箱',
+                order=1,
+                unique=True,
+                hint='请输入邮箱',
+                max_length=10,
+                options=[Option(id=OptionId('work'), name='工作邮箱')],
+            )
+
+        alchemy = self.build_alchemy(Importer)
+        field_meta = alchemy.ordered_field_meta[0]
+
+        assert field_meta.declared.comment_required == '必填性：必填'
+        assert field_meta.declared.comment_unique == '唯一性：唯一'
+        assert field_meta.presentation.comment_hint == '提示：请输入邮箱'
+        assert field_meta.presentation.options_name_map(field_label=field_meta.label) == {
+            '工作邮箱': Option(id=OptionId('work'), name='工作邮箱')
+        }
+        assert field_meta.constraints.comment_max_length == '最大长度：10'
 
     async def test_clone_keeps_split_internal_layers_independent(self):
         class Importer(BaseModel):

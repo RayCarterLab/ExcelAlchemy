@@ -97,18 +97,18 @@ class ExcelAlchemy[
         self.ordered_field_meta = self._layout.ordered_field_meta
 
     def __get_importer_model__(self) -> type[ImportCreateModelT] | type[ImportUpdateModelT] | type[ExportModelT]:
-        importer_model = None
+        importer_model: type[ImportCreateModelT] | type[ImportUpdateModelT] | type[ExportModelT] | None = None
         if self.excel_mode == ExcelMode.IMPORT:
             if not isinstance(self.config, ImporterConfig):
                 raise ConfigError(msg(MessageKey.IMPORT_MODE_CONFIG_REQUIRED, config_name=ImporterConfig.__name__))
             if self.config.behavior.import_mode in (ImportMode.CREATE, ImportMode.CREATE_OR_UPDATE):
-                importer_model = self.config.schema_options.create_importer_model  # type: ignore[assignment]
+                importer_model = self.config.schema_options.create_importer_model
             elif self.config.behavior.import_mode == ImportMode.UPDATE:
-                importer_model = self.config.schema_options.update_importer_model  # type: ignore[assignment]
+                importer_model = self.config.schema_options.update_importer_model
         elif self.excel_mode == ExcelMode.EXPORT:
             if not isinstance(self.config, ExporterConfig):
                 raise ConfigError(msg(MessageKey.EXPORT_MODE_CONFIG_REQUIRED, config_name=ExporterConfig.__name__))
-            importer_model = self.config.schema_options.exporter_model  # type: ignore[assignment]
+            importer_model = self.config.schema_options.exporter_model
 
         if importer_model is None:
             raise ConfigError(msg(MessageKey.NO_IMPORTER_OR_EXPORTER_MODEL_CONFIGURED))
@@ -192,7 +192,9 @@ class ExcelAlchemy[
 
     @property
     def worksheet_table(self) -> WorksheetTable:
-        return self.df
+        if self._last_import_session is None:
+            return WorksheetTable()
+        return self._last_import_session.worksheet_table
 
     @property
     def header_df(self) -> WorksheetTable:
@@ -203,19 +205,31 @@ class ExcelAlchemy[
 
     @property
     def header_table(self) -> WorksheetTable:
-        return self.header_df
+        if self._last_import_session is None:
+            return WorksheetTable()
+        return self._last_import_session.header_table
+
+    @property
+    def cell_error_map(self) -> dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]]:
+        if self._last_import_session is None:
+            return {}
+        return self._last_import_session.cell_error_map
+
+    @property
+    def row_error_map(self) -> dict[RowIndex, list[ExcelRowError | ExcelCellError]]:
+        if self._last_import_session is None:
+            return {}
+        return self._last_import_session.row_error_map
 
     @property
     def cell_errors(self) -> dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]]:
-        if self._last_import_session is None:
-            return {}
-        return self._last_import_session.cell_errors
+        """Backward-compatible alias for cell_error_map."""
+        return self.cell_error_map
 
     @property
     def row_errors(self) -> dict[RowIndex, list[ExcelRowError | ExcelCellError]]:
-        if self._last_import_session is None:
-            return {}
-        return self._last_import_session.row_errors
+        """Backward-compatible alias for row_error_map."""
+        return self.row_error_map
 
     @property
     def last_import_snapshot(self) -> ImportSessionSnapshot | None:

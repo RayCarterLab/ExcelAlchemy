@@ -16,12 +16,14 @@ class MultiCheckbox(ExcelFieldCodec, list[str]):
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
+        declared = field_meta.declared
+        presentation = field_meta.presentation
         return '\n'.join(
             [
-                field_meta.comment_required,
-                field_meta.comment_options,
+                declared.comment_required,
+                presentation.comment_options,
                 dmsg(MessageKey.COMMENT_SELECTION_MODE, value=dmsg(MessageKey.COMMENT_SELECTION_VALUE_MULTI)),
-                field_meta.comment_hint,
+                presentation.comment_hint,
             ]
         )
 
@@ -41,25 +43,27 @@ class MultiCheckbox(ExcelFieldCodec, list[str]):
 
     @classmethod
     def normalize_import_value(cls, value: object, field_meta: FieldMetaInfo) -> list[str]:  # OptionId
+        declared = field_meta.declared
+        presentation = field_meta.presentation
         if not isinstance(value, list):
             raise ValueError(msg(MessageKey.OPTION_NOT_FOUND_HEADER_COMMENT))
 
         items = cast(list[object], value)
         parsed = [str(item).strip() for item in items]
 
-        if field_meta.options is None:
+        if presentation.options is None:
             raise ProgrammaticError(msg(MessageKey.OPTIONS_CANNOT_BE_NONE_FOR_VALUE_TYPE, value_type=cls.__name__))
 
-        if not field_meta.options:  # empty
+        if not presentation.options:  # empty
             logging.warning(
-                'Field %s of type %s has no options; returning the original value', field_meta.label, cls.__name__
+                'Field %s of type %s has no options; returning the original value', declared.label, cls.__name__
             )
             return parsed
 
         if len(parsed) != len(set(parsed)):
             raise ValueError(msg(MessageKey.OPTIONS_CONTAIN_DUPLICATES))
 
-        result, errors = field_meta.exchange_names_to_option_ids_with_errors(parsed)
+        result, errors = presentation.exchange_names_to_option_ids_with_errors(parsed, field_label=declared.label)
 
         if errors:
             raise ValueError(*errors)
@@ -68,6 +72,8 @@ class MultiCheckbox(ExcelFieldCodec, list[str]):
 
     @classmethod
     def format_display_value(cls, value: str | list[OptionId] | None, field_meta: FieldMetaInfo) -> str:
+        declared = field_meta.declared
+        presentation = field_meta.presentation
         match value:
             case None | '':
                 return ''
@@ -75,7 +81,7 @@ class MultiCheckbox(ExcelFieldCodec, list[str]):
                 return value
             case list():
                 option_ids = [OptionId(option_id) for option_id in value]
-                option_names = field_meta.exchange_option_ids_to_names(option_ids)
+                option_names = presentation.exchange_option_ids_to_names(option_ids, field_label=declared.label)
                 return f'{MULTI_CHECKBOX_SEPARATOR}'.join(option_names)
 
 

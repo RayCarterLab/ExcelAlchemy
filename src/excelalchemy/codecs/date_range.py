@@ -1,7 +1,7 @@
 import logging
 from collections.abc import Mapping
 from datetime import datetime
-from typing import Any, cast
+from typing import cast
 
 import pendulum
 from pendulum import DateTime
@@ -28,7 +28,7 @@ class DateRange(CompositeExcelFieldCodec):
     __name__ = 'DateRange'
 
     @classmethod
-    def model_validate(cls, obj: Any) -> 'DateRange':
+    def model_validate(cls, obj: object) -> 'DateRange':
         impl = _DateRangeImpl.model_validate(obj)
         self = cls(impl.start, impl.end)
         return self
@@ -50,14 +50,16 @@ class DateRange(CompositeExcelFieldCodec):
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
-        if field_meta.date_format is None:
+        declared = field_meta.declared
+        presentation = field_meta.presentation
+        if presentation.date_format is None:
             raise RuntimeError(msg(MessageKey.DATE_FORMAT_NOT_CONFIGURED))
 
         return '\n'.join(
             [
-                field_meta.comment_required,
-                field_meta.comment_date_format,
-                dmsg(MessageKey.COMMENT_DATE_RANGE_START_NOT_AFTER_END, extra_hint=field_meta.hint or ''),
+                declared.comment_required,
+                presentation.comment_date_format,
+                dmsg(MessageKey.COMMENT_DATE_RANGE_START_NOT_AFTER_END, extra_hint=presentation.hint or ''),
             ]
         )
 
@@ -92,20 +94,21 @@ class DateRange(CompositeExcelFieldCodec):
         value: object,
         field_meta: FieldMetaInfo,
     ) -> 'DateRange':
+        presentation = field_meta.presentation
         try:
             parsed = DateRange.model_validate(value)
-            parsed.start = pendulum.instance(parsed.start, tz=field_meta.timezone) if parsed.start else None
-            parsed.end = pendulum.instance(parsed.end, tz=field_meta.timezone) if parsed.end else None
+            parsed.start = pendulum.instance(parsed.start, tz=presentation.timezone) if parsed.start else None
+            parsed.end = pendulum.instance(parsed.end, tz=presentation.timezone) if parsed.end else None
         except Exception as exc:
             raise ValueError(msg(MessageKey.INVALID_INPUT)) from exc
 
         errors: list[str] = []
-        now = datetime.now(tz=field_meta.timezone)
+        now = datetime.now(tz=presentation.timezone)
 
         if parsed.start and parsed.end and parsed.start > parsed.end:
             errors.append(msg(MessageKey.DATE_RANGE_START_AFTER_END))
 
-        match field_meta.date_range_option:
+        match presentation.date_range_option:
             case DataRangeOption.PRE:
                 if (parsed.start and parsed.start > now) or (parsed.end and parsed.end > now):
                     errors.append(msg(MessageKey.DATE_MUST_BE_EARLIER_THAN_NOW))
@@ -124,7 +127,8 @@ class DateRange(CompositeExcelFieldCodec):
     def format_display_value(cls, value: object | None, field_meta: FieldMetaInfo) -> str:
         if value is None or value == '':
             return ''
-        date_format = field_meta.must_date_format
+        presentation = field_meta.presentation
+        date_format = presentation.must_date_format
         py_date_format = DATE_FORMAT_TO_PYTHON_MAPPING[date_format]
 
         if isinstance(value, str):
@@ -178,11 +182,12 @@ class DateRange(CompositeExcelFieldCodec):
 
     @staticmethod
     def _parse_datetime_text(value: str, field_meta: FieldMetaInfo) -> DateTime:
+        presentation = field_meta.presentation
         parsed = pendulum.parse(value)
         if isinstance(parsed, DateTime):
-            return parsed.replace(tzinfo=field_meta.timezone)
+            return parsed.replace(tzinfo=presentation.timezone)
         if isinstance(parsed, datetime):
-            return pendulum.instance(parsed).replace(tzinfo=field_meta.timezone)
+            return pendulum.instance(parsed).replace(tzinfo=presentation.timezone)
         raise ValueError(msg(MessageKey.INVALID_INPUT))
 
 

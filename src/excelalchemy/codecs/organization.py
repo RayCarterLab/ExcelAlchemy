@@ -15,10 +15,12 @@ class SingleOrganization(Radio):
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
-        extra_hint = field_meta.hint or dmsg(MessageKey.SINGLE_ORGANIZATION_HINT)
+        declared = field_meta.declared
+        presentation = field_meta.presentation
+        extra_hint = presentation.hint or dmsg(MessageKey.SINGLE_ORGANIZATION_HINT)
         value_key = (
             MessageKey.COMMENT_REQUIRED_VALUE_REQUIRED
-            if field_meta.required
+            if declared.effective_required
             else MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL
         )
         return '\n'.join(
@@ -31,10 +33,12 @@ class SingleOrganization(Radio):
 
     @classmethod
     def format_display_value(cls, value: object, field_meta: FieldMetaInfo) -> str:
+        declared = field_meta.declared
+        presentation = field_meta.presentation
         if not isinstance(value, str):
             return '' if value is None else str(value)
         try:
-            return field_meta.options_id_map[OptionId(value.strip())].name
+            return presentation.options_id_map(field_label=declared.label)[OptionId(value.strip())].name
         except KeyError:
             logging.warning('Could not resolve organization option %s; returning the original value', value)
 
@@ -46,10 +50,12 @@ class MultiOrganization(MultiCheckbox):
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
+        declared = field_meta.declared
+        presentation = field_meta.presentation
         return '\n'.join(
             [
-                field_meta.comment_required,
-                dmsg(MessageKey.COMMENT_HINT, value=field_meta.hint or dmsg(MessageKey.MULTI_ORGANIZATION_HINT)),
+                declared.comment_required,
+                dmsg(MessageKey.COMMENT_HINT, value=presentation.hint or dmsg(MessageKey.MULTI_ORGANIZATION_HINT)),
             ]
         )
 
@@ -59,6 +65,8 @@ class MultiOrganization(MultiCheckbox):
 
     @classmethod
     def format_display_value(cls, value: object | None, field_meta: FieldMetaInfo) -> str:
+        declared = field_meta.declared
+        presentation = field_meta.presentation
         if value is None or value == '':
             return ''
 
@@ -68,7 +76,7 @@ class MultiOrganization(MultiCheckbox):
         if isinstance(value, list):
             items = cast(list[object], value)
             option_ids = [OptionId(option_id) for option_id in items]
-            option_names = field_meta.exchange_option_ids_to_names(option_ids)
+            option_names = presentation.exchange_option_ids_to_names(option_ids, field_label=declared.label)
             return MULTI_CHECKBOX_SEPARATOR.join(map(str, option_names))
 
         logging.warning('%s could not be deserialized; returning the original value', cls.__name__)

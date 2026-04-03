@@ -102,6 +102,24 @@ pip install ExcelAlchemy
 pip install "ExcelAlchemy[minio]"
 ```
 
+## 示例
+
+仓库里有一组更贴近实际接入的示例：
+
+- [`examples/annotated_schema.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/annotated_schema.py)
+- [`examples/employee_import_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/employee_import_workflow.py)
+- [`examples/create_or_update_import.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/create_or_update_import.py)
+- [`examples/date_and_range_fields.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/date_and_range_fields.py)
+- [`examples/selection_fields.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/selection_fields.py)
+- [`examples/custom_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/custom_storage.py)
+- [`examples/export_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/export_workflow.py)
+- [`examples/minio_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/minio_storage.py)
+- [`examples/fastapi_upload.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_upload.py)
+- [`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)
+
+如果你想按推荐顺序来阅读，建议先看
+[`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)。
+
 ## 快速开始
 
 ```python
@@ -192,6 +210,24 @@ alchemy = ExcelAlchemy(ExporterConfig(Importer, storage=InMemoryExcelStorage()))
 
 如果你希望使用内置 Minio 实现，推荐显式传入 `storage=MinioStorageGateway(...)`，而不是再把 Minio 配置散落到门面层。
 
+## 导入结果状态查看命名
+
+如果你需要从 facade 上查看一次导入后的中间状态，推荐使用 2.2 这套更清晰的命名：
+
+- `alchemy.worksheet_table`
+- `alchemy.header_table`
+- `alchemy.cell_error_map`
+- `alchemy.row_error_map`
+
+旧别名：
+
+- `alchemy.df`
+- `alchemy.header_df`
+- `alchemy.cell_errors`
+- `alchemy.row_errors`
+
+在 2.x 里仍然可用，用于兼容旧代码；但新代码建议统一使用前面这组更明确的名字。
+
 ## 为什么这样设计
 
 ### 为什么去掉 pandas
@@ -210,7 +246,7 @@ alchemy = ExcelAlchemy(ExporterConfig(Importer, storage=InMemoryExcelStorage()))
 Excel 元数据不应该深绑到 Pydantic 内部结构上。
 所以现在的分层是：
 
-- `FieldMetaInfo` 负责 Excel 元数据
+- `FieldMetaInfo` 是对外兼容 façade，内部再组合声明层、运行时绑定层、展示层和导入约束层
 - `helper/pydantic.py` 只做适配
 - 真正的业务校验仍然由 ExcelAlchemy 控制
 

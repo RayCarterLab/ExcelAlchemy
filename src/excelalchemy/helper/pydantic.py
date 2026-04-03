@@ -14,6 +14,9 @@ from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import message as msg
 from excelalchemy.metadata import FieldMetaInfo, extract_declared_field_metadata
 
+type ExcelValidationIssue = ExcelCellError | ExcelRowError
+type ExcelValidationIssues = list[ExcelValidationIssue]
+
 
 def _resolve_excel_codec_type(annotation: object) -> type[ExcelFieldCodec]:
     if isinstance(annotation, type):
@@ -60,11 +63,12 @@ class PydanticFieldAdapter:
     @property
     def required(self) -> bool:
         declared = self.declared_metadata
+        declared_meta = declared.declared
 
-        if declared.is_primary_key or declared.unique:
+        if declared_meta.effective_required is not None:
+            return bool(declared_meta.effective_required)
+        if declared_meta.is_primary_key or declared_meta.unique:
             return True
-        if declared.required is not None:
-            return declared.required
         if self.raw_field.default is not PydanticUndefined or self.raw_field.default_factory is not None:
             return False
         return not self.allows_none
@@ -75,10 +79,11 @@ class PydanticFieldAdapter:
 
     def runtime_metadata(self) -> FieldMetaInfo:
         declared = self.declared_metadata
+        declared_meta = declared.declared
         return declared.bind_runtime(
             required=self.required,
             excel_codec=self.excel_codec,
-            parent_label=declared.label,
+            parent_label=declared_meta.label,
             parent_key=Key(self.name),
             key=Key(self.name),
             offset=0,
@@ -128,11 +133,11 @@ def get_model_field_names(model: type[BaseModel]) -> list[str]:
 def instantiate_pydantic_model[ModelT: BaseModel](
     data: Mapping[str, object],
     model: type[ModelT],
-) -> ModelT | list[ExcelCellError | ExcelRowError]:
+) -> ModelT | ExcelValidationIssues:
     """Instantiate a Pydantic model and return mapped Excel errors when validation fails."""
     model_adapter = PydanticModelAdapter(model)
     normalized_data: dict[str, object] = {}
-    errors: list[ExcelCellError | ExcelRowError] = []
+    errors: ExcelValidationIssues = []
     failed_fields: set[str] = set()
 
     for field_adapter in model_adapter.fields():
@@ -161,6 +166,7 @@ def instantiate_pydantic_model[ModelT: BaseModel](
 def _extract_pydantic_model(model: PydanticModelAdapter) -> Generator[FieldMetaInfo, None, None]:
     for field_adapter in model.fields():
         declared_metadata = field_adapter.declared_metadata
+        declared_meta = declared_metadata.declared
         excel_codec = field_adapter.excel_codec
 
         if issubclass(excel_codec, CompositeExcelFieldCodec):
@@ -169,7 +175,7 @@ def _extract_pydantic_model(model: PydanticModelAdapter) -> Generator[FieldMetaI
                 yield inherited.bind_runtime(
                     required=field_adapter.required,
                     excel_codec=excel_codec,
-                    parent_label=declared_metadata.label,
+                    parent_label=declared_meta.label,
                     parent_key=Key(field_adapter.name),
                     key=key,
                     offset=offset,
@@ -179,7 +185,7 @@ def _extract_pydantic_model(model: PydanticModelAdapter) -> Generator[FieldMetaI
 
 
 def _handle_error(
-    error_container: list[ExcelCellError | ExcelRowError],
+    error_container: ExcelValidationIssues,
     exc: Exception,
     field_def: FieldMetaInfo,
 ) -> None:
@@ -210,7 +216,7 @@ def _map_validation_error(
     model_adapter: PydanticModelAdapter,
     failed_fields: set[str],
 ) -> list[ExcelCellError | ExcelRowError]:
-    mapped: list[ExcelCellError | ExcelRowError] = []
+    mapped: ExcelValidationIssues = []
     for error in exc.errors():
         loc = error.get('loc', ())
         if not loc:
@@ -230,7 +236,7 @@ def _map_validation_error(
             mapped.append(_nested_excel_error(field_adapter, loc[1], message))
             continue
 
-        mapped.append(ExcelCellError(label=field_adapter.declared_metadata.label, message=message))
+        mapped.append(ExcelCellError(label=field_adapter.declared_metadata.declared.label, message=message))
 
     return mapped
 
@@ -241,14 +247,15 @@ def _nested_excel_error(
     message: str,
 ) -> ExcelCellError:
     declared_metadata = field_adapter.declared_metadata
+    declared_meta = declared_metadata.declared
     excel_codec = field_adapter.excel_codec
     if issubclass(excel_codec, CompositeExcelFieldCodec):
         for key, sub_field_info in excel_codec.column_items():
             if key == child_key:
                 return ExcelCellError(
                     label=sub_field_info.label,
-                    parent_label=declared_metadata.label,
+                    parent_label=declared_meta.label,
                     message=message,
                 )
 
-    return ExcelCellError(label=declared_metadata.label, message=message)
+    return ExcelCellError(label=declared_meta.label, message=message)
