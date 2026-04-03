@@ -1,3 +1,4 @@
+from dataclasses import FrozenInstanceError
 from typing import Annotated
 
 from pydantic import BaseModel, Field
@@ -372,3 +373,47 @@ class TestFieldMetadata(BaseTestCase):
         assert original.parent_label == '邮箱'
         assert cloned.hint == '新提示'
         assert cloned.parent_label == '父'
+
+    async def test_split_internal_layers_are_immutable_value_objects(self):
+        class Importer(BaseModel):
+            email: Email = FieldMeta(label='邮箱', order=1, hint='原始提示')
+
+        alchemy = self.build_alchemy(Importer)
+        field_meta = alchemy.ordered_field_meta[0]
+
+        with self.assertRaises(FrozenInstanceError):
+            field_meta.declared_meta.label = '新标签'  # type: ignore[misc]
+
+        with self.assertRaises(FrozenInstanceError):
+            field_meta.runtime_binding.parent_label = '父'  # type: ignore[misc]
+
+        with self.assertRaises(FrozenInstanceError):
+            field_meta.presentation_meta.hint = '新提示'  # type: ignore[misc]
+
+        with self.assertRaises(FrozenInstanceError):
+            field_meta.import_constraints.max_length = 20  # type: ignore[misc]
+
+    async def test_mutating_facade_replaces_internal_layers_instead_of_mutating_in_place(self):
+        class Importer(BaseModel):
+            email: Email = FieldMeta(
+                label='邮箱',
+                order=1,
+                hint='原始提示',
+                options=[Option(id=OptionId('work'), name='工作邮箱')],
+            )
+
+        alchemy = self.build_alchemy(Importer)
+        field_meta = alchemy.ordered_field_meta[0]
+
+        original_declared_meta = field_meta.declared_meta
+        original_presentation_meta = field_meta.presentation_meta
+
+        field_meta.label = '新邮箱'
+        field_meta.hint = '新的提示'
+        field_meta.options = [Option(id=OptionId('personal'), name='个人邮箱')]
+
+        assert field_meta.declared_meta is not original_declared_meta
+        assert field_meta.presentation_meta is not original_presentation_meta
+        assert field_meta.label == '新邮箱'
+        assert field_meta.hint == '新的提示'
+        assert field_meta.options == [Option(id=OptionId('personal'), name='个人邮箱')]
