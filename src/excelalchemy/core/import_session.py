@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass, replace
+from enum import StrEnum
 from functools import cached_property
 from typing import cast
 
@@ -28,6 +30,34 @@ from excelalchemy.metadata import FieldMetaInfo
 from excelalchemy.results import ImportResult, ValidateHeaderResult, ValidateResult
 
 HEADER_HINT_LINE_COUNT = 1
+
+
+class ImportSessionPhase(StrEnum):
+    """High-level lifecycle phase for a one-shot import session."""
+
+    INITIALIZED = 'INITIALIZED'
+    WORKBOOK_LOADED = 'WORKBOOK_LOADED'
+    HEADERS_VALIDATED = 'HEADERS_VALIDATED'
+    ROWS_PREPARED = 'ROWS_PREPARED'
+    ROWS_EXECUTED = 'ROWS_EXECUTED'
+    RESULT_RENDERED = 'RESULT_RENDERED'
+    COMPLETED = 'COMPLETED'
+
+
+@dataclass(slots=True, frozen=True)
+class ImportSessionSnapshot:
+    """Immutable snapshot of the current session lifecycle state."""
+
+    phase: ImportSessionPhase = ImportSessionPhase.INITIALIZED
+    input_excel_name: str | None = None
+    output_excel_name: str | None = None
+    has_merged_header: bool | None = None
+    data_row_count: int = 0
+    processed_row_count: int = 0
+    success_count: int = 0
+    fail_count: int = 0
+    rendered_result_workbook: bool = False
+    result: ValidateResult | None = None
 
 
 class ImportSession[
@@ -71,6 +101,7 @@ class ImportSession[
         self.issue_tracker = ImportIssueTracker(self.layout, self.import_result_field_meta)
         self.row_aggregator = RowAggregator(self.layout, self.behavior.import_mode)
         self.executor = ImportExecutor(self.config, self.issue_tracker, lambda: self.context)
+        self._snapshot = ImportSessionSnapshot()
 
     @property
     def cell_errors(self):
@@ -79,6 +110,10 @@ class ImportSession[
     @property
     def row_errors(self):
         return self.issue_tracker.row_errors
+
+    @property
+    def snapshot(self) -> ImportSessionSnapshot:
+        return self._snapshot
 
     @cached_property
     def input_excel_has_merged_header(self) -> bool:
@@ -101,42 +136,73 @@ class ImportSession[
 
     async def run(self, input_excel_name: str, output_excel_name: str) -> ImportResult:
         with use_display_locale(self.locale):
+            self._snapshot = replace(
+                self._snapshot,
+                phase=ImportSessionPhase.INITIALIZED,
+                input_excel_name=input_excel_name,
+                output_excel_name=output_excel_name,
+                rendered_result_workbook=False,
+                result=None,
+                data_row_count=0,
+                processed_row_count=0,
+                success_count=0,
+                fail_count=0,
+            )
+
             validate_header = self._validate_header(input_excel_name)
             if not validate_header.is_valid:
-                return ImportResult.from_validate_header_result(validate_header)
-
-            self.worksheet_table = self.worksheet_table.iloc[1:]
-            self._set_columns(self.worksheet_table)
-            self.worksheet_table = self.worksheet_table.reset_index(drop=True)
-
-            all_success, success_count, fail_count = True, 0, 0
-            for table_row_index in range(self.extra_header_count_on_import, len(self.worksheet_table)):
-                row = self.worksheet_table.row_at(table_row_index)
-                aggregate_data = self._aggregate_data(cast(FlatRowPayload, row.to_dict()))
-                success = await self.executor.execute(RowIndex(table_row_index), aggregate_data, self.worksheet_table)
-                all_success = all_success and success
-                success_count, fail_count = (
-                    (success_count + 1, fail_count) if success else (success_count, fail_count + 1)
+                header_result = ImportResult.from_validate_header_result(validate_header)
+                self._snapshot = replace(
+                    self._snapshot,
+                    phase=ImportSessionPhase.COMPLETED,
+                    has_merged_header=self.input_excel_has_merged_header,
+                    result=header_result.result,
                 )
+                return header_result
+
+            self._prepare_rows_for_execution()
+
+            all_success, success_count, fail_count = await self._execute_rows()
 
             url = None
             if not all_success:
                 self._add_result_column()
                 content_with_prefix = self._render_import_result_excel()
                 url = self._upload_file(output_excel_name, content_with_prefix)
+                self._snapshot = replace(
+                    self._snapshot,
+                    phase=ImportSessionPhase.RESULT_RENDERED,
+                    rendered_result_workbook=True,
+                )
 
-            return ImportResult(
+            import_result = ImportResult(
                 result=(ValidateResult.DATA_INVALID, ValidateResult.SUCCESS)[int(all_success)],
                 url=url,
                 success_count=success_count,
                 fail_count=fail_count,
             )
+            self._snapshot = replace(
+                self._snapshot,
+                phase=ImportSessionPhase.COMPLETED,
+                success_count=success_count,
+                fail_count=fail_count,
+                result=import_result.result,
+            )
+            return import_result
 
     def _validate_header(self, input_excel_name: str) -> ValidateHeaderResult:
-        self._read_dataframe(input_excel_name)
-        return self.header_validator.validate(self.input_excel_headers, self.layout, self.behavior.import_mode)
+        self._load_workbook(input_excel_name)
+        validate_header = self.header_validator.validate(
+            self.input_excel_headers, self.layout, self.behavior.import_mode
+        )
+        self._snapshot = replace(
+            self._snapshot,
+            phase=ImportSessionPhase.HEADERS_VALIDATED,
+            has_merged_header=self.input_excel_has_merged_header,
+        )
+        return validate_header
 
-    def _read_dataframe(self, input_excel_name: str) -> WorksheetTable:
+    def _load_workbook(self, input_excel_name: str) -> WorksheetTable:
         if not self._state_df_has_been_loaded:
             worksheet_table = self.storage_gateway.read_excel_table(
                 input_excel_name,
@@ -146,7 +212,38 @@ class ImportSession[
             self.worksheet_table = worksheet_table
             self.header_table = worksheet_table.head(2)
             self._state_df_has_been_loaded = True
+            self._snapshot = replace(self._snapshot, phase=ImportSessionPhase.WORKBOOK_LOADED)
         return self.worksheet_table
+
+    def _prepare_rows_for_execution(self) -> None:
+        self.worksheet_table = self.worksheet_table.iloc[1:]
+        self._set_columns(self.worksheet_table)
+        self.worksheet_table = self.worksheet_table.reset_index(drop=True)
+        self._snapshot = replace(
+            self._snapshot,
+            phase=ImportSessionPhase.ROWS_PREPARED,
+            data_row_count=max(0, len(self.worksheet_table) - self.extra_header_count_on_import),
+        )
+
+    async def _execute_rows(self) -> tuple[bool, int, int]:
+        all_success, success_count, fail_count = True, 0, 0
+        processed_row_count = 0
+        for table_row_index in range(self.extra_header_count_on_import, len(self.worksheet_table)):
+            row = self.worksheet_table.row_at(table_row_index)
+            aggregate_data = self._aggregate_data(cast(FlatRowPayload, row.to_dict()))
+            success = await self.executor.execute(RowIndex(table_row_index), aggregate_data, self.worksheet_table)
+            processed_row_count += 1
+            all_success = all_success and success
+            success_count, fail_count = (success_count + 1, fail_count) if success else (success_count, fail_count + 1)
+
+        self._snapshot = replace(
+            self._snapshot,
+            phase=ImportSessionPhase.ROWS_EXECUTED,
+            processed_row_count=processed_row_count,
+            success_count=success_count,
+            fail_count=fail_count,
+        )
+        return all_success, success_count, fail_count
 
     def _set_columns(self, worksheet_table: WorksheetTable) -> WorksheetTable:
         return self.header_parser.apply_columns(

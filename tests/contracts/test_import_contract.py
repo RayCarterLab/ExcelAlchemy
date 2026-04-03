@@ -6,6 +6,7 @@ from openpyxl import load_workbook
 
 from excelalchemy import ExcelAlchemy, ImporterConfig, ValidateResult
 from excelalchemy.const import BACKGROUND_ERROR_COLOR, REASON_COLUMN_LABEL, RESULT_COLUMN_LABEL
+from excelalchemy.core.import_session import ImportSessionPhase
 from tests.support import BaseTestCase, FileRegistry, get_fill_color, load_binary_excel_to_workbook
 from tests.support.contract_models import MergedContractImporter, SimpleContractImporter, creator, failing_creator
 
@@ -56,6 +57,28 @@ class TestImportContracts(BaseTestCase):
         assert second_result.success_count == 1
         assert second_result.fail_count == 0
         assert second_result.url is None
+
+    async def test_import_session_snapshot_tracks_completed_successful_run(self):
+        alchemy = ExcelAlchemy(
+            ImporterConfig.for_create(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio))
+        )
+
+        result = await alchemy.import_data(
+            input_excel_name=FileRegistry.TEST_SIMPLE_IMPORT,
+            output_excel_name='contract-session-success.xlsx',
+        )
+
+        snapshot = alchemy.last_import_snapshot
+
+        assert result.result == ValidateResult.SUCCESS
+        assert snapshot is not None
+        assert snapshot.phase == ImportSessionPhase.COMPLETED
+        assert snapshot.result == ValidateResult.SUCCESS
+        assert snapshot.data_row_count == 1
+        assert snapshot.processed_row_count == 1
+        assert snapshot.success_count == 1
+        assert snapshot.fail_count == 0
+        assert not snapshot.rendered_result_workbook
 
     async def test_import_data_uploads_result_workbook_for_invalid_rows(self):
         output_name = 'contract-data-invalid.xlsx'
