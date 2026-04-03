@@ -4,7 +4,37 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog and versioned according to PEP 440.
 
-## [2.2.2] - Unreleased
+## [2.2.3] - Unreleased
+
+This release continues the stable 2.x line with a focused validation fix in
+the Pydantic adapter layer.
+
+### Fixed
+
+- Restored explicit `ProgrammaticError` handling for unsupported
+  `Annotated[..., Field(...), ExcelMeta(...)]` declarations that use native
+  Python types instead of `ExcelFieldCodec` subclasses
+- Tightened codec resolution in the Pydantic adapter so unsupported
+  declarations fail at the codec resolution boundary instead of being treated
+  as valid runtime metadata
+- Added a regression test for unsupported annotated declarations to prevent
+  native Python annotations from slipping through the workbook schema path
+
+### Compatibility Notes
+
+- No public import or export workflow API was removed in this release
+- Valid `ExcelFieldCodec` and `CompositeExcelFieldCodec` declarations continue
+  to work unchanged
+- Unsupported native annotations with `ExcelMeta(...)` now fail early with the
+  intended `ProgrammaticError`
+
+### Release Summary
+
+- unsupported annotated declarations now fail with the intended error again
+- codec resolution is stricter and easier to reason about
+- the validation fix is protected by an explicit integration regression test
+
+## [2.2.2] - 2026-04-03
 
 This release continues the stable 2.x line with stronger developer ergonomics,
 clearer public API guidance, and better release-time smoke coverage.
