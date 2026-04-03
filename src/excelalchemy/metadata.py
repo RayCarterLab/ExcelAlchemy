@@ -4,7 +4,7 @@ import copy
 import datetime
 import logging
 from collections.abc import Callable, Mapping, Set
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from functools import cached_property
 from typing import Any, Self, cast
 
@@ -37,6 +37,16 @@ type FieldDefaultFactory = Callable[[], object]
 type FieldIncludeExclude = Set[IntStr] | bool | None
 
 
+def _normalize_character_set(character_set: set[CharacterSet] | None) -> frozenset[CharacterSet]:
+    return frozenset(character_set or set(CharacterSet))
+
+
+def _normalize_options(options: list[Option] | tuple[Option, ...] | None) -> tuple[Option, ...] | None:
+    if options is None:
+        return None
+    return tuple(options)
+
+
 class PatchFieldMeta(BaseModel):
     unique: bool | None = False  # Workbook hint only. Runtime uniqueness is enforced elsewhere.
     is_primary_key: bool | None = False  # Workbook hint only. Runtime primary-key behavior is configured separately.
@@ -44,7 +54,7 @@ class PatchFieldMeta(BaseModel):
     options: list[Option] | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, frozen=True)
 class DeclaredFieldMeta:
     """Static workbook field declaration supplied by user code."""
 
@@ -56,7 +66,7 @@ class DeclaredFieldMeta:
     order: int
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, frozen=True)
 class RuntimeFieldBinding:
     """Runtime identity assigned after schema extraction flattens the model."""
 
@@ -67,21 +77,21 @@ class RuntimeFieldBinding:
     excel_codec: type[ExcelFieldCodec] = UndefinedFieldCodec
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, frozen=True)
 class WorkbookPresentationMeta:
     """Workbook-facing comment and formatting metadata."""
 
-    character_set: set[CharacterSet] = field(default_factory=lambda: set(CharacterSet))
+    character_set: frozenset[CharacterSet] = field(default_factory=lambda: frozenset(CharacterSet))
     fraction_digits: int | None = None
     timezone: datetime.timezone = field(default_factory=lambda: datetime.timezone(datetime.timedelta(hours=8), 'CST'))
     date_format: DateFormat | None = None
     date_range_option: DataRangeOption | None = None
-    options: list[Option] | None = None
+    options: tuple[Option, ...] | None = None
     unit: str | None = None
     hint: str | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, frozen=True)
 class ImportConstraints:
     """Importer-side validation hints mirrored from Pydantic constraints."""
 
@@ -136,12 +146,12 @@ class FieldMetaInfo:
         )
         self.runtime_binding = RuntimeFieldBinding()
         self.presentation_meta = WorkbookPresentationMeta(
-            character_set=character_set or set(CharacterSet),
+            character_set=_normalize_character_set(character_set),
             fraction_digits=fraction_digits,
             timezone=timezone or datetime.timezone(datetime.timedelta(hours=8), 'CST'),
             date_format=date_format,
             date_range_option=date_range_option,
-            options=options,
+            options=_normalize_options(options),
             unit=unit,
             hint=hint,
         )
@@ -196,7 +206,7 @@ class FieldMetaInfo:
 
     @excel_codec.setter
     def excel_codec(self, value: type[ExcelFieldCodec]) -> None:
-        self.runtime_binding.excel_codec = value
+        self.runtime_binding = replace(self.runtime_binding, excel_codec=value)
 
     @property
     def value_type(self) -> type[ExcelFieldCodec]:
@@ -383,7 +393,7 @@ class FieldMetaInfo:
 
     @label.setter
     def label(self, value: str | Label) -> None:
-        self.declared_meta.label = Label(value)
+        self.declared_meta = replace(self.declared_meta, label=Label(value))
 
     @property
     def is_primary_key(self) -> bool:
@@ -391,7 +401,7 @@ class FieldMetaInfo:
 
     @is_primary_key.setter
     def is_primary_key(self, value: bool) -> None:
-        self.declared_meta.is_primary_key = value
+        self.declared_meta = replace(self.declared_meta, is_primary_key=value)
 
     @property
     def unique(self) -> bool:
@@ -399,7 +409,7 @@ class FieldMetaInfo:
 
     @unique.setter
     def unique(self, value: bool) -> None:
-        self.declared_meta.unique = value
+        self.declared_meta = replace(self.declared_meta, unique=value)
 
     @property
     def ignore_import(self) -> bool:
@@ -407,7 +417,7 @@ class FieldMetaInfo:
 
     @ignore_import.setter
     def ignore_import(self, value: bool) -> None:
-        self.declared_meta.ignore_import = value
+        self.declared_meta = replace(self.declared_meta, ignore_import=value)
 
     @property
     def required(self) -> bool | None:
@@ -415,7 +425,7 @@ class FieldMetaInfo:
 
     @required.setter
     def required(self, value: bool | None) -> None:
-        self.declared_meta.required = value
+        self.declared_meta = replace(self.declared_meta, required=value)
 
     @property
     def order(self) -> int:
@@ -423,7 +433,7 @@ class FieldMetaInfo:
 
     @order.setter
     def order(self, value: int) -> None:
-        self.declared_meta.order = value
+        self.declared_meta = replace(self.declared_meta, order=value)
 
     @property
     def parent_label(self) -> Label | None:
@@ -431,7 +441,7 @@ class FieldMetaInfo:
 
     @parent_label.setter
     def parent_label(self, value: Label | None) -> None:
-        self.runtime_binding.parent_label = value
+        self.runtime_binding = replace(self.runtime_binding, parent_label=value)
 
     @property
     def key(self) -> Key | None:
@@ -439,7 +449,7 @@ class FieldMetaInfo:
 
     @key.setter
     def key(self, value: Key | None) -> None:
-        self.runtime_binding.key = value
+        self.runtime_binding = replace(self.runtime_binding, key=value)
 
     @property
     def parent_key(self) -> Key | None:
@@ -447,7 +457,7 @@ class FieldMetaInfo:
 
     @parent_key.setter
     def parent_key(self, value: Key | None) -> None:
-        self.runtime_binding.parent_key = value
+        self.runtime_binding = replace(self.runtime_binding, parent_key=value)
 
     @property
     def offset(self) -> int:
@@ -455,15 +465,15 @@ class FieldMetaInfo:
 
     @offset.setter
     def offset(self, value: int) -> None:
-        self.runtime_binding.offset = value
+        self.runtime_binding = replace(self.runtime_binding, offset=value)
 
     @property
     def character_set(self) -> set[CharacterSet]:
-        return self.presentation_meta.character_set
+        return set(self.presentation_meta.character_set)
 
     @character_set.setter
     def character_set(self, value: set[CharacterSet]) -> None:
-        self.presentation_meta.character_set = value
+        self.presentation_meta = replace(self.presentation_meta, character_set=_normalize_character_set(value))
 
     @property
     def fraction_digits(self) -> int | None:
@@ -471,7 +481,7 @@ class FieldMetaInfo:
 
     @fraction_digits.setter
     def fraction_digits(self, value: int | None) -> None:
-        self.presentation_meta.fraction_digits = value
+        self.presentation_meta = replace(self.presentation_meta, fraction_digits=value)
 
     @property
     def timezone(self) -> datetime.timezone:
@@ -479,7 +489,7 @@ class FieldMetaInfo:
 
     @timezone.setter
     def timezone(self, value: datetime.timezone) -> None:
-        self.presentation_meta.timezone = value
+        self.presentation_meta = replace(self.presentation_meta, timezone=value)
 
     @property
     def date_format(self) -> DateFormat | None:
@@ -487,7 +497,7 @@ class FieldMetaInfo:
 
     @date_format.setter
     def date_format(self, value: DateFormat | None) -> None:
-        self.presentation_meta.date_format = value
+        self.presentation_meta = replace(self.presentation_meta, date_format=value)
 
     @property
     def date_range_option(self) -> DataRangeOption | None:
@@ -495,15 +505,17 @@ class FieldMetaInfo:
 
     @date_range_option.setter
     def date_range_option(self, value: DataRangeOption | None) -> None:
-        self.presentation_meta.date_range_option = value
+        self.presentation_meta = replace(self.presentation_meta, date_range_option=value)
 
     @property
     def options(self) -> list[Option] | None:
-        return self.presentation_meta.options
+        if self.presentation_meta.options is None:
+            return None
+        return list(self.presentation_meta.options)
 
     @options.setter
     def options(self, value: list[Option] | None) -> None:
-        self.presentation_meta.options = value
+        self.presentation_meta = replace(self.presentation_meta, options=_normalize_options(value))
 
     @property
     def unit(self) -> str | None:
@@ -511,7 +523,7 @@ class FieldMetaInfo:
 
     @unit.setter
     def unit(self, value: str | None) -> None:
-        self.presentation_meta.unit = value
+        self.presentation_meta = replace(self.presentation_meta, unit=value)
 
     @property
     def hint(self) -> str | None:
@@ -519,7 +531,7 @@ class FieldMetaInfo:
 
     @hint.setter
     def hint(self, value: str | None) -> None:
-        self.presentation_meta.hint = value
+        self.presentation_meta = replace(self.presentation_meta, hint=value)
 
     @property
     def importer_ge(self) -> float | None:
@@ -527,7 +539,7 @@ class FieldMetaInfo:
 
     @importer_ge.setter
     def importer_ge(self, value: float | None) -> None:
-        self.import_constraints.ge = value
+        self.import_constraints = replace(self.import_constraints, ge=value)
 
     @property
     def importer_le(self) -> float | None:
@@ -535,7 +547,7 @@ class FieldMetaInfo:
 
     @importer_le.setter
     def importer_le(self, value: float | None) -> None:
-        self.import_constraints.le = value
+        self.import_constraints = replace(self.import_constraints, le=value)
 
     @property
     def importer_max_digits(self) -> int | None:
@@ -543,7 +555,7 @@ class FieldMetaInfo:
 
     @importer_max_digits.setter
     def importer_max_digits(self, value: int | None) -> None:
-        self.import_constraints.max_digits = value
+        self.import_constraints = replace(self.import_constraints, max_digits=value)
 
     @property
     def importer_decimal_places(self) -> int | None:
@@ -551,7 +563,7 @@ class FieldMetaInfo:
 
     @importer_decimal_places.setter
     def importer_decimal_places(self, value: int | None) -> None:
-        self.import_constraints.decimal_places = value
+        self.import_constraints = replace(self.import_constraints, decimal_places=value)
 
     @property
     def importer_min_length(self) -> int | None:
@@ -559,7 +571,7 @@ class FieldMetaInfo:
 
     @importer_min_length.setter
     def importer_min_length(self, value: int | None) -> None:
-        self.import_constraints.min_length = value
+        self.import_constraints = replace(self.import_constraints, min_length=value)
 
     @property
     def importer_max_length(self) -> int | None:
@@ -567,7 +579,7 @@ class FieldMetaInfo:
 
     @importer_max_length.setter
     def importer_max_length(self, value: int | None) -> None:
-        self.import_constraints.max_length = value
+        self.import_constraints = replace(self.import_constraints, max_length=value)
 
     @property
     def importer_min_items(self) -> int | None:
@@ -575,7 +587,7 @@ class FieldMetaInfo:
 
     @importer_min_items.setter
     def importer_min_items(self, value: int | None) -> None:
-        self.import_constraints.min_items = value
+        self.import_constraints = replace(self.import_constraints, min_items=value)
 
     @property
     def importer_max_items(self) -> int | None:
@@ -583,7 +595,7 @@ class FieldMetaInfo:
 
     @importer_max_items.setter
     def importer_max_items(self, value: int | None) -> None:
-        self.import_constraints.max_items = value
+        self.import_constraints = replace(self.import_constraints, max_items=value)
 
     @property
     def importer_unique_items(self) -> bool | None:
@@ -591,7 +603,7 @@ class FieldMetaInfo:
 
     @importer_unique_items.setter
     def importer_unique_items(self, value: bool | None) -> None:
-        self.import_constraints.unique_items = value
+        self.import_constraints = replace(self.import_constraints, unique_items=value)
 
 
 def extract_declared_field_metadata(field_info: FieldInfo) -> FieldMetaInfo:

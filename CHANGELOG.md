@@ -4,7 +4,47 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog and versioned according to PEP 440.
 
-## [2.2.0] - Unreleased
+## [2.2.1] - Unreleased
+
+This release continues the stable 2.x line with deeper metadata layering,
+stronger internal immutability, and tighter type boundaries around the
+Pydantic adapter layer.
+
+### Added
+
+- Added regression tests that verify split metadata layers behave like
+  immutable value objects
+- Added regression tests that verify facade-level mutation replaces internal
+  metadata layers rather than mutating them in place
+
+### Changed
+
+- Made `DeclaredFieldMeta`, `RuntimeFieldBinding`,
+  `WorkbookPresentationMeta`, and `ImportConstraints` frozen internal
+  structures
+- Updated `FieldMetaInfo` mutation paths to replace internal layer objects via
+  structural updates instead of mutating them in place
+- Normalized workbook presentation internals so character sets and options are
+  stored in immutable forms
+- Tightened key type boundaries in the Pydantic adapter around annotations,
+  codecs, and normalized input payloads
+
+### Compatibility Notes
+
+- No public import or export workflow API was removed in this release
+- `FieldMeta(...)` and `ExcelMeta(...)` remain the stable public metadata entry
+  points
+- The metadata layering changes are internal and preserve the public 2.x
+  surface
+
+### Release Summary
+
+- metadata internals are now more immutable and easier to reason about
+- facade-level metadata updates preserve 2.x ergonomics while reducing hidden
+  shared state
+- the Pydantic adapter layer now has clearer type boundaries
+
+## [2.2.0] - 2026-04-03
 
 This release continues the stable 2.x line with runtime consolidation,
 clearer configuration ergonomics, and a stronger protocol-first storage story.

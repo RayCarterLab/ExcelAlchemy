@@ -1,7 +1,7 @@
 from collections.abc import Generator, Iterable, Mapping
 from dataclasses import dataclass
 from types import UnionType
-from typing import Any, Union, cast, get_args, get_origin
+from typing import Union, cast, get_args, get_origin
 
 from pydantic import BaseModel, ValidationError
 from pydantic.fields import FieldInfo
@@ -23,23 +23,23 @@ class PydanticFieldAdapter:
     raw_field: FieldInfo
 
     @property
-    def annotation(self) -> Any:
+    def annotation(self) -> object:
         return self.raw_field.annotation
 
     @property
-    def excel_codec(self) -> type[Any]:
+    def excel_codec(self) -> type[ExcelFieldCodec]:
         annotation = self.annotation
         origin = get_origin(annotation)
         if origin in (UnionType, Union):
             args = [arg for arg in get_args(annotation) if arg is not type(None)]
             if len(args) != 1:
                 raise ProgrammaticError(msg(MessageKey.UNSUPPORTED_FIELD_TYPE_DECLARATION, annotation=annotation))
-            return cast(type[Any], args[0])
+            return cast(type[ExcelFieldCodec], args[0])
 
-        return cast(type[Any], annotation)
+        return cast(type[ExcelFieldCodec], annotation)
 
     @property
-    def value_type(self) -> type[Any]:
+    def value_type(self) -> type[ExcelFieldCodec]:
         """Backward-compatible alias for excel_codec."""
         return self.excel_codec
 
@@ -67,14 +67,14 @@ class PydanticFieldAdapter:
         declared = self.declared_metadata
         return declared.bind_runtime(
             required=self.required,
-            excel_codec=cast(type[ExcelFieldCodec], self.excel_codec),
+            excel_codec=self.excel_codec,
             parent_label=declared.label,
             parent_key=Key(self.name),
             key=Key(self.name),
             offset=0,
         )
 
-    def validate_value(self, raw_value: Any) -> Any:
+    def validate_value(self, raw_value: object) -> object:
         if raw_value is None:
             if self.allows_none and not self.required:
                 return None
@@ -116,12 +116,12 @@ def get_model_field_names(model: type[BaseModel]) -> list[str]:
 
 
 def instantiate_pydantic_model[ModelT: BaseModel](
-    data: Mapping[str, Any],
+    data: Mapping[str, object],
     model: type[ModelT],
 ) -> ModelT | list[ExcelCellError | ExcelRowError]:
     """Instantiate a Pydantic model and return mapped Excel errors when validation fails."""
     model_adapter = PydanticModelAdapter(model)
-    normalized_data: dict[str, Any] = {}
+    normalized_data: dict[str, object] = {}
     errors: list[ExcelCellError | ExcelRowError] = []
     failed_fields: set[str] = set()
 
@@ -158,18 +158,14 @@ def _extract_pydantic_model(model: PydanticModelAdapter) -> Generator[FieldMetaI
                 inherited = sub_field_info.inherited_from(declared_metadata)
                 yield inherited.bind_runtime(
                     required=field_adapter.required,
-                    excel_codec=cast(type[ExcelFieldCodec], excel_codec),
+                    excel_codec=excel_codec,
                     parent_label=declared_metadata.label,
                     parent_key=Key(field_adapter.name),
                     key=key,
                     offset=offset,
                 )
-
-        elif issubclass(excel_codec, ExcelFieldCodec):
-            yield field_adapter.runtime_metadata()
-
         else:
-            raise ProgrammaticError(msg(MessageKey.VALUE_TYPE_DECLARATION_UNSUPPORTED, value_type=excel_codec))
+            yield field_adapter.runtime_metadata()
 
 
 def _handle_error(
@@ -188,7 +184,7 @@ def _handle_error(
 
 
 def _model_validate[ModelT: BaseModel](
-    data: dict[str, Any],
+    data: dict[str, object],
     model: type[ModelT],
     model_adapter: PydanticModelAdapter,
     failed_fields: set[str],
