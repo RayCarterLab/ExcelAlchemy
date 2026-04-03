@@ -16,7 +16,7 @@ from excelalchemy.codecs.base import SystemReserved
 from excelalchemy.config import ExcelMode, ExporterConfig, ImporterConfig, ImportMode
 from excelalchemy.core.abstract import ABCExcelAlchemy
 from excelalchemy.core.headers import ExcelHeaderParser, ExcelHeaderValidator
-from excelalchemy.core.import_session import ImportSession, build_import_result_field_meta
+from excelalchemy.core.import_session import ImportSession, ImportSessionSnapshot, build_import_result_field_meta
 from excelalchemy.core.rendering import ExcelRenderer
 from excelalchemy.core.schema import ExcelSchemaLayout
 from excelalchemy.core.storage import build_storage_gateway
@@ -216,6 +216,12 @@ class ExcelAlchemy[
         if self._last_import_session is None:
             return {}
         return self._last_import_session.row_errors
+
+    @property
+    def last_import_snapshot(self) -> ImportSessionSnapshot | None:
+        if self._last_import_session is None:
+            return None
+        return self._last_import_session.snapshot
 
     @property
     def input_excel_has_merged_header(self) -> bool:

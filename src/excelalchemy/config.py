@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -9,6 +10,7 @@ from typing import TYPE_CHECKING, Self
 
 from pydantic import BaseModel
 
+from excelalchemy._primitives.deprecation import DEPRECATION_REMOVAL_VERSION, ExcelAlchemyDeprecationWarning
 from excelalchemy._primitives.payloads import DataConverter, DmlCallback, ExistenceCheckCallback, ImportContext
 from excelalchemy.core.storage_protocol import ExcelStorage
 from excelalchemy.exceptions import ConfigError
@@ -19,6 +21,9 @@ from excelalchemy.util.converter import export_data_converter, import_data_conve
 
 if TYPE_CHECKING:
     from minio import Minio
+
+
+_EMITTED_STORAGE_DEPRECATION_WARNINGS: set[bool] = set()
 
 
 class ExcelMode(StrEnum):
@@ -50,6 +55,10 @@ class StorageOptions:
     @property
     def has_legacy_minio(self) -> bool:
         return self.minio is not None
+
+    @property
+    def uses_legacy_minio_path(self) -> bool:
+        return self.storage is None and self.minio is not None
 
 
 @dataclass(slots=True, frozen=True)
@@ -118,6 +127,116 @@ class ImporterConfig[ContextT, ImportCreateModelT: BaseModel, ImportUpdateModelT
     behavior: ImportBehavior[ContextT] = field(init=False, repr=False)
     storage_options: StorageOptions = field(init=False, repr=False)
 
+    @classmethod
+    def for_create(
+        cls,
+        importer_model: type[ImportCreateModelT],
+        *,
+        data_converter: DataConverter | None = import_data_converter,
+        creator: DmlCallback[ContextT] | None = None,
+        updater: DmlCallback[ContextT] | None = None,
+        context: ImportContext[ContextT] = None,
+        is_data_exist: ExistenceCheckCallback[ContextT] | None = None,
+        exec_formatter: Callable[[Exception], str] = str,
+        storage: ExcelStorage | None = None,
+        minio: Minio | None = None,
+        bucket_name: str = 'excel',
+        url_expires: int = 3600,
+        locale: str = 'zh-CN',
+        sheet_name: str = 'Sheet1',
+    ) -> Self:
+        """Build a create-mode importer config through the recommended constructor."""
+        return cls(
+            create_importer_model=importer_model,
+            data_converter=data_converter,
+            creator=creator,
+            updater=updater,
+            context=context,
+            is_data_exist=is_data_exist,
+            exec_formatter=exec_formatter,
+            import_mode=ImportMode.CREATE,
+            storage=storage,
+            minio=minio,
+            bucket_name=bucket_name,
+            url_expires=url_expires,
+            locale=locale,
+            sheet_name=sheet_name,
+        )
+
+    @classmethod
+    def for_update(
+        cls,
+        importer_model: type[ImportUpdateModelT],
+        *,
+        data_converter: DataConverter | None = import_data_converter,
+        creator: DmlCallback[ContextT] | None = None,
+        updater: DmlCallback[ContextT] | None = None,
+        context: ImportContext[ContextT] = None,
+        is_data_exist: ExistenceCheckCallback[ContextT] | None = None,
+        exec_formatter: Callable[[Exception], str] = str,
+        storage: ExcelStorage | None = None,
+        minio: Minio | None = None,
+        bucket_name: str = 'excel',
+        url_expires: int = 3600,
+        locale: str = 'zh-CN',
+        sheet_name: str = 'Sheet1',
+    ) -> Self:
+        """Build an update-mode importer config through the recommended constructor."""
+        return cls(
+            update_importer_model=importer_model,
+            data_converter=data_converter,
+            creator=creator,
+            updater=updater,
+            context=context,
+            is_data_exist=is_data_exist,
+            exec_formatter=exec_formatter,
+            import_mode=ImportMode.UPDATE,
+            storage=storage,
+            minio=minio,
+            bucket_name=bucket_name,
+            url_expires=url_expires,
+            locale=locale,
+            sheet_name=sheet_name,
+        )
+
+    @classmethod
+    def for_create_or_update(
+        cls,
+        *,
+        create_importer_model: type[ImportCreateModelT],
+        update_importer_model: type[ImportUpdateModelT],
+        is_data_exist: ExistenceCheckCallback[ContextT],
+        data_converter: DataConverter | None = import_data_converter,
+        creator: DmlCallback[ContextT] | None = None,
+        updater: DmlCallback[ContextT] | None = None,
+        context: ImportContext[ContextT] = None,
+        exec_formatter: Callable[[Exception], str] = str,
+        storage: ExcelStorage | None = None,
+        minio: Minio | None = None,
+        bucket_name: str = 'excel',
+        url_expires: int = 3600,
+        locale: str = 'zh-CN',
+        sheet_name: str = 'Sheet1',
+    ) -> Self:
+        """Build a create-or-update importer config through the recommended constructor."""
+        return cls(
+            create_importer_model=create_importer_model,
+            update_importer_model=update_importer_model,
+            data_converter=data_converter,
+            creator=creator,
+            updater=updater,
+            context=context,
+            is_data_exist=is_data_exist,
+            exec_formatter=exec_formatter,
+            import_mode=ImportMode.CREATE_OR_UPDATE,
+            storage=storage,
+            minio=minio,
+            bucket_name=bucket_name,
+            url_expires=url_expires,
+            locale=locale,
+            sheet_name=sheet_name,
+        )
+
     def validate_model(self) -> Self:
         if self.import_mode not in ImportMode.__members__.values():
             raise ConfigError(msg(MessageKey.INVALID_IMPORT_MODE, import_mode=self.import_mode))
@@ -181,6 +300,8 @@ class ImporterConfig[ContextT, ImportCreateModelT: BaseModel, ImportUpdateModelT
             bucket_name=self.bucket_name,
             url_expires=self.url_expires,
         )
+        if self.storage_options.has_legacy_minio:
+            _warn_legacy_storage_path(has_explicit_storage=self.storage_options.has_explicit_storage)
 
 
 @dataclass(slots=True)
@@ -199,6 +320,50 @@ class ExporterConfig[ExportModelT: BaseModel]:
     schema_options: ExporterSchemaOptions[ExportModelT] = field(init=False, repr=False)
     behavior: ExportBehavior = field(init=False, repr=False)
     storage_options: StorageOptions = field(init=False, repr=False)
+
+    @classmethod
+    def for_model(
+        cls,
+        exporter_model: type[ExportModelT],
+        *,
+        data_converter: DataConverter | None = export_data_converter,
+        storage: ExcelStorage | None = None,
+        minio: Minio | None = None,
+        bucket_name: str = 'excel',
+        url_expires: int = 3600,
+        locale: str = 'zh-CN',
+        sheet_name: str = 'Sheet1',
+    ) -> Self:
+        """Build an exporter config through the recommended constructor."""
+        return cls(
+            exporter_model=exporter_model,
+            data_converter=data_converter,
+            storage=storage,
+            minio=minio,
+            bucket_name=bucket_name,
+            url_expires=url_expires,
+            locale=locale,
+            sheet_name=sheet_name,
+        )
+
+    @classmethod
+    def for_storage(
+        cls,
+        exporter_model: type[ExportModelT],
+        *,
+        storage: ExcelStorage,
+        data_converter: DataConverter | None = export_data_converter,
+        locale: str = 'zh-CN',
+        sheet_name: str = 'Sheet1',
+    ) -> Self:
+        """Build an exporter config for the recommended explicit-storage path."""
+        return cls.for_model(
+            exporter_model,
+            data_converter=data_converter,
+            storage=storage,
+            locale=locale,
+            sheet_name=sheet_name,
+        )
 
     def validate_model(self) -> Self:
         if not self.exporter_model:
@@ -219,3 +384,26 @@ class ExporterConfig[ExportModelT: BaseModel]:
             bucket_name=self.bucket_name,
             url_expires=self.url_expires,
         )
+        if self.storage_options.has_legacy_minio:
+            _warn_legacy_storage_path(has_explicit_storage=self.storage_options.has_explicit_storage)
+
+
+def _warn_legacy_storage_path(*, has_explicit_storage: bool) -> None:
+    """Emit a deprecation warning for the legacy built-in Minio config path."""
+    if has_explicit_storage in _EMITTED_STORAGE_DEPRECATION_WARNINGS:
+        return
+    _EMITTED_STORAGE_DEPRECATION_WARNINGS.add(has_explicit_storage)
+
+    detail = (
+        ' The explicit `storage=` backend will be used.'
+        if has_explicit_storage
+        else ' Prefer passing `storage=` with `MinioStorageGateway` or a custom `ExcelStorage` implementation.'
+    )
+    warnings.warn(
+        (
+            '`minio`, `bucket_name`, and `url_expires` are deprecated configuration fields and will be removed in '
+            f'ExcelAlchemy {DEPRECATION_REMOVAL_VERSION}.{detail}'
+        ),
+        category=ExcelAlchemyDeprecationWarning,
+        stacklevel=3,
+    )

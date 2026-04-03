@@ -4,6 +4,50 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog and versioned according to PEP 440.
 
+## [2.2.0] - Unreleased
+
+This release continues the stable 2.x line with runtime consolidation,
+clearer configuration ergonomics, and a stronger protocol-first storage story.
+
+### Added
+
+- Added `ImportSessionPhase` and `ImportSessionSnapshot` so one-shot import runs
+  expose a clearer lifecycle and final runtime summary
+- Added recommended config constructors:
+  `ImporterConfig.for_create(...)`, `ImporterConfig.for_update(...)`,
+  `ImporterConfig.for_create_or_update(...)`, `ExporterConfig.for_model(...)`,
+  and `ExporterConfig.for_storage(...)`
+- Added targeted regression tests for config helper constructors, legacy
+  storage deprecation behavior, and import session snapshots
+
+### Changed
+
+- Refined `ImportSession` so the import workflow now advances through explicit
+  phases: workbook loading, header validation, row preparation, row execution,
+  result rendering, and completion
+- Added `ExcelAlchemy.last_import_snapshot` as the facade-level read-only view
+  of the latest import session state
+- Clarified the recommended storage configuration path around explicit
+  `storage=...` backends
+- Kept legacy `minio`, `bucket_name`, and `url_expires` support for 2.x, but
+  now emit an explicit deprecation warning when that path is used
+- Reduced warning noise by emitting the legacy storage deprecation warning once
+  per compatibility scenario
+
+### Compatibility Notes
+
+- No public import or export workflow API was removed in this release
+- The legacy Minio config path remains supported in 2.x for migration-friendly
+  compatibility
+- Existing direct `ImporterConfig(...)` and `ExporterConfig(...)` construction
+  continue to work; helper constructors are the new recommended path
+
+### Release Summary
+
+- import sessions now expose a clearer lifecycle and final snapshot
+- config construction is easier to read through dedicated helper constructors
+- `storage=...` is now the clear recommended backend integration path for 2.x
+
 ## [2.1.0] - 2026-04-02
 
 This release continues the stable 2.x line with internal architecture cleanup,
