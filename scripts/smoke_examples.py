@@ -65,6 +65,44 @@ def _run_module_example(module_name: str) -> str:
     return buffer.getvalue()
 
 
+def _run_fastapi_reference_http_smoke() -> None:
+    testclient_module = importlib.import_module('fastapi.testclient')
+    TestClient = testclient_module.TestClient
+    app_module = importlib.import_module('examples.fastapi_reference.app')
+    services_module = importlib.import_module('examples.fastapi_reference.services')
+
+    client = TestClient(app_module.create_app())
+    template_response = client.get('/employee-template.xlsx')
+    if template_response.status_code != 200:
+        raise AssertionError('FastAPI reference template endpoint did not return HTTP 200')
+
+    upload_bytes = services_module.build_demo_upload(template_response.content)
+    import_response = client.post(
+        '/employee-imports',
+        data={'tenant_id': 'tenant-smoke'},
+        files={
+            'file': (
+                'employee-import.xlsx',
+                upload_bytes,
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            )
+        },
+    )
+    if import_response.status_code != 200:
+        raise AssertionError('FastAPI reference import endpoint did not return HTTP 200')
+
+    payload = import_response.json()
+    if payload['result']['result'] != 'SUCCESS':
+        raise AssertionError('FastAPI reference import did not return SUCCESS')
+    if payload['request']['tenant_id'] != 'tenant-smoke':
+        raise AssertionError('FastAPI reference request echo payload is incorrect')
+    if payload['cell_errors']['error_count'] != 0:
+        raise AssertionError('FastAPI reference success payload should not contain cell errors')
+    if payload['row_errors']['error_count'] != 0:
+        raise AssertionError('FastAPI reference success payload should not contain row errors')
+    print('Smoke passed: examples.fastapi_reference.http')
+
+
 def _assert_example_output(filename: str, output: str, required_fragments: tuple[str, ...]) -> None:
     missing = [fragment for fragment in required_fragments if fragment not in output]
     if missing:
@@ -90,6 +128,11 @@ def main() -> None:
         output = _run_module_example(module_name)
         _assert_example_output(module_name, output, required_fragments)
         print(f'Smoke passed: {module_name}')
+
+    if _dependency_available('fastapi') and _dependency_available('httpx') and _dependency_available('multipart'):
+        _run_fastapi_reference_http_smoke()
+    else:
+        print('Skipped optional example: examples.fastapi_reference.http (fastapi/httpx/python-multipart missing)')
 
 
 if __name__ == '__main__':

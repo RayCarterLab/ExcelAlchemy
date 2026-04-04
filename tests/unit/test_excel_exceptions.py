@@ -79,8 +79,11 @@ class TestExcelExceptions(BaseTestCase):
 
         assert exc.to_dict() == {
             'type': 'ExcelCellError',
+            'code': 'ExcelCellError',
             'message': 'Enter a valid email address',
+            'display_message': '【邮箱】Enter a valid email address',
             'label': '邮箱',
+            'field_label': '邮箱',
             'parent_label': '员工',
             'unique_label': '员工·邮箱',
         }
@@ -91,12 +94,16 @@ class TestExcelExceptions(BaseTestCase):
 
         assert programmatic.to_dict() == {
             'type': 'ProgrammaticError',
+            'code': 'ProgrammaticError',
             'message': 'Invalid declaration',
+            'display_message': 'Invalid declaration',
             'detail': {'field': 'email'},
         }
         assert config.to_dict() == {
             'type': 'ConfigError',
+            'code': 'ConfigError',
             'message': 'Missing storage backend',
+            'display_message': 'Missing storage backend',
             'detail': {'backend': 'minio'},
         }
         assert repr(programmatic) == "ProgrammaticError(message='Invalid declaration', detail={'field': 'email'})"
@@ -119,8 +126,11 @@ class TestExcelExceptions(BaseTestCase):
                 3: [
                     {
                         'type': 'ExcelCellError',
+                        'code': 'ExcelCellError',
                         'message': 'Enter a valid email address',
+                        'display_message': '【邮箱】Enter a valid email address',
                         'label': '邮箱',
+                        'field_label': '邮箱',
                         'parent_label': None,
                         'unique_label': '邮箱',
                     }
@@ -132,13 +142,17 @@ class TestExcelExceptions(BaseTestCase):
             'items': [
                 {
                     'type': 'ExcelCellError',
+                    'code': 'ExcelCellError',
                     'message': 'Enter a valid email address',
+                    'display_message': '【邮箱】Enter a valid email address',
                     'label': '邮箱',
+                    'field_label': '邮箱',
                     'parent_label': None,
                     'unique_label': '邮箱',
                     'row_index': 0,
+                    'row_number_for_humans': 1,
                     'column_index': 3,
-                    'display_message': '【邮箱】Enter a valid email address',
+                    'column_number_for_humans': 4,
                 }
             ],
             'by_row': {
@@ -146,15 +160,55 @@ class TestExcelExceptions(BaseTestCase):
                     3: [
                         {
                             'type': 'ExcelCellError',
+                            'code': 'ExcelCellError',
                             'message': 'Enter a valid email address',
+                            'display_message': '【邮箱】Enter a valid email address',
                             'label': '邮箱',
+                            'field_label': '邮箱',
                             'parent_label': None,
                             'unique_label': '邮箱',
                         }
                     ]
                 }
             },
+            'summary': {
+                'by_field': [
+                    {
+                        'field_label': '邮箱',
+                        'parent_label': None,
+                        'unique_label': '邮箱',
+                        'error_count': 1,
+                        'row_indices': [0],
+                        'row_numbers_for_humans': [1],
+                        'codes': ['ExcelCellError'],
+                    }
+                ],
+                'by_row': [
+                    {
+                        'row_index': 0,
+                        'row_number_for_humans': 1,
+                        'error_count': 1,
+                        'codes': ['ExcelCellError'],
+                        'field_labels': ['邮箱'],
+                        'unique_labels': ['邮箱'],
+                    }
+                ],
+                'by_code': [
+                    {
+                        'code': 'ExcelCellError',
+                        'error_count': 1,
+                        'row_indices': [0],
+                        'row_numbers_for_humans': [1],
+                        'unique_labels': ['邮箱'],
+                    }
+                ],
+            },
         }
+
+        field_summary = error_map.summary_by_field()
+        assert field_summary[0].to_dict()['unique_label'] == '邮箱'
+        assert error_map.summary_by_code()[0].code == 'ExcelCellError'
+        assert error_map.summary_by_row()[0].row_number_for_humans == 1
 
     async def test_row_issue_map_supports_row_access_and_numbered_messages(self):
         issue_map = RowIssueMap()
@@ -180,14 +234,19 @@ class TestExcelExceptions(BaseTestCase):
             0: [
                 {
                     'type': 'ExcelCellError',
+                    'code': 'ExcelCellError',
                     'message': 'Enter a valid email address',
+                    'display_message': '【邮箱】Enter a valid email address',
                     'label': '邮箱',
+                    'field_label': '邮箱',
                     'parent_label': None,
                     'unique_label': '邮箱',
                 },
                 {
                     'type': 'ExcelRowError',
+                    'code': 'ExcelRowError',
                     'message': 'Combination invalid',
+                    'display_message': 'Combination invalid',
                 },
             ]
         }
@@ -196,33 +255,76 @@ class TestExcelExceptions(BaseTestCase):
             'items': [
                 {
                     'type': 'ExcelCellError',
+                    'code': 'ExcelCellError',
                     'message': 'Enter a valid email address',
+                    'display_message': '【邮箱】Enter a valid email address',
                     'label': '邮箱',
+                    'field_label': '邮箱',
                     'parent_label': None,
                     'unique_label': '邮箱',
                     'row_index': 0,
-                    'display_message': '【邮箱】Enter a valid email address',
+                    'row_number_for_humans': 1,
                 },
                 {
                     'type': 'ExcelRowError',
+                    'code': 'ExcelRowError',
                     'message': 'Combination invalid',
-                    'row_index': 0,
                     'display_message': 'Combination invalid',
+                    'row_index': 0,
+                    'row_number_for_humans': 1,
+                    'field_label': None,
+                    'parent_label': None,
+                    'unique_label': None,
                 },
             ],
             'by_row': {
                 0: [
                     {
                         'type': 'ExcelCellError',
+                        'code': 'ExcelCellError',
                         'message': 'Enter a valid email address',
+                        'display_message': '【邮箱】Enter a valid email address',
                         'label': '邮箱',
+                        'field_label': '邮箱',
                         'parent_label': None,
                         'unique_label': '邮箱',
                     },
                     {
                         'type': 'ExcelRowError',
+                        'code': 'ExcelRowError',
                         'message': 'Combination invalid',
+                        'display_message': 'Combination invalid',
                     },
                 ]
             },
+            'summary': {
+                'by_row': [
+                    {
+                        'row_index': 0,
+                        'row_number_for_humans': 1,
+                        'error_count': 2,
+                        'codes': ['ExcelCellError', 'ExcelRowError'],
+                        'field_labels': ['邮箱'],
+                        'unique_labels': ['邮箱'],
+                    }
+                ],
+                'by_code': [
+                    {
+                        'code': 'ExcelCellError',
+                        'error_count': 1,
+                        'row_indices': [0],
+                        'row_numbers_for_humans': [1],
+                        'unique_labels': ['邮箱'],
+                    },
+                    {
+                        'code': 'ExcelRowError',
+                        'error_count': 1,
+                        'row_indices': [0],
+                        'row_numbers_for_humans': [1],
+                        'unique_labels': [],
+                    },
+                ],
+            },
         }
+        assert issue_map.summary_by_row()[0].error_count == 2
+        assert [summary.code for summary in issue_map.summary_by_code()] == ['ExcelCellError', 'ExcelRowError']

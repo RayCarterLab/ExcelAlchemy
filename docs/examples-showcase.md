@@ -9,6 +9,9 @@ guided path through the examples directory, start with
 If you want to see how import results and error maps are meant to be surfaced
 through backend APIs, see
 [`docs/result-objects.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md).
+If you want copyable success and failure response shapes for backend endpoints,
+see
+[`docs/api-response-cookbook.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md).
 
 ## What ExcelAlchemy Looks Like
 

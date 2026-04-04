@@ -1,4 +1,3 @@
-import logging
 from decimal import ROUND_DOWN, Context, Decimal, InvalidOperation
 
 from excelalchemy.codecs.base import (
@@ -6,6 +5,7 @@ from excelalchemy.codecs.base import (
     NormalizedImportValue,
     WorkbookDisplayValue,
     WorkbookInputValue,
+    codec_logger,
     log_codec_parse_fallback,
 )
 from excelalchemy.i18n.messages import MessageKey
@@ -24,7 +24,7 @@ def canonicalize_decimal(value: Decimal, digits_limit: int | None) -> Decimal:
                 context=Context(rounding=ROUND_DOWN),
             )
         except InvalidOperation as e:
-            logging.warning('fraction_digits is too small and causes precision loss: %s', e)
+            codec_logger.warning('Codec Number detected precision loss while quantizing fraction_digits: %s', e)
     return value
 
 

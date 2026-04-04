@@ -1,4 +1,3 @@
-import logging
 from collections.abc import Mapping
 from datetime import datetime
 from typing import cast
@@ -9,7 +8,7 @@ from pydantic import BaseModel
 
 from excelalchemy._primitives.constants import DATE_FORMAT_TO_PYTHON_MAPPING, MILLISECOND_TO_SECOND, DataRangeOption
 from excelalchemy._primitives.identity import Key
-from excelalchemy.codecs.base import CompositeExcelFieldCodec, log_codec_parse_fallback
+from excelalchemy.codecs.base import CompositeExcelFieldCodec, log_codec_parse_fallback, log_codec_render_fallback
 from excelalchemy.exceptions import ConfigError
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
@@ -149,7 +148,12 @@ class DateRange(CompositeExcelFieldCodec):
         if mapping is not None:
             return cls.__deserialize__dict(py_date_format, mapping)
 
-        logging.warning('%s could not be deserialized; returning the original value', cls.__name__)
+        log_codec_render_fallback(
+            cls.__name__,
+            value,
+            field_label=field_meta.declared.label,
+            reason='The workbook value is not a string, datetime, or start/end mapping',
+        )
         return str(value)
 
     @classmethod

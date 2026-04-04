@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 from typing import cast
 
@@ -11,6 +10,7 @@ from excelalchemy.codecs.base import (
     NormalizedImportValue,
     WorkbookDisplayValue,
     WorkbookInputValue,
+    codec_logger,
     log_codec_parse_fallback,
 )
 from excelalchemy.exceptions import ConfigError
@@ -53,7 +53,7 @@ class Date(ExcelFieldCodec, datetime):
         declared = field_meta.declared
         presentation = field_meta.presentation
         if isinstance(value, DateTime):
-            logging.info(
+            codec_logger.info(
                 'Codec %s received a parsed datetime for %s; returning it unchanged: %s',
                 cls.__name__,
                 declared.label,

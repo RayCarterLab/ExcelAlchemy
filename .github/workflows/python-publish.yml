@@ -56,19 +56,23 @@ jobs:
         run: |
           uv venv .pkg-smoke-wheel --python 3.14
           uv pip install --python .pkg-smoke-wheel/bin/python dist/*.whl
+          uv pip install --python .pkg-smoke-wheel/bin/python fastapi httpx python-multipart
           .pkg-smoke-wheel/bin/python -c "import excelalchemy; print(excelalchemy.__version__)"
           .pkg-smoke-wheel/bin/python scripts/smoke_package.py
           .pkg-smoke-wheel/bin/python scripts/smoke_examples.py
           .pkg-smoke-wheel/bin/python scripts/generate_example_output_assets.py
+          .pkg-smoke-wheel/bin/python scripts/smoke_docs_assets.py
 
       - name: Smoke test source distribution installation
         run: |
           uv venv .pkg-smoke-sdist --python 3.14
           uv pip install --python .pkg-smoke-sdist/bin/python dist/*.tar.gz
+          uv pip install --python .pkg-smoke-sdist/bin/python fastapi httpx python-multipart
           .pkg-smoke-sdist/bin/python -c "import excelalchemy; print(excelalchemy.__version__)"
           .pkg-smoke-sdist/bin/python scripts/smoke_package.py
           .pkg-smoke-sdist/bin/python scripts/smoke_examples.py
           .pkg-smoke-sdist/bin/python scripts/generate_example_output_assets.py
+          .pkg-smoke-sdist/bin/python scripts/smoke_docs_assets.py
 
       - name: Set artifact metadata
         id: artifact-meta

@@ -1,7 +1,10 @@
-import logging
-
 from excelalchemy.codecs import excel_choice_codec
-from excelalchemy.codecs.base import ExcelFieldCodec, WorkbookDisplayValue, WorkbookInputValue
+from excelalchemy.codecs.base import (
+    ExcelFieldCodec,
+    WorkbookDisplayValue,
+    WorkbookInputValue,
+    log_codec_render_fallback,
+)
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
 from excelalchemy.i18n.messages import message as msg
@@ -63,15 +66,19 @@ class Boolean(ExcelFieldCodec):
             if value in cls._false_values():
                 return cls._false_display()
             if value not in cls._true_values() | cls._false_values():
-                logging.warning('Could not recognize boolean value %s; returning the original value', value)
+                log_codec_render_fallback(
+                    cls.__name__,
+                    value,
+                    field_label=declared.label,
+                    reason=f'Expected {cls._true_display()!r} or {cls._false_display()!r}',
+                )
                 return value
         else:
-            logging.warning(
-                'Type %s could not deserialize %s for field %s; returning the default value %s',
+            log_codec_render_fallback(
                 cls.__name__,
                 value,
-                declared.label,
-                cls._false_display(),
+                field_label=declared.label,
+                reason=f'Expected a boolean or one of {cls._true_display()!r}/{cls._false_display()!r}',
             )
 
         return cls._true_display() if str(value) in cls._true_values() else cls._false_display()

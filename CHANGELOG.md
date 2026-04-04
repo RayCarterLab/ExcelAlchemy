@@ -4,6 +4,70 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog and versioned according to PEP 440.
 
+## [2.2.7] - 2026-04-04
+
+This release continues the stable 2.x line with stronger API-facing result
+payloads, a more complete FastAPI reference application, harder install-time
+smoke verification, and more consistent codec diagnostics.
+
+### Added
+
+- Added `docs/api-response-cookbook.md` with copyable success, data-invalid,
+  and header-invalid response shapes for backend integrations
+- Added request and response contract modules for the FastAPI reference app
+  under `examples/fastapi_reference/schemas.py` and
+  `examples/fastapi_reference/responses.py`
+- Added `scripts/smoke_docs_assets.py` to verify showcase assets and critical
+  result-object/showcase documentation entry points
+- Added logger consistency tests for codec fallback diagnostics
+
+### Changed
+
+- Extended `ImportResult`, `CellErrorMap`, and `RowIssueMap` payload guidance
+  so `code`, `message_key`, `message`, and `display_message` have clearer and
+  more stable frontend-facing roles
+- Strengthened `CellErrorMap` and `RowIssueMap` with summary helpers for
+  aggregation by field, row, and machine-readable code
+- Made `ImportResult.to_api_payload()` a stable top-level integration surface
+  for success, data-invalid, and header-invalid responses
+- Expanded the FastAPI reference app into a more copyable minimal application
+  with request schema, response schema, structured response builder, and
+  cookbook-aligned payloads
+- Hardened release smoke verification so installed-package checks now cover:
+  - successful imports
+  - failed imports
+  - structured error payloads
+  - example asset generation
+  - result-object and showcase docs
+  - FastAPI reference HTTP behavior after dependency installation
+- Unified codec fallback logging under the `excelalchemy.codecs` logger and
+  aligned warning wording across option, parse, and render fallbacks
+
+### Fixed
+
+- Fixed the runnable FastAPI example and the FastAPI reference app so their
+  runtime type annotations work correctly when optional web dependencies are
+  actually installed
+- Fixed stale integration-test expectations after the improved business-facing
+  validation messages landed
+
+### Compatibility Notes
+
+- No public import or export workflow API was removed in this release
+- `ImportResult`, `CellErrorMap`, and `RowIssueMap` remain the stable public
+  result objects for 2.x integrations
+- `storage=...` remains the recommended 2.x backend configuration path
+- Legacy built-in Minio fields remain part of the 2.x compatibility surface
+
+### Release Summary
+
+- API response payloads are easier to consume from frontends and backend
+  clients
+- the FastAPI reference project now looks more like a copyable minimal app
+- release smoke checks now verify docs, assets, failed-import payloads, and
+  installed FastAPI integrations
+- codec diagnostics are more consistent and easier to filter by logger
+
 ## [2.2.6] - 2026-04-04
 
 This release continues the stable 2.x line with stronger consumer-facing

@@ -1,9 +1,8 @@
-import logging
 from typing import cast
 
 from excelalchemy._primitives.constants import MULTI_CHECKBOX_SEPARATOR
 from excelalchemy._primitives.identity import OptionId
-from excelalchemy.codecs.base import ExcelFieldCodec
+from excelalchemy.codecs.base import ExcelFieldCodec, log_codec_missing_options, log_codec_parse_fallback
 from excelalchemy.exceptions import ProgrammaticError
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
@@ -73,8 +72,11 @@ class MultiCheckbox(ExcelFieldCodec, list[str]):
         if isinstance(value, str):
             return [item.strip() for item in value.split(MULTI_CHECKBOX_SEPARATOR)]
 
-        logging.warning(
-            'ValueType <%s> could not parse Excel input %s; returning the original value', cls.__name__, value
+        log_codec_parse_fallback(
+            cls.__name__,
+            value,
+            field_label=field_meta.declared.label,
+            reason='Expected a delimited string or a list of selected values',
         )
         return value
 
@@ -92,9 +94,7 @@ class MultiCheckbox(ExcelFieldCodec, list[str]):
             raise ProgrammaticError(msg(MessageKey.OPTIONS_CANNOT_BE_NONE_FOR_VALUE_TYPE, value_type=cls.__name__))
 
         if not presentation.options:  # empty
-            logging.warning(
-                'Field %s of type %s has no options; returning the original value', declared.label, cls.__name__
-            )
+            log_codec_missing_options(cls.__name__, field_label=declared.label)
             return parsed
 
         if len(parsed) != len(set(parsed)):

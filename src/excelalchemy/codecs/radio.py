@@ -1,8 +1,12 @@
-import logging
-
 from excelalchemy._primitives.constants import MULTI_CHECKBOX_SEPARATOR
 from excelalchemy._primitives.identity import OptionId
-from excelalchemy.codecs.base import ExcelFieldCodec, WorkbookDisplayValue, WorkbookInputValue
+from excelalchemy.codecs.base import (
+    ExcelFieldCodec,
+    WorkbookDisplayValue,
+    WorkbookInputValue,
+    log_codec_missing_options,
+    log_codec_option_resolution_fallback,
+)
 from excelalchemy.exceptions import ProgrammaticError
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
@@ -49,7 +53,7 @@ class Radio(ExcelFieldCodec, str):
         declared = field_meta.declared
         presentation = field_meta.presentation
         if not presentation.options:
-            logging.error('Field %s of type %s must define options', declared.label, cls.__name__)
+            log_codec_missing_options(cls.__name__, field_label=declared.label)
 
         return '\n'.join(
             [
@@ -74,13 +78,7 @@ class Radio(ExcelFieldCodec, str):
         try:
             return presentation.options_id_map(field_label=declared.label)[value.strip()].name
         except Exception as exc:
-            logging.warning(
-                'Type %s could not resolve option %s for field %s; returning the original value. Reason: %s',
-                cls.__name__,
-                value,
-                declared.label,
-                exc,
-            )
+            log_codec_option_resolution_fallback(cls.__name__, value, field_label=declared.label, exc=exc)
         return value if value is not None else ''
 
     @classmethod
@@ -96,9 +94,7 @@ class Radio(ExcelFieldCodec, str):
             raise ProgrammaticError(msg(MessageKey.OPTIONS_CANNOT_BE_NONE_FOR_SELECTION_FIELDS))
 
         if not presentation.options:  # empty
-            logging.warning(
-                'Field %s of type %s has no options; returning the original value', declared.label, cls.__name__
-            )
+            log_codec_missing_options(cls.__name__, field_label=declared.label)
             return parsed
 
         options_id_map = presentation.options_id_map(field_label=declared.label)

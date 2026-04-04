@@ -1,8 +1,8 @@
-import logging
 from typing import cast
 
 from excelalchemy._primitives.constants import MULTI_CHECKBOX_SEPARATOR
 from excelalchemy._primitives.identity import OptionId
+from excelalchemy.codecs.base import log_codec_option_resolution_fallback, log_codec_render_fallback
 from excelalchemy.codecs.multi_checkbox import MultiCheckbox
 from excelalchemy.codecs.radio import Radio
 from excelalchemy.i18n.messages import MessageKey
@@ -44,7 +44,7 @@ class SingleOrganization(Radio):
         try:
             return presentation.options_id_map(field_label=declared.label)[OptionId(value.strip())].name
         except KeyError:
-            logging.warning('Could not resolve organization option %s; returning the original value', value)
+            log_codec_option_resolution_fallback(cls.__name__, value, field_label=declared.label)
 
         return value
 
@@ -88,7 +88,12 @@ class MultiOrganization(MultiCheckbox):
             option_names = presentation.exchange_option_ids_to_names(option_ids, field_label=declared.label)
             return MULTI_CHECKBOX_SEPARATOR.join(map(str, option_names))
 
-        logging.warning('%s could not be deserialized; returning the original value', cls.__name__)
+        log_codec_render_fallback(
+            cls.__name__,
+            value,
+            field_label=declared.label,
+            reason='The workbook value is not a string or a list of option ids',
+        )
         return str(value)
 
     @classmethod
