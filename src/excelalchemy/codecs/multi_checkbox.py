@@ -14,6 +14,37 @@ from excelalchemy.metadata import FieldMetaInfo
 class MultiCheckbox(ExcelFieldCodec, list[str]):
     __name__ = 'MultiChoice'
 
+    @classmethod
+    def selection_entity_plural(cls) -> str | None:
+        return None
+
+    @classmethod
+    def _options_preview(cls, field_meta: FieldMetaInfo, *, limit: int = 5) -> str | None:
+        options = field_meta.presentation.options
+        if not options:
+            return None
+        preview = MULTI_CHECKBOX_SEPARATOR.join(option.name for option in options[:limit])
+        if len(options) > limit:
+            preview = f'{preview}{MULTI_CHECKBOX_SEPARATOR}...'
+        return preview
+
+    @classmethod
+    def _compose_selection_message(cls, field_meta: FieldMetaInfo) -> str:
+        entity_plural = cls.selection_entity_plural()
+        if entity_plural is None:
+            base_message = msg(MessageKey.SELECT_ONLY_CONFIGURED_OPTIONS)
+        else:
+            base_message = msg(MessageKey.SELECT_ONLY_CONFIGURED_ENTITIES, entity_plural=entity_plural)
+
+        preview = cls._options_preview(field_meta)
+        if preview is None:
+            return base_message
+        return f'{base_message}. {msg(MessageKey.VALID_VALUES_INCLUDE, options=preview)}'
+
+    @classmethod
+    def expected_input_message(cls, field_meta: FieldMetaInfo) -> str | None:
+        return cls._compose_selection_message(field_meta)
+
     @staticmethod
     def _coerce_items(value: object) -> list[object] | None:
         if not isinstance(value, list):
@@ -53,7 +84,7 @@ class MultiCheckbox(ExcelFieldCodec, list[str]):
         presentation = field_meta.presentation
         items = cls._coerce_items(value)
         if items is None:
-            raise ValueError(msg(MessageKey.OPTION_NOT_FOUND_HEADER_COMMENT))
+            raise ValueError(cls._compose_selection_message(field_meta))
 
         parsed = [str(item).strip() for item in items]
 
@@ -72,7 +103,7 @@ class MultiCheckbox(ExcelFieldCodec, list[str]):
         result, errors = presentation.exchange_names_to_option_ids_with_errors(parsed, field_label=declared.label)
 
         if errors:
-            raise ValueError(*errors)
+            raise ValueError(cls._compose_selection_message(field_meta))
         else:
             return result
 

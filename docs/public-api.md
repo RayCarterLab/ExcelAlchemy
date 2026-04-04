@@ -10,6 +10,8 @@ If you want concrete repository examples, see
 [`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)
 and
 [`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md).
+If you want result-object guidance for backend or frontend integration, see
+[`docs/result-objects.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md).
 
 ## Stable Public Modules
 
@@ -44,6 +46,9 @@ These modules are the recommended import paths for application code:
 - import inspection names:
   Prefer `worksheet_table`, `header_table`, `cell_error_map`, and
   `row_error_map` when reading import-run state from the facade.
+- structured error access:
+  Prefer `CellErrorMap` and `RowIssueMap` helpers such as `to_api_payload()`
+  when you need frontend-friendly or API-friendly validation output.
 
 ## Compatibility Modules In 2.x
 
@@ -96,7 +101,15 @@ For most application code, these are the recommended import paths:
 - `from excelalchemy.metadata import ...`
   Use this if you want the dedicated metadata entry points directly.
 - `from excelalchemy.results import ...`
-  Use this if you need result models or error-map helper types directly.
+  Use this if you need result models or richer error-map helper types directly.
+
+If you are building API responses from import failures, the recommended public
+result helpers are:
+
+- `CellErrorMap.to_api_payload()`
+- `RowIssueMap.to_api_payload()`
+- `CellErrorMap.records()`
+- `RowIssueMap.records()`
 
 Avoid depending on implementation details such as:
 

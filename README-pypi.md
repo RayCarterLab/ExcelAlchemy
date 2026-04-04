@@ -10,9 +10,9 @@ ExcelAlchemy turns Pydantic models into typed workbook contracts:
 - render workbook-facing output in `zh-CN` or `en`
 - keep storage pluggable through `ExcelStorage`
 
-The current stable release is `2.2.5`, which continues the 2.x line with richer import-failure feedback, clearer documentation entry points, stronger examples, and stronger smoke coverage.
+The current stable release is `2.2.6`, which continues the 2.x line with stronger result-object guidance, a copyable FastAPI reference project, more robust smoke verification, and clearer codec fallback diagnostics.
 
-[GitHub Repository](https://github.com/RayCarterLab/ExcelAlchemy) · [Full README](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README.md) · [Getting Started](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md) · [Examples Showcase](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md) · [Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/architecture.md) · [Migration Notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/MIGRATIONS.md)
+[GitHub Repository](https://github.com/RayCarterLab/ExcelAlchemy) · [Full README](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README.md) · [Getting Started](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md) · [Result Objects](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md) · [Examples Showcase](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md) · [Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/architecture.md) · [Migration Notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/MIGRATIONS.md)
 
 ## Screenshots
 
@@ -111,10 +111,37 @@ Full captured outputs:
 - [export-workflow.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/export-workflow.txt)
 - [date-and-range-fields.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/date-and-range-fields.txt)
 - [selection-fields.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/selection-fields.txt)
+- [fastapi-reference.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/fastapi-reference.txt)
 
 For a single GitHub page that combines screenshots, representative workflows,
 and captured outputs, see the
 [Examples Showcase](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md).
+
+If you want a copyable FastAPI-oriented reference layout rather than a single
+example script, see the
+[FastAPI reference project](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md).
+
+## Error Feedback
+
+ExcelAlchemy keeps workbook-facing validation feedback readable while also
+supporting API-friendly inspection in application code.
+
+The stable 2.x result surface includes:
+
+- `alchemy.cell_error_map`
+- `alchemy.row_error_map`
+
+These objects remain dict-like for compatibility, but also expose helpers such
+as:
+
+- `messages_at(...)`
+- `messages_for_row(...)`
+- `flatten()`
+- `to_api_payload()`
+
+Common field types now also produce more business-oriented error wording, such
+as expected date formats, sample email/phone/URL formats, and clearer messages
+for configured selection fields.
 
 ## Why ExcelAlchemy
 

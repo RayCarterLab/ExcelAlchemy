@@ -4,6 +4,51 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog and versioned according to PEP 440.
 
+## [2.2.6] - 2026-04-04
+
+This release continues the stable 2.x line with stronger consumer-facing
+result-object guidance, a copyable FastAPI reference project, harder release
+smoke validation, and clearer codec fallback diagnostics.
+
+### Added
+
+- Added `docs/result-objects.md` to explain how to read `ImportResult`,
+  `CellErrorMap`, and `RowIssueMap` and how to expose them through backend APIs
+- Added a copyable FastAPI reference project under `examples/fastapi_reference`
+  with separate route, service, storage, and schema modules
+- Added a captured output artifact for the FastAPI reference project and linked
+  it from the examples docs and showcase
+
+### Changed
+
+- Extended `docs/getting-started.md`, `docs/public-api.md`,
+  `docs/examples-showcase.md`, and the README entry points so the result
+  objects and API integration path are easier to discover
+- Strengthened package smoke verification by validating both successful and
+  failed imports, including structured `cell_error_map` and `row_error_map`
+  payloads
+- Expanded example smoke coverage so the FastAPI reference project is exercised
+  directly alongside the existing script-style examples
+- Polished codec fallback warnings so parse failures now produce clearer
+  developer-facing diagnostics with field labels and cleaner exception reasons
+
+### Compatibility Notes
+
+- No public import or export workflow API was removed in this release
+- `ImportResult`, `CellErrorMap`, and `RowIssueMap` remain the stable public
+  result objects for 2.x integrations
+- The FastAPI reference project is additive guidance and does not change the
+  public API surface
+- `storage=...` remains the recommended 2.x backend configuration path
+
+### Release Summary
+
+- result objects are now documented as first-class API integration surfaces
+- the repository now includes a copyable FastAPI reference-project layout
+- release smoke verification checks successful imports, failed imports, and
+  structured error payloads
+- codec fallback warnings are easier to read and more useful during debugging
+
 ## [2.2.5] - 2026-04-04
 
 This release continues the stable 2.x line with error UX polish, clearer
@@ -14,6 +59,8 @@ typing cleanup across the runtime path.
 
 - Added `CellErrorMap` and `RowIssueMap` as richer workbook-facing error access
   containers while preserving 2.x dict-like compatibility
+- Added structured error records and API-friendly payload helpers through
+  `records()` and `to_api_payload()` on both `CellErrorMap` and `RowIssueMap`
 - Added `docs/getting-started.md` to give new users one clear entry point for
   installation, schema declaration, workflow setup, and backend configuration
 - Added `docs/examples-showcase.md` and example-output assets so examples can
@@ -21,6 +68,9 @@ typing cleanup across the runtime path.
 - Added more business-oriented examples, including employee import,
   create-or-update import, export workflow, selection-heavy forms, and
   date/range field workflows
+- Added a minimal FastAPI reference project with separate route, service,
+  storage, and schema modules so teams can start from a copyable backend
+  layout instead of only single-file examples
 - Added stronger smoke scripts and release checks for installed packages,
   repository examples, and generated example-output assets
 
@@ -34,6 +84,9 @@ typing cleanup across the runtime path.
   output and clearer equality semantics
 - Normalized common validation messages into more natural, workbook-facing
   English such as `This field is required`
+- Made common field-type validation messages more business-oriented by adding
+  expected-format hints for date, date-range, number-range, email, phone,
+  URL, and configured-selection fields
 - Clarified `FieldMetaInfo` as a compatibility facade over layered metadata
   objects and moved more internal consumers and codecs onto `declared`,
   `runtime`, `presentation`, and `constraints`
@@ -44,6 +97,8 @@ typing cleanup across the runtime path.
   public API, migrations, examples, showcase, and PyPI-facing README content
 - Expanded `examples/README.md` into a recommended reading order with expected
   outputs and captured example artifacts
+- Expanded the examples docs and showcase so the new FastAPI reference project
+  is linked from GitHub README, PyPI README, and the examples showcase page
 
 ### Fixed
 

@@ -14,6 +14,10 @@ class SingleOrganization(Radio):
     __name__ = 'SingleOrganization'
 
     @classmethod
+    def selection_entity_singular(cls) -> str | None:
+        return 'organization'
+
+    @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
         declared = field_meta.declared
         presentation = field_meta.presentation
@@ -47,6 +51,10 @@ class SingleOrganization(Radio):
 
 class MultiOrganization(MultiCheckbox):
     __name__ = 'MultiOrganization'
+
+    @classmethod
+    def selection_entity_plural(cls) -> str | None:
+        return 'organizations'
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:

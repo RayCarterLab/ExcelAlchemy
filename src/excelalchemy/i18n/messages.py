@@ -63,12 +63,14 @@ class MessageKey(StrEnum):
     DATE_MUST_BE_EARLIER_THAN_NOW = 'date_must_be_earlier_than_now'
     DATE_MUST_BE_LATER_THAN_NOW = 'date_must_be_later_than_now'
     DATE_RANGE_START_AFTER_END = 'date_range_start_after_end'
+    ENTER_DATE_RANGE_EXPECTED_FORMAT = 'enter_date_range_expected_format'
     VALID_EMAIL_REQUIRED = 'valid_email_required'
     INVALID_NUMBER_ENTER_NUMBER = 'invalid_number_enter_number'
     NUMBER_BETWEEN_MIN_AND_MAX = 'number_between_min_and_max'
     NUMBER_BETWEEN_NEG_INF_AND_MAX = 'number_between_neg_inf_and_max'
     NUMBER_BETWEEN_MIN_AND_POS_INF = 'number_between_min_and_pos_inf'
     NUMBER_RANGE_MIN_GREATER_THAN_MAX = 'number_range_min_greater_than_max'
+    ENTER_NUMBER_RANGE_EXPECTED_FORMAT = 'enter_number_range_expected_format'
     ENTER_NUMBER = 'enter_number'
     ENTER_NUMBER_EXPECTED_FORMAT = 'enter_number_expected_format'
     VALID_URL_REQUIRED = 'valid_url_required'
@@ -82,6 +84,11 @@ class MessageKey(StrEnum):
     MAX_LENGTH_CHARACTERS = 'max_length_characters'
     MIN_ITEMS_REQUIRED = 'min_items_required'
     MAX_ITEMS_ALLOWED = 'max_items_allowed'
+    SELECT_ONE_CONFIGURED_OPTION = 'select_one_configured_option'
+    SELECT_ONLY_CONFIGURED_OPTIONS = 'select_only_configured_options'
+    SELECT_ONE_CONFIGURED_ENTITY = 'select_one_configured_entity'
+    SELECT_ONLY_CONFIGURED_ENTITIES = 'select_only_configured_entities'
+    VALID_VALUES_INCLUDE = 'valid_values_include'
     ONLY_CHARACTER_SET_ALLOWED = 'only_character_set_allowed'
     IMPORT_RESULT_ONLY_FOR_INVALID_HEADER_VALIDATION = 'import_result_only_for_invalid_header_validation'
     ENTER_VALUE_EXPECTED_FORMAT = 'enter_value_expected_format'
@@ -225,16 +232,22 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.DATE_MUST_BE_EARLIER_THAN_NOW: 'The value must be earlier than or equal to the current time',
         MessageKey.DATE_MUST_BE_LATER_THAN_NOW: 'The value must be later than or equal to the current time',
         MessageKey.DATE_RANGE_START_AFTER_END: 'The start date cannot be later than the end date',
-        MessageKey.VALID_EMAIL_REQUIRED: 'Enter a valid email address',
+        MessageKey.ENTER_DATE_RANGE_EXPECTED_FORMAT: (
+            'Enter both a start date and an end date in the format shown in the header comment'
+        ),
+        MessageKey.VALID_EMAIL_REQUIRED: 'Enter a valid email address, such as name@example.com',
         MessageKey.INVALID_NUMBER_ENTER_NUMBER: 'Invalid input; enter a number.',
         MessageKey.NUMBER_BETWEEN_MIN_AND_MAX: 'Enter a number between {minimum} and {maximum}.',
         MessageKey.NUMBER_BETWEEN_NEG_INF_AND_MAX: 'Enter a number between -∞ and {maximum}.',
         MessageKey.NUMBER_BETWEEN_MIN_AND_POS_INF: 'Enter a number between {minimum} and +∞.',
         MessageKey.NUMBER_RANGE_MIN_GREATER_THAN_MAX: 'The minimum value cannot be greater than the maximum value',
+        MessageKey.ENTER_NUMBER_RANGE_EXPECTED_FORMAT: (
+            'Enter both a minimum value and a maximum value in the format shown in the header comment'
+        ),
         MessageKey.ENTER_NUMBER: 'Enter a number',
         MessageKey.ENTER_NUMBER_EXPECTED_FORMAT: 'Enter a number in the expected format',
-        MessageKey.VALID_URL_REQUIRED: 'Enter a valid URL',
-        MessageKey.VALID_PHONE_NUMBER_REQUIRED: 'Enter a valid phone number',
+        MessageKey.VALID_URL_REQUIRED: 'Enter a valid URL, such as https://example.com',
+        MessageKey.VALID_PHONE_NUMBER_REQUIRED: 'Enter a valid phone number, such as 13800138000',
         MessageKey.MIN_LENGTH_CHARACTERS: 'The minimum length is {min_length} characters',
         MessageKey.MULTIPLE_SELECTIONS_NOT_SUPPORTED: 'Multiple selections are not supported',
         MessageKey.OPTIONS_CANNOT_BE_NONE_FOR_SELECTION_FIELDS: (
@@ -246,6 +259,11 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.MAX_LENGTH_CHARACTERS: 'The maximum length is {max_length} characters',
         MessageKey.MIN_ITEMS_REQUIRED: 'Select at least {min_items} items',
         MessageKey.MAX_ITEMS_ALLOWED: 'Select no more than {max_items} items',
+        MessageKey.SELECT_ONE_CONFIGURED_OPTION: 'Select one of the configured options',
+        MessageKey.SELECT_ONLY_CONFIGURED_OPTIONS: 'Select only configured options',
+        MessageKey.SELECT_ONE_CONFIGURED_ENTITY: 'Select one {entity} from the configured options',
+        MessageKey.SELECT_ONLY_CONFIGURED_ENTITIES: 'Select {entity_plural} from the configured options',
+        MessageKey.VALID_VALUES_INCLUDE: 'Valid values include: {options}',
         MessageKey.ONLY_CHARACTER_SET_ALLOWED: 'Only {character_set_names} are allowed',
         MessageKey.IMPORT_RESULT_ONLY_FOR_INVALID_HEADER_VALIDATION: (
             'ImportResult can only be built from an invalid header validation result'
@@ -322,6 +340,16 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.MAX_LENGTH_CHARACTERS: '最大长度为 {max_length} 个字符',
         MessageKey.MIN_ITEMS_REQUIRED: '至少选择 {min_items} 项',
         MessageKey.MAX_ITEMS_ALLOWED: '最多选择 {max_items} 项',
+        MessageKey.ENTER_DATE_RANGE_EXPECTED_FORMAT: '请按照表头批注中的格式同时填写开始日期和结束日期',
+        MessageKey.ENTER_NUMBER_RANGE_EXPECTED_FORMAT: '请按照表头批注中的格式同时填写最小值和最大值',
+        MessageKey.VALID_EMAIL_REQUIRED: '请输入正确的邮箱地址，例如 name@example.com',
+        MessageKey.VALID_URL_REQUIRED: '请输入有效的网址，例如 https://example.com',
+        MessageKey.VALID_PHONE_NUMBER_REQUIRED: '请输入有效的手机号，例如 13800138000',
+        MessageKey.SELECT_ONE_CONFIGURED_OPTION: '请从配置的选项中选择一项',
+        MessageKey.SELECT_ONLY_CONFIGURED_OPTIONS: '请选择配置的选项',
+        MessageKey.SELECT_ONE_CONFIGURED_ENTITY: '请从配置的选项中选择一个{entity}',
+        MessageKey.SELECT_ONLY_CONFIGURED_ENTITIES: '请选择配置的{entity_plural}',
+        MessageKey.VALID_VALUES_INCLUDE: '可选值示例：{options}',
         MessageKey.ENTER_VALUE_EXPECTED_FORMAT: '请按照表头注释中给出的格式填写',
         MessageKey.IMPORT_RESULT_ONLY_FOR_INVALID_HEADER_VALIDATION: '仅当表头校验不通过时，才能构造 ImportResult',
         MessageKey.HEADER_HINT: (

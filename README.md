@@ -6,7 +6,7 @@
 ![Lint](https://img.shields.io/badge/lint-ruff-D7FF64)
 ![Typing](https://img.shields.io/badge/typing-pyright-2C6BED)
 
-[中文 README](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README_cn.md) · [About](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/ABOUT.md) · [Getting Started](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md) · [Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/architecture.md) · [Examples Showcase](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md) · [Public API](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md) · [Locale Policy](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/locale.md) · [Changelog](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/CHANGELOG.md) · [Migration Notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/MIGRATIONS.md)
+[中文 README](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README_cn.md) · [About](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/ABOUT.md) · [Getting Started](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md) · [Result Objects](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md) · [Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/architecture.md) · [Examples Showcase](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md) · [Public API](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md) · [Locale Policy](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/locale.md) · [Changelog](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/CHANGELOG.md) · [Migration Notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/MIGRATIONS.md)
 
 ExcelAlchemy is a schema-driven Python library for Excel import and export workflows.
 It turns Pydantic models into typed workbook contracts: generate templates, validate uploads, map failures back to rows
@@ -16,7 +16,7 @@ This repository is also a design artifact.
 It documents a series of deliberate engineering choices: `src/` layout, Pydantic v2 migration, pandas removal,
 pluggable storage, `uv`-based workflows, and locale-aware workbook output.
 
-The current stable release is `2.2.5`, which continues the ExcelAlchemy 2.x line with richer import-failure feedback, clearer getting-started and public-API guidance, stronger real-world examples, and stronger release smoke coverage.
+The current stable release is `2.2.6`, which continues the ExcelAlchemy 2.x line with stronger result-object guidance, a copyable FastAPI reference project, more robust release smoke verification, and clearer codec fallback diagnostics.
 
 ## At a Glance
 
@@ -186,6 +186,7 @@ Practical examples live in the repository:
 - [`examples/export_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/export_workflow.py)
 - [`examples/minio_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/minio_storage.py)
 - [`examples/fastapi_upload.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_upload.py)
+- [`examples/fastapi_reference/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md)
 - [`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)
 
 If you want the recommended reading order, start with
@@ -231,6 +232,7 @@ Full captured outputs:
 - [`files/example-outputs/selection-fields.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/selection-fields.txt)
 - [`files/example-outputs/custom-storage.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/custom-storage.txt)
 - [`files/example-outputs/annotated-schema.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/annotated-schema.txt)
+- [`files/example-outputs/fastapi-reference.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/fastapi-reference.txt)
 
 ## Public API Boundaries
 
@@ -256,6 +258,39 @@ The older aliases:
 
 still work in the 2.x line as compatibility paths, but new application code
 should use the clearer names above.
+
+## Structured Error Access
+
+Import failures are now easier to inspect programmatically.
+
+- `alchemy.cell_error_map`
+- `alchemy.row_error_map`
+
+Both containers remain dict-like for 2.x compatibility, but they also expose
+clearer helper methods for application code and API handlers:
+
+- `at(...)`
+- `messages_at(...)`
+- `messages_for_row(...)`
+- `numbered_messages_for_row(...)`
+- `flatten()`
+- `to_dict()`
+- `to_api_payload()`
+
+This makes it easier to:
+
+- build frontend-friendly validation responses
+- render row-level and cell-level failure summaries
+- keep workbook feedback and API feedback aligned
+
+Common field types also provide more business-oriented validation wording. For
+example:
+
+- date fields now mention the expected date format
+- date range and number range fields now mention the expected combined input
+- email, phone number, and URL fields now include example formats
+- selection, organization, and staff fields now mention that values must come
+  from the configured options
 
 ## Locale-Aware Workbook Output
 

@@ -6,6 +6,9 @@ It complements the repository examples by surfacing the most representative
 workflows, screenshots, and fixed outputs in one place. If you want the full
 guided path through the examples directory, start with
 [`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md).
+If you want to see how import results and error maps are meant to be surfaced
+through backend APIs, see
+[`docs/result-objects.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md).
 
 ## What ExcelAlchemy Looks Like
 
@@ -119,6 +122,8 @@ If you want to see how ExcelAlchemy fits into backend systems:
   - [`examples/minio_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/minio_storage.py)
 - FastAPI integration:
   - [`examples/fastapi_upload.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_upload.py)
+  - [`examples/fastapi_reference/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md)
+  - [`files/example-outputs/fastapi-reference.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/fastapi-reference.txt)
 
 ## Recommended Reading Order
 
@@ -134,6 +139,7 @@ showcase:
 7. [`examples/selection_fields.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/selection_fields.py)
 8. [`examples/minio_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/minio_storage.py)
 9. [`examples/fastapi_upload.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_upload.py)
+10. [`examples/fastapi_reference/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md)
 
 Or start with the dedicated guide:
 

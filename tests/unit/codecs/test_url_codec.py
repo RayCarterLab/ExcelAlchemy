@@ -50,4 +50,6 @@ class TestUrlValueType(BaseTestCase):
         field.value_type = cast(Url, field.value_type)
 
         assert field.value_type.__validate__('http://www.baidu.com', field) == 'http://www.baidu.com'
-        self.assertRaises(ValueError, field.value_type.__validate__, '1', field)
+        with self.assertRaises(ValueError) as context:
+            field.value_type.__validate__('1', field)
+        assert str(context.exception) == 'Enter a valid URL, such as https://example.com'

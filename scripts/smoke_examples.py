@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import contextlib
+import importlib
 import importlib.util
 import io
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 EXAMPLES_DIR = ROOT / 'examples'
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 REQUIRED_EXAMPLES: dict[str, tuple[str, ...]] = {
     'annotated_schema.py': ('Generated template:', 'employee-template.xlsx'),
@@ -23,6 +27,10 @@ REQUIRED_EXAMPLES: dict[str, tuple[str, ...]] = {
 OPTIONAL_EXAMPLES: dict[str, tuple[tuple[str, bool], tuple[str, ...]]] = {
     'fastapi_upload.py': (('fastapi', True), ('FastAPI upload example completed', '/employee-imports')),
     'minio_storage.py': (('minio', True), ('Built gateway: MinioStorageGateway', 'Uses built-in Minio path: True')),
+}
+
+REQUIRED_MODULE_EXAMPLES: dict[str, tuple[str, ...]] = {
+    'examples.fastapi_reference.app': ('FastAPI reference project completed', '/employee-imports'),
 }
 
 
@@ -49,6 +57,14 @@ def _dependency_available(module_name: str) -> bool:
     return importlib.util.find_spec(module_name) is not None
 
 
+def _run_module_example(module_name: str) -> str:
+    module = importlib.import_module(module_name)
+    buffer = io.StringIO()
+    with contextlib.redirect_stdout(buffer):
+        module.main()
+    return buffer.getvalue()
+
+
 def _assert_example_output(filename: str, output: str, required_fragments: tuple[str, ...]) -> None:
     missing = [fragment for fragment in required_fragments if fragment not in output]
     if missing:
@@ -69,6 +85,11 @@ def main() -> None:
         output = _run_example(filename)
         _assert_example_output(filename, output, required_fragments)
         print(f'Smoke passed: {filename}')
+
+    for module_name, required_fragments in REQUIRED_MODULE_EXAMPLES.items():
+        output = _run_module_example(module_name)
+        _assert_example_output(module_name, output, required_fragments)
+        print(f'Smoke passed: {module_name}')
 
 
 if __name__ == '__main__':

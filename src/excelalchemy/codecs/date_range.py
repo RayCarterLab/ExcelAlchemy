@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from excelalchemy._primitives.constants import DATE_FORMAT_TO_PYTHON_MAPPING, MILLISECOND_TO_SECOND, DataRangeOption
 from excelalchemy._primitives.identity import Key
-from excelalchemy.codecs.base import CompositeExcelFieldCodec
+from excelalchemy.codecs.base import CompositeExcelFieldCodec, log_codec_parse_fallback
 from excelalchemy.exceptions import ConfigError
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
@@ -67,7 +67,12 @@ class DateRange(CompositeExcelFieldCodec):
         )
 
     @classmethod
+    def expected_input_message(cls, field_meta: FieldMetaInfo) -> str | None:
+        return msg(MessageKey.ENTER_DATE_RANGE_EXPECTED_FORMAT)
+
+    @classmethod
     def parse_input(cls, value: object, field_meta: FieldMetaInfo) -> object:
+        declared = field_meta.declared
         mapping = cls._coerce_mapping(value)
         if mapping is not None:
             try:
@@ -76,7 +81,7 @@ class DateRange(CompositeExcelFieldCodec):
                     'end': cls._parse_optional_datetime(mapping.get('end'), field_meta),
                 }
             except Exception as exc:
-                logging.warning('Could not parse value %s for field %s. Reason: %s', value, cls.__name__, exc)
+                log_codec_parse_fallback(cls.__name__, value, field_label=declared.label, exc=exc)
                 return value
 
         if isinstance(value, datetime):
@@ -86,7 +91,7 @@ class DateRange(CompositeExcelFieldCodec):
             try:
                 return cls._parse_datetime_text(value, field_meta)
             except Exception as exc:
-                logging.warning('Could not parse value %s for field %s. Reason: %s', value, cls.__name__, exc)
+                log_codec_parse_fallback(cls.__name__, value, field_label=declared.label, exc=exc)
                 return value
 
         return value

@@ -6,6 +6,9 @@ If you want a single public-facing page that combines screenshots,
 representative workflows, and captured outputs, see
 [`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md).
 
+If you want a copyable reference layout rather than a single script, see
+[`examples/fastapi_reference/`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md).
+
 ## Recommended Reading Order
 
 1. `annotated_schema.py`
@@ -58,6 +61,12 @@ representative workflows, and captured outputs, see
    - It is useful once the import and storage examples already make sense.
    - Best for: backend teams exposing template download and workbook import over HTTP.
    - Output: prints the import result, created row count, uploaded result artifacts, and registered FastAPI routes.
+10. `fastapi_reference/`
+   - Read this if you want a copyable minimal reference project rather than a single-file integration sketch.
+   - Shows a split between route, service, storage, and schema layers.
+   - Best for: teams integrating ExcelAlchemy into a real FastAPI backend.
+   - Output: prints the import result, created row count, uploaded artifacts, and registered route paths.
+   - Captured output: [`files/example-outputs/fastapi-reference.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/fastapi-reference.txt)
 
 ## By Goal
 
@@ -75,6 +84,7 @@ representative workflows, and captured outputs, see
   - `selection_fields.py`
 - Learn web integration:
   - `fastapi_upload.py`
+  - `fastapi_reference/`
 
 ## Storage and Backend Integration
 
@@ -86,6 +96,8 @@ representative workflows, and captured outputs, see
   - Shows the built-in Minio-backed storage path currently available in the 2.x line.
 - `fastapi_upload.py`
   - Shows a FastAPI integration sketch for template download and workbook import.
+- `fastapi_reference/`
+  - Shows a minimal reference-project layout with route, service, storage, and schema modules.
 
 ## How To Run
 
@@ -101,10 +113,17 @@ uv run python examples/custom_storage.py
 uv run python examples/export_workflow.py
 uv run python examples/minio_storage.py
 uv run python examples/fastapi_upload.py
+uv run python -m examples.fastapi_reference.app
 ```
 
 If you want to run the FastAPI app itself, install FastAPI first and then run
 your preferred ASGI server against `examples.fastapi_upload:app`.
+
+For the reference-project version, use:
+
+```bash
+uv run uvicorn examples.fastapi_reference.app:app --reload
+```
 
 If you want to smoke-test the web integration without running a server, execute:
 

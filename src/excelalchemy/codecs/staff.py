@@ -15,6 +15,10 @@ class SingleStaff(Radio):
     __name__ = 'SingleStaff'
 
     @classmethod
+    def selection_entity_singular(cls) -> str | None:
+        return 'staff member'
+
+    @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
         declared = field_meta.declared
         presentation = field_meta.presentation
@@ -52,6 +56,10 @@ class SingleStaff(Radio):
 
 class MultiStaff(MultiCheckbox):
     __name__ = 'MultiStaff'
+
+    @classmethod
+    def selection_entity_plural(cls) -> str | None:
+        return 'staff members'
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:

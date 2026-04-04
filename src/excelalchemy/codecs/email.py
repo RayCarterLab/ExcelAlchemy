@@ -12,6 +12,10 @@ class Email(String):
     _validator: ClassVar[TypeAdapter[EmailStr]] = TypeAdapter(EmailStr)
 
     @classmethod
+    def expected_input_message(cls, field_meta: FieldMetaInfo) -> str | None:
+        return msg(MessageKey.VALID_EMAIL_REQUIRED)
+
+    @classmethod
     def normalize_import_value(cls, value: object, field_meta: FieldMetaInfo) -> str:
         # Try to parse the value as a string
         try:

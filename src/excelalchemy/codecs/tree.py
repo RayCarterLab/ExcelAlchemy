@@ -12,6 +12,10 @@ class SingleTreeNode(Radio):
     __name__ = 'SingleTreeNode'
 
     @classmethod
+    def selection_entity_singular(cls) -> str | None:
+        return 'tree node'
+
+    @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
         declared = field_meta.declared
         presentation = field_meta.presentation
@@ -46,6 +50,10 @@ class SingleTreeNode(Radio):
 
 class MultiTreeNode(MultiCheckbox):
     __name__ = 'MultiTreeNode'
+
+    @classmethod
+    def selection_entity_plural(cls) -> str | None:
+        return 'tree nodes'
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:

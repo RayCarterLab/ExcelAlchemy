@@ -18,3 +18,6 @@ class TestPhoneNumberValueType(BaseTestCase):
         self.assertRaises(ValueError, field.value_type.__validate__, 'ddd', field)
         self.assertRaises(ValueError, field.value_type.__validate__, '1234567890', field)
         assert field.value_type.__validate__('13216762386', field) == '13216762386'
+        with self.assertRaises(ValueError) as context:
+            field.value_type.__validate__('ddd', field)
+        assert str(context.exception) == 'Enter a valid phone number, such as 13800138000'

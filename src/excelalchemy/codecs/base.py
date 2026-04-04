@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
@@ -17,6 +18,63 @@ if TYPE_CHECKING:
 type WorkbookInputValue = Any
 type WorkbookDisplayValue = Any
 type NormalizedImportValue = Any
+
+
+def _summarize_exception(exc: Exception) -> str:
+    details: list[str] = []
+    for arg in exc.args:
+        if isinstance(arg, list):
+            raw_items = cast(list[object], arg)
+            list_items: list[str] = []
+            for item in raw_items:
+                item_text = item.__name__ if isinstance(item, type) else str(item).strip()
+                if item_text:
+                    list_items.append(item_text)
+            if list_items:
+                details.append(', '.join(list_items))
+            continue
+
+        text = str(arg).strip()
+        if text:
+            details.append(text)
+
+    if details:
+        return '; '.join(details)
+    return exc.__class__.__name__
+
+
+def log_codec_parse_fallback(
+    codec_name: str,
+    value: object,
+    *,
+    field_label: str | None = None,
+    exc: Exception,
+) -> None:
+    field_context = f' for field "{field_label}"' if field_label else ''
+    logging.warning(
+        'Codec %s could not parse workbook input%s; keeping the original value %r. Reason: %s',
+        codec_name,
+        field_context,
+        value,
+        _summarize_exception(exc),
+    )
+
+
+def log_codec_render_fallback(
+    codec_name: str,
+    value: object,
+    *,
+    field_label: str | None = None,
+    exc: Exception,
+) -> None:
+    field_context = f' for field "{field_label}"' if field_label else ''
+    logging.warning(
+        'Codec %s could not format workbook value%s; returning %r as-is. Reason: %s',
+        codec_name,
+        field_context,
+        value,
+        _summarize_exception(exc),
+    )
 
 
 class ExcelFieldCodec(ABC):
@@ -41,6 +99,11 @@ class ExcelFieldCodec(ABC):
     @abstractmethod
     def normalize_import_value(cls, value: WorkbookInputValue, field_meta: FieldMetaInfo) -> NormalizedImportValue:
         """Validate and normalize parsed input before handing it to the Pydantic layer."""
+
+    @classmethod
+    def expected_input_message(cls, field_meta: FieldMetaInfo) -> str | None:
+        """Return a user-facing input hint for invalid values when one is known."""
+        return None
 
     @classmethod
     def comment(cls, field_meta: FieldMetaInfo) -> str:

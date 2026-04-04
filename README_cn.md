@@ -1,11 +1,11 @@
 # ExcelAlchemy
 
-[English README](./README.md) · [项目说明](./ABOUT.md) · [架构文档](./docs/architecture.md) · [Locale Policy](./docs/locale.md) · [Changelog](./CHANGELOG.md) · [迁移说明](./MIGRATIONS.md)
+[English README](./README.md) · [项目说明](./ABOUT.md) · [快速开始](./docs/getting-started.md) · [结果对象](./docs/result-objects.md) · [架构文档](./docs/architecture.md) · [Locale Policy](./docs/locale.md) · [Changelog](./CHANGELOG.md) · [迁移说明](./MIGRATIONS.md)
 
 ExcelAlchemy 是一个面向 Excel 导入导出的 schema-first Python 库。
 它的核心思路不是“读写表格文件”，而是“把 Excel 当成一种带约束的业务契约”。
 
-当前稳定发布版本是 `2.2.5`，它在稳定的 ExcelAlchemy 2.x 线上继续加强了导入失败反馈、更清晰的入门与 public API 文档、更贴近真实业务的示例，以及更强的 release smoke 验证。
+当前稳定发布版本是 `2.2.6`，它在稳定的 ExcelAlchemy 2.x 线上继续加强了结果对象与接入说明、可复制的 FastAPI 参考项目、更稳的 release smoke 验证，以及更清晰的 codec fallback 诊断信息。
 
 你用 Pydantic 模型定义结构，用 `FieldMeta` 定义 Excel 元数据，用显式的导入/导出流程去完成模板生成、数据校验、错误回写和后端集成。
 
@@ -115,6 +115,7 @@ pip install "ExcelAlchemy[minio]"
 - [`examples/export_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/export_workflow.py)
 - [`examples/minio_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/minio_storage.py)
 - [`examples/fastapi_upload.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_upload.py)
+- [`examples/fastapi_reference/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md)
 - [`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)
 
 如果你想按推荐顺序来阅读，建议先看
@@ -161,6 +162,7 @@ Uploaded objects: ['employees-export-upload.xlsx']
 - [`files/example-outputs/selection-fields.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/selection-fields.txt)
 - [`files/example-outputs/custom-storage.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/custom-storage.txt)
 - [`files/example-outputs/annotated-schema.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/annotated-schema.txt)
+- [`files/example-outputs/fastapi-reference.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/fastapi-reference.txt)
 
 ## 快速开始
 
@@ -269,6 +271,36 @@ alchemy = ExcelAlchemy(ExporterConfig(Importer, storage=InMemoryExcelStorage()))
 - `alchemy.row_errors`
 
 在 2.x 里仍然可用，用于兼容旧代码；但新代码建议统一使用前面这组更明确的名字。
+
+## 结构化错误读取
+
+现在导入失败不仅能回写到 workbook，也更适合被后端服务和前端界面读取。
+
+- `alchemy.cell_error_map`
+- `alchemy.row_error_map`
+
+这两个对象在 2.x 中仍然保持 dict 兼容，但同时提供了更适合业务代码使用的辅助方法：
+
+- `at(...)`
+- `messages_at(...)`
+- `messages_for_row(...)`
+- `numbered_messages_for_row(...)`
+- `flatten()`
+- `to_dict()`
+- `to_api_payload()`
+
+这意味着你可以更容易地：
+
+- 构造前端可直接消费的校验响应
+- 渲染按行和按单元格的失败摘要
+- 保持 workbook 提示和 API 提示的一致性
+
+常见字段类型的错误提示也更贴近业务语义了，例如：
+
+- 日期字段会直接提示期望的日期格式
+- 日期区间和数值区间字段会提示期望的组合输入格式
+- 邮箱、手机号、URL 会给出更自然的示例格式
+- 选项、组织、人员类字段会明确提示“必须来自配置项”
 
 ## 为什么这样设计
 
