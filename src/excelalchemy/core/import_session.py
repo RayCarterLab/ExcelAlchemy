@@ -5,13 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from enum import StrEnum
 from functools import cached_property
-from typing import cast
 
 from pydantic import BaseModel
 
 from excelalchemy._primitives.constants import REASON_COLUMN_KEY, RESULT_COLUMN_KEY
 from excelalchemy._primitives.header_models import ExcelHeader
-from excelalchemy._primitives.identity import ColumnIndex, DataUrlStr, RowIndex, UniqueLabel, UrlStr
+from excelalchemy._primitives.identity import DataUrlStr, RowIndex, UniqueLabel, UrlStr
 from excelalchemy._primitives.payloads import FlatRowPayload, ModelRowPayload
 from excelalchemy.codecs.base import SystemReserved
 from excelalchemy.config import ImporterConfig
@@ -21,13 +20,13 @@ from excelalchemy.core.rendering import ExcelRenderer
 from excelalchemy.core.rows import ImportIssueTracker, RowAggregator
 from excelalchemy.core.schema import ExcelSchemaLayout
 from excelalchemy.core.storage_protocol import ExcelStorage
-from excelalchemy.core.table import WorksheetTable
-from excelalchemy.exceptions import ConfigError, ExcelCellError, ExcelRowError
+from excelalchemy.core.table import WorksheetRow, WorksheetTable
+from excelalchemy.exceptions import ConfigError
 from excelalchemy.i18n.messages import MessageKey, use_display_locale
 from excelalchemy.i18n.messages import display_message as dmsg
 from excelalchemy.i18n.messages import message as msg
 from excelalchemy.metadata import FieldMetaInfo
-from excelalchemy.results import ImportResult, ValidateHeaderResult, ValidateResult
+from excelalchemy.results import CellErrorMap, ImportResult, RowIssueMap, ValidateHeaderResult, ValidateResult
 
 HEADER_HINT_LINE_COUNT = 1
 
@@ -104,20 +103,20 @@ class ImportSession[
         self._snapshot = ImportSessionSnapshot()
 
     @property
-    def cell_error_map(self) -> dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]]:
+    def cell_error_map(self) -> CellErrorMap:
         return self.issue_tracker.cell_errors
 
     @property
-    def row_error_map(self) -> dict[RowIndex, list[ExcelRowError | ExcelCellError]]:
+    def row_error_map(self) -> RowIssueMap:
         return self.issue_tracker.row_errors
 
     @property
-    def cell_errors(self) -> dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]]:
+    def cell_errors(self) -> CellErrorMap:
         """Backward-compatible alias for cell_error_map."""
         return self.cell_error_map
 
     @property
-    def row_errors(self) -> dict[RowIndex, list[ExcelRowError | ExcelCellError]]:
+    def row_errors(self) -> RowIssueMap:
         """Backward-compatible alias for row_error_map."""
         return self.row_error_map
 
@@ -240,7 +239,7 @@ class ImportSession[
         processed_row_count = 0
         for table_row_index in range(self.extra_header_count_on_import, len(self.worksheet_table)):
             row = self.worksheet_table.row_at(table_row_index)
-            aggregate_data = self._aggregate_data(cast(FlatRowPayload, row.to_dict()))
+            aggregate_data = self._aggregate_data(self._row_payload(row))
             success = await self.executor.execute(RowIndex(table_row_index), aggregate_data, self.worksheet_table)
             processed_row_count += 1
             all_success = all_success and success
@@ -264,6 +263,13 @@ class ImportSession[
 
     def _aggregate_data(self, row_data: FlatRowPayload) -> ModelRowPayload:
         return self.row_aggregator.aggregate(row_data)
+
+    @staticmethod
+    def _row_payload(row: WorksheetRow) -> FlatRowPayload:
+        payload: FlatRowPayload = {}
+        for key, value in row.items():
+            payload[str(key)] = value
+        return payload
 
     def _render_import_result_excel(self) -> DataUrlStr:
         return self.renderer.render_data(

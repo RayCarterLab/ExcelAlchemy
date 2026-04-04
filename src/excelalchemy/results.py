@@ -1,10 +1,12 @@
 """Import result models for ExcelAlchemy workflows."""
 
+from collections.abc import Iterable
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from excelalchemy._primitives.identity import Label
+from excelalchemy._primitives.identity import ColumnIndex, Label, RowIndex
+from excelalchemy.exceptions import ExcelCellError, ExcelRowError, ProgrammaticError
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
 from excelalchemy.i18n.messages import message as msg
@@ -12,6 +14,83 @@ from excelalchemy.i18n.messages import message as msg
 
 def _empty_labels() -> list[Label]:
     return []
+
+
+type RowIssue = ExcelRowError | ExcelCellError
+
+
+class CellErrorMap(dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]]):
+    """Workbook-coordinate cell error mapping with convenience accessors."""
+
+    def add(self, row_index: RowIndex | int, column_index: ColumnIndex | int, error: ExcelCellError) -> None:
+        self.setdefault(RowIndex(row_index), {}).setdefault(ColumnIndex(column_index), []).append(error)
+
+    def at(self, row_index: RowIndex | int, column_index: ColumnIndex | int) -> tuple[ExcelCellError, ...]:
+        row = self.get(RowIndex(row_index), {})
+        return tuple(row.get(ColumnIndex(column_index), ()))
+
+    def for_row(self, row_index: RowIndex | int) -> dict[ColumnIndex, tuple[ExcelCellError, ...]]:
+        row = self.get(RowIndex(row_index), {})
+        return {column_index: tuple(errors) for column_index, errors in row.items()}
+
+    def messages_at(self, row_index: RowIndex | int, column_index: ColumnIndex | int) -> tuple[str, ...]:
+        return tuple(str(error) for error in self.at(row_index, column_index))
+
+    def flatten(self) -> tuple[ExcelCellError, ...]:
+        return tuple(error for row in self.values() for errors in row.values() for error in errors)
+
+    def to_dict(self) -> dict[int, dict[int, list[dict[str, object]]]]:
+        return {
+            int(row_index): {
+                int(column_index): [error.to_dict() for error in errors] for column_index, errors in row.items()
+            }
+            for row_index, row in self.items()
+        }
+
+    @property
+    def has_errors(self) -> bool:
+        return bool(self)
+
+    @property
+    def error_count(self) -> int:
+        return len(self.flatten())
+
+
+class RowIssueMap(dict[RowIndex, list[RowIssue]]):
+    """Workbook-coordinate row issue mapping with convenience accessors."""
+
+    def add(self, row_index: RowIndex | int, error: RowIssue) -> None:
+        self.setdefault(RowIndex(row_index), []).append(error)
+
+    def add_many(self, row_index: RowIndex | int, errors: Iterable[RowIssue]) -> None:
+        self.setdefault(RowIndex(row_index), []).extend(errors)
+
+    def at(self, row_index: RowIndex | int) -> tuple[RowIssue, ...]:
+        return tuple(self.get(RowIndex(row_index), ()))
+
+    def messages_for_row(self, row_index: RowIndex | int) -> tuple[str, ...]:
+        return tuple(str(error) for error in self.at(row_index))
+
+    def numbered_messages_for_row(self, row_index: RowIndex | int) -> tuple[str, ...]:
+        return self.numbered_messages(self.at(row_index))
+
+    def flatten(self) -> tuple[RowIssue, ...]:
+        return tuple(error for errors in self.values() for error in errors)
+
+    def to_dict(self) -> dict[int, list[dict[str, object]]]:
+        return {int(row_index): [error.to_dict() for error in errors] for row_index, errors in self.items()}
+
+    @staticmethod
+    def numbered_messages(errors: Iterable[RowIssue]) -> tuple[str, ...]:
+        return tuple(f'{index}、{error!s}' for index, error in enumerate(errors, start=1))
+
+    @property
+    def has_errors(self) -> bool:
+        return bool(self)
+
+    @property
+    def error_count(self) -> int:
+        return len(self.flatten())
 
 
 class ValidateRowResult(StrEnum):
@@ -80,7 +159,10 @@ class ImportResult(BaseModel):
     def from_validate_header_result(cls, result: ValidateHeaderResult) -> 'ImportResult':
         """Build an import result from a failed header-validation result."""
         if result.is_valid:
-            raise RuntimeError(msg(MessageKey.IMPORT_RESULT_ONLY_FOR_INVALID_HEADER_VALIDATION))
+            raise ProgrammaticError(
+                msg(MessageKey.IMPORT_RESULT_ONLY_FOR_INVALID_HEADER_VALIDATION),
+                message_key=MessageKey.IMPORT_RESULT_ONLY_FOR_INVALID_HEADER_VALIDATION,
+            )
         return cls(
             result=ValidateResult.HEADER_INVALID,
             is_required_missing=result.is_required_missing,

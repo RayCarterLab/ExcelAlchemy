@@ -107,6 +107,13 @@ jobs:
         run: |
           uv run pytest --cov=excelalchemy --cov-report=term-missing:skip-covered --cov-report=xml:coverage.xml --junitxml=pytest.xml tests
 
+      - name: Run smoke scripts
+        if: matrix.python-version == '3.14'
+        run: |
+          uv run python scripts/smoke_package.py
+          uv run python scripts/smoke_examples.py
+          uv run python scripts/generate_example_output_assets.py
+
       - name: Upload coverage artifact
         if: always() && matrix.python-version == '3.14'
         uses: actions/upload-artifact@v7

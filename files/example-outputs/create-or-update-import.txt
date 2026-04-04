@@ -1,0 +1,8 @@
+Create-or-update import workflow completed
+Result: SUCCESS
+Success rows: 2
+Failed rows: 0
+Created rows: 1
+Updated rows: 1
+Result workbook URL: None
+Uploaded artifacts: []

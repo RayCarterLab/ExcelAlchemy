@@ -4,6 +4,13 @@ This page summarizes which ExcelAlchemy modules are intended to be stable public
 entry points, which ones remain compatibility shims for the 2.x line, and which
 ones should be treated as internal implementation details.
 
+If you want the quickest path into the library, start with
+[`docs/getting-started.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md).
+If you want concrete repository examples, see
+[`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)
+and
+[`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md).
+
 ## Stable Public Modules
 
 These modules are the recommended import paths for application code:
@@ -77,6 +84,20 @@ from excelalchemy.config import ExporterConfig, ImportMode
 from excelalchemy.exceptions import ConfigError
 ```
 
+For most application code, these are the recommended import paths:
+
+- `from excelalchemy import ...`
+  Use this for the common public types, codecs, result models, and facade.
+- `from excelalchemy.config import ...`
+  Use this when you need workflow configuration types such as `ExporterConfig`
+  or `ImportMode`.
+- `from excelalchemy.exceptions import ...`
+  Use this when you catch or surface library-level exceptions.
+- `from excelalchemy.metadata import ...`
+  Use this if you want the dedicated metadata entry points directly.
+- `from excelalchemy.results import ...`
+  Use this if you need result models or error-map helper types directly.
+
 Avoid depending on implementation details such as:
 
 ```python
@@ -84,6 +105,31 @@ from excelalchemy.core.alchemy import ExcelAlchemy
 from excelalchemy.core.headers import ExcelHeaderParser
 from excelalchemy._primitives.identity import UniqueLabel
 ```
+
+## Recommended Backend Configuration Path
+
+For the stable 2.x line, the recommended backend integration path is:
+
+```python
+storage=...
+```
+
+The `storage` object should implement `ExcelStorage`.
+
+The older built-in Minio fields:
+
+- `minio=...`
+- `bucket_name=...`
+- `url_expires=...`
+
+still work in 2.x as compatibility paths, but they are no longer the
+recommended public API shape and now emit deprecation warnings.
+
+If you need concrete examples of the recommended storage path, see:
+
+- [`examples/custom_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/custom_storage.py)
+- [`examples/export_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/export_workflow.py)
+- [`docs/getting-started.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md)
 
 ## Deprecation Direction
 

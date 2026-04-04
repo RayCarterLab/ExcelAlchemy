@@ -29,6 +29,16 @@ If your application is still pinned to Pydantic v1, upgrade that dependency befo
 - Storage is now modeled as the `ExcelStorage` protocol
 - The built-in Minio backend is still available, but as an optional extra
 
+### The 2.x recommendation in one sentence
+
+For all new 2.x application code, prefer:
+
+```python
+storage=...
+```
+
+Treat the older built-in Minio fields as compatibility-only API surface.
+
 ### New install patterns
 
 Base install:
@@ -59,7 +69,14 @@ config = ExporterConfig.for_storage(
 
 ### Legacy compatibility
 
-The older `minio=..., bucket_name=..., url_expires=...` configuration style is still accepted for compatibility, but it is no longer the preferred shape of the API and now emits a deprecation warning in the 2.x line.
+The older `minio=..., bucket_name=..., url_expires=...` configuration style is
+still accepted for compatibility, but:
+
+- it is not the recommended 2.x path
+- it emits a deprecation warning
+- it should be treated as a migration bridge rather than a long-term API choice
+
+If you are writing new code in the 2.x line, use `storage=...` instead.
 
 ### Recommended importer constructors
 
@@ -83,6 +100,15 @@ config = ImporterConfig.for_create_or_update(
     storage=storage,
 )
 ```
+
+### Examples and docs
+
+If you want concrete examples of the recommended 2.x API shape, see:
+
+- [`docs/getting-started.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md)
+- [`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md)
+- [`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)
+- [`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md)
 
 ## pandas
 

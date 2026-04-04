@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from excelalchemy._primitives.constants import DATE_FORMAT_TO_PYTHON_MAPPING, MILLISECOND_TO_SECOND, DataRangeOption
 from excelalchemy._primitives.identity import Key
 from excelalchemy.codecs.base import CompositeExcelFieldCodec
+from excelalchemy.exceptions import ConfigError
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
 from excelalchemy.i18n.messages import message as msg
@@ -53,7 +54,9 @@ class DateRange(CompositeExcelFieldCodec):
         declared = field_meta.declared
         presentation = field_meta.presentation
         if presentation.date_format is None:
-            raise RuntimeError(msg(MessageKey.DATE_FORMAT_NOT_CONFIGURED))
+            raise ConfigError(
+                msg(MessageKey.DATE_FORMAT_NOT_CONFIGURED), message_key=MessageKey.DATE_FORMAT_NOT_CONFIGURED
+            )
 
         return '\n'.join(
             [

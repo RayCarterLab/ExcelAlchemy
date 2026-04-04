@@ -4,7 +4,83 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog and versioned according to PEP 440.
 
-## [2.2.3] - Unreleased
+## [2.2.5] - 2026-04-04
+
+This release continues the stable 2.x line with error UX polish, clearer
+documentation boundaries, stronger examples and smoke coverage, and continued
+typing cleanup across the runtime path.
+
+### Added
+
+- Added `CellErrorMap` and `RowIssueMap` as richer workbook-facing error access
+  containers while preserving 2.x dict-like compatibility
+- Added `docs/getting-started.md` to give new users one clear entry point for
+  installation, schema declaration, workflow setup, and backend configuration
+- Added `docs/examples-showcase.md` and example-output assets so examples can
+  be browsed as a lightweight showcase instead of only as source code
+- Added more business-oriented examples, including employee import,
+  create-or-update import, export workflow, selection-heavy forms, and
+  date/range field workflows
+- Added stronger smoke scripts and release checks for installed packages,
+  repository examples, and generated example-output assets
+
+### Changed
+
+- Polished error UX so row and cell issues are easier to inspect through
+  dedicated result-map helpers such as `at(...)`, `messages_at(...)`,
+  `messages_for_row(...)`, and `flatten()`
+- Unified exception boundaries around `ProgrammaticError`, `ConfigError`,
+  `ExcelCellError`, and `ExcelRowError`, including structured `to_dict()`
+  output and clearer equality semantics
+- Normalized common validation messages into more natural, workbook-facing
+  English such as `This field is required`
+- Clarified `FieldMetaInfo` as a compatibility facade over layered metadata
+  objects and moved more internal consumers and codecs onto `declared`,
+  `runtime`, `presentation`, and `constraints`
+- Continued shrinking typing gray areas outside `metadata.py` and
+  `helper/pydantic.py` by removing or consolidating low-value `cast(...)`
+  usage where concrete runtime behavior was already clear
+- Strengthened documentation boundaries by cross-linking getting-started,
+  public API, migrations, examples, showcase, and PyPI-facing README content
+- Expanded `examples/README.md` into a recommended reading order with expected
+  outputs and captured example artifacts
+
+### Fixed
+
+- Restored explicit `ProgrammaticError` handling for unsupported
+  `Annotated[..., Field(...), ExcelMeta(...)]` declarations that use native
+  Python types instead of `ExcelFieldCodec` subclasses
+- Tightened codec resolution in the Pydantic adapter so unsupported
+  declarations fail at the codec resolution boundary instead of being treated
+  as valid runtime metadata
+- Added regression coverage for the unsupported-annotation path and for error
+  message quality in the Pydantic adapter
+
+### Compatibility Notes
+
+- No public import or export workflow API was removed in this release
+- Valid `ExcelFieldCodec` and `CompositeExcelFieldCodec` declarations continue
+  to work unchanged
+- Unsupported native annotations with `ExcelMeta(...)` now fail early with the
+  intended `ProgrammaticError`
+- `storage=...` remains the recommended 2.x backend configuration path, while
+  legacy built-in Minio fields continue to exist only as compatibility surface
+- `FieldMeta(...)` and `ExcelMeta(...)` remain the stable public metadata entry
+  points while internal metadata continues to consolidate behind them
+
+### Release Summary
+
+- import failures are easier to inspect and present through richer error maps
+- validation messages are more consistent, more natural, and better suited for
+  workbook feedback
+- examples now read more like real integration guides and are protected by
+  direct smoke coverage
+- getting-started, public API, migrations, examples, and showcase docs now
+  form a clearer documentation path
+- runtime typing boundaries are a little tighter without sacrificing
+  readability or 2.x compatibility
+
+## [2.2.3] - Unpublished draft history
 
 This release continues the stable 2.x line with a focused validation fix in
 the Pydantic adapter layer.
@@ -94,7 +170,7 @@ clearer public API guidance, and better release-time smoke coverage.
 - release publishing now includes stronger smoke coverage for installed
   packages
 
-## [2.2.1] - Unreleased
+## [2.2.1] - 2026-04-03
 
 This release continues the stable 2.x line with deeper metadata layering,
 stronger internal immutability, and tighter type boundaries around the

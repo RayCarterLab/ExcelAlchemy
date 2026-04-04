@@ -1,4 +1,4 @@
-from excelalchemy import ExcelCellError, ExcelRowError, Label
+from excelalchemy import CellErrorMap, ConfigError, ExcelCellError, ExcelRowError, Label, ProgrammaticError, RowIssueMap
 from tests.support import BaseTestCase
 
 
@@ -15,7 +15,10 @@ class TestExcelExceptions(BaseTestCase):
 
     async def test_excel_cell_error_repr_includes_label_and_message(self):
         exc1 = ExcelCellError(label=Label('邮箱'), message='Enter a valid email address')
-        assert repr(exc1) == "ExcelCellError(label=Label('邮箱'), message='Enter a valid email address')"
+        assert (
+            repr(exc1)
+            == "ExcelCellError(label=Label('邮箱'), parent_label=None, message='Enter a valid email address')"
+        )
 
     async def test_excel_cell_error_str_prefixes_label(self):
         exc1 = ExcelCellError(label=Label('邮箱'), message='Enter a valid email address')
@@ -40,6 +43,10 @@ class TestExcelExceptions(BaseTestCase):
         exc2 = ExcelCellError(label=Label('邮箱1'), message='Enter a valid email address')
         assert exc1 != exc2
 
+        exc1 = ExcelCellError(label=Label('邮箱'), parent_label=Label('员工'), message='Enter a valid email address')
+        exc2 = ExcelCellError(label=Label('邮箱'), message='Enter a valid email address')
+        assert exc1 != exc2
+
         exc1 = ExcelCellError(label=Label('邮箱'), message='Enter a valid email address')
         other = 'other'
 
@@ -57,4 +64,94 @@ class TestExcelExceptions(BaseTestCase):
         assert str(exc1) == 'Enter a valid email address'
 
         exc1 = ExcelRowError(message='Enter a valid email address')
-        assert repr(exc1) == "ExcelRowError(message='Enter a valid email address')"
+        assert repr(exc1) == "ExcelRowError(message='Enter a valid email address', detail={})"
+
+    async def test_excel_cell_error_to_dict_includes_coordinate_metadata(self):
+        exc = ExcelCellError(label=Label('邮箱'), parent_label=Label('员工'), message='Enter a valid email address')
+
+        assert exc.to_dict() == {
+            'type': 'ExcelCellError',
+            'message': 'Enter a valid email address',
+            'label': '邮箱',
+            'parent_label': '员工',
+            'unique_label': '员工·邮箱',
+        }
+
+    async def test_programmatic_and_config_errors_preserve_detail_payloads(self):
+        programmatic = ProgrammaticError('Invalid declaration', field='email')
+        config = ConfigError('Missing storage backend', backend='minio')
+
+        assert programmatic.to_dict() == {
+            'type': 'ProgrammaticError',
+            'message': 'Invalid declaration',
+            'detail': {'field': 'email'},
+        }
+        assert config.to_dict() == {
+            'type': 'ConfigError',
+            'message': 'Missing storage backend',
+            'detail': {'backend': 'minio'},
+        }
+        assert repr(programmatic) == "ProgrammaticError(message='Invalid declaration', detail={'field': 'email'})"
+        assert repr(config) == "ConfigError(message='Missing storage backend', detail={'backend': 'minio'})"
+
+    async def test_cell_error_map_supports_coordinate_access_and_flattening(self):
+        error_map = CellErrorMap()
+        error = ExcelCellError(label=Label('邮箱'), message='Enter a valid email address')
+
+        error_map.add(0, 3, error)
+
+        assert error_map.has_errors is True
+        assert error_map.error_count == 1
+        assert error_map.at(0, 3) == (error,)
+        assert error_map.messages_at(0, 3) == ('【邮箱】Enter a valid email address',)
+        assert error_map.flatten() == (error,)
+        assert error_map.for_row(0) == {3: (error,)}
+        assert error_map.to_dict() == {
+            0: {
+                3: [
+                    {
+                        'type': 'ExcelCellError',
+                        'message': 'Enter a valid email address',
+                        'label': '邮箱',
+                        'parent_label': None,
+                        'unique_label': '邮箱',
+                    }
+                ]
+            }
+        }
+
+    async def test_row_issue_map_supports_row_access_and_numbered_messages(self):
+        issue_map = RowIssueMap()
+        cell_error = ExcelCellError(label=Label('邮箱'), message='Enter a valid email address')
+        row_error = ExcelRowError(message='Combination invalid')
+
+        issue_map.add(0, cell_error)
+        issue_map.add(0, row_error)
+
+        assert issue_map.has_errors is True
+        assert issue_map.error_count == 2
+        assert issue_map.at(0) == (cell_error, row_error)
+        assert issue_map.messages_for_row(0) == ('【邮箱】Enter a valid email address', 'Combination invalid')
+        assert issue_map.numbered_messages_for_row(0) == (
+            '1、【邮箱】Enter a valid email address',
+            '2、Combination invalid',
+        )
+        assert issue_map.numbered_messages(issue_map.at(0)) == (
+            '1、【邮箱】Enter a valid email address',
+            '2、Combination invalid',
+        )
+        assert issue_map.to_dict() == {
+            0: [
+                {
+                    'type': 'ExcelCellError',
+                    'message': 'Enter a valid email address',
+                    'label': '邮箱',
+                    'parent_label': None,
+                    'unique_label': '邮箱',
+                },
+                {
+                    'type': 'ExcelRowError',
+                    'message': 'Combination invalid',
+                },
+            ]
+        }

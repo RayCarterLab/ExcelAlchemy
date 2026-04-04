@@ -1,8 +1,6 @@
 """Row aggregation and import issue tracking helpers."""
 
-from collections import defaultdict
 from collections.abc import Iterator
-from typing import cast
 
 from excelalchemy._primitives.identity import ColumnIndex, Key, RowIndex, UniqueLabel
 from excelalchemy._primitives.payloads import AggregatedRowPayload, ModelRowPayload, RowPayloadLike
@@ -11,7 +9,7 @@ from excelalchemy.exceptions import ConfigError, ExcelCellError, ExcelRowError
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import message as msg
 from excelalchemy.metadata import FieldMetaInfo
-from excelalchemy.results import ValidateRowResult
+from excelalchemy.results import CellErrorMap, RowIssueMap, ValidateRowResult
 from excelalchemy.util.file import value_is_nan
 
 from .schema import ExcelSchemaLayout
@@ -76,8 +74,8 @@ class ImportIssueTracker:
     def __init__(self, layout: ExcelSchemaLayout, import_result_field_meta: list[FieldMetaInfo]):
         self.layout = layout
         self.import_result_field_meta = import_result_field_meta
-        self.cell_errors: dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]] = {}
-        self.row_errors: dict[RowIndex, list[ExcelRowError | ExcelCellError]] = defaultdict(list)
+        self.cell_errors = CellErrorMap()
+        self.row_errors = RowIssueMap()
 
     def register_row_error(
         self,
@@ -86,9 +84,9 @@ class ImportIssueTracker:
     ) -> None:
         """Record one row-level issue or a batch of issues for the same row."""
         if isinstance(error, list):
-            self.row_errors[row_index].extend(error)
+            self.row_errors.add_many(row_index, error)
         else:
-            self.row_errors[row_index].append(error)
+            self.row_errors.add(row_index, error)
 
     def register_cell_errors(
         self,
@@ -99,8 +97,8 @@ class ImportIssueTracker:
         """Map cell errors from schema labels to rendered workbook coordinates."""
         for error in errors:
             for index in self._column_indices(worksheet_table, error.unique_label):
-                column_index = cast(ColumnIndex, index + len(self.import_result_field_meta))
-                self.cell_errors.setdefault(row_index, {}).setdefault(column_index, []).append(error)
+                column_index = ColumnIndex(index + len(self.import_result_field_meta))
+                self.cell_errors.add(row_index, column_index, error)
 
     def add_result_columns(
         self,
@@ -115,17 +113,15 @@ class ImportIssueTracker:
         reason: list[str] = []
 
         for index in worksheet_table.index[extra_header_count_on_import:]:
-            row_errors = self.row_errors.get(RowIndex(index))
+            row_errors = self.row_errors.at(RowIndex(index))
             if not row_errors:
                 result.append(str(ValidateRowResult.SUCCESS))
                 reason.append('')
                 continue
 
             result.append(str(ValidateRowResult.FAIL))
-            numbered_reasons = [
-                f'{idx}、{error!s}' for idx, error in enumerate(self.layout.order_errors(row_errors), start=1)
-            ]
-            reason.append('\n'.join(numbered_reasons))
+            ordered_errors = list(self.layout.order_errors(list(row_errors)))
+            reason.append('\n'.join(self.row_errors.numbered_messages(ordered_errors)))
 
         if extra_header_count_on_import == 1:
             result = [str(result_unique_label), *result]

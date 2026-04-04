@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import importlib
 import importlib.util
 import io
 from pathlib import Path
@@ -115,6 +116,21 @@ def test_fastapi_example_source_compiles() -> None:
     compile(source, str(EXAMPLES_DIR / 'fastapi_upload.py'), 'exec')
 
 
+@pytest.mark.skipif(importlib.util.find_spec('fastapi') is None, reason='fastapi is not installed')
+def test_fastapi_example_main_runs_when_optional_dependency_is_available() -> None:
+    module = _load_example_module('example_fastapi_upload_main', 'fastapi_upload.py')
+
+    buffer = io.StringIO()
+    with contextlib.redirect_stdout(buffer):
+        module.main()
+
+    output = buffer.getvalue()
+    assert 'FastAPI upload example completed' in output
+    assert 'Success rows: 1' in output
+    assert '/employee-template.xlsx' in output
+    assert '/employee-imports' in output
+
+
 @pytest.mark.skipif(importlib.util.find_spec('minio') is None, reason='minio is not installed')
 def test_minio_storage_example_main_builds_gateway() -> None:
     module = _load_example_module('example_minio_storage', 'minio_storage.py')
@@ -133,5 +149,48 @@ def test_minio_storage_example_main_builds_gateway() -> None:
 def test_fastapi_example_module_imports_when_optional_dependency_is_available() -> None:
     module = _load_example_module('example_fastapi_upload', 'fastapi_upload.py')
     assert module.app is not None
-    assert module.download_template is not None
-    assert module.import_employees is not None
+    assert module.create_app is not None
+    assert module.import_employees_from_upload is not None
+
+
+@pytest.mark.skipif(
+    importlib.util.find_spec('fastapi') is None or importlib.util.find_spec('httpx') is None,
+    reason='fastapi/httpx is not installed',
+)
+def test_fastapi_example_endpoints_work_when_optional_dependencies_are_available() -> None:
+    from openpyxl import load_workbook
+
+    module = _load_example_module('example_fastapi_upload_client', 'fastapi_upload.py')
+    testclient_module = importlib.import_module('fastapi.testclient')
+    TestClient = testclient_module.TestClient
+
+    client = TestClient(module.create_app())
+    template_response = client.get('/employee-template.xlsx')
+    assert template_response.status_code == 200
+
+    workbook = load_workbook(io.BytesIO(template_response.content))
+    try:
+        worksheet = workbook['Sheet1']
+        worksheet['A3'] = 'TaylorChen'
+        worksheet['B3'] = '32'
+        buffer = io.BytesIO()
+        workbook.save(buffer)
+        upload_bytes = buffer.getvalue()
+    finally:
+        workbook.close()
+
+    import_response = client.post(
+        '/employee-imports',
+        files={
+            'file': (
+                'employee-import.xlsx',
+                upload_bytes,
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            )
+        },
+    )
+    assert import_response.status_code == 200
+    payload = import_response.json()
+    assert payload['result']['result'] == 'SUCCESS'
+    assert payload['created_rows'] == 1
+    assert payload['uploaded_artifacts'] == ['employee-import-result.xlsx']

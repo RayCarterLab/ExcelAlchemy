@@ -1,7 +1,6 @@
 """Header parsing and validation helpers for import workbooks."""
 
 from collections.abc import Container, Sequence
-from typing import cast
 
 from excelalchemy._primitives.header_models import ExcelHeader
 from excelalchemy._primitives.identity import Label, UniqueLabel
@@ -129,12 +128,12 @@ class ExcelHeaderValidator:
 
     @staticmethod
     def _ordered_difference[T](values: Sequence[T], allowed: Container[T]) -> list[T]:
-        seen: set[Label] = set()
+        seen: set[T] = set()
         result: list[T] = []
         for value in values:
             if value in allowed or value in seen:
                 continue
-            seen.add(cast(Label, value))
+            seen.add(value)
             result.append(value)
         return result
 

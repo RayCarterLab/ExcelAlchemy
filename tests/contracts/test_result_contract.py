@@ -1,4 +1,6 @@
-from excelalchemy import Label, ValidateResult
+import pytest
+
+from excelalchemy import Label, ProgrammaticError, ValidateResult
 from excelalchemy.results import ImportResult, ValidateHeaderResult
 
 
@@ -44,3 +46,17 @@ class TestResultContracts:
         assert result.missing_primary == []
         assert result.unrecognized == []
         assert result.duplicated == []
+
+    def test_import_result_from_validate_header_result_rejects_valid_input(self):
+        validate_header = ValidateHeaderResult(
+            missing_required=[],
+            missing_primary=[],
+            unrecognized=[],
+            duplicated=[],
+            is_valid=True,
+        )
+
+        with pytest.raises(ProgrammaticError) as context:
+            ImportResult.from_validate_header_result(validate_header)
+
+        assert str(context.value) == 'ImportResult can only be built from an invalid header validation result'

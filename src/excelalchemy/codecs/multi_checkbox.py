@@ -14,6 +14,12 @@ from excelalchemy.metadata import FieldMetaInfo
 class MultiCheckbox(ExcelFieldCodec, list[str]):
     __name__ = 'MultiChoice'
 
+    @staticmethod
+    def _coerce_items(value: object) -> list[object] | None:
+        if not isinstance(value, list):
+            return None
+        return cast(list[object], value)
+
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
         declared = field_meta.declared
@@ -29,8 +35,8 @@ class MultiCheckbox(ExcelFieldCodec, list[str]):
 
     @classmethod
     def parse_input(cls, value: object, field_meta: FieldMetaInfo) -> list[str] | object:
-        if isinstance(value, list):
-            items = cast(list[object], value)
+        items = cls._coerce_items(value)
+        if items is not None:
             return [str(item).strip() for item in items]
 
         if isinstance(value, str):
@@ -45,10 +51,10 @@ class MultiCheckbox(ExcelFieldCodec, list[str]):
     def normalize_import_value(cls, value: object, field_meta: FieldMetaInfo) -> list[str]:  # OptionId
         declared = field_meta.declared
         presentation = field_meta.presentation
-        if not isinstance(value, list):
+        items = cls._coerce_items(value)
+        if items is None:
             raise ValueError(msg(MessageKey.OPTION_NOT_FOUND_HEADER_COMMENT))
 
-        items = cast(list[object], value)
         parsed = [str(item).strip() for item in items]
 
         if presentation.options is None:

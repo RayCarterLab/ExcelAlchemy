@@ -85,3 +85,5 @@ class TestCoreComponentContracts:
                 2: [error],
             }
         }
+        assert tracker.cell_errors.at(RowIndex(0), 2) == (error,)
+        assert tracker.cell_errors.messages_at(RowIndex(0), 2) == ('【姓名】Simulated failure',)

@@ -5,7 +5,7 @@
 ExcelAlchemy 是一个面向 Excel 导入导出的 schema-first Python 库。
 它的核心思路不是“读写表格文件”，而是“把 Excel 当成一种带约束的业务契约”。
 
-当前稳定发布版本是 `2.2.0`，它在稳定的 ExcelAlchemy 2.x 线上继续推进了导入 facade 轻量化、更清晰的配置构造方式，以及更明确的 protocol-first storage 叙事。
+当前稳定发布版本是 `2.2.5`，它在稳定的 ExcelAlchemy 2.x 线上继续加强了导入失败反馈、更清晰的入门与 public API 文档、更贴近真实业务的示例，以及更强的 release smoke 验证。
 
 你用 Pydantic 模型定义结构，用 `FieldMeta` 定义 Excel 元数据，用显式的导入/导出流程去完成模板生成、数据校验、错误回写和后端集成。
 
@@ -119,6 +119,48 @@ pip install "ExcelAlchemy[minio]"
 
 如果你想按推荐顺序来阅读，建议先看
 [`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)。
+
+如果你想看一页汇总好的展示页，里面同时包含截图、代表性工作流和固定输出，
+可以直接看
+[`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md)。
+
+这些固定输出素材由
+[`scripts/generate_example_output_assets.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/scripts/generate_example_output_assets.py)
+生成。
+
+### 示例输出
+
+导入工作流输出：
+
+```text
+Employee import workflow completed
+Result: SUCCESS
+Success rows: 1
+Failed rows: 0
+Result workbook URL: None
+Created rows: 1
+Uploaded artifacts: []
+```
+
+导出工作流输出：
+
+```text
+Export workflow completed
+Artifact filename: employees-export.xlsx
+Artifact bytes: 6893
+Upload URL: memory://employees-export-upload.xlsx
+Uploaded objects: ['employees-export-upload.xlsx']
+```
+
+完整输出：
+
+- [`files/example-outputs/employee-import-workflow.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/employee-import-workflow.txt)
+- [`files/example-outputs/create-or-update-import.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/create-or-update-import.txt)
+- [`files/example-outputs/export-workflow.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/export-workflow.txt)
+- [`files/example-outputs/date-and-range-fields.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/date-and-range-fields.txt)
+- [`files/example-outputs/selection-fields.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/selection-fields.txt)
+- [`files/example-outputs/custom-storage.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/custom-storage.txt)
+- [`files/example-outputs/annotated-schema.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/annotated-schema.txt)
 
 ## 快速开始
 

@@ -53,7 +53,10 @@ class TestDateValueType(BaseTestCase):
         assert (
             error.message == 'Enter a date in yyyy/mm format'
         )  # may be more accurate to say 'Enter a date in yyyy/mm format, e.g. 2021/01'
-        assert repr(error) == "ExcelCellError(label=Label('出生日期'), message='Enter a date in yyyy/mm format')"
+        assert (
+            repr(error)
+            == "ExcelCellError(label=Label('出生日期'), parent_label=None, message='Enter a date in yyyy/mm format')"
+        )
         assert str(error) == '【出生日期】Enter a date in yyyy/mm format'
 
     async def test_import_rejects_dates_that_do_not_match_day_format(self):

@@ -1,3 +1,4 @@
+import re
 from collections.abc import Generator, Iterable, Mapping
 from dataclasses import dataclass
 from types import UnionType
@@ -16,6 +17,49 @@ from excelalchemy.metadata import FieldMetaInfo, extract_declared_field_metadata
 
 type ExcelValidationIssue = ExcelCellError | ExcelRowError
 type ExcelValidationIssues = list[ExcelValidationIssue]
+
+_MIN_ITEMS_PATTERN = re.compile(r'^Value should have at least (\d+) items after validation, not \d+$')
+_MAX_ITEMS_PATTERN = re.compile(r'^Value should have at most (\d+) items after validation, not \d+$')
+
+
+def _normalize_validation_message(message: str, field_def: FieldMetaInfo | None = None) -> str:
+    normalized = message.strip()
+    if normalized == 'Field required':
+        return msg(MessageKey.THIS_FIELD_IS_REQUIRED)
+
+    for prefix in ('Value error, ', 'Assertion failed, '):
+        if normalized.startswith(prefix):
+            normalized = normalized.removeprefix(prefix)
+            break
+
+    normalized = _normalize_constraint_message(normalized, field_def)
+
+    if normalized and normalized[0].islower():
+        normalized = normalized[0].upper() + normalized[1:]
+
+    return normalized
+
+
+def _normalize_constraint_message(message: str, field_def: FieldMetaInfo | None) -> str:
+    if field_def is None:
+        return message
+
+    constraints = field_def.constraints
+
+    if (match := _MIN_ITEMS_PATTERN.match(message)) is not None:
+        if constraints.min_length is not None:
+            return msg(MessageKey.MIN_LENGTH_CHARACTERS, min_length=constraints.min_length)
+        return msg(MessageKey.MIN_ITEMS_REQUIRED, min_items=int(match.group(1)))
+
+    if (match := _MAX_ITEMS_PATTERN.match(message)) is not None:
+        if constraints.max_length is not None:
+            return msg(MessageKey.MAX_LENGTH_CHARACTERS, max_length=constraints.max_length)
+        return msg(MessageKey.MAX_ITEMS_ALLOWED, max_items=int(match.group(1)))
+
+    if message == 'Input should be a valid dictionary':
+        return msg(MessageKey.ENTER_VALUE_EXPECTED_FORMAT)
+
+    return message
 
 
 def _resolve_excel_codec_type(annotation: object) -> type[ExcelFieldCodec]:
@@ -122,7 +166,7 @@ def extract_pydantic_model(
 ) -> list[FieldMetaInfo]:
     """Extract Excel field metadata from a Pydantic model declaration."""
     if model is None:
-        raise RuntimeError(msg(MessageKey.MODEL_CANNOT_BE_NONE))
+        raise ProgrammaticError(msg(MessageKey.MODEL_CANNOT_BE_NONE), message_key=MessageKey.MODEL_CANNOT_BE_NONE)
     return list(_extract_pydantic_model(PydanticModelAdapter(model)))
 
 
@@ -189,7 +233,8 @@ def _handle_error(
     exc: Exception,
     field_def: FieldMetaInfo,
 ) -> None:
-    messages = [str(arg) for arg in exc.args if str(arg)] or [str(exc) or msg(MessageKey.INVALID_INPUT)]
+    raw_messages = [str(arg) for arg in exc.args if str(arg)] or [str(exc) or msg(MessageKey.INVALID_INPUT)]
+    messages = [_normalize_validation_message(message, field_def) for message in raw_messages]
     error_container.extend(
         ExcelCellError(
             label=field_def.label,
@@ -220,18 +265,18 @@ def _map_validation_error(
     for error in exc.errors():
         loc = error.get('loc', ())
         if not loc:
-            mapped.append(ExcelRowError(str(error['msg'])))
+            mapped.append(ExcelRowError(_normalize_validation_message(str(error['msg']))))
             continue
 
         field_name = loc[0]
         if not isinstance(field_name, str):
-            mapped.append(ExcelRowError(str(error['msg'])))
+            mapped.append(ExcelRowError(_normalize_validation_message(str(error['msg']))))
             continue
         if field_name in failed_fields:
             continue
 
         field_adapter = model_adapter.field(field_name)
-        message = str(error['msg'])
+        message = _normalize_validation_message(str(error['msg']), field_adapter.declared_metadata)
         if len(loc) > 1 and isinstance(loc[1], str):
             mapped.append(_nested_excel_error(field_adapter, loc[1], message))
             continue

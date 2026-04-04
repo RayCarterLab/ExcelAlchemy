@@ -10,7 +10,9 @@ ExcelAlchemy turns Pydantic models into typed workbook contracts:
 - render workbook-facing output in `zh-CN` or `en`
 - keep storage pluggable through `ExcelStorage`
 
-[GitHub Repository](https://github.com/RayCarterLab/ExcelAlchemy) · [Full README](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README.md) · [Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/architecture.md) · [Migration Notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/MIGRATIONS.md)
+The current stable release is `2.2.5`, which continues the 2.x line with richer import-failure feedback, clearer documentation entry points, stronger examples, and stronger smoke coverage.
+
+[GitHub Repository](https://github.com/RayCarterLab/ExcelAlchemy) · [Full README](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README.md) · [Getting Started](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md) · [Examples Showcase](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md) · [Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/architecture.md) · [Migration Notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/MIGRATIONS.md)
 
 ## Screenshots
 
@@ -74,6 +76,45 @@ class Importer(BaseModel):
 alchemy = ExcelAlchemy(ImporterConfig(Importer, locale='en'))
 template = alchemy.download_template_artifact(filename='people-template.xlsx')
 ```
+
+## Example Outputs
+
+These fixed outputs are generated from the repository examples by
+[`scripts/generate_example_output_assets.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/scripts/generate_example_output_assets.py).
+
+Import workflow:
+
+```text
+Employee import workflow completed
+Result: SUCCESS
+Success rows: 1
+Failed rows: 0
+Result workbook URL: None
+Created rows: 1
+Uploaded artifacts: []
+```
+
+Export workflow:
+
+```text
+Export workflow completed
+Artifact filename: employees-export.xlsx
+Artifact bytes: 6893
+Upload URL: memory://employees-export-upload.xlsx
+Uploaded objects: ['employees-export-upload.xlsx']
+```
+
+Full captured outputs:
+
+- [employee-import-workflow.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/employee-import-workflow.txt)
+- [create-or-update-import.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/create-or-update-import.txt)
+- [export-workflow.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/export-workflow.txt)
+- [date-and-range-fields.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/date-and-range-fields.txt)
+- [selection-fields.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/selection-fields.txt)
+
+For a single GitHub page that combines screenshots, representative workflows,
+and captured outputs, see the
+[Examples Showcase](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md).
 
 ## Why ExcelAlchemy
 

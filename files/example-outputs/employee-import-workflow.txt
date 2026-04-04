@@ -1,0 +1,7 @@
+Employee import workflow completed
+Result: SUCCESS
+Success rows: 1
+Failed rows: 0
+Result workbook URL: None
+Created rows: 1
+Uploaded artifacts: []
