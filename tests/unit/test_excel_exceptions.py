@@ -1,4 +1,12 @@
-from excelalchemy import CellErrorMap, ConfigError, ExcelCellError, ExcelRowError, Label, ProgrammaticError, RowIssueMap
+from excelalchemy import (
+    CellErrorMap,
+    ConfigError,
+    ExcelCellError,
+    ExcelRowError,
+    Label,
+    ProgrammaticError,
+    RowIssueMap,
+)
 from tests.support import BaseTestCase
 
 
@@ -119,6 +127,34 @@ class TestExcelExceptions(BaseTestCase):
                 ]
             }
         }
+        assert error_map.to_api_payload() == {
+            'error_count': 1,
+            'items': [
+                {
+                    'type': 'ExcelCellError',
+                    'message': 'Enter a valid email address',
+                    'label': '邮箱',
+                    'parent_label': None,
+                    'unique_label': '邮箱',
+                    'row_index': 0,
+                    'column_index': 3,
+                    'display_message': '【邮箱】Enter a valid email address',
+                }
+            ],
+            'by_row': {
+                0: {
+                    3: [
+                        {
+                            'type': 'ExcelCellError',
+                            'message': 'Enter a valid email address',
+                            'label': '邮箱',
+                            'parent_label': None,
+                            'unique_label': '邮箱',
+                        }
+                    ]
+                }
+            },
+        }
 
     async def test_row_issue_map_supports_row_access_and_numbered_messages(self):
         issue_map = RowIssueMap()
@@ -154,4 +190,39 @@ class TestExcelExceptions(BaseTestCase):
                     'message': 'Combination invalid',
                 },
             ]
+        }
+        assert issue_map.to_api_payload() == {
+            'error_count': 2,
+            'items': [
+                {
+                    'type': 'ExcelCellError',
+                    'message': 'Enter a valid email address',
+                    'label': '邮箱',
+                    'parent_label': None,
+                    'unique_label': '邮箱',
+                    'row_index': 0,
+                    'display_message': '【邮箱】Enter a valid email address',
+                },
+                {
+                    'type': 'ExcelRowError',
+                    'message': 'Combination invalid',
+                    'row_index': 0,
+                    'display_message': 'Combination invalid',
+                },
+            ],
+            'by_row': {
+                0: [
+                    {
+                        'type': 'ExcelCellError',
+                        'message': 'Enter a valid email address',
+                        'label': '邮箱',
+                        'parent_label': None,
+                        'unique_label': '邮箱',
+                    },
+                    {
+                        'type': 'ExcelRowError',
+                        'message': 'Combination invalid',
+                    },
+                ]
+            },
         }

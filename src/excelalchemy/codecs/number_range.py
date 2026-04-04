@@ -1,10 +1,9 @@
-import logging
 from collections.abc import Mapping
 from decimal import Decimal
 from typing import cast
 
 from excelalchemy._primitives.identity import Key
-from excelalchemy.codecs.base import CompositeExcelFieldCodec
+from excelalchemy.codecs.base import CompositeExcelFieldCodec, log_codec_parse_fallback
 from excelalchemy.codecs.number import Number, canonicalize_decimal, transform_decimal
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
@@ -36,7 +35,12 @@ class NumberRange(CompositeExcelFieldCodec):
         return Number.build_comment(field_meta)
 
     @classmethod
+    def expected_input_message(cls, field_meta: FieldMetaInfo) -> str | None:
+        return msg(MessageKey.ENTER_NUMBER_RANGE_EXPECTED_FORMAT)
+
+    @classmethod
     def parse_input(cls, value: object, field_meta: FieldMetaInfo) -> object:
+        declared = field_meta.declared
         if isinstance(value, str):
             value = value.strip()
 
@@ -50,12 +54,7 @@ class NumberRange(CompositeExcelFieldCodec):
                 end = cls._parse_decimal_boundary(mapping['end'])
                 return NumberRange(start, end)
             except (KeyError, TypeError, ValueError) as exc:
-                logging.warning(
-                    '%s could not parse Excel input %s; returning the original value. Reason: %s',
-                    cls.__name__,
-                    value,
-                    exc,
-                )
+                log_codec_parse_fallback(cls.__name__, value, field_label=declared.label, exc=exc)
         return value
 
     @classmethod
@@ -68,13 +67,7 @@ class NumberRange(CompositeExcelFieldCodec):
             if parsed is None:
                 return ''
             return str(transform_decimal(canonicalize_decimal(parsed, presentation.fraction_digits)))
-        except Exception as exc:
-            logging.warning(
-                'ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s',
-                cls.__name__,
-                value,
-                exc,
-            )
+        except Exception:
             return str(value)
 
     @classmethod

@@ -17,7 +17,7 @@ class TestEmailValueType(BaseTestCase):
         assert result.fail_count == 1
         row, col, first_error = RowIndex(0), ColumnIndex(2), 0
         assert alchemy.cell_errors[row][col][first_error] == ExcelCellError(
-            label=Label('邮箱'), message='Enter a valid email address'
+            label=Label('邮箱'), message='Enter a valid email address, such as name@example.com'
         )
 
     async def test_import_accepts_valid_email_value(self):

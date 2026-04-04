@@ -54,6 +54,19 @@ class TestPydanticContracts:
         assert isinstance(result, list)
         assert result == [ExcelCellError(label=Label('停留时间'), message='This field is required')]
 
+    def test_instantiate_pydantic_model_uses_field_specific_expected_format_for_composite_codecs(self):
+        result = instantiate_pydantic_model(
+            {'email': 'noreply@example.com', 'stay_range': 'not-a-range'}, ContractPydanticModel
+        )
+
+        assert isinstance(result, list)
+        assert result == [
+            ExcelCellError(
+                label=Label('停留时间'),
+                message='Enter both a start date and an end date in the format shown in the header comment',
+            )
+        ]
+
     def test_instantiate_pydantic_model_applies_field_constraints_and_field_validators(self):
         class FieldValidatedModel(BaseModel):
             name: Email = FieldMeta(label='邮箱', order=1, min_length=20)
@@ -69,7 +82,9 @@ class TestPydanticContracts:
         wrong_domain = instantiate_pydantic_model({'name': 'long-enough-address@openai.com'}, FieldValidatedModel)
 
         assert isinstance(too_short, list)
-        assert too_short == [ExcelCellError(label=Label('邮箱'), message='The minimum length is 20 characters')]
+        assert too_short == [
+            ExcelCellError(label=Label('邮箱'), message='The minimum length is 20 characters', min_length=20)
+        ]
 
         assert isinstance(wrong_domain, list)
         assert wrong_domain == [ExcelCellError(label=Label('邮箱'), message='Must use the company domain')]
@@ -148,7 +163,9 @@ class TestPydanticContracts:
         assert declared_metadata.importer_min_length == 20
         assert [meta.unique_label for meta in metas] == ['邮箱', '停留时间·开始日期', '停留时间·结束日期']
         assert isinstance(result, list)
-        assert result == [ExcelCellError(label=Label('邮箱'), message='The minimum length is 20 characters')]
+        assert result == [
+            ExcelCellError(label=Label('邮箱'), message='The minimum length is 20 characters', min_length=20)
+        ]
 
     def test_extract_pydantic_model_requires_a_model(self):
         with pytest.raises(ProgrammaticError) as context:

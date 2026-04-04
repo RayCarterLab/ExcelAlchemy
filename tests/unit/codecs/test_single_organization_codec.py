@@ -46,3 +46,23 @@ class TestSingleOrganizationValueType(BaseTestCase):
 
         assert field.value_type.deserialize('XX公司/一级部门/二级部门', field) == 'XX公司/一级部门/二级部门'
         assert field.value_type.deserialize('1', field) == 'XX公司/一级部门/二级部门'
+
+    async def test_validate_rejects_unknown_organizations_with_business_message(self):
+        class Importer(BaseModel):
+            single_organization: SingleOrganization = FieldMeta(
+                label='单选组织',
+                order=1,
+                options=[
+                    Option(id=OptionId(1), name='XX公司/一级部门/二级部门'),
+                ],
+            )
+
+        alchemy = self.build_alchemy(Importer)
+        field = alchemy.ordered_field_meta[0]
+        field.value_type = cast(SingleOrganization, field.value_type)
+
+        with self.assertRaises(ValueError) as context:
+            field.value_type.__validate__('未知组织', field)
+        assert str(context.exception) == (
+            'Select one organization from the configured options. Valid values include: XX公司/一级部门/二级部门'
+        )

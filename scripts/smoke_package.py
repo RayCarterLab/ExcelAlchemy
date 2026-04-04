@@ -68,6 +68,20 @@ def _build_import_fixture(storage: InMemorySmokeStorage, template_bytes: bytes) 
         workbook.close()
 
 
+def _build_invalid_import_fixture(storage: InMemorySmokeStorage, template_bytes: bytes) -> None:
+    workbook = load_workbook(io.BytesIO(template_bytes))
+    try:
+        worksheet = workbook['Sheet1']
+        worksheet['A3'] = 'TaylorChen'
+        worksheet['B3'] = 'invalid-age'
+
+        buffer = io.BytesIO()
+        workbook.save(buffer)
+        storage.fixtures['smoke-invalid-input.xlsx'] = buffer.getvalue()
+    finally:
+        workbook.close()
+
+
 async def main() -> None:
     storage = InMemorySmokeStorage()
 
@@ -88,6 +102,27 @@ async def main() -> None:
     assert import_result.fail_count == 0
     assert import_result.result == 'SUCCESS'
 
+    invalid_importer = ExcelAlchemy(
+        ImporterConfig.for_create(
+            SmokeImporter,
+            creator=_create_employee,
+            storage=storage,
+            locale='en',
+        )
+    )
+    _build_invalid_import_fixture(storage, template.as_bytes())
+    invalid_result = await invalid_importer.import_data('smoke-invalid-input.xlsx', 'smoke-invalid-result.xlsx')
+    assert invalid_result.result == 'DATA_INVALID'
+    assert invalid_result.fail_count == 1
+    assert invalid_importer.cell_error_map.error_count >= 1
+    assert invalid_importer.row_error_map.error_count >= 1
+    cell_payload = invalid_importer.cell_error_map.to_api_payload()
+    row_payload = invalid_importer.row_error_map.to_api_payload()
+    assert cell_payload['error_count'] >= 1
+    assert row_payload['error_count'] >= 1
+    assert isinstance(cell_payload['items'], list)
+    assert isinstance(row_payload['items'], list)
+
     exporter = ExcelAlchemy(ExporterConfig.for_storage(SmokeImporter, storage=storage, locale='en'))
     artifact = exporter.export_artifact(
         [{'full_name': 'TaylorChen', 'age': 32}],
@@ -100,6 +135,7 @@ async def main() -> None:
 
     print('Package smoke passed')
     print(f'Import result: {import_result.result}')
+    print(f'Invalid import result: {invalid_result.result}')
     print(f'Upload URL: {uploaded_url}')
 
 

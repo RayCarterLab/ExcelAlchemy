@@ -1,6 +1,6 @@
 """A Python Library for Reading and Writing Excel Files"""
 
-__version__ = '2.2.5'
+__version__ = '2.2.6'
 from excelalchemy._primitives.constants import CharacterSet, DataRangeOption, DateFormat, Option
 from excelalchemy._primitives.deprecation import ExcelAlchemyDeprecationWarning
 from excelalchemy._primitives.identity import (
@@ -50,8 +50,10 @@ from excelalchemy.helper.pydantic import extract_pydantic_model
 from excelalchemy.metadata import ExcelMeta, FieldMeta, PatchFieldMeta
 from excelalchemy.results import (
     CellErrorMap,
+    CellIssueRecord,
     ImportResult,
     RowIssueMap,
+    RowIssueRecord,
     ValidateHeaderResult,
     ValidateResult,
     ValidateRowResult,
@@ -63,6 +65,7 @@ __all__ = [
     'Boolean',
     'BooleanCodec',
     'CellErrorMap',
+    'CellIssueRecord',
     'ColumnIndex',
     'CompositeExcelFieldCodec',
     'ConfigError',
@@ -113,6 +116,7 @@ __all__ = [
     'Radio',
     'RowIndex',
     'RowIssueMap',
+    'RowIssueRecord',
     'SingleChoiceCodec',
     'SingleOrganization',
     'SingleOrganizationCodec',

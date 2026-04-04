@@ -14,6 +14,37 @@ class Radio(ExcelFieldCodec, str):
     __name__ = 'SingleChoice'
 
     @classmethod
+    def selection_entity_singular(cls) -> str | None:
+        return None
+
+    @classmethod
+    def _options_preview(cls, field_meta: FieldMetaInfo, *, limit: int = 5) -> str | None:
+        options = field_meta.presentation.options
+        if not options:
+            return None
+        preview = MULTI_CHECKBOX_SEPARATOR.join(option.name for option in options[:limit])
+        if len(options) > limit:
+            preview = f'{preview}{MULTI_CHECKBOX_SEPARATOR}...'
+        return preview
+
+    @classmethod
+    def _compose_selection_message(cls, field_meta: FieldMetaInfo) -> str:
+        entity = cls.selection_entity_singular()
+        if entity is None:
+            base_message = msg(MessageKey.SELECT_ONE_CONFIGURED_OPTION)
+        else:
+            base_message = msg(MessageKey.SELECT_ONE_CONFIGURED_ENTITY, entity=entity)
+
+        preview = cls._options_preview(field_meta)
+        if preview is None:
+            return base_message
+        return f'{base_message}. {msg(MessageKey.VALID_VALUES_INCLUDE, options=preview)}'
+
+    @classmethod
+    def expected_input_message(cls, field_meta: FieldMetaInfo) -> str | None:
+        return cls._compose_selection_message(field_meta)
+
+    @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
         declared = field_meta.declared
         presentation = field_meta.presentation
@@ -57,7 +88,7 @@ class Radio(ExcelFieldCodec, str):
         declared = field_meta.declared
         presentation = field_meta.presentation
         if MULTI_CHECKBOX_SEPARATOR in value:
-            raise ValueError(msg(MessageKey.MULTIPLE_SELECTIONS_NOT_SUPPORTED))
+            raise ValueError(cls._compose_selection_message(field_meta))
 
         parsed = value.strip()
 
@@ -76,7 +107,7 @@ class Radio(ExcelFieldCodec, str):
 
         options_name_map = presentation.options_name_map(field_label=declared.label)
         if parsed not in options_name_map:
-            raise ValueError(msg(MessageKey.OPTION_NOT_FOUND_FIELD_COMMENT))
+            raise ValueError(cls._compose_selection_message(field_meta))
 
         return options_name_map[parsed].id
 

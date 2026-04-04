@@ -94,7 +94,9 @@ class TestRadioValueType(BaseTestCase):
         assert field.value_type.__validate__('选项2', field) == '2'
 
         self.assertRaises(ValueError, field.value_type.__validate__, '选项3', field)
-        self.assertRaises(ValueError, field.value_type.__validate__, f'3{MULTI_CHECKBOX_SEPARATOR}', field)
+        with self.assertRaises(ValueError) as context:
+            field.value_type.__validate__(f'3{MULTI_CHECKBOX_SEPARATOR}', field)
+        assert str(context.exception) == 'Select one of the configured options. Valid values include: 选项1，选项2'
 
         field.options = None
         self.assertRaises(ProgrammaticError, field.value_type.__validate__, '1', field)

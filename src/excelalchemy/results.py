@@ -1,6 +1,7 @@
 """Import result models for ExcelAlchemy workflows."""
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -17,6 +18,36 @@ def _empty_labels() -> list[Label]:
 
 
 type RowIssue = ExcelRowError | ExcelCellError
+
+
+@dataclass(slots=True, frozen=True)
+class CellIssueRecord:
+    """Flat cell issue record suitable for API responses and UI rendering."""
+
+    row_index: RowIndex
+    column_index: ColumnIndex
+    error: ExcelCellError
+
+    def to_dict(self) -> dict[str, object]:
+        payload = self.error.to_dict()
+        payload['row_index'] = int(self.row_index)
+        payload['column_index'] = int(self.column_index)
+        payload['display_message'] = str(self.error)
+        return payload
+
+
+@dataclass(slots=True, frozen=True)
+class RowIssueRecord:
+    """Flat row issue record suitable for API responses and UI rendering."""
+
+    row_index: RowIndex
+    error: RowIssue
+
+    def to_dict(self) -> dict[str, object]:
+        payload = self.error.to_dict()
+        payload['row_index'] = int(self.row_index)
+        payload['display_message'] = str(self.error)
+        return payload
 
 
 class CellErrorMap(dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]]):
@@ -39,12 +70,27 @@ class CellErrorMap(dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]]):
     def flatten(self) -> tuple[ExcelCellError, ...]:
         return tuple(error for row in self.values() for errors in row.values() for error in errors)
 
+    def records(self) -> tuple[CellIssueRecord, ...]:
+        return tuple(
+            CellIssueRecord(row_index=row_index, column_index=column_index, error=error)
+            for row_index, row in self.items()
+            for column_index, errors in row.items()
+            for error in errors
+        )
+
     def to_dict(self) -> dict[int, dict[int, list[dict[str, object]]]]:
         return {
             int(row_index): {
                 int(column_index): [error.to_dict() for error in errors] for column_index, errors in row.items()
             }
             for row_index, row in self.items()
+        }
+
+    def to_api_payload(self) -> dict[str, object]:
+        return {
+            'error_count': self.error_count,
+            'items': [record.to_dict() for record in self.records()],
+            'by_row': self.to_dict(),
         }
 
     @property
@@ -77,8 +123,20 @@ class RowIssueMap(dict[RowIndex, list[RowIssue]]):
     def flatten(self) -> tuple[RowIssue, ...]:
         return tuple(error for errors in self.values() for error in errors)
 
+    def records(self) -> tuple[RowIssueRecord, ...]:
+        return tuple(
+            RowIssueRecord(row_index=row_index, error=error) for row_index, errors in self.items() for error in errors
+        )
+
     def to_dict(self) -> dict[int, list[dict[str, object]]]:
         return {int(row_index): [error.to_dict() for error in errors] for row_index, errors in self.items()}
+
+    def to_api_payload(self) -> dict[str, object]:
+        return {
+            'error_count': self.error_count,
+            'items': [record.to_dict() for record in self.records()],
+            'by_row': self.to_dict(),
+        }
 
     @staticmethod
     def numbered_messages(errors: Iterable[RowIssue]) -> tuple[str, ...]:

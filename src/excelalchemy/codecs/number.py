@@ -6,6 +6,7 @@ from excelalchemy.codecs.base import (
     NormalizedImportValue,
     WorkbookDisplayValue,
     WorkbookInputValue,
+    log_codec_parse_fallback,
 )
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
@@ -64,6 +65,7 @@ class Number(Decimal, ExcelFieldCodec):
         value: str | int | float | WorkbookInputValue | None,
         field_meta: FieldMetaInfo,
     ) -> Decimal | WorkbookInputValue:
+        declared = field_meta.declared
         if isinstance(value, str):
             value = value.strip()
         if value is None:
@@ -71,12 +73,7 @@ class Number(Decimal, ExcelFieldCodec):
         try:
             return transform_decimal(Decimal(str(value)))
         except Exception as exc:
-            logging.warning(
-                'ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s',
-                cls.__name__,
-                value,
-                exc,
-            )
+            log_codec_parse_fallback(cls.__name__, value, field_label=declared.label, exc=exc)
             return str(value)
 
     @classmethod
@@ -90,13 +87,7 @@ class Number(Decimal, ExcelFieldCodec):
 
         try:
             return str(transform_decimal(Decimal(value)))
-        except Exception as exc:
-            logging.warning(
-                'ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s',
-                cls.__name__,
-                value,
-                exc,
-            )
+        except Exception:
             return str(value)
 
     @classmethod

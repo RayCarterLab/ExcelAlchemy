@@ -11,6 +11,7 @@ from excelalchemy.codecs.base import (
     NormalizedImportValue,
     WorkbookDisplayValue,
     WorkbookInputValue,
+    log_codec_parse_fallback,
 )
 from excelalchemy.exceptions import ConfigError
 from excelalchemy.i18n.messages import MessageKey
@@ -20,6 +21,13 @@ from excelalchemy.metadata import FieldMetaInfo
 
 class Date(ExcelFieldCodec, datetime):
     __name__ = 'Date'
+
+    @classmethod
+    def expected_input_message(cls, field_meta: FieldMetaInfo) -> str | None:
+        presentation = field_meta.presentation
+        if presentation.date_format is None:
+            return None
+        return msg(MessageKey.ENTER_DATE_FORMAT, date_format=DATE_FORMAT_TO_HINT_MAPPING[presentation.date_format])
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
@@ -62,12 +70,7 @@ class Date(ExcelFieldCodec, datetime):
             dt: DateTime = cast(DateTime, pendulum.parse(v))
             return dt.replace(tzinfo=presentation.timezone)
         except Exception as exc:
-            logging.warning(
-                'ValueType <%s> could not parse Excel input %s; returning the original value. Reason: %s',
-                cls.__name__,
-                value,
-                exc,
-            )
+            log_codec_parse_fallback(cls.__name__, value, field_label=declared.label, exc=exc)
             return value
 
     @classmethod

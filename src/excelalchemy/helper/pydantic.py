@@ -8,7 +8,7 @@ from pydantic import BaseModel, ValidationError
 from pydantic.fields import FieldInfo
 from pydantic_core import PydanticUndefined
 
-from excelalchemy._primitives.identity import Key
+from excelalchemy._primitives.identity import Key, Label
 from excelalchemy.codecs.base import CompositeExcelFieldCodec, ExcelFieldCodec
 from excelalchemy.exceptions import ExcelCellError, ExcelRowError, ProgrammaticError
 from excelalchemy.i18n.messages import MessageKey
@@ -22,44 +22,121 @@ _MIN_ITEMS_PATTERN = re.compile(r'^Value should have at least (\d+) items after 
 _MAX_ITEMS_PATTERN = re.compile(r'^Value should have at most (\d+) items after validation, not \d+$')
 
 
-def _normalize_validation_message(message: str, field_def: FieldMetaInfo | None = None) -> str:
+@dataclass(frozen=True)
+class NormalizedValidationMessage:
+    message: str
+    message_key: MessageKey | None = None
+    detail: Mapping[str, object] | None = None
+
+
+def _build_cell_error(
+    *,
+    label: Label,
+    normalized: NormalizedValidationMessage,
+    parent_label: Label | None = None,
+) -> ExcelCellError:
+    error = ExcelCellError(
+        label=label,
+        parent_label=parent_label,
+        message=normalized.message,
+        message_key=normalized.message_key,
+    )
+    if normalized.detail:
+        error.detail.update(normalized.detail)
+    return error
+
+
+def _build_row_error(normalized: NormalizedValidationMessage) -> ExcelRowError:
+    error = ExcelRowError(
+        normalized.message,
+        message_key=normalized.message_key,
+    )
+    if normalized.detail:
+        error.detail.update(normalized.detail)
+    return error
+
+
+def _normalize_validation_message(
+    message: str,
+    field_def: FieldMetaInfo | None = None,
+    *,
+    excel_codec: type[ExcelFieldCodec] | None = None,
+) -> NormalizedValidationMessage:
     normalized = message.strip()
     if normalized == 'Field required':
-        return msg(MessageKey.THIS_FIELD_IS_REQUIRED)
+        return NormalizedValidationMessage(msg(MessageKey.THIS_FIELD_IS_REQUIRED), MessageKey.THIS_FIELD_IS_REQUIRED)
 
     for prefix in ('Value error, ', 'Assertion failed, '):
         if normalized.startswith(prefix):
             normalized = normalized.removeprefix(prefix)
             break
 
-    normalized = _normalize_constraint_message(normalized, field_def)
+    normalized_message = _normalize_constraint_message(normalized, field_def, excel_codec=excel_codec)
+    if normalized_message is not None:
+        return normalized_message
+
+    if normalized == msg(MessageKey.INVALID_INPUT) and field_def is not None and excel_codec is not None:
+        expected = excel_codec.expected_input_message(field_def)
+        if expected is not None:
+            return NormalizedValidationMessage(expected)
 
     if normalized and normalized[0].islower():
         normalized = normalized[0].upper() + normalized[1:]
 
-    return normalized
+    return NormalizedValidationMessage(normalized)
 
 
-def _normalize_constraint_message(message: str, field_def: FieldMetaInfo | None) -> str:
+def _normalize_constraint_message(
+    message: str,
+    field_def: FieldMetaInfo | None,
+    *,
+    excel_codec: type[ExcelFieldCodec] | None = None,
+) -> NormalizedValidationMessage | None:
     if field_def is None:
-        return message
+        return None
 
     constraints = field_def.constraints
 
     if (match := _MIN_ITEMS_PATTERN.match(message)) is not None:
         if constraints.min_length is not None:
-            return msg(MessageKey.MIN_LENGTH_CHARACTERS, min_length=constraints.min_length)
-        return msg(MessageKey.MIN_ITEMS_REQUIRED, min_items=int(match.group(1)))
+            return NormalizedValidationMessage(
+                msg(MessageKey.MIN_LENGTH_CHARACTERS, min_length=constraints.min_length),
+                MessageKey.MIN_LENGTH_CHARACTERS,
+                {'min_length': constraints.min_length},
+            )
+        min_items = int(match.group(1))
+        return NormalizedValidationMessage(
+            msg(MessageKey.MIN_ITEMS_REQUIRED, min_items=min_items),
+            MessageKey.MIN_ITEMS_REQUIRED,
+            {'min_items': min_items},
+        )
 
     if (match := _MAX_ITEMS_PATTERN.match(message)) is not None:
         if constraints.max_length is not None:
-            return msg(MessageKey.MAX_LENGTH_CHARACTERS, max_length=constraints.max_length)
-        return msg(MessageKey.MAX_ITEMS_ALLOWED, max_items=int(match.group(1)))
+            return NormalizedValidationMessage(
+                msg(MessageKey.MAX_LENGTH_CHARACTERS, max_length=constraints.max_length),
+                MessageKey.MAX_LENGTH_CHARACTERS,
+                {'max_length': constraints.max_length},
+            )
+        max_items = int(match.group(1))
+        return NormalizedValidationMessage(
+            msg(MessageKey.MAX_ITEMS_ALLOWED, max_items=max_items),
+            MessageKey.MAX_ITEMS_ALLOWED,
+            {'max_items': max_items},
+        )
 
     if message == 'Input should be a valid dictionary':
-        return msg(MessageKey.ENTER_VALUE_EXPECTED_FORMAT)
+        if (
+            excel_codec is not None
+            and issubclass(excel_codec, CompositeExcelFieldCodec)
+            and (expected := excel_codec.expected_input_message(field_def)) is not None
+        ):
+            return NormalizedValidationMessage(expected)
+        return NormalizedValidationMessage(
+            msg(MessageKey.ENTER_VALUE_EXPECTED_FORMAT), MessageKey.ENTER_VALUE_EXPECTED_FORMAT
+        )
 
-    return message
+    return None
 
 
 def _resolve_excel_codec_type(annotation: object) -> type[ExcelFieldCodec]:
@@ -195,7 +272,7 @@ def instantiate_pydantic_model[ModelT: BaseModel](
             raise
         except Exception as exc:
             failed_fields.add(field_adapter.name)
-            _handle_error(errors, exc, field_adapter.declared_metadata)
+            _handle_error(errors, exc, field_adapter.declared_metadata, excel_codec=field_adapter.excel_codec)
 
     model_instance_or_errors = _model_validate(normalized_data, model, model_adapter, failed_fields)
     if isinstance(model_instance_or_errors, list):
@@ -232,16 +309,12 @@ def _handle_error(
     error_container: ExcelValidationIssues,
     exc: Exception,
     field_def: FieldMetaInfo,
+    *,
+    excel_codec: type[ExcelFieldCodec] | None = None,
 ) -> None:
     raw_messages = [str(arg) for arg in exc.args if str(arg)] or [str(exc) or msg(MessageKey.INVALID_INPUT)]
-    messages = [_normalize_validation_message(message, field_def) for message in raw_messages]
-    error_container.extend(
-        ExcelCellError(
-            label=field_def.label,
-            message=message,
-        )
-        for message in messages
-    )
+    messages = [_normalize_validation_message(message, field_def, excel_codec=excel_codec) for message in raw_messages]
+    error_container.extend(_build_cell_error(label=field_def.label, normalized=normalized) for normalized in messages)
 
 
 def _model_validate[ModelT: BaseModel](
@@ -265,23 +338,29 @@ def _map_validation_error(
     for error in exc.errors():
         loc = error.get('loc', ())
         if not loc:
-            mapped.append(ExcelRowError(_normalize_validation_message(str(error['msg']))))
+            normalized = _normalize_validation_message(str(error['msg']))
+            mapped.append(_build_row_error(normalized))
             continue
 
         field_name = loc[0]
         if not isinstance(field_name, str):
-            mapped.append(ExcelRowError(_normalize_validation_message(str(error['msg']))))
+            normalized = _normalize_validation_message(str(error['msg']))
+            mapped.append(_build_row_error(normalized))
             continue
         if field_name in failed_fields:
             continue
 
         field_adapter = model_adapter.field(field_name)
-        message = _normalize_validation_message(str(error['msg']), field_adapter.declared_metadata)
+        normalized = _normalize_validation_message(
+            str(error['msg']),
+            field_adapter.declared_metadata,
+            excel_codec=field_adapter.excel_codec,
+        )
         if len(loc) > 1 and isinstance(loc[1], str):
-            mapped.append(_nested_excel_error(field_adapter, loc[1], message))
+            mapped.append(_nested_excel_error(field_adapter, loc[1], normalized))
             continue
 
-        mapped.append(ExcelCellError(label=field_adapter.declared_metadata.declared.label, message=message))
+        mapped.append(_build_cell_error(label=field_adapter.declared_metadata.declared.label, normalized=normalized))
 
     return mapped
 
@@ -289,7 +368,7 @@ def _map_validation_error(
 def _nested_excel_error(
     field_adapter: PydanticFieldAdapter,
     child_key: str,
-    message: str,
+    normalized: NormalizedValidationMessage,
 ) -> ExcelCellError:
     declared_metadata = field_adapter.declared_metadata
     declared_meta = declared_metadata.declared
@@ -297,10 +376,8 @@ def _nested_excel_error(
     if issubclass(excel_codec, CompositeExcelFieldCodec):
         for key, sub_field_info in excel_codec.column_items():
             if key == child_key:
-                return ExcelCellError(
-                    label=sub_field_info.label,
-                    parent_label=declared_meta.label,
-                    message=message,
+                return _build_cell_error(
+                    label=sub_field_info.label, parent_label=declared_meta.label, normalized=normalized
                 )
 
-    return ExcelCellError(label=declared_meta.label, message=message)
+    return _build_cell_error(label=declared_meta.label, normalized=normalized)

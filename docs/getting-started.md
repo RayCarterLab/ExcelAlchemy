@@ -6,6 +6,9 @@ If you want screenshots and fixed workflow outputs first, see
 [`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md).
 If you want the full public surface and compatibility boundaries, see
 [`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md).
+If you want to understand the result objects and how to surface them through an
+API, see
+[`docs/result-objects.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md).
 
 ## 1. Install
 
@@ -153,3 +156,23 @@ These two documents explain:
 - which modules are stable public entry points
 - which import paths are compatibility-only in 2.x
 - how storage and Minio should be configured going forward
+
+## 8. Surface Results In Your Own API
+
+If you are integrating ExcelAlchemy into a web backend, the recommended public
+result surface is:
+
+- `ImportResult`
+- `alchemy.cell_error_map`
+- `alchemy.row_error_map`
+
+These objects let you return:
+
+- a high-level import summary
+- row-level error summaries
+- cell-level coordinates for UI highlighting
+
+See:
+
+- [`docs/result-objects.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md)
+- [`examples/fastapi_reference/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md)

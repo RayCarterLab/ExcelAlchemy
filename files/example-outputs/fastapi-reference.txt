@@ -1,0 +1,7 @@
+FastAPI reference project completed
+Result: SUCCESS
+Success rows: 1
+Failed rows: 0
+Created rows: 1
+Uploaded artifacts: []
+Routes: ['/employee-imports', '/employee-template.xlsx']

@@ -4,12 +4,15 @@ import contextlib
 import importlib
 import importlib.util
 import io
+import sys
 from pathlib import Path
 
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EXAMPLES_DIR = REPO_ROOT / 'examples'
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 
 def _load_example_module(module_name: str, filename: str):
@@ -116,6 +119,13 @@ def test_fastapi_example_source_compiles() -> None:
     compile(source, str(EXAMPLES_DIR / 'fastapi_upload.py'), 'exec')
 
 
+def test_fastapi_reference_example_sources_compile() -> None:
+    package_dir = EXAMPLES_DIR / 'fastapi_reference'
+    for filename in ('models.py', 'storage.py', 'services.py', 'app.py'):
+        source = (package_dir / filename).read_text(encoding='utf-8')
+        compile(source, str(package_dir / filename), 'exec')
+
+
 @pytest.mark.skipif(importlib.util.find_spec('fastapi') is None, reason='fastapi is not installed')
 def test_fastapi_example_main_runs_when_optional_dependency_is_available() -> None:
     module = _load_example_module('example_fastapi_upload_main', 'fastapi_upload.py')
@@ -126,6 +136,20 @@ def test_fastapi_example_main_runs_when_optional_dependency_is_available() -> No
 
     output = buffer.getvalue()
     assert 'FastAPI upload example completed' in output
+    assert 'Success rows: 1' in output
+    assert '/employee-template.xlsx' in output
+    assert '/employee-imports' in output
+
+
+def test_fastapi_reference_project_main_runs_when_optional_dependency_is_available() -> None:
+    module = importlib.import_module('examples.fastapi_reference.app')
+
+    buffer = io.StringIO()
+    with contextlib.redirect_stdout(buffer):
+        module.main()
+
+    output = buffer.getvalue()
+    assert 'FastAPI reference project completed' in output
     assert 'Success rows: 1' in output
     assert '/employee-template.xlsx' in output
     assert '/employee-imports' in output
@@ -178,6 +202,39 @@ def test_fastapi_example_endpoints_work_when_optional_dependencies_are_available
         upload_bytes = buffer.getvalue()
     finally:
         workbook.close()
+
+    import_response = client.post(
+        '/employee-imports',
+        files={
+            'file': (
+                'employee-import.xlsx',
+                upload_bytes,
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            )
+        },
+    )
+    assert import_response.status_code == 200
+    payload = import_response.json()
+    assert payload['result']['result'] == 'SUCCESS'
+    assert payload['created_rows'] == 1
+    assert payload['uploaded_artifacts'] == ['employee-import-result.xlsx']
+
+
+@pytest.mark.skipif(
+    importlib.util.find_spec('fastapi') is None or importlib.util.find_spec('httpx') is None,
+    reason='fastapi/httpx is not installed',
+)
+def test_fastapi_reference_project_endpoints_work_when_optional_dependencies_are_available() -> None:
+    module = importlib.import_module('examples.fastapi_reference.app')
+    testclient_module = importlib.import_module('fastapi.testclient')
+    TestClient = testclient_module.TestClient
+
+    client = TestClient(module.create_app())
+    template_response = client.get('/employee-template.xlsx')
+    assert template_response.status_code == 200
+
+    import_service_module = importlib.import_module('examples.fastapi_reference.services')
+    upload_bytes = import_service_module.build_demo_upload(template_response.content)
 
     import_response = client.post(
         '/employee-imports',

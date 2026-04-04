@@ -11,6 +11,10 @@ class Url(String):
     _validator = TypeAdapter(HttpUrl)
 
     @classmethod
+    def expected_input_message(cls, field_meta: FieldMetaInfo) -> str | None:
+        return msg(MessageKey.VALID_URL_REQUIRED)
+
+    @classmethod
     def normalize_import_value(cls, value: WorkbookInputValue, field_meta: FieldMetaInfo) -> str:
         parsed = str(value)
         errors: list[str] = []
