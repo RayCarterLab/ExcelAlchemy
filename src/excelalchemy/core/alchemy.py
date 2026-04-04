@@ -9,7 +9,7 @@ from excelalchemy._primitives.constants import (
     RESULT_COLUMN_KEY,
 )
 from excelalchemy._primitives.header_models import ExcelHeader
-from excelalchemy._primitives.identity import ColumnIndex, DataUrlStr, Label, RowIndex, UniqueKey, UniqueLabel, UrlStr
+from excelalchemy._primitives.identity import DataUrlStr, Label, UniqueKey, UniqueLabel, UrlStr
 from excelalchemy._primitives.payloads import DataConverter, ExportRowPayload
 from excelalchemy.artifacts import ExcelArtifact
 from excelalchemy.codecs.base import SystemReserved
@@ -22,13 +22,13 @@ from excelalchemy.core.schema import ExcelSchemaLayout
 from excelalchemy.core.storage import build_storage_gateway
 from excelalchemy.core.storage_protocol import ExcelStorage
 from excelalchemy.core.table import WorksheetTable
-from excelalchemy.exceptions import ConfigError, ExcelCellError, ExcelRowError
+from excelalchemy.exceptions import ConfigError
 from excelalchemy.helper.pydantic import get_model_field_names
 from excelalchemy.i18n.messages import MessageKey, use_display_locale
 from excelalchemy.i18n.messages import display_message as dmsg
 from excelalchemy.i18n.messages import message as msg
 from excelalchemy.metadata import FieldMetaInfo
-from excelalchemy.results import ImportResult
+from excelalchemy.results import CellErrorMap, ImportResult, RowIssueMap
 from excelalchemy.util.file import flatten
 
 HEADER_HINT_LINE_COUNT = 1
@@ -210,24 +210,24 @@ class ExcelAlchemy[
         return self._last_import_session.header_table
 
     @property
-    def cell_error_map(self) -> dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]]:
+    def cell_error_map(self) -> CellErrorMap:
         if self._last_import_session is None:
-            return {}
+            return CellErrorMap()
         return self._last_import_session.cell_error_map
 
     @property
-    def row_error_map(self) -> dict[RowIndex, list[ExcelRowError | ExcelCellError]]:
+    def row_error_map(self) -> RowIssueMap:
         if self._last_import_session is None:
-            return {}
+            return RowIssueMap()
         return self._last_import_session.row_error_map
 
     @property
-    def cell_errors(self) -> dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]]:
+    def cell_errors(self) -> CellErrorMap:
         """Backward-compatible alias for cell_error_map."""
         return self.cell_error_map
 
     @property
-    def row_errors(self) -> dict[RowIndex, list[ExcelRowError | ExcelCellError]]:
+    def row_errors(self) -> RowIssueMap:
         """Backward-compatible alias for row_error_map."""
         return self.row_error_map
 

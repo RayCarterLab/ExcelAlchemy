@@ -29,9 +29,9 @@ def flatten(data: Mapping[str, object], level: list[str] | None = None) -> dict[
     tmp_dict: dict[str, object] = {}
     level = level or []
     for key, val in data.items():
-        if isinstance(val, Mapping):
-            nested = cast(Mapping[str, object], val)
-            tmp_dict.update(flatten(nested, [*level, key]))
+        nested_mapping = _string_key_mapping(val)
+        if nested_mapping is not None:
+            tmp_dict.update(flatten(nested_mapping, [*level, key]))
         else:
             tmp_dict[f'{UNIQUE_HEADER_CONNECTOR}'.join([*level, key])] = val
     return tmp_dict
@@ -46,7 +46,23 @@ def value_is_nan(value: object) -> bool:
         return True
 
     if isinstance(value, Sequence) and not isinstance(value, str):
-        items = cast(Sequence[object], value)
-        return any(value_is_nan(item) for item in items)
+        return any(value_is_nan(item) for item in _sequence_items(cast(Sequence[object], value)))
 
     return False
+
+
+def _string_key_mapping(value: object) -> Mapping[str, object] | None:
+    if not isinstance(value, Mapping):
+        return None
+
+    raw_mapping = cast(Mapping[object, object], value)
+    normalized: dict[str, object] = {}
+    for key, item in raw_mapping.items():
+        if not isinstance(key, str):
+            return None
+        normalized[key] = item
+    return normalized
+
+
+def _sequence_items(value: Sequence[object]) -> list[object]:
+    return list(value)

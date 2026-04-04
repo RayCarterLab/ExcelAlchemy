@@ -1,5 +1,4 @@
 import re
-from typing import cast
 
 from excelalchemy._primitives.constants import FIELD_DATA_KEY
 from excelalchemy._primitives.identity import Key
@@ -26,7 +25,7 @@ def export_data_converter(data: ModelRowPayload, to_camel: bool = False) -> Mode
         if not isinstance(value, dict):
             raise TypeError(f'Expected fieldData payload to be a mapping, got {type(value)}')
 
-        for field_key, field_value in cast(ModelRowPayload, value).items():
+        for field_key, field_value in value.items():
             result[Key(f'{converted_key}.{field_key}')] = field_value
     return result
 
@@ -46,5 +45,5 @@ def _nested_set(mapping: ModelRowPayload, keys: list[str], value: object) -> Non
         nested_mapping = mapping.setdefault(key, {})
         if not isinstance(nested_mapping, dict):
             raise TypeError(f'Expected nested mapping at {key!r}, got {type(nested_mapping)}')
-        mapping = cast(ModelRowPayload, nested_mapping)
+        mapping = nested_mapping
     mapping[keys[-1]] = value

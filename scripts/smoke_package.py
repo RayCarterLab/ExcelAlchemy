@@ -86,6 +86,7 @@ async def main() -> None:
     import_result = await importer.import_data('smoke-input.xlsx', 'smoke-result.xlsx')
     assert import_result.success_count == 1
     assert import_result.fail_count == 0
+    assert import_result.result == 'SUCCESS'
 
     exporter = ExcelAlchemy(ExporterConfig.for_storage(SmokeImporter, storage=storage, locale='en'))
     artifact = exporter.export_artifact(
@@ -93,6 +94,13 @@ async def main() -> None:
         filename='smoke-export.xlsx',
     )
     assert len(artifact.as_bytes()) > 0
+    uploaded_url = exporter.export_upload('smoke-export-upload.xlsx', [{'full_name': 'TaylorChen', 'age': 32}])
+    assert uploaded_url == 'memory://smoke-export-upload.xlsx'
+    assert 'smoke-export-upload.xlsx' in storage.uploaded
+
+    print('Package smoke passed')
+    print(f'Import result: {import_result.result}')
+    print(f'Upload URL: {uploaded_url}')
 
 
 if __name__ == '__main__':

@@ -73,14 +73,18 @@ class MessageKey(StrEnum):
     ENTER_NUMBER_EXPECTED_FORMAT = 'enter_number_expected_format'
     VALID_URL_REQUIRED = 'valid_url_required'
     VALID_PHONE_NUMBER_REQUIRED = 'valid_phone_number_required'
+    MIN_LENGTH_CHARACTERS = 'min_length_characters'
     MULTIPLE_SELECTIONS_NOT_SUPPORTED = 'multiple_selections_not_supported'
     OPTIONS_CANNOT_BE_NONE_FOR_SELECTION_FIELDS = 'options_cannot_be_none_for_selection_fields'
     OPTIONS_CANNOT_BE_NONE_FOR_VALUE_TYPE = 'options_cannot_be_none_for_value_type'
     OPTIONS_CONTAIN_DUPLICATES = 'options_contain_duplicates'
     CHARACTER_SET_NOT_CONFIGURED = 'character_set_not_configured'
     MAX_LENGTH_CHARACTERS = 'max_length_characters'
+    MIN_ITEMS_REQUIRED = 'min_items_required'
+    MAX_ITEMS_ALLOWED = 'max_items_allowed'
     ONLY_CHARACTER_SET_ALLOWED = 'only_character_set_allowed'
     IMPORT_RESULT_ONLY_FOR_INVALID_HEADER_VALIDATION = 'import_result_only_for_invalid_header_validation'
+    ENTER_VALUE_EXPECTED_FORMAT = 'enter_value_expected_format'
     BOOLEAN_ENTER_YES_OR_NO = 'boolean_enter_yes_or_no'
     BOOLEAN_TRUE_DISPLAY = 'boolean_true_display'
     BOOLEAN_FALSE_DISPLAY = 'boolean_false_display'
@@ -231,6 +235,7 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.ENTER_NUMBER_EXPECTED_FORMAT: 'Enter a number in the expected format',
         MessageKey.VALID_URL_REQUIRED: 'Enter a valid URL',
         MessageKey.VALID_PHONE_NUMBER_REQUIRED: 'Enter a valid phone number',
+        MessageKey.MIN_LENGTH_CHARACTERS: 'The minimum length is {min_length} characters',
         MessageKey.MULTIPLE_SELECTIONS_NOT_SUPPORTED: 'Multiple selections are not supported',
         MessageKey.OPTIONS_CANNOT_BE_NONE_FOR_SELECTION_FIELDS: (
             'options cannot be None when validating RADIO / MULTI_CHECKBOX / SELECT fields'
@@ -239,10 +244,13 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.OPTIONS_CONTAIN_DUPLICATES: 'Options contain duplicates',
         MessageKey.CHARACTER_SET_NOT_CONFIGURED: 'character_set is not configured',
         MessageKey.MAX_LENGTH_CHARACTERS: 'The maximum length is {max_length} characters',
+        MessageKey.MIN_ITEMS_REQUIRED: 'Select at least {min_items} items',
+        MessageKey.MAX_ITEMS_ALLOWED: 'Select no more than {max_items} items',
         MessageKey.ONLY_CHARACTER_SET_ALLOWED: 'Only {character_set_names} are allowed',
         MessageKey.IMPORT_RESULT_ONLY_FOR_INVALID_HEADER_VALIDATION: (
             'ImportResult can only be built from an invalid header validation result'
         ),
+        MessageKey.ENTER_VALUE_EXPECTED_FORMAT: 'Enter a value in the expected format shown in the header comment',
         MessageKey.BOOLEAN_ENTER_YES_OR_NO: 'Enter "{true_value}" or "{false_value}"',
         MessageKey.BOOLEAN_TRUE_DISPLAY: 'Yes',
         MessageKey.BOOLEAN_FALSE_DISPLAY: 'No',
@@ -309,6 +317,13 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.LABEL_MAXIMUM_VALUE: 'Maximum value',
     },
     'zh-CN': {
+        MessageKey.THIS_FIELD_IS_REQUIRED: '此字段为必填项',
+        MessageKey.MIN_LENGTH_CHARACTERS: '最小长度为 {min_length} 个字符',
+        MessageKey.MAX_LENGTH_CHARACTERS: '最大长度为 {max_length} 个字符',
+        MessageKey.MIN_ITEMS_REQUIRED: '至少选择 {min_items} 项',
+        MessageKey.MAX_ITEMS_ALLOWED: '最多选择 {max_items} 项',
+        MessageKey.ENTER_VALUE_EXPECTED_FORMAT: '请按照表头注释中给出的格式填写',
+        MessageKey.IMPORT_RESULT_ONLY_FOR_INVALID_HEADER_VALIDATION: '仅当表头校验不通过时，才能构造 ImportResult',
         MessageKey.HEADER_HINT: (
             '\n导入填写须知：\n'
             '1、填写数据时，请注意查看字段名称上的注释，避免导入失败。\n'

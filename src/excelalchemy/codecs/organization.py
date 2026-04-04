@@ -74,7 +74,8 @@ class MultiOrganization(MultiCheckbox):
             return value
 
         if isinstance(value, list):
-            items = cast(list[object], value)
+            items = MultiOrganization._coerce_items(cast(object, value))
+            assert items is not None
             option_ids = [OptionId(option_id) for option_id in items]
             option_names = presentation.exchange_option_ids_to_names(option_ids, field_label=declared.label)
             return MULTI_CHECKBOX_SEPARATOR.join(map(str, option_names))

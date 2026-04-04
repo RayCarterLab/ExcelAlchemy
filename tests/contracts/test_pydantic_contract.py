@@ -1,5 +1,6 @@
 from typing import Annotated
 
+import pytest
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from excelalchemy import (
@@ -12,6 +13,7 @@ from excelalchemy import (
     ExcelRowError,
     FieldMeta,
     Label,
+    ProgrammaticError,
 )
 from excelalchemy.helper.pydantic import extract_pydantic_model, instantiate_pydantic_model
 from excelalchemy.metadata import FieldMetaInfo, extract_declared_field_metadata
@@ -46,6 +48,12 @@ class TestPydanticContracts:
         assert result[0].label == Label('邮箱')
         assert result[1].label == Label('停留时间')
 
+    def test_instantiate_pydantic_model_normalizes_missing_field_messages(self):
+        result = instantiate_pydantic_model({'email': 'noreply@example.com'}, ContractPydanticModel)
+
+        assert isinstance(result, list)
+        assert result == [ExcelCellError(label=Label('停留时间'), message='This field is required')]
+
     def test_instantiate_pydantic_model_applies_field_constraints_and_field_validators(self):
         class FieldValidatedModel(BaseModel):
             name: Email = FieldMeta(label='邮箱', order=1, min_length=20)
@@ -61,12 +69,10 @@ class TestPydanticContracts:
         wrong_domain = instantiate_pydantic_model({'name': 'long-enough-address@openai.com'}, FieldValidatedModel)
 
         assert isinstance(too_short, list)
-        assert too_short == [
-            ExcelCellError(label=Label('邮箱'), message='Value should have at least 20 items after validation, not 6')
-        ]
+        assert too_short == [ExcelCellError(label=Label('邮箱'), message='The minimum length is 20 characters')]
 
         assert isinstance(wrong_domain, list)
-        assert wrong_domain == [ExcelCellError(label=Label('邮箱'), message='Value error, must use the company domain')]
+        assert wrong_domain == [ExcelCellError(label=Label('邮箱'), message='Must use the company domain')]
 
     def test_instantiate_pydantic_model_maps_model_validators_to_row_errors(self):
         class ModelValidatedContract(BaseModel):
@@ -88,7 +94,7 @@ class TestPydanticContracts:
         assert isinstance(result, list)
         assert len(result) == 1
         assert isinstance(result[0], ExcelRowError)
-        assert str(result[0]) == 'Value error, combination invalid'
+        assert str(result[0]) == 'Combination invalid'
 
     def test_custom_excel_field_codec_can_define_new_style_extension_surface(self):
         class UppercaseTextCodec(str, ExcelFieldCodec):
@@ -142,6 +148,10 @@ class TestPydanticContracts:
         assert declared_metadata.importer_min_length == 20
         assert [meta.unique_label for meta in metas] == ['邮箱', '停留时间·开始日期', '停留时间·结束日期']
         assert isinstance(result, list)
-        assert result == [
-            ExcelCellError(label=Label('邮箱'), message='Value should have at least 20 items after validation, not 6')
-        ]
+        assert result == [ExcelCellError(label=Label('邮箱'), message='The minimum length is 20 characters')]
+
+    def test_extract_pydantic_model_requires_a_model(self):
+        with pytest.raises(ProgrammaticError) as context:
+            extract_pydantic_model(None)
+
+        assert str(context.value) == 'model cannot be None'

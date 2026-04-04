@@ -22,7 +22,7 @@ from excelalchemy._primitives.constants import (
 )
 from excelalchemy._primitives.identity import ColumnIndex, DataUrlStr, Label, RowIndex, UniqueLabel
 from excelalchemy.core.table import WorksheetTable, WorksheetValue
-from excelalchemy.exceptions import ExcelCellError
+from excelalchemy.exceptions import ExcelCellError, ProgrammaticError
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import display_message as dmsg
 from excelalchemy.i18n.messages import message as msg
@@ -167,7 +167,10 @@ def _write_horizontally_merged_header(
         declared = field_meta.declared
         runtime = field_meta.runtime
         if runtime.parent_label is None:
-            raise RuntimeError(msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME))
+            raise ProgrammaticError(
+                msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME),
+                message_key=MessageKey.PARENT_LABEL_EMPTY_RUNTIME,
+            )
         counter[runtime.parent_label] += 1
 
     for openpyxl_col_index, column in enumerate(
@@ -178,7 +181,10 @@ def _write_horizontally_merged_header(
         declared = field_meta.declared
         runtime = field_meta.runtime
         if runtime.parent_label is None:
-            raise RuntimeError(msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME))
+            raise ProgrammaticError(
+                msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME),
+                message_key=MessageKey.PARENT_LABEL_EMPTY_RUNTIME,
+            )
         if declared.label != runtime.parent_label and runtime.offset == 0:
             cell = _worksheet_cell(worksheet, row=start_row, column=openpyxl_col_index)
             cell.value = str(runtime.parent_label)

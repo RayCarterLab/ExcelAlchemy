@@ -1,0 +1,2 @@
+Generated template: compensation-template.xlsx (6861 bytes)
+Fields: Start date, Probation window, Salary band, Signing bonus

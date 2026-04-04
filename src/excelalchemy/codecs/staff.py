@@ -80,7 +80,8 @@ class MultiStaff(MultiCheckbox):
             return value
 
         if isinstance(value, list):
-            items = cast(list[object], value)
+            items = MultiStaff._coerce_items(cast(object, value))
+            assert items is not None
             option_ids = [OptionId(option_id) for option_id in items]
             if len(option_ids) != len(set(option_ids)):
                 raise ValueError(msg(MessageKey.OPTIONS_CONTAIN_DUPLICATES))

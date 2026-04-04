@@ -5,7 +5,6 @@ from collections import defaultdict
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from itertools import chain
-from typing import cast
 
 from pydantic import BaseModel
 
@@ -88,10 +87,17 @@ class ExcelSchemaLayout:
         return sorted(
             field_metas,
             key=lambda x: (
-                orders.get(cast(Label, x.runtime.parent_label), Decimal('Infinity')),
+                cls._parent_order(orders, x),
                 x.runtime.offset,
             ),
         )
+
+    @staticmethod
+    def _parent_order(orders: dict[Label, int], field_meta: FieldMetaInfo) -> int | Decimal:
+        parent_label = field_meta.runtime.parent_label
+        if parent_label is None:
+            return Decimal('Infinity')
+        return orders.get(parent_label, Decimal('Infinity'))
 
     def has_merged_header(self, selected_keys: list[UniqueKey]) -> bool:
         """Return whether the selected keys need a two-row merged header."""

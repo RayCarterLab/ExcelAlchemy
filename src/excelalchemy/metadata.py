@@ -103,15 +103,21 @@ class RuntimeFieldBinding:
 
     def make_unique_label(self, *, label: Label) -> UniqueLabel:
         if self.parent_label is None:
-            raise RuntimeError(msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME))
+            raise ProgrammaticError(
+                msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME),
+                message_key=MessageKey.PARENT_LABEL_EMPTY_RUNTIME,
+            )
         unique_label = f'{self.parent_label}{UNIQUE_HEADER_CONNECTOR}{label}' if self.parent_label != label else label
         return UniqueLabel(unique_label)
 
     def make_unique_key(self, *, key: Key | None) -> UniqueKey:
         if self.parent_key is None:
-            raise RuntimeError(msg(MessageKey.PARENT_KEY_EMPTY_RUNTIME))
+            raise ProgrammaticError(
+                msg(MessageKey.PARENT_KEY_EMPTY_RUNTIME),
+                message_key=MessageKey.PARENT_KEY_EMPTY_RUNTIME,
+            )
         if key is None:
-            raise RuntimeError(msg(MessageKey.KEY_EMPTY_RUNTIME))
+            raise ProgrammaticError(msg(MessageKey.KEY_EMPTY_RUNTIME), message_key=MessageKey.KEY_EMPTY_RUNTIME)
         unique_key = f'{self.parent_key}{UNIQUE_HEADER_CONNECTOR}{key}' if self.parent_key != key else key
         return UniqueKey(unique_key)
 
