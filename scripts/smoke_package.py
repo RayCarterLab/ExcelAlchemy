@@ -116,12 +116,33 @@ async def main() -> None:
     assert invalid_result.fail_count == 1
     assert invalid_importer.cell_error_map.error_count >= 1
     assert invalid_importer.row_error_map.error_count >= 1
+    invalid_result_payload = invalid_result.to_api_payload()
     cell_payload = invalid_importer.cell_error_map.to_api_payload()
     row_payload = invalid_importer.row_error_map.to_api_payload()
+    assert invalid_result_payload['result'] == 'DATA_INVALID'
+    assert invalid_result_payload['is_data_invalid'] is True
+    assert invalid_result_payload['summary']['fail_count'] == 1
     assert cell_payload['error_count'] >= 1
     assert row_payload['error_count'] >= 1
     assert isinstance(cell_payload['items'], list)
     assert isinstance(row_payload['items'], list)
+    assert cell_payload['summary']['by_code']
+    assert cell_payload['summary']['by_row']
+    assert row_payload['summary']['by_code']
+    assert row_payload['summary']['by_row']
+    first_cell_issue = cell_payload['items'][0]
+    assert isinstance(first_cell_issue['code'], str) and first_cell_issue['code']
+    assert first_cell_issue['field_label'] == 'Age'
+    assert isinstance(first_cell_issue['message'], str) and first_cell_issue['message']
+    assert isinstance(first_cell_issue['display_message'], str) and first_cell_issue['display_message']
+    assert first_cell_issue['row_number_for_humans'] == 1
+    assert isinstance(first_cell_issue['column_number_for_humans'], int)
+    assert first_cell_issue['column_number_for_humans'] >= 1
+    first_row_issue = row_payload['items'][0]
+    assert isinstance(first_row_issue['code'], str) and first_row_issue['code']
+    assert isinstance(first_row_issue['message'], str) and first_row_issue['message']
+    assert isinstance(first_row_issue['display_message'], str) and first_row_issue['display_message']
+    assert first_row_issue['row_number_for_humans'] == 1
 
     exporter = ExcelAlchemy(ExporterConfig.for_storage(SmokeImporter, storage=storage, locale='en'))
     artifact = exporter.export_artifact(

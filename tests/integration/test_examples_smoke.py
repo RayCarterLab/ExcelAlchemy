@@ -121,7 +121,7 @@ def test_fastapi_example_source_compiles() -> None:
 
 def test_fastapi_reference_example_sources_compile() -> None:
     package_dir = EXAMPLES_DIR / 'fastapi_reference'
-    for filename in ('models.py', 'storage.py', 'services.py', 'app.py'):
+    for filename in ('models.py', 'schemas.py', 'responses.py', 'storage.py', 'services.py', 'app.py'):
         source = (package_dir / filename).read_text(encoding='utf-8')
         compile(source, str(package_dir / filename), 'exec')
 
@@ -153,6 +153,8 @@ def test_fastapi_reference_project_main_runs_when_optional_dependency_is_availab
     assert 'Success rows: 1' in output
     assert '/employee-template.xlsx' in output
     assert '/employee-imports' in output
+    assert 'Response sections:' in output
+    assert 'Request tenant: tenant-001' in output
 
 
 @pytest.mark.skipif(importlib.util.find_spec('minio') is None, reason='minio is not installed')
@@ -216,8 +218,12 @@ def test_fastapi_example_endpoints_work_when_optional_dependencies_are_available
     assert import_response.status_code == 200
     payload = import_response.json()
     assert payload['result']['result'] == 'SUCCESS'
+    assert payload['result']['is_success'] is True
     assert payload['created_rows'] == 1
     assert payload['uploaded_artifacts'] == ['employee-import-result.xlsx']
+    assert payload['request']['tenant_id'] == 'tenant-001'
+    assert payload['cell_errors']['error_count'] == 0
+    assert payload['row_errors']['error_count'] == 0
 
 
 @pytest.mark.skipif(
@@ -249,5 +255,9 @@ def test_fastapi_reference_project_endpoints_work_when_optional_dependencies_are
     assert import_response.status_code == 200
     payload = import_response.json()
     assert payload['result']['result'] == 'SUCCESS'
+    assert payload['result']['is_success'] is True
     assert payload['created_rows'] == 1
     assert payload['uploaded_artifacts'] == ['employee-import-result.xlsx']
+    assert payload['request']['tenant_id'] == 'tenant-001'
+    assert payload['cell_errors']['error_count'] == 0
+    assert payload['row_errors']['error_count'] == 0

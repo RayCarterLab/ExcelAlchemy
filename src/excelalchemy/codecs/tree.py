@@ -1,6 +1,8 @@
-import logging
-
-from excelalchemy.codecs.base import WorkbookDisplayValue, WorkbookInputValue
+from excelalchemy.codecs.base import (
+    WorkbookDisplayValue,
+    WorkbookInputValue,
+    log_codec_option_resolution_fallback,
+)
 from excelalchemy.codecs.multi_checkbox import MultiCheckbox
 from excelalchemy.codecs.radio import Radio
 from excelalchemy.i18n.messages import MessageKey
@@ -43,7 +45,7 @@ class SingleTreeNode(Radio):
         try:
             return presentation.options_id_map(field_label=declared.label)[value.strip()].name
         except KeyError:
-            logging.warning('Could not resolve tree option %s; returning the original value', value)
+            log_codec_option_resolution_fallback(cls.__name__, value, field_label=declared.label)
 
         return value if value is not None else ''
 

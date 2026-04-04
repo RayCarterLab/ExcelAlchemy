@@ -313,47 +313,57 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         assert alchemy.cell_errors == {
             0: {
                 6: [ExcelCellError(label=Label('出生日期'), message='Enter a date in yyyy format')],
-                7: [ExcelCellError(label=Label('邮箱'), message='Enter a valid email address')],
-                18: [ExcelCellError(label=Label('网址'), message='Enter a valid URL')],
+                7: [
+                    ExcelCellError(label=Label('邮箱'), message='Enter a valid email address, such as name@example.com')
+                ],
+                18: [ExcelCellError(label=Label('网址'), message='Enter a valid URL, such as https://example.com')],
                 9: [
                     ExcelCellError(
-                        label=Label('爱好'), message='Option not found; check the header comment for valid values'
+                        label=Label('爱好'),
+                        message='Select only configured options. Valid values include: 篮球，足球，乒乓球',
                     )
                 ],
                 10: [
                     ExcelCellError(
-                        label=Label('公司'), message='Option not found; check the header comment for valid values'
+                        label=Label('公司'),
+                        message='Select organizations from the configured options. Valid values include: 腾讯，阿里巴巴，百度',
                     )
                 ],
                 11: [
                     ExcelCellError(
-                        label=Label('经理'), message='Option not found; check the header comment for valid values'
+                        label=Label('经理'),
+                        message='Select staff members from the configured options. Valid values include: 张三，李四，王五',
                     )
                 ],
                 12: [
                     ExcelCellError(
-                        label=Label('部门'), message='Option not found; check the header comment for valid values'
+                        label=Label('部门'),
+                        message='Select tree nodes from the configured options. Valid values include: 研发部，市场部，销售部',
                     )
                 ],
                 17: [
                     ExcelCellError(
-                        label=Label('团队'), message='Option not found; check the field comment for valid values'
+                        label=Label('团队'),
+                        message='Select one tree node from the configured options. Valid values include: 研发部，市场部，销售部',
                     )
                 ],
-                13: [ExcelCellError(label=Label('电话'), message='Enter a valid phone number')],
+                13: [ExcelCellError(label=Label('电话'), message='Enter a valid phone number, such as 13800138000')],
                 14: [
                     ExcelCellError(
-                        label=Label('单选'), message='Option not found; check the field comment for valid values'
+                        label=Label('单选'),
+                        message='Select one of the configured options. Valid values include: 选项1，选项2，选项3',
                     )
                 ],
                 15: [
                     ExcelCellError(
-                        label=Label('老板'), message='Option not found; check the field comment for valid values'
+                        label=Label('老板'),
+                        message='Select one organization from the configured options. Valid values include: 马云，马化腾，李彦宏',
                     )
                 ],
                 16: [
                     ExcelCellError(
-                        label=Label('领导'), message='Option not found; check the field comment for valid values'
+                        label=Label('领导'),
+                        message='Select one staff member from the configured options. Valid values include: 张三，李四，王五',
                     )
                 ],
             }

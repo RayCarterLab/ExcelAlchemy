@@ -46,6 +46,60 @@ class TestResultContracts:
         assert result.missing_primary == []
         assert result.unrecognized == []
         assert result.duplicated == []
+        assert result.is_success is True
+        assert result.is_header_invalid is False
+        assert result.is_data_invalid is False
+
+    def test_import_result_to_api_payload_for_success_case(self):
+        result = ImportResult(result=ValidateResult.SUCCESS, success_count=1, fail_count=0, url='memory://result.xlsx')
+
+        assert result.to_api_payload() == {
+            'result': 'SUCCESS',
+            'is_success': True,
+            'is_header_invalid': False,
+            'is_data_invalid': False,
+            'summary': {
+                'success_count': 1,
+                'fail_count': 0,
+                'result_workbook_url': 'memory://result.xlsx',
+            },
+            'header_issues': {
+                'is_required_missing': False,
+                'missing_required': [],
+                'missing_primary': [],
+                'unrecognized': [],
+                'duplicated': [],
+            },
+        }
+
+    def test_import_result_to_api_payload_for_header_invalid_case(self):
+        result = ImportResult(
+            result=ValidateResult.HEADER_INVALID,
+            is_required_missing=True,
+            missing_required=[Label('年龄')],
+            missing_primary=[Label('邮箱')],
+            unrecognized=[Label('未知列')],
+            duplicated=[Label('姓名')],
+        )
+
+        assert result.to_api_payload() == {
+            'result': 'HEADER_INVALID',
+            'is_success': False,
+            'is_header_invalid': True,
+            'is_data_invalid': False,
+            'summary': {
+                'success_count': 0,
+                'fail_count': 0,
+                'result_workbook_url': None,
+            },
+            'header_issues': {
+                'is_required_missing': True,
+                'missing_required': ['年龄'],
+                'missing_primary': ['邮箱'],
+                'unrecognized': ['未知列'],
+                'duplicated': ['姓名'],
+            },
+        }
 
     def test_import_result_from_validate_header_result_rejects_valid_input(self):
         validate_header = ValidateHeaderResult(

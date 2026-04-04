@@ -20,6 +20,80 @@ def _empty_labels() -> list[Label]:
 type RowIssue = ExcelRowError | ExcelCellError
 
 
+def _row_number_for_humans(row_index: RowIndex) -> int:
+    return int(row_index) + 1
+
+
+def _column_number_for_humans(column_index: ColumnIndex) -> int:
+    return int(column_index) + 1
+
+
+@dataclass(slots=True, frozen=True)
+class FieldIssueSummary:
+    """Field-level issue summary suitable for frontends and dashboards."""
+
+    field_label: Label
+    parent_label: Label | None
+    unique_label: str
+    error_count: int
+    row_indices: tuple[RowIndex, ...]
+    row_numbers_for_humans: tuple[int, ...]
+    codes: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            'field_label': str(self.field_label),
+            'parent_label': None if self.parent_label is None else str(self.parent_label),
+            'unique_label': self.unique_label,
+            'error_count': self.error_count,
+            'row_indices': [int(index) for index in self.row_indices],
+            'row_numbers_for_humans': list(self.row_numbers_for_humans),
+            'codes': list(self.codes),
+        }
+
+
+@dataclass(slots=True, frozen=True)
+class RowIssueSummary:
+    """Row-level issue summary suitable for frontends and dashboards."""
+
+    row_index: RowIndex
+    row_number_for_humans: int
+    error_count: int
+    codes: tuple[str, ...]
+    field_labels: tuple[str, ...]
+    unique_labels: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            'row_index': int(self.row_index),
+            'row_number_for_humans': self.row_number_for_humans,
+            'error_count': self.error_count,
+            'codes': list(self.codes),
+            'field_labels': list(self.field_labels),
+            'unique_labels': list(self.unique_labels),
+        }
+
+
+@dataclass(slots=True, frozen=True)
+class CodeIssueSummary:
+    """Code-level issue summary suitable for frontends and dashboards."""
+
+    code: str
+    error_count: int
+    row_indices: tuple[RowIndex, ...]
+    row_numbers_for_humans: tuple[int, ...]
+    unique_labels: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            'code': self.code,
+            'error_count': self.error_count,
+            'row_indices': [int(index) for index in self.row_indices],
+            'row_numbers_for_humans': list(self.row_numbers_for_humans),
+            'unique_labels': list(self.unique_labels),
+        }
+
+
 @dataclass(slots=True, frozen=True)
 class CellIssueRecord:
     """Flat cell issue record suitable for API responses and UI rendering."""
@@ -31,8 +105,10 @@ class CellIssueRecord:
     def to_dict(self) -> dict[str, object]:
         payload = self.error.to_dict()
         payload['row_index'] = int(self.row_index)
+        payload['row_number_for_humans'] = _row_number_for_humans(self.row_index)
         payload['column_index'] = int(self.column_index)
-        payload['display_message'] = str(self.error)
+        payload['column_number_for_humans'] = _column_number_for_humans(self.column_index)
+        payload['display_message'] = self.error.display_message
         return payload
 
 
@@ -46,7 +122,16 @@ class RowIssueRecord:
     def to_dict(self) -> dict[str, object]:
         payload = self.error.to_dict()
         payload['row_index'] = int(self.row_index)
-        payload['display_message'] = str(self.error)
+        payload['row_number_for_humans'] = _row_number_for_humans(self.row_index)
+        payload['display_message'] = self.error.display_message
+        if isinstance(self.error, ExcelCellError):
+            payload['field_label'] = str(self.error.label)
+            payload['parent_label'] = None if self.error.parent_label is None else str(self.error.parent_label)
+            payload['unique_label'] = str(self.error.unique_label)
+        else:
+            payload.setdefault('field_label', None)
+            payload.setdefault('parent_label', None)
+            payload.setdefault('unique_label', None)
         return payload
 
 
@@ -78,6 +163,66 @@ class CellErrorMap(dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]]):
             for error in errors
         )
 
+    def summary_by_field(self) -> tuple[FieldIssueSummary, ...]:
+        grouped: dict[str, list[CellIssueRecord]] = {}
+        for record in self.records():
+            grouped.setdefault(str(record.error.unique_label), []).append(record)
+
+        summaries: list[FieldIssueSummary] = []
+        for unique_label, records in grouped.items():
+            first_error = records[0].error
+            row_indices = tuple(sorted({record.row_index for record in records}))
+            summaries.append(
+                FieldIssueSummary(
+                    field_label=first_error.label,
+                    parent_label=first_error.parent_label,
+                    unique_label=unique_label,
+                    error_count=len(records),
+                    row_indices=row_indices,
+                    row_numbers_for_humans=tuple(_row_number_for_humans(index) for index in row_indices),
+                    codes=tuple(sorted({record.error.code for record in records})),
+                )
+            )
+        return tuple(sorted(summaries, key=lambda summary: summary.unique_label))
+
+    def summary_by_row(self) -> tuple[RowIssueSummary, ...]:
+        grouped: dict[RowIndex, list[CellIssueRecord]] = {}
+        for record in self.records():
+            grouped.setdefault(record.row_index, []).append(record)
+
+        summaries: list[RowIssueSummary] = []
+        for row_index, records in grouped.items():
+            summaries.append(
+                RowIssueSummary(
+                    row_index=row_index,
+                    row_number_for_humans=_row_number_for_humans(row_index),
+                    error_count=len(records),
+                    codes=tuple(sorted({record.error.code for record in records})),
+                    field_labels=tuple(sorted({str(record.error.label) for record in records})),
+                    unique_labels=tuple(sorted({str(record.error.unique_label) for record in records})),
+                )
+            )
+        return tuple(sorted(summaries, key=lambda summary: summary.row_index))
+
+    def summary_by_code(self) -> tuple[CodeIssueSummary, ...]:
+        grouped: dict[str, list[CellIssueRecord]] = {}
+        for record in self.records():
+            grouped.setdefault(record.error.code, []).append(record)
+
+        summaries: list[CodeIssueSummary] = []
+        for code, records in grouped.items():
+            row_indices = tuple(sorted({record.row_index for record in records}))
+            summaries.append(
+                CodeIssueSummary(
+                    code=code,
+                    error_count=len(records),
+                    row_indices=row_indices,
+                    row_numbers_for_humans=tuple(_row_number_for_humans(index) for index in row_indices),
+                    unique_labels=tuple(sorted({str(record.error.unique_label) for record in records})),
+                )
+            )
+        return tuple(sorted(summaries, key=lambda summary: summary.code))
+
     def to_dict(self) -> dict[int, dict[int, list[dict[str, object]]]]:
         return {
             int(row_index): {
@@ -91,6 +236,11 @@ class CellErrorMap(dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]]):
             'error_count': self.error_count,
             'items': [record.to_dict() for record in self.records()],
             'by_row': self.to_dict(),
+            'summary': {
+                'by_field': [summary.to_dict() for summary in self.summary_by_field()],
+                'by_row': [summary.to_dict() for summary in self.summary_by_row()],
+                'by_code': [summary.to_dict() for summary in self.summary_by_code()],
+            },
         }
 
     @property
@@ -128,6 +278,46 @@ class RowIssueMap(dict[RowIndex, list[RowIssue]]):
             RowIssueRecord(row_index=row_index, error=error) for row_index, errors in self.items() for error in errors
         )
 
+    def summary_by_row(self) -> tuple[RowIssueSummary, ...]:
+        summaries: list[RowIssueSummary] = []
+        for row_index, errors in self.items():
+            cell_errors = [error for error in errors if isinstance(error, ExcelCellError)]
+            summaries.append(
+                RowIssueSummary(
+                    row_index=row_index,
+                    row_number_for_humans=_row_number_for_humans(row_index),
+                    error_count=len(errors),
+                    codes=tuple(sorted({error.code for error in errors})),
+                    field_labels=tuple(sorted({str(error.label) for error in cell_errors})),
+                    unique_labels=tuple(sorted({str(error.unique_label) for error in cell_errors})),
+                )
+            )
+        return tuple(sorted(summaries, key=lambda summary: summary.row_index))
+
+    def summary_by_code(self) -> tuple[CodeIssueSummary, ...]:
+        grouped: dict[str, list[RowIssueRecord]] = {}
+        for record in self.records():
+            grouped.setdefault(record.error.code, []).append(record)
+
+        summaries: list[CodeIssueSummary] = []
+        for code, records in grouped.items():
+            row_indices = tuple(sorted({record.row_index for record in records}))
+            unique_labels = tuple(
+                sorted(
+                    {str(record.error.unique_label) for record in records if isinstance(record.error, ExcelCellError)}
+                )
+            )
+            summaries.append(
+                CodeIssueSummary(
+                    code=code,
+                    error_count=len(records),
+                    row_indices=row_indices,
+                    row_numbers_for_humans=tuple(_row_number_for_humans(index) for index in row_indices),
+                    unique_labels=unique_labels,
+                )
+            )
+        return tuple(sorted(summaries, key=lambda summary: summary.code))
+
     def to_dict(self) -> dict[int, list[dict[str, object]]]:
         return {int(row_index): [error.to_dict() for error in errors] for row_index, errors in self.items()}
 
@@ -136,6 +326,10 @@ class RowIssueMap(dict[RowIndex, list[RowIssue]]):
             'error_count': self.error_count,
             'items': [record.to_dict() for record in self.records()],
             'by_row': self.to_dict(),
+            'summary': {
+                'by_row': [summary.to_dict() for summary in self.summary_by_row()],
+                'by_code': [summary.to_dict() for summary in self.summary_by_code()],
+            },
         }
 
     @staticmethod
@@ -212,6 +406,38 @@ class ImportResult(BaseModel):
     )
     success_count: int = Field(default=0, description='Number of rows imported successfully.')
     fail_count: int = Field(default=0, description='Number of rows that failed to import.')
+
+    @property
+    def is_success(self) -> bool:
+        return self.result == ValidateResult.SUCCESS
+
+    @property
+    def is_header_invalid(self) -> bool:
+        return self.result == ValidateResult.HEADER_INVALID
+
+    @property
+    def is_data_invalid(self) -> bool:
+        return self.result == ValidateResult.DATA_INVALID
+
+    def to_api_payload(self) -> dict[str, object]:
+        return {
+            'result': self.result.value,
+            'is_success': self.is_success,
+            'is_header_invalid': self.is_header_invalid,
+            'is_data_invalid': self.is_data_invalid,
+            'summary': {
+                'success_count': self.success_count,
+                'fail_count': self.fail_count,
+                'result_workbook_url': self.url,
+            },
+            'header_issues': {
+                'is_required_missing': self.is_required_missing,
+                'missing_required': [str(label) for label in self.missing_required],
+                'missing_primary': [str(label) for label in self.missing_primary],
+                'unrecognized': [str(label) for label in self.unrecognized],
+                'duplicated': [str(label) for label in self.duplicated],
+            },
+        }
 
     @classmethod
     def from_validate_header_result(cls, result: ValidateHeaderResult) -> 'ImportResult':

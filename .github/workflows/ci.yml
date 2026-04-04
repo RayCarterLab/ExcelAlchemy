@@ -110,9 +110,11 @@ jobs:
       - name: Run smoke scripts
         if: matrix.python-version == '3.14'
         run: |
+          uv pip install fastapi httpx python-multipart
           uv run python scripts/smoke_package.py
           uv run python scripts/smoke_examples.py
           uv run python scripts/generate_example_output_assets.py
+          uv run python scripts/smoke_docs_assets.py
 
       - name: Upload coverage artifact
         if: always() && matrix.python-version == '3.14'

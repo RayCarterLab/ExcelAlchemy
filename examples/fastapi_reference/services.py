@@ -8,8 +8,10 @@ import io
 from openpyxl import load_workbook
 
 from examples.fastapi_reference.models import EmployeeImporter
+from examples.fastapi_reference.responses import build_import_response
+from examples.fastapi_reference.schemas import EmployeeImportRequest, EmployeeImportResponse
 from examples.fastapi_reference.storage import RequestScopedStorage
-from excelalchemy import ExcelAlchemy, ImporterConfig, ImportResult
+from excelalchemy import ExcelAlchemy, ImporterConfig
 
 
 async def create_employee(row: dict[str, object], context: dict[str, object] | None) -> dict[str, object]:
@@ -28,7 +30,9 @@ class EmployeeImportService:
         self.storage = storage
         self.tenant_id = tenant_id
 
-    def build_alchemy(self) -> ExcelAlchemy[dict[str, object], EmployeeImporter, EmployeeImporter]:
+    def build_alchemy(
+        self, *, tenant_id: str | None = None
+    ) -> ExcelAlchemy[dict[str, object], EmployeeImporter, EmployeeImporter, EmployeeImporter]:
         alchemy = ExcelAlchemy(
             ImporterConfig.for_create(
                 EmployeeImporter,
@@ -37,7 +41,7 @@ class EmployeeImportService:
                 locale='en',
             )
         )
-        alchemy.add_context({'tenant_id': self.tenant_id, 'created_rows': []})
+        alchemy.add_context({'tenant_id': tenant_id or self.tenant_id, 'created_rows': []})
         return alchemy
 
     def generate_template_bytes(self) -> bytes:
@@ -45,17 +49,29 @@ class EmployeeImportService:
         artifact = alchemy.download_template_artifact(filename='employee-template.xlsx')
         return artifact.as_bytes()
 
-    async def import_workbook(self, filename: str, content: bytes) -> dict[str, object]:
+    async def import_workbook(
+        self,
+        filename: str,
+        content: bytes,
+        *,
+        request: EmployeeImportRequest | None = None,
+    ) -> EmployeeImportResponse:
+        request_model = request or EmployeeImportRequest(tenant_id=self.tenant_id)
         self.storage.register_upload(filename, content)
-        alchemy = self.build_alchemy()
+        alchemy = self.build_alchemy(tenant_id=request_model.tenant_id)
         result = await alchemy.import_data(filename, 'employee-import-result.xlsx')
-        created_rows = alchemy.context['created_rows']
+        context = alchemy.context
+        assert context is not None
+        created_rows = context['created_rows']
         assert isinstance(created_rows, list)
-        return {
-            'result': result.model_dump(),
-            'created_rows': len(created_rows),
-            'uploaded_artifacts': sorted(self.storage.uploaded),
-        }
+        return build_import_response(
+            result=result,
+            cell_error_map=alchemy.cell_error_map,
+            row_error_map=alchemy.row_error_map,
+            created_rows=len(created_rows),
+            uploaded_artifacts=sorted(self.storage.uploaded),
+            request=request_model,
+        )
 
 
 def build_demo_upload(template_bytes: bytes) -> bytes:
@@ -71,23 +87,18 @@ def build_demo_upload(template_bytes: bytes) -> bytes:
         workbook.close()
 
 
-def summarize_result(payload: dict[str, object]) -> tuple[ImportResult, int, list[str]]:
-    result = ImportResult.model_validate(payload['result'])
-    created_rows = payload['created_rows']
-    uploaded_artifacts = payload['uploaded_artifacts']
-    assert isinstance(created_rows, int)
-    assert isinstance(uploaded_artifacts, list)
-    assert all(isinstance(item, str) for item in uploaded_artifacts)
-    return result, created_rows, uploaded_artifacts
-
-
-def run_reference_demo() -> tuple[ImportResult, int, list[str]]:
+def run_reference_demo() -> EmployeeImportResponse:
     storage = RequestScopedStorage()
     service = EmployeeImportService(storage)
     template_bytes = service.generate_template_bytes()
     upload_bytes = build_demo_upload(template_bytes)
-    payload = asyncio.run(service.import_workbook('employee-import.xlsx', upload_bytes))
-    return summarize_result(payload)
+    return asyncio.run(
+        service.import_workbook(
+            'employee-import.xlsx',
+            upload_bytes,
+            request=EmployeeImportRequest(tenant_id='tenant-001'),
+        )
+    )
 
 
 __all__ = [
@@ -95,5 +106,4 @@ __all__ = [
     'build_demo_upload',
     'create_employee',
     'run_reference_demo',
-    'summarize_result',
 ]

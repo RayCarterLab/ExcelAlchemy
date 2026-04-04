@@ -76,7 +76,7 @@ async def create_employee(row: dict[str, object], context: dict[str, object] | N
 
 def build_import_alchemy(
     storage: RequestScopedStorage, *, tenant_id: str = 'tenant-001'
-) -> ExcelAlchemy[dict[str, object], EmployeeImporter, EmployeeImporter]:
+) -> ExcelAlchemy[dict[str, object], EmployeeImporter, EmployeeImporter, EmployeeImporter]:
     alchemy = ExcelAlchemy(
         ImporterConfig.for_create(
             EmployeeImporter,

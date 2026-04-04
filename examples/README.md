@@ -63,9 +63,9 @@ If you want a copyable reference layout rather than a single script, see
    - Output: prints the import result, created row count, uploaded result artifacts, and registered FastAPI routes.
 10. `fastapi_reference/`
    - Read this if you want a copyable minimal reference project rather than a single-file integration sketch.
-   - Shows a split between route, service, storage, and schema layers.
+   - Shows a split between route, request/response schema, service, response builder, storage, and workbook schema layers.
    - Best for: teams integrating ExcelAlchemy into a real FastAPI backend.
-   - Output: prints the import result, created row count, uploaded artifacts, and registered route paths.
+   - Output: prints the import result, created row count, uploaded artifacts, registered route paths, and structured response sections.
    - Captured output: [`files/example-outputs/fastapi-reference.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/fastapi-reference.txt)
 
 ## By Goal

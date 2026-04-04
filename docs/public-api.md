@@ -12,6 +12,8 @@ and
 [`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md).
 If you want result-object guidance for backend or frontend integration, see
 [`docs/result-objects.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md).
+If you want copyable backend response shapes, see
+[`docs/api-response-cookbook.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md).
 
 ## Stable Public Modules
 
@@ -49,6 +51,8 @@ These modules are the recommended import paths for application code:
 - structured error access:
   Prefer `CellErrorMap` and `RowIssueMap` helpers such as `to_api_payload()`
   when you need frontend-friendly or API-friendly validation output.
+  The stable helper set also includes `records()`, `summary_by_field()`,
+  `summary_by_row()`, and `summary_by_code()` where applicable.
 
 ## Compatibility Modules In 2.x
 
@@ -110,6 +114,11 @@ result helpers are:
 - `RowIssueMap.to_api_payload()`
 - `CellErrorMap.records()`
 - `RowIssueMap.records()`
+- `CellErrorMap.summary_by_field()`
+- `CellErrorMap.summary_by_row()`
+- `CellErrorMap.summary_by_code()`
+- `RowIssueMap.summary_by_row()`
+- `RowIssueMap.summary_by_code()`
 
 Avoid depending on implementation details such as:
 

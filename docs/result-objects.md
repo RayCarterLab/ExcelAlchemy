@@ -7,6 +7,8 @@ If you are new to the library, start with
 [`docs/getting-started.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md).
 If you want the stable public API boundaries, see
 [`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md).
+If you want copyable success / failure / header-invalid response shapes, see
+[`docs/api-response-cookbook.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md).
 
 ## Core Result Objects
 
@@ -22,6 +24,30 @@ You can import them from:
 from excelalchemy import ImportResult
 from excelalchemy.results import CellErrorMap, RowIssueMap
 ```
+
+## Error Payload Layers
+
+ExcelAlchemy keeps machine-readable metadata separate from ready-to-render
+messages.
+
+- `code`
+  Stable machine-readable identifier for frontend branching, filters, and
+  summary aggregation.
+- `message_key`
+  Optional i18n-oriented identifier when the error originated from a known
+  `MessageKey`.
+- `message`
+  Human-readable base message without workbook-coordinate decoration.
+- `display_message`
+  Human-readable message ready for UI rendering. For cell-level errors, this may
+  include the workbook field prefix such as `【Email】...`.
+
+Recommended usage:
+
+- use `code` for branching and grouping
+- use `message_key` for i18n-aware clients when present
+- use `message` for logs, plain APIs, or analytics
+- use `display_message` for UI lists, toasts, and workbook-adjacent feedback
 
 ## `ImportResult`
 
@@ -51,6 +77,36 @@ if result.result == 'SUCCESS':
     ...
 ```
 
+Useful helpers:
+
+- `is_success`
+- `is_header_invalid`
+- `is_data_invalid`
+- `to_api_payload()`
+
+Example payload:
+
+```json
+{
+  "result": "DATA_INVALID",
+  "is_success": false,
+  "is_header_invalid": false,
+  "is_data_invalid": true,
+  "summary": {
+    "success_count": 3,
+    "fail_count": 1,
+    "result_workbook_url": "memory://employee-import-result.xlsx"
+  },
+  "header_issues": {
+    "is_required_missing": false,
+    "missing_required": [],
+    "missing_primary": [],
+    "unrecognized": [],
+    "duplicated": []
+  }
+}
+```
+
 ## `CellErrorMap`
 
 `cell_error_map` stores workbook-coordinate cell-level failures.
@@ -67,6 +123,9 @@ Useful helpers:
 - `messages_at(row_index, column_index)`
 - `flatten()`
 - `records()`
+- `summary_by_field()`
+- `summary_by_row()`
+- `summary_by_code()`
 - `to_dict()`
 - `to_api_payload()`
 
@@ -83,16 +142,55 @@ Shape:
   "error_count": 2,
   "items": [
     {
+      "code": "valid_email_required",
+      "message_key": "valid_email_required",
       "row_index": 0,
+      "row_number_for_humans": 1,
       "column_index": 1,
+      "column_number_for_humans": 2,
+      "field_label": "Email",
+      "parent_label": null,
       "message": "Enter a valid email address, such as name@example.com",
-      "display_message": "Enter a valid email address, such as name@example.com"
+      "display_message": "【Email】Enter a valid email address, such as name@example.com"
     }
   ],
+  "summary": {
+    "by_field": [
+      {
+        "field_label": "Email",
+        "parent_label": null,
+        "unique_label": "Email",
+        "error_count": 1,
+        "row_indices": [0],
+        "row_numbers_for_humans": [1],
+        "codes": ["valid_email_required"]
+      }
+    ],
+    "by_row": [
+      {
+        "row_index": 0,
+        "row_number_for_humans": 1,
+        "error_count": 1,
+        "codes": ["valid_email_required"],
+        "field_labels": ["Email"],
+        "unique_labels": ["Email"]
+      }
+    ],
+    "by_code": [
+      {
+        "code": "valid_email_required",
+        "error_count": 1,
+        "row_indices": [0],
+        "row_numbers_for_humans": [1],
+        "unique_labels": ["Email"]
+      }
+    ]
+  },
   "by_row": {
     "0": {
       "1": [
         {
+          "code": "valid_email_required",
           "message": "Enter a valid email address, such as name@example.com"
         }
       ]
@@ -106,6 +204,7 @@ Use this when you need:
 - frontend field-level highlighting
 - API responses that point back to workbook coordinates
 - UI summaries that keep workbook and JSON feedback aligned
+- aggregated views by field, row, or machine-readable code
 
 ## `RowIssueMap`
 
@@ -125,6 +224,8 @@ Useful helpers:
 - `numbered_messages_for_row(row_index)`
 - `flatten()`
 - `records()`
+- `summary_by_row()`
+- `summary_by_code()`
 - `to_dict()`
 - `to_api_payload()`
 
@@ -148,7 +249,7 @@ For a backend endpoint, a practical response shape is:
 result = await alchemy.import_data('employees.xlsx', 'employee-import-result.xlsx')
 
 response = {
-    'result': result.model_dump(),
+    'result': result.to_api_payload(),
     'cell_errors': alchemy.cell_error_map.to_api_payload(),
     'row_errors': alchemy.row_error_map.to_api_payload(),
 }
@@ -159,6 +260,13 @@ This gives you:
 - a stable top-level import summary
 - row-level summaries for tables or toast messages
 - cell-level coordinates for fine-grained UI rendering
+- machine-readable `code` fields for frontend branching
+- optional `message_key` fields for i18n-aware clients
+- human-friendly row numbers through `row_number_for_humans`
+
+For concrete success, data-invalid, and header-invalid API response examples,
+see
+[`docs/api-response-cookbook.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md).
 
 ## Workbook Feedback vs API Feedback
 
@@ -179,5 +287,6 @@ This is especially useful when:
 
 - [`docs/getting-started.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md)
 - [`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md)
+- [`docs/api-response-cookbook.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md)
 - [`examples/employee_import_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/employee_import_workflow.py)
 - [`examples/fastapi_reference/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md)

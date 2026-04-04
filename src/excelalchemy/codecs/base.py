@@ -19,6 +19,9 @@ type WorkbookInputValue = Any
 type WorkbookDisplayValue = Any
 type NormalizedImportValue = Any
 
+CODEC_LOGGER_NAME = 'excelalchemy.codecs'
+codec_logger = logging.getLogger(CODEC_LOGGER_NAME)
+
 
 def _summarize_exception(exc: Exception) -> str:
     details: list[str] = []
@@ -43,20 +46,29 @@ def _summarize_exception(exc: Exception) -> str:
     return exc.__class__.__name__
 
 
+def _fallback_reason(*, exc: Exception | None = None, reason: str | None = None) -> str:
+    if reason:
+        return reason
+    if exc is not None:
+        return _summarize_exception(exc)
+    return 'No additional details'
+
+
 def log_codec_parse_fallback(
     codec_name: str,
     value: object,
     *,
     field_label: str | None = None,
-    exc: Exception,
+    exc: Exception | None = None,
+    reason: str | None = None,
 ) -> None:
     field_context = f' for field "{field_label}"' if field_label else ''
-    logging.warning(
+    codec_logger.warning(
         'Codec %s could not parse workbook input%s; keeping the original value %r. Reason: %s',
         codec_name,
         field_context,
         value,
-        _summarize_exception(exc),
+        _fallback_reason(exc=exc, reason=reason),
     )
 
 
@@ -65,15 +77,43 @@ def log_codec_render_fallback(
     value: object,
     *,
     field_label: str | None = None,
-    exc: Exception,
+    exc: Exception | None = None,
+    reason: str | None = None,
 ) -> None:
     field_context = f' for field "{field_label}"' if field_label else ''
-    logging.warning(
+    codec_logger.warning(
         'Codec %s could not format workbook value%s; returning %r as-is. Reason: %s',
         codec_name,
         field_context,
         value,
-        _summarize_exception(exc),
+        _fallback_reason(exc=exc, reason=reason),
+    )
+
+
+def log_codec_option_resolution_fallback(
+    codec_name: str,
+    value: object,
+    *,
+    field_label: str | None = None,
+    exc: Exception | None = None,
+    reason: str | None = None,
+) -> None:
+    field_context = f' for field "{field_label}"' if field_label else ''
+    codec_logger.warning(
+        'Codec %s could not resolve a configured option%s; returning %r as-is. Reason: %s',
+        codec_name,
+        field_context,
+        value,
+        _fallback_reason(exc=exc, reason=reason),
+    )
+
+
+def log_codec_missing_options(codec_name: str, *, field_label: str | None = None) -> None:
+    field_context = f' for field "{field_label}"' if field_label else ''
+    codec_logger.warning(
+        'Codec %s is missing configured options%s; workbook comments and validation may be incomplete.',
+        codec_name,
+        field_context,
     )
 
 
