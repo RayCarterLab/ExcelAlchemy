@@ -115,6 +115,7 @@ jobs:
           uv run python scripts/smoke_examples.py
           uv run python scripts/generate_example_output_assets.py
           uv run python scripts/smoke_docs_assets.py
+          uv run python scripts/smoke_api_payload_snapshot.py
 
       - name: Upload coverage artifact
         if: always() && matrix.python-version == '3.14'

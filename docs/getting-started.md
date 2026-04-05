@@ -9,6 +9,8 @@ If you want the full public surface and compatibility boundaries, see
 If you want to understand the result objects and how to surface them through an
 API, see
 [`docs/result-objects.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md).
+If you want a role-based reading path, see
+[`docs/integration-roadmap.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-roadmap.md).
 
 ## 1. Install
 

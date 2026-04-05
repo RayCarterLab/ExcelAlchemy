@@ -30,7 +30,12 @@ OPTIONAL_EXAMPLES: dict[str, tuple[tuple[str, bool], tuple[str, ...]]] = {
 }
 
 REQUIRED_MODULE_EXAMPLES: dict[str, tuple[str, ...]] = {
-    'examples.fastapi_reference.app': ('FastAPI reference project completed', '/employee-imports'),
+    'examples.fastapi_reference.app': (
+        'FastAPI reference project completed',
+        '/employee-imports',
+        'Envelope sections:',
+        'Data sections:',
+    ),
 }
 
 
@@ -92,14 +97,25 @@ def _run_fastapi_reference_http_smoke() -> None:
         raise AssertionError('FastAPI reference import endpoint did not return HTTP 200')
 
     payload = import_response.json()
-    if payload['result']['result'] != 'SUCCESS':
+    if payload['ok'] is not True:
+        raise AssertionError('FastAPI reference import did not return a success envelope')
+    if payload['data']['result']['result'] != 'SUCCESS':
         raise AssertionError('FastAPI reference import did not return SUCCESS')
-    if payload['request']['tenant_id'] != 'tenant-smoke':
+    if payload['data']['request']['tenant_id'] != 'tenant-smoke':
         raise AssertionError('FastAPI reference request echo payload is incorrect')
-    if payload['cell_errors']['error_count'] != 0:
+    if payload['data']['cell_errors']['error_count'] != 0:
         raise AssertionError('FastAPI reference success payload should not contain cell errors')
-    if payload['row_errors']['error_count'] != 0:
+    if payload['data']['row_errors']['error_count'] != 0:
         raise AssertionError('FastAPI reference success payload should not contain row errors')
+
+    missing_file_response = client.post('/employee-imports', data={'tenant_id': 'tenant-smoke'})
+    if missing_file_response.status_code != 400:
+        raise AssertionError('FastAPI reference missing-file path did not return HTTP 400')
+    missing_file_payload = missing_file_response.json()
+    if missing_file_payload['ok'] is not False:
+        raise AssertionError('FastAPI reference missing-file path did not return an error envelope')
+    if missing_file_payload['error']['code'] != 'file_required':
+        raise AssertionError('FastAPI reference missing-file error code is incorrect')
     print('Smoke passed: examples.fastapi_reference.http')
 
 

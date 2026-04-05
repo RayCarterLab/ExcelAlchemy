@@ -2,7 +2,6 @@
 
 import copy
 import datetime
-import logging
 from collections.abc import Callable, Mapping, Set
 from dataclasses import dataclass, field, replace
 from functools import cached_property
@@ -24,6 +23,10 @@ from excelalchemy._primitives.constants import (
     DateFormat,
     IntStr,
     Option,
+)
+from excelalchemy._primitives.diagnostics import (
+    log_metadata_large_option_set,
+    log_metadata_missing_option_id,
 )
 from excelalchemy._primitives.identity import Key, Label, OptionId, UniqueKey, UniqueLabel
 from excelalchemy.codecs.base import ExcelFieldCodec, UndefinedFieldCodec
@@ -188,22 +191,14 @@ class WorkbookPresentationMeta:
         if self.options is None:
             return {}
         if len(self.options) > MAX_OPTIONS_COUNT:
-            logging.warning(
-                'Field "%s" defines %s options; please confirm that this is intentional because options are not meant for large datasets',
-                field_label,
-                len(self.options),
-            )
+            log_metadata_large_option_set(field_label=str(field_label), option_count=len(self.options))
         return {option.id: option for option in self.options}
 
     def options_name_map(self, *, field_label: Label) -> dict[str, Option]:
         if self.options is None:
             return {}
         if len(self.options) > MAX_OPTIONS_COUNT:
-            logging.warning(
-                'Field "%s" defines %s options; please confirm that this is intentional because options are not meant for large datasets',
-                field_label,
-                len(self.options),
-            )
+            log_metadata_large_option_set(field_label=str(field_label), option_count=len(self.options))
         return {option.name: option for option in self.options}
 
     def exchange_option_ids_to_names(
@@ -220,7 +215,7 @@ class WorkbookPresentationMeta:
             try:
                 option_names.append(option_id_map[normalized_id].name)
             except KeyError:
-                logging.warning('Could not find option id %s; returning the original value', normalized_id)
+                log_metadata_missing_option_id(option_id=str(normalized_id), field_label=str(field_label))
                 option_names.append(normalized_id)
 
         return option_names

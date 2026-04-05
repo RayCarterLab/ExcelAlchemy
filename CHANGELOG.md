@@ -4,6 +4,44 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog and versioned according to PEP 440.
 
+## [2.2.8] - 2026-04-05
+
+This release continues the stable 2.x line with a clearer integration reading
+path, stronger API payload smoke verification, and a more production-shaped
+reference-app release flow.
+
+### Added
+
+- Added `docs/integration-roadmap.md` to give new adopters a role-based reading
+  path for first-time integration, backend APIs, frontend error rendering, and
+  migration work
+- Added `scripts/smoke_api_payload_snapshot.py` and a generated
+  `import-failure-api-payload.json` snapshot under `files/example-outputs/`
+
+### Changed
+
+- Expanded release smoke so wheel and source-distribution verification now
+  compare a stable import-failure API payload snapshot instead of only checking
+  ad hoc fields
+- Extended release verification so installed-package smoke runs the
+  `examples.fastapi_reference.app` demo directly after dependency installation
+- Cross-linked the new integration roadmap from onboarding, API-facing, and
+  PyPI-facing docs
+
+### Compatibility Notes
+
+- No public import or export workflow API was removed in this release
+- `ImportResult`, `CellErrorMap`, and `RowIssueMap` remain the stable public
+  result objects for 2.x integrations
+- `storage=...` remains the recommended 2.x backend configuration path
+
+### Release Summary
+
+- new users now have a clearer “what to read first” path
+- release smoke now checks a stable import-failure payload shape
+- installed-package verification exercises the FastAPI reference app more
+  directly
+
 ## [2.2.7] - 2026-04-04
 
 This release continues the stable 2.x line with stronger API-facing result

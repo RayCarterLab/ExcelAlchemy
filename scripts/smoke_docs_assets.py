@@ -16,6 +16,11 @@ REQUIRED_DOC_CHECKS: dict[Path, tuple[str, ...]] = {
         'docs/api-response-cookbook.md',
         'display_message',
     ),
+    DOCS_DIR / 'integration-roadmap.md': (
+        'If You Are Integrating ExcelAlchemy For The First Time',
+        'If You Are Building A Backend API',
+        'If You Are Building Frontend Error Displays',
+    ),
     DOCS_DIR / 'examples-showcase.md': (
         'files/example-outputs/employee-import-workflow.txt',
         'files/example-outputs/create-or-update-import.txt',
@@ -33,6 +38,7 @@ REQUIRED_ASSETS = (
     'custom-storage.txt',
     'export-workflow.txt',
     'fastapi-reference.txt',
+    'import-failure-api-payload.json',
 )
 
 

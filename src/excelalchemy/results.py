@@ -152,6 +152,30 @@ class CellErrorMap(dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]]):
     def messages_at(self, row_index: RowIndex | int, column_index: ColumnIndex | int) -> tuple[str, ...]:
         return tuple(str(error) for error in self.at(row_index, column_index))
 
+    def field_labels(self) -> tuple[str, ...]:
+        return tuple(sorted({str(error.label) for error in self.flatten()}))
+
+    def parent_labels(self) -> tuple[str, ...]:
+        return tuple(sorted({str(error.parent_label) for error in self.flatten() if error.parent_label is not None}))
+
+    def unique_labels(self) -> tuple[str, ...]:
+        return tuple(sorted({str(error.unique_label) for error in self.flatten()}))
+
+    def codes(self) -> tuple[str, ...]:
+        return tuple(sorted({error.code for error in self.flatten()}))
+
+    def row_indices(self) -> tuple[RowIndex, ...]:
+        return tuple(sorted(self.keys()))
+
+    def row_numbers_for_humans(self) -> tuple[int, ...]:
+        return tuple(_row_number_for_humans(row_index) for row_index in self.row_indices())
+
+    def column_indices(self) -> tuple[ColumnIndex, ...]:
+        return tuple(sorted({column_index for row in self.values() for column_index in row}))
+
+    def column_numbers_for_humans(self) -> tuple[int, ...]:
+        return tuple(_column_number_for_humans(column_index) for column_index in self.column_indices())
+
     def flatten(self) -> tuple[ExcelCellError, ...]:
         return tuple(error for row in self.values() for errors in row.values() for error in errors)
 
@@ -223,6 +247,32 @@ class CellErrorMap(dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]]):
             )
         return tuple(sorted(summaries, key=lambda summary: summary.code))
 
+    def grouped_messages_by_field(self) -> dict[str, tuple[str, ...]]:
+        return {
+            summary.unique_label: tuple(
+                record.error.display_message
+                for record in self.records()
+                if str(record.error.unique_label) == summary.unique_label
+            )
+            for summary in self.summary_by_field()
+        }
+
+    def grouped_messages_by_row(self) -> dict[int, tuple[str, ...]]:
+        return {
+            int(summary.row_index): tuple(
+                record.error.display_message for record in self.records() if record.row_index == summary.row_index
+            )
+            for summary in self.summary_by_row()
+        }
+
+    def grouped_messages_by_code(self) -> dict[str, tuple[str, ...]]:
+        return {
+            summary.code: tuple(
+                record.error.display_message for record in self.records() if record.error.code == summary.code
+            )
+            for summary in self.summary_by_code()
+        }
+
     def to_dict(self) -> dict[int, dict[int, list[dict[str, object]]]]:
         return {
             int(row_index): {
@@ -236,6 +286,23 @@ class CellErrorMap(dict[RowIndex, dict[ColumnIndex, list[ExcelCellError]]]):
             'error_count': self.error_count,
             'items': [record.to_dict() for record in self.records()],
             'by_row': self.to_dict(),
+            'facets': {
+                'field_labels': list(self.field_labels()),
+                'parent_labels': list(self.parent_labels()),
+                'unique_labels': list(self.unique_labels()),
+                'codes': list(self.codes()),
+                'row_numbers_for_humans': list(self.row_numbers_for_humans()),
+                'column_numbers_for_humans': list(self.column_numbers_for_humans()),
+            },
+            'grouped': {
+                'messages_by_field': {
+                    key: list(messages) for key, messages in self.grouped_messages_by_field().items()
+                },
+                'messages_by_row': {
+                    str(row_index): list(messages) for row_index, messages in self.grouped_messages_by_row().items()
+                },
+                'messages_by_code': {key: list(messages) for key, messages in self.grouped_messages_by_code().items()},
+            },
             'summary': {
                 'by_field': [summary.to_dict() for summary in self.summary_by_field()],
                 'by_row': [summary.to_dict() for summary in self.summary_by_row()],
@@ -266,6 +333,32 @@ class RowIssueMap(dict[RowIndex, list[RowIssue]]):
 
     def messages_for_row(self, row_index: RowIndex | int) -> tuple[str, ...]:
         return tuple(str(error) for error in self.at(row_index))
+
+    def field_labels(self) -> tuple[str, ...]:
+        return tuple(sorted({str(error.label) for error in self.flatten() if isinstance(error, ExcelCellError)}))
+
+    def parent_labels(self) -> tuple[str, ...]:
+        return tuple(
+            sorted(
+                {
+                    str(error.parent_label)
+                    for error in self.flatten()
+                    if isinstance(error, ExcelCellError) and error.parent_label is not None
+                }
+            )
+        )
+
+    def unique_labels(self) -> tuple[str, ...]:
+        return tuple(sorted({str(error.unique_label) for error in self.flatten() if isinstance(error, ExcelCellError)}))
+
+    def codes(self) -> tuple[str, ...]:
+        return tuple(sorted({error.code for error in self.flatten()}))
+
+    def row_indices(self) -> tuple[RowIndex, ...]:
+        return tuple(sorted(self.keys()))
+
+    def row_numbers_for_humans(self) -> tuple[int, ...]:
+        return tuple(_row_number_for_humans(row_index) for row_index in self.row_indices())
 
     def numbered_messages_for_row(self, row_index: RowIndex | int) -> tuple[str, ...]:
         return self.numbered_messages(self.at(row_index))
@@ -318,6 +411,22 @@ class RowIssueMap(dict[RowIndex, list[RowIssue]]):
             )
         return tuple(sorted(summaries, key=lambda summary: summary.code))
 
+    def grouped_messages_by_row(self) -> dict[int, tuple[str, ...]]:
+        return {
+            int(summary.row_index): tuple(
+                record.error.display_message for record in self.records() if record.row_index == summary.row_index
+            )
+            for summary in self.summary_by_row()
+        }
+
+    def grouped_messages_by_code(self) -> dict[str, tuple[str, ...]]:
+        return {
+            summary.code: tuple(
+                record.error.display_message for record in self.records() if record.error.code == summary.code
+            )
+            for summary in self.summary_by_code()
+        }
+
     def to_dict(self) -> dict[int, list[dict[str, object]]]:
         return {int(row_index): [error.to_dict() for error in errors] for row_index, errors in self.items()}
 
@@ -326,6 +435,19 @@ class RowIssueMap(dict[RowIndex, list[RowIssue]]):
             'error_count': self.error_count,
             'items': [record.to_dict() for record in self.records()],
             'by_row': self.to_dict(),
+            'facets': {
+                'field_labels': list(self.field_labels()),
+                'parent_labels': list(self.parent_labels()),
+                'unique_labels': list(self.unique_labels()),
+                'codes': list(self.codes()),
+                'row_numbers_for_humans': list(self.row_numbers_for_humans()),
+            },
+            'grouped': {
+                'messages_by_row': {
+                    str(row_index): list(messages) for row_index, messages in self.grouped_messages_by_row().items()
+                },
+                'messages_by_code': {key: list(messages) for key, messages in self.grouped_messages_by_code().items()},
+            },
             'summary': {
                 'by_row': [summary.to_dict() for summary in self.summary_by_row()],
                 'by_code': [summary.to_dict() for summary in self.summary_by_code()],

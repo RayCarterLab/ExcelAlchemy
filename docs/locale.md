@@ -2,12 +2,27 @@
 
 ## Scope
 
-ExcelAlchemy currently distinguishes between two kinds of language output:
+ExcelAlchemy currently distinguishes between three kinds of language output:
 
+- developer diagnostics, intended for logs and runtime troubleshooting
 - runtime messages, intended for Python developers and integrators
 - workbook display text, intended for spreadsheet users
 
-These two layers do not currently share the same locale policy.
+These layers do not currently share the same locale policy.
+
+## Developer Diagnostics Policy
+
+- Developer diagnostics are emitted through named loggers such as:
+  - `excelalchemy.codecs`
+  - `excelalchemy.runtime`
+  - `excelalchemy.metadata`
+- Stability policy: diagnostics are intentionally standardized in English for the
+  2.x line
+- Intended audience: backend developers, operators, and maintainers
+
+Developer diagnostics are not the same surface as API payloads or workbook-facing
+messages. They are designed for logs, traces, and troubleshooting rather than
+end-user rendering.
 
 ## Runtime Message Policy
 
@@ -35,6 +50,7 @@ Workbook display locale affects user-facing spreadsheet text such as:
 
 ## Fallback Rules
 
+- Developer diagnostics fall back to English
 - Runtime messages fall back to the runtime default locale: `en`
 - Workbook display messages fall back to the workbook display default locale: `zh-CN`
 
@@ -67,7 +83,8 @@ alchemy_en = ExcelAlchemy(ImporterConfig(ImporterModel, creator=create_func, loc
 
 The i18n roadmap remains intentionally incremental:
 
-1. keep runtime messages consistently English
-2. keep workbook display locale explicit and stable
-3. add new workbook locales additively
-4. only expand runtime locale support when there is a clear maintenance plan
+1. keep developer diagnostics consistently English
+2. keep runtime messages consistently English
+3. keep workbook display locale explicit and stable
+4. add new workbook locales additively
+5. only expand runtime locale support when there is a clear maintenance plan

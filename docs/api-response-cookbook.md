@@ -37,6 +37,12 @@ Within each error item:
 - use `message` for logs or plain-text APIs
 - use `display_message` when you want ready-to-render UI text
 
+Developer diagnostics are intentionally separate from these payload fields.
+Application logs use named loggers such as `excelalchemy.codecs`,
+`excelalchemy.runtime`, and `excelalchemy.metadata`; API responses should rely
+on `code`, `message_key`, `message`, and `display_message` instead of raw log
+output.
+
 ## 1. Success Response
 
 Use this when the import completed without header or data failures.
