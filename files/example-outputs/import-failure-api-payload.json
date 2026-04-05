@@ -1,0 +1,231 @@
+{
+  "cell_errors": {
+    "by_row": {
+      "0": {
+        "3": [
+          {
+            "code": "ExcelCellError",
+            "display_message": "\u3010Age\u3011Invalid input; enter a number.",
+            "field_label": "Age",
+            "label": "Age",
+            "message": "Invalid input; enter a number.",
+            "parent_label": null,
+            "type": "ExcelCellError",
+            "unique_label": "Age"
+          }
+        ]
+      }
+    },
+    "error_count": 1,
+    "facets": {
+      "codes": [
+        "ExcelCellError"
+      ],
+      "column_numbers_for_humans": [
+        4
+      ],
+      "field_labels": [
+        "Age"
+      ],
+      "parent_labels": [],
+      "row_numbers_for_humans": [
+        1
+      ],
+      "unique_labels": [
+        "Age"
+      ]
+    },
+    "grouped": {
+      "messages_by_code": {
+        "ExcelCellError": [
+          "\u3010Age\u3011Invalid input; enter a number."
+        ]
+      },
+      "messages_by_field": {
+        "Age": [
+          "\u3010Age\u3011Invalid input; enter a number."
+        ]
+      },
+      "messages_by_row": {
+        "0": [
+          "\u3010Age\u3011Invalid input; enter a number."
+        ]
+      }
+    },
+    "items": [
+      {
+        "code": "ExcelCellError",
+        "column_index": 3,
+        "column_number_for_humans": 4,
+        "display_message": "\u3010Age\u3011Invalid input; enter a number.",
+        "field_label": "Age",
+        "label": "Age",
+        "message": "Invalid input; enter a number.",
+        "parent_label": null,
+        "row_index": 0,
+        "row_number_for_humans": 1,
+        "type": "ExcelCellError",
+        "unique_label": "Age"
+      }
+    ],
+    "summary": {
+      "by_code": [
+        {
+          "code": "ExcelCellError",
+          "error_count": 1,
+          "row_indices": [
+            0
+          ],
+          "row_numbers_for_humans": [
+            1
+          ],
+          "unique_labels": [
+            "Age"
+          ]
+        }
+      ],
+      "by_field": [
+        {
+          "codes": [
+            "ExcelCellError"
+          ],
+          "error_count": 1,
+          "field_label": "Age",
+          "parent_label": null,
+          "row_indices": [
+            0
+          ],
+          "row_numbers_for_humans": [
+            1
+          ],
+          "unique_label": "Age"
+        }
+      ],
+      "by_row": [
+        {
+          "codes": [
+            "ExcelCellError"
+          ],
+          "error_count": 1,
+          "field_labels": [
+            "Age"
+          ],
+          "row_index": 0,
+          "row_number_for_humans": 1,
+          "unique_labels": [
+            "Age"
+          ]
+        }
+      ]
+    }
+  },
+  "result": {
+    "header_issues": {
+      "duplicated": [],
+      "is_required_missing": false,
+      "missing_primary": [],
+      "missing_required": [],
+      "unrecognized": []
+    },
+    "is_data_invalid": true,
+    "is_header_invalid": false,
+    "is_success": false,
+    "result": "DATA_INVALID",
+    "summary": {
+      "fail_count": 1,
+      "result_workbook_url": "memory://smoke-invalid-result.xlsx",
+      "success_count": 0
+    }
+  },
+  "row_errors": {
+    "by_row": {
+      "0": [
+        {
+          "code": "ExcelCellError",
+          "display_message": "\u3010Age\u3011Invalid input; enter a number.",
+          "field_label": "Age",
+          "label": "Age",
+          "message": "Invalid input; enter a number.",
+          "parent_label": null,
+          "type": "ExcelCellError",
+          "unique_label": "Age"
+        }
+      ]
+    },
+    "error_count": 1,
+    "facets": {
+      "codes": [
+        "ExcelCellError"
+      ],
+      "field_labels": [
+        "Age"
+      ],
+      "parent_labels": [],
+      "row_numbers_for_humans": [
+        1
+      ],
+      "unique_labels": [
+        "Age"
+      ]
+    },
+    "grouped": {
+      "messages_by_code": {
+        "ExcelCellError": [
+          "\u3010Age\u3011Invalid input; enter a number."
+        ]
+      },
+      "messages_by_row": {
+        "0": [
+          "\u3010Age\u3011Invalid input; enter a number."
+        ]
+      }
+    },
+    "items": [
+      {
+        "code": "ExcelCellError",
+        "display_message": "\u3010Age\u3011Invalid input; enter a number.",
+        "field_label": "Age",
+        "label": "Age",
+        "message": "Invalid input; enter a number.",
+        "parent_label": null,
+        "row_index": 0,
+        "row_number_for_humans": 1,
+        "type": "ExcelCellError",
+        "unique_label": "Age"
+      }
+    ],
+    "summary": {
+      "by_code": [
+        {
+          "code": "ExcelCellError",
+          "error_count": 1,
+          "row_indices": [
+            0
+          ],
+          "row_numbers_for_humans": [
+            1
+          ],
+          "unique_labels": [
+            "Age"
+          ]
+        }
+      ],
+      "by_row": [
+        {
+          "codes": [
+            "ExcelCellError"
+          ],
+          "error_count": 1,
+          "field_labels": [
+            "Age"
+          ],
+          "row_index": 0,
+          "row_number_for_humans": 1,
+          "unique_labels": [
+            "Age"
+          ]
+        }
+      ]
+    }
+  }
+}

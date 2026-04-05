@@ -6,6 +6,8 @@ ones should be treated as internal implementation details.
 
 If you want the quickest path into the library, start with
 [`docs/getting-started.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md).
+If you want a role-based reading path, see
+[`docs/integration-roadmap.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-roadmap.md).
 If you want concrete repository examples, see
 [`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)
 and

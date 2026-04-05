@@ -49,6 +49,10 @@ Recommended usage:
 - use `message` for logs, plain APIs, or analytics
 - use `display_message` for UI lists, toasts, and workbook-adjacent feedback
 
+Developer diagnostics are a separate layer. Warning and info logs are emitted
+through named loggers such as `excelalchemy.codecs`, `excelalchemy.runtime`, and
+`excelalchemy.metadata`, and should not be treated as API payload text.
+
 ## `ImportResult`
 
 `ImportResult` is the high-level summary of one import run.
@@ -121,6 +125,9 @@ Useful helpers:
 
 - `at(row_index, column_index)`
 - `messages_at(row_index, column_index)`
+- `field_labels()`
+- `codes()`
+- `row_numbers_for_humans()`
 - `flatten()`
 - `records()`
 - `summary_by_field()`
@@ -133,6 +140,8 @@ Example:
 
 ```python
 payload = alchemy.cell_error_map.to_api_payload()
+field_labels = alchemy.cell_error_map.field_labels()
+codes = alchemy.cell_error_map.codes()
 ```
 
 Shape:
@@ -186,6 +195,31 @@ Shape:
       }
     ]
   },
+  "facets": {
+    "field_labels": ["Email"],
+    "parent_labels": [],
+    "unique_labels": ["Email"],
+    "codes": ["valid_email_required"],
+    "row_numbers_for_humans": [1],
+    "column_numbers_for_humans": [2]
+  },
+  "grouped": {
+    "messages_by_field": {
+      "Email": [
+        "【Email】Enter a valid email address, such as name@example.com"
+      ]
+    },
+    "messages_by_row": {
+      "0": [
+        "【Email】Enter a valid email address, such as name@example.com"
+      ]
+    },
+    "messages_by_code": {
+      "valid_email_required": [
+        "【Email】Enter a valid email address, such as name@example.com"
+      ]
+    }
+  },
   "by_row": {
     "0": {
       "1": [
@@ -205,6 +239,7 @@ Use this when you need:
 - API responses that point back to workbook coordinates
 - UI summaries that keep workbook and JSON feedback aligned
 - aggregated views by field, row, or machine-readable code
+- direct field/code/row facets without doing a second client-side pass
 
 ## `RowIssueMap`
 
@@ -222,6 +257,9 @@ Useful helpers:
 - `at(row_index)`
 - `messages_for_row(row_index)`
 - `numbered_messages_for_row(row_index)`
+- `field_labels()`
+- `codes()`
+- `row_numbers_for_humans()`
 - `flatten()`
 - `records()`
 - `summary_by_row()`
@@ -240,6 +278,7 @@ Use this when you need:
 - one-line row summaries in an admin UI
 - numbered failure lists for APIs
 - a simpler summary than cell coordinates alone
+- direct grouped row/code message collections for a frontend table or sidebar
 
 ## Recommended API Response Pattern
 

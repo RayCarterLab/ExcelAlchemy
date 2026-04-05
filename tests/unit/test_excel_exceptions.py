@@ -171,6 +171,25 @@ class TestExcelExceptions(BaseTestCase):
                     ]
                 }
             },
+            'facets': {
+                'field_labels': ['邮箱'],
+                'parent_labels': [],
+                'unique_labels': ['邮箱'],
+                'codes': ['ExcelCellError'],
+                'row_numbers_for_humans': [1],
+                'column_numbers_for_humans': [4],
+            },
+            'grouped': {
+                'messages_by_field': {
+                    '邮箱': ['【邮箱】Enter a valid email address'],
+                },
+                'messages_by_row': {
+                    '0': ['【邮箱】Enter a valid email address'],
+                },
+                'messages_by_code': {
+                    'ExcelCellError': ['【邮箱】Enter a valid email address'],
+                },
+            },
             'summary': {
                 'by_field': [
                     {
@@ -209,6 +228,9 @@ class TestExcelExceptions(BaseTestCase):
         assert field_summary[0].to_dict()['unique_label'] == '邮箱'
         assert error_map.summary_by_code()[0].code == 'ExcelCellError'
         assert error_map.summary_by_row()[0].row_number_for_humans == 1
+        assert error_map.field_labels() == ('邮箱',)
+        assert error_map.codes() == ('ExcelCellError',)
+        assert error_map.row_numbers_for_humans() == (1,)
 
     async def test_row_issue_map_supports_row_access_and_numbered_messages(self):
         issue_map = RowIssueMap()
@@ -297,6 +319,22 @@ class TestExcelExceptions(BaseTestCase):
                     },
                 ]
             },
+            'facets': {
+                'field_labels': ['邮箱'],
+                'parent_labels': [],
+                'unique_labels': ['邮箱'],
+                'codes': ['ExcelCellError', 'ExcelRowError'],
+                'row_numbers_for_humans': [1],
+            },
+            'grouped': {
+                'messages_by_row': {
+                    '0': ['【邮箱】Enter a valid email address', 'Combination invalid'],
+                },
+                'messages_by_code': {
+                    'ExcelCellError': ['【邮箱】Enter a valid email address'],
+                    'ExcelRowError': ['Combination invalid'],
+                },
+            },
             'summary': {
                 'by_row': [
                     {
@@ -328,3 +366,6 @@ class TestExcelExceptions(BaseTestCase):
         }
         assert issue_map.summary_by_row()[0].error_count == 2
         assert [summary.code for summary in issue_map.summary_by_code()] == ['ExcelCellError', 'ExcelRowError']
+        assert issue_map.field_labels() == ('邮箱',)
+        assert issue_map.codes() == ('ExcelCellError', 'ExcelRowError')
+        assert issue_map.row_numbers_for_humans() == (1,)

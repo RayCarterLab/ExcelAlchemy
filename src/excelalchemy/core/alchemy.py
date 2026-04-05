@@ -1,4 +1,3 @@
-import logging
 from collections.abc import Sequence
 from typing import cast
 
@@ -7,6 +6,12 @@ from pydantic import BaseModel
 from excelalchemy._primitives.constants import (
     REASON_COLUMN_KEY,
     RESULT_COLUMN_KEY,
+)
+from excelalchemy._primitives.diagnostics import (
+    log_runtime_context_replacement,
+    log_runtime_export_requested_in_import_mode,
+    log_runtime_exporter_inference,
+    log_runtime_ignoring_unrecognized_export_keys,
 )
 from excelalchemy._primitives.header_models import ExcelHeader
 from excelalchemy._primitives.identity import DataUrlStr, Label, UniqueKey, UniqueLabel, UrlStr
@@ -174,7 +179,7 @@ class ExcelAlchemy[
 
     def add_context(self, context: ContextT) -> None:
         if self._context is not None:
-            logging.warning('An existing conversion context is being replaced')
+            log_runtime_context_replacement()
         self._context = context
         if self._last_import_session is not None:
             self._last_import_session.context = context
@@ -263,10 +268,10 @@ class ExcelAlchemy[
             if self.config.schema_options.create_importer_model and self.config.schema_options.update_importer_model:
                 raise ConfigError(msg(MessageKey.EXPORTER_MODEL_INFERENCE_CONFLICT))
             if self.config.schema_options.create_importer_model:
-                logging.info('Inferring exporter_model from create_importer_model')
+                log_runtime_exporter_inference(source='create_importer_model')
                 return cast(type[ExportModelT], self.config.schema_options.create_importer_model)
             if self.config.schema_options.update_importer_model:
-                logging.info('Inferring exporter_model from update_importer_model')
+                log_runtime_exporter_inference(source='update_importer_model')
                 return cast(type[ExportModelT], self.config.schema_options.update_importer_model)
             raise ConfigError(msg(MessageKey.EXPORTER_MODEL_CANNOT_BE_INFERRED))
 
@@ -285,7 +290,7 @@ class ExcelAlchemy[
         self, data: list[ExportRowPayload], keys: Sequence[str] | None = None
     ) -> tuple[WorksheetTable, bool]:
         if self.excel_mode == ExcelMode.IMPORT:
-            logging.info('Export requested while configured in import mode; continuing with exporter_model inference')
+            log_runtime_export_requested_in_import_mode()
 
         input_keys = (
             list(keys)
@@ -298,9 +303,7 @@ class ExcelAlchemy[
         )
         model_keys = get_model_field_names(self.exporter_model)
         if unrecognized := (set(input_keys) - set(model_keys)):
-            logging.warning(
-                'Ignoring keys not present in the exporter model: %s (model keys: %s)', unrecognized, model_keys
-            )
+            log_runtime_ignoring_unrecognized_export_keys(unrecognized=unrecognized, model_keys=model_keys)
 
         selected_keys = self._select_output_excel_keys(list(set(input_keys).intersection(set(model_keys))))
         has_merged_header = self.has_merged_header(selected_keys)

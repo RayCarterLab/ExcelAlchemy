@@ -72,6 +72,23 @@ class TestResultContracts:
             },
         }
 
+    def test_import_result_status_helpers_remain_consistent(self):
+        success = ImportResult(result=ValidateResult.SUCCESS)
+        header_invalid = ImportResult(result=ValidateResult.HEADER_INVALID)
+        data_invalid = ImportResult(result=ValidateResult.DATA_INVALID)
+
+        assert success.is_success is True
+        assert success.is_header_invalid is False
+        assert success.is_data_invalid is False
+
+        assert header_invalid.is_success is False
+        assert header_invalid.is_header_invalid is True
+        assert header_invalid.is_data_invalid is False
+
+        assert data_invalid.is_success is False
+        assert data_invalid.is_header_invalid is False
+        assert data_invalid.is_data_invalid is True
+
     def test_import_result_to_api_payload_for_header_invalid_case(self):
         result = ImportResult(
             result=ValidateResult.HEADER_INVALID,

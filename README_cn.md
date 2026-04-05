@@ -1,11 +1,11 @@
 # ExcelAlchemy
 
-[English README](./README.md) · [项目说明](./ABOUT.md) · [快速开始](./docs/getting-started.md) · [结果对象](./docs/result-objects.md) · [架构文档](./docs/architecture.md) · [Locale Policy](./docs/locale.md) · [Changelog](./CHANGELOG.md) · [迁移说明](./MIGRATIONS.md)
+[English README](./README.md) · [项目说明](./ABOUT.md) · [快速开始](./docs/getting-started.md) · [接入路线图](./docs/integration-roadmap.md) · [结果对象](./docs/result-objects.md) · [架构文档](./docs/architecture.md) · [Locale Policy](./docs/locale.md) · [Changelog](./CHANGELOG.md) · [迁移说明](./MIGRATIONS.md)
 
 ExcelAlchemy 是一个面向 Excel 导入导出的 schema-first Python 库。
 它的核心思路不是“读写表格文件”，而是“把 Excel 当成一种带约束的业务契约”。
 
-当前稳定发布版本是 `2.2.7`，它在稳定的 ExcelAlchemy 2.x 线上继续加强了 API 结果载荷、FastAPI 参考应用、安装后真实可用的 release smoke 验证，以及更一致的 codec 诊断信息。
+当前稳定发布版本是 `2.2.8`，它在稳定的 ExcelAlchemy 2.x 线上继续加强了接入路线图、失败导入 API 载荷的 smoke 校验，以及对 FastAPI 参考应用的安装后真实可用验证。
 
 你用 Pydantic 模型定义结构，用 `FieldMeta` 定义 Excel 元数据，用显式的导入/导出流程去完成模板生成、数据校验、错误回写和后端集成。
 

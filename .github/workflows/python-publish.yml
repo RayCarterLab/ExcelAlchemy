@@ -62,6 +62,8 @@ jobs:
           .pkg-smoke-wheel/bin/python scripts/smoke_examples.py
           .pkg-smoke-wheel/bin/python scripts/generate_example_output_assets.py
           .pkg-smoke-wheel/bin/python scripts/smoke_docs_assets.py
+          .pkg-smoke-wheel/bin/python scripts/smoke_api_payload_snapshot.py
+          .pkg-smoke-wheel/bin/python -m examples.fastapi_reference.app
 
       - name: Smoke test source distribution installation
         run: |
@@ -73,6 +75,8 @@ jobs:
           .pkg-smoke-sdist/bin/python scripts/smoke_examples.py
           .pkg-smoke-sdist/bin/python scripts/generate_example_output_assets.py
           .pkg-smoke-sdist/bin/python scripts/smoke_docs_assets.py
+          .pkg-smoke-sdist/bin/python scripts/smoke_api_payload_snapshot.py
+          .pkg-smoke-sdist/bin/python -m examples.fastapi_reference.app
 
       - name: Set artifact metadata
         id: artifact-meta

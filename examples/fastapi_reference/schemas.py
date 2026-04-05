@@ -1,5 +1,7 @@
 """Request and response schemas for the FastAPI reference project."""
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -42,4 +44,32 @@ class EmployeeImportResponse(BaseModel):
         return value
 
 
-__all__ = ['EmployeeImportRequest', 'EmployeeImportResponse']
+class ApiErrorDetail(BaseModel):
+    """Structured API error payload for the HTTP layer."""
+
+    code: str = Field(description='Machine-readable API error code.')
+    message: str = Field(description='Human-readable API error message.')
+    detail: dict[str, object] = Field(default_factory=dict, description='Optional structured error detail.')
+
+
+class EmployeeImportSuccessEnvelope(BaseModel):
+    """Success response envelope for workbook import endpoints."""
+
+    ok: Literal[True] = Field(default=True, description='Whether the request succeeded.')
+    data: EmployeeImportResponse = Field(description='Structured import payload.')
+
+
+class EmployeeImportErrorEnvelope(BaseModel):
+    """Error response envelope for workbook import endpoints."""
+
+    ok: Literal[False] = Field(default=False, description='Whether the request failed.')
+    error: ApiErrorDetail = Field(description='Structured API error payload.')
+
+
+__all__ = [
+    'ApiErrorDetail',
+    'EmployeeImportErrorEnvelope',
+    'EmployeeImportRequest',
+    'EmployeeImportResponse',
+    'EmployeeImportSuccessEnvelope',
+]
