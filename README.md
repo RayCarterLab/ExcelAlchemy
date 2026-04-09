@@ -78,6 +78,40 @@ template = alchemy.download_template_artifact(filename='people-template.xlsx')
 For browser downloads, prefer `template.as_bytes()` with a `Blob`, or return the bytes from your backend with
 `Content-Disposition: attachment`. A top-level navigation to a long `data:` URL is less reliable in modern browsers.
 
+## When To Use / When Not To Use / Limitations & Gotchas
+
+### When To Use
+
+- You want schema-driven Excel templates and imports in a Python backend.
+- You want row-level and cell-level validation feedback tied to workbook coordinates.
+- You want server-side workbook generation and processing without requiring Microsoft Excel on the host.
+- You want a typed integration path built around Pydantic models and explicit storage boundaries.
+
+### When Not To Use
+
+- You need desktop Excel automation, live recalculation, or macro execution.
+- You need a general spreadsheet analysis tool or a pandas-first data processing workflow.
+- You need byte-for-byte preservation of an existing workbook as it moves through your system.
+- You need UI-grade responsiveness for very large operational workbooks instead of batch-style backend processing.
+
+### Limitations & Gotchas
+
+- Formula cells are read through `openpyxl` using stored workbook values. ExcelAlchemy does not run Excel and does not recalculate formulas on the server.
+- This is a server-side file-processing library, not a wrapper around a locally installed Excel application.
+- Large workbook performance depends on workbook size, formula density, and validation workload. Treat large imports as backend jobs, not instant spreadsheet interactions.
+- Exported or result workbooks should not be described as full-fidelity round trips of the original file. The library reads and renders the workbook data it needs for its own workflow.
+
+| Scenario | Is ExcelAlchemy a good fit? |
+| --- | --- |
+| Backend upload validation and result workbook generation | Yes |
+| Typed template generation from Pydantic models | Yes |
+| Server-side processing in containers or Linux services | Yes |
+| Desktop Excel automation or local Office integration | No |
+| Exact workbook round-trip preservation for complex existing files | Usually no |
+
+For concrete details and FAQ-style guidance, see
+[`docs/limitations.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/limitations.md).
+
 ## Repository Scope
 
 - A library for building Excel workflows from typed schemas.
@@ -433,6 +467,7 @@ More detail is documented in [ABOUT.md](https://github.com/RayCarterLab/ExcelAlc
 - [README_cn.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README_cn.md): Chinese usage-oriented guide
 - [ABOUT.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/ABOUT.md): engineering rationale and evolution notes
 - [docs/architecture.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/architecture.md): component map and boundaries
+- [docs/limitations.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/limitations.md): practical fit, limitations, and gotchas
 
 ## Development
 
