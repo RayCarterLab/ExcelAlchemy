@@ -5,6 +5,9 @@ what you are trying to build.
 
 If you want the fastest general entry point, start with
 [`docs/getting-started.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md).
+If you want the expectations-setting page for formulas, server-side execution,
+large workbooks, and round-trip limits, see
+[`docs/limitations.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/limitations.md).
 If you want screenshots and captured workflow output first, see
 [`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md).
 
@@ -13,9 +16,10 @@ If you want screenshots and captured workflow output first, see
 Recommended order:
 
 1. [`docs/getting-started.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md)
-2. [`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md)
-3. [`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)
-4. [`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md)
+2. [`docs/limitations.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/limitations.md)
+3. [`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md)
+4. [`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)
+5. [`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md)
 
 Focus on these concepts first:
 
@@ -23,6 +27,7 @@ Focus on these concepts first:
 - schema declaration style
 - `storage=...` as the recommended backend integration path
 - the difference between import, create-or-update, and export workflows
+- the practical limits of formula handling, performance, and workbook fidelity
 
 ## 2. If You Are Building A Backend API
 

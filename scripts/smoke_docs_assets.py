@@ -21,6 +21,12 @@ REQUIRED_DOC_CHECKS: dict[Path, tuple[str, ...]] = {
         'If You Are Building A Backend API',
         'If You Are Building Frontend Error Displays',
     ),
+    DOCS_DIR / 'limitations.md': (
+        'Formula Cells And Cached Values',
+        'server-side',
+        'round-trip',
+        'Microsoft Excel',
+    ),
     DOCS_DIR / 'examples-showcase.md': (
         'files/example-outputs/employee-import-workflow.txt',
         'files/example-outputs/create-or-update-import.txt',
