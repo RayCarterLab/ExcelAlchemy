@@ -4,11 +4,14 @@ This page sets practical expectations for evaluating ExcelAlchemy in backend
 systems.
 
 If you want the quickest getting-started path, see
-[`docs/getting-started.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md).
+[`docs/getting-started.md`](getting-started.md).
 If you want the stable public API boundaries, see
-[`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md).
+[`docs/public-api.md`](public-api.md).
 If you want runnable reference examples, see
-[`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md).
+[`examples/README.md`](../examples/README.md).
+If you are planning large uploads, worker memory budgets, or async job
+thresholds, see
+[`docs/performance.md`](performance.md).
 
 ## Quick Fit Check
 
@@ -69,7 +72,8 @@ Performance depends on factors such as:
 For large operational imports, plan for batch-style backend processing rather
 than instant UI-style responsiveness. If your workflow regularly handles very
 large workbooks, test with realistic files early and treat execution time and
-memory use as part of integration planning.
+memory use as part of integration planning. For the operational guide, see
+[`docs/performance.md`](performance.md).
 
 ## Workbook Fidelity And Round-Trip Limits
 

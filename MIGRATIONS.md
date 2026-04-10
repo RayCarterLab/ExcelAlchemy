@@ -105,10 +105,10 @@ config = ImporterConfig.for_create_or_update(
 
 If you want concrete examples of the recommended 2.x API shape, see:
 
-- [`docs/getting-started.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md)
-- [`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md)
-- [`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)
-- [`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md)
+- [`docs/getting-started.md`](docs/getting-started.md)
+- [`docs/public-api.md`](docs/public-api.md)
+- [`examples/README.md`](examples/README.md)
+- [`docs/examples-showcase.md`](docs/examples-showcase.md)
 
 ## pandas
 

@@ -5,7 +5,7 @@ ExcelAlchemy into a FastAPI service.
 
 If you want copyable success / failure response shapes that match this
 reference project, see
-[`docs/api-response-cookbook.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md).
+[`docs/api-response-cookbook.md`](../../docs/api-response-cookbook.md).
 
 ## Layout
 
@@ -268,4 +268,4 @@ The demo entry point prints:
 
 For a captured output artifact, see:
 
-- [`files/example-outputs/fastapi-reference.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/fastapi-reference.txt)
+- [`files/example-outputs/fastapi-reference.txt`](../../files/example-outputs/fastapi-reference.txt)

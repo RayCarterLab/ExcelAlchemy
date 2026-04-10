@@ -5,17 +5,17 @@ entry points, which ones remain compatibility shims for the 2.x line, and which
 ones should be treated as internal implementation details.
 
 If you want the quickest path into the library, start with
-[`docs/getting-started.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md).
+[`docs/getting-started.md`](getting-started.md).
 If you want a role-based reading path, see
-[`docs/integration-roadmap.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-roadmap.md).
+[`docs/integration-roadmap.md`](integration-roadmap.md).
 If you want concrete repository examples, see
-[`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)
+[`examples/README.md`](../examples/README.md)
 and
-[`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md).
+[`docs/examples-showcase.md`](examples-showcase.md).
 If you want result-object guidance for backend or frontend integration, see
-[`docs/result-objects.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md).
+[`docs/result-objects.md`](result-objects.md).
 If you want copyable backend response shapes, see
-[`docs/api-response-cookbook.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md).
+[`docs/api-response-cookbook.md`](api-response-cookbook.md).
 
 ## Stable Public Modules
 
@@ -151,9 +151,9 @@ recommended public API shape and now emit deprecation warnings.
 
 If you need concrete examples of the recommended storage path, see:
 
-- [`examples/custom_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/custom_storage.py)
-- [`examples/export_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/export_workflow.py)
-- [`docs/getting-started.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md)
+- [`examples/custom_storage.py`](../examples/custom_storage.py)
+- [`examples/export_workflow.py`](../examples/export_workflow.py)
+- [`docs/getting-started.md`](getting-started.md)
 
 ## Deprecation Direction
 

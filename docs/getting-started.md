@@ -3,17 +3,20 @@
 This page is the fastest way to get productive with ExcelAlchemy.
 
 If you want screenshots and fixed workflow outputs first, see
-[`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md).
+[`docs/examples-showcase.md`](examples-showcase.md).
 If you want the full public surface and compatibility boundaries, see
-[`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md).
+[`docs/public-api.md`](public-api.md).
 If you want to understand the result objects and how to surface them through an
 API, see
-[`docs/result-objects.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md).
+[`docs/result-objects.md`](result-objects.md).
 If you want practical expectations around formulas, cached values, server-side
 processing, and workbook fidelity, see
-[`docs/limitations.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/limitations.md).
+[`docs/limitations.md`](limitations.md).
+If you need operational guidance for larger uploads, memory-sensitive services,
+or background-job planning, see
+[`docs/performance.md`](performance.md).
 If you want a role-based reading path, see
-[`docs/integration-roadmap.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-roadmap.md).
+[`docs/integration-roadmap.md`](integration-roadmap.md).
 
 ## 1. Install
 
@@ -116,11 +119,11 @@ That storage object should implement the public `ExcelStorage` protocol.
 Examples:
 
 - custom storage:
-  [`examples/custom_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/custom_storage.py)
+  [`examples/custom_storage.py`](../examples/custom_storage.py)
 - export workflow:
-  [`examples/export_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/export_workflow.py)
+  [`examples/export_workflow.py`](../examples/export_workflow.py)
 - import workflow:
-  [`examples/employee_import_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/employee_import_workflow.py)
+  [`examples/employee_import_workflow.py`](../examples/employee_import_workflow.py)
 
 ### Legacy Minio Fields
 
@@ -140,21 +143,21 @@ passing it via `storage=...`.
 
 Recommended reading order:
 
-1. [`examples/annotated_schema.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/annotated_schema.py)
-2. [`examples/employee_import_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/employee_import_workflow.py)
-3. [`examples/create_or_update_import.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/create_or_update_import.py)
-4. [`examples/export_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/export_workflow.py)
-5. [`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)
+1. [`examples/annotated_schema.py`](../examples/annotated_schema.py)
+2. [`examples/employee_import_workflow.py`](../examples/employee_import_workflow.py)
+3. [`examples/create_or_update_import.py`](../examples/create_or_update_import.py)
+4. [`examples/export_workflow.py`](../examples/export_workflow.py)
+5. [`examples/README.md`](../examples/README.md)
 
 If you want the shorter visual summary, see
-[`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md).
+[`docs/examples-showcase.md`](examples-showcase.md).
 
 ## 7. Know The Stable Boundaries
 
 Before you wire ExcelAlchemy into a larger project, review:
 
-- [`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md)
-- [`MIGRATIONS.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/MIGRATIONS.md)
+- [`docs/public-api.md`](public-api.md)
+- [`MIGRATIONS.md`](../MIGRATIONS.md)
 
 These two documents explain:
 
@@ -179,6 +182,6 @@ These objects let you return:
 
 See:
 
-- [`docs/result-objects.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md)
-- [`docs/api-response-cookbook.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md)
-- [`examples/fastapi_reference/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md)
+- [`docs/result-objects.md`](result-objects.md)
+- [`docs/api-response-cookbook.md`](api-response-cookbook.md)
+- [`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md)

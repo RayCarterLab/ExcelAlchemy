@@ -6,7 +6,7 @@
 ![Lint](https://img.shields.io/badge/lint-ruff-D7FF64)
 ![Typing](https://img.shields.io/badge/typing-pyright-2C6BED)
 
-[中文 README](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README_cn.md) · [About](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/ABOUT.md) · [Getting Started](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md) · [Integration Roadmap](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-roadmap.md) · [Result Objects](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md) · [API Response Cookbook](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md) · [Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/architecture.md) · [Examples Showcase](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md) · [Public API](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md) · [Locale Policy](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/locale.md) · [Changelog](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/CHANGELOG.md) · [Migration Notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/MIGRATIONS.md)
+[中文 README](README_cn.md) · [About](ABOUT.md) · [Getting Started](docs/getting-started.md) · [Integration Roadmap](docs/integration-roadmap.md) · [Result Objects](docs/result-objects.md) · [API Response Cookbook](docs/api-response-cookbook.md) · [Architecture](docs/architecture.md) · [Examples Showcase](docs/examples-showcase.md) · [Public API](docs/public-api.md) · [Locale Policy](docs/locale.md) · [Limitations](docs/limitations.md) · [Performance](docs/performance.md) · [Changelog](CHANGELOG.md) · [Migration Notes](MIGRATIONS.md)
 
 ExcelAlchemy is a schema-driven Python library for Excel import and export workflows.
 It turns Pydantic models into typed workbook contracts: generate templates, validate uploads, map failures back to rows
@@ -31,7 +31,7 @@ The current stable release is `2.2.8`, which continues the ExcelAlchemy 2.x line
 
 | Template | Import Result |
 | --- | --- |
-| ![Excel template screenshot](https://raw.githubusercontent.com/RayCarterLab/ExcelAlchemy/main/images/portfolio-template-en.png) | ![Excel import result screenshot](https://raw.githubusercontent.com/RayCarterLab/ExcelAlchemy/main/images/portfolio-import-result-en.png) |
+| ![Excel template screenshot](images/portfolio-template-en.png) | ![Excel import result screenshot](images/portfolio-import-result-en.png) |
 
 ## Minimal Example
 
@@ -110,7 +110,26 @@ For browser downloads, prefer `template.as_bytes()` with a `Blob`, or return the
 | Exact workbook round-trip preservation for complex existing files | Usually no |
 
 For concrete details and FAQ-style guidance, see
-[`docs/limitations.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/limitations.md).
+[`docs/limitations.md`](docs/limitations.md).
+If you are evaluating large uploads, memory-sensitive services, or background
+job thresholds, also see
+[`docs/performance.md`](docs/performance.md).
+
+## Choosing ExcelAlchemy
+
+ExcelAlchemy is easiest to justify when you need typed schema modeling,
+template generation, workbook-facing validation feedback, and clean backend/API
+integration in the same workflow.
+
+- Compare it to plain `openpyxl` when you are deciding between a reusable
+  workflow library and one-off workbook scripting.
+- Compare it to Excel automation tools when you need to separate server-side
+  processing from desktop Excel behavior.
+- Compare it to dataframe/schema-validation stacks when the question is
+  “workbook contract and user feedback” versus “tabular ETL and validation.”
+
+For the balanced decision guide and summary table, see
+[`docs/tool-comparison.md`](docs/tool-comparison.md).
 
 ## Repository Scope
 
@@ -160,7 +179,7 @@ flowchart TD
     E --> M[Runtime Error Messages]
 ```
 
-See the full breakdown in [docs/architecture.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/architecture.md).
+See the full breakdown in [docs/architecture.md](docs/architecture.md).
 
 ## Workflow
 
@@ -180,7 +199,7 @@ flowchart LR
 ## Design Principles
 
 This repository is guided by explicit design principles rather than accidental convenience.
-The full mapping is in [ABOUT.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/ABOUT.md); the short version is:
+The full mapping is in [ABOUT.md](ABOUT.md); the short version is:
 
 1. Schema first.
 2. Explicit metadata over implicit conventions.
@@ -211,27 +230,27 @@ pip install "ExcelAlchemy[minio]"
 
 Practical examples live in the repository:
 
-- [`examples/annotated_schema.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/annotated_schema.py)
-- [`examples/employee_import_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/employee_import_workflow.py)
-- [`examples/create_or_update_import.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/create_or_update_import.py)
-- [`examples/date_and_range_fields.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/date_and_range_fields.py)
-- [`examples/selection_fields.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/selection_fields.py)
-- [`examples/custom_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/custom_storage.py)
-- [`examples/export_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/export_workflow.py)
-- [`examples/minio_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/minio_storage.py)
-- [`examples/fastapi_upload.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_upload.py)
-- [`examples/fastapi_reference/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md)
-- [`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)
+- [`examples/annotated_schema.py`](examples/annotated_schema.py)
+- [`examples/employee_import_workflow.py`](examples/employee_import_workflow.py)
+- [`examples/create_or_update_import.py`](examples/create_or_update_import.py)
+- [`examples/date_and_range_fields.py`](examples/date_and_range_fields.py)
+- [`examples/selection_fields.py`](examples/selection_fields.py)
+- [`examples/custom_storage.py`](examples/custom_storage.py)
+- [`examples/export_workflow.py`](examples/export_workflow.py)
+- [`examples/minio_storage.py`](examples/minio_storage.py)
+- [`examples/fastapi_upload.py`](examples/fastapi_upload.py)
+- [`examples/fastapi_reference/README.md`](examples/fastapi_reference/README.md)
+- [`examples/README.md`](examples/README.md)
 
 If you want the recommended reading order, start with
-[`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md).
+[`examples/README.md`](examples/README.md).
 
 If you want a single page that combines screenshots, representative workflows,
 and captured outputs, see
-[`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md).
+[`docs/examples-showcase.md`](docs/examples-showcase.md).
 
 Selected fixed outputs from the examples are generated by
-[`scripts/generate_example_output_assets.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/scripts/generate_example_output_assets.py).
+[`scripts/generate_example_output_assets.py`](scripts/generate_example_output_assets.py).
 
 ### Example Outputs
 
@@ -259,20 +278,20 @@ Uploaded objects: ['employees-export-upload.xlsx']
 
 Full captured outputs:
 
-- [`files/example-outputs/employee-import-workflow.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/employee-import-workflow.txt)
-- [`files/example-outputs/create-or-update-import.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/create-or-update-import.txt)
-- [`files/example-outputs/export-workflow.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/export-workflow.txt)
-- [`files/example-outputs/date-and-range-fields.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/date-and-range-fields.txt)
-- [`files/example-outputs/selection-fields.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/selection-fields.txt)
-- [`files/example-outputs/custom-storage.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/custom-storage.txt)
-- [`files/example-outputs/annotated-schema.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/annotated-schema.txt)
-- [`files/example-outputs/fastapi-reference.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/fastapi-reference.txt)
+- [`files/example-outputs/employee-import-workflow.txt`](files/example-outputs/employee-import-workflow.txt)
+- [`files/example-outputs/create-or-update-import.txt`](files/example-outputs/create-or-update-import.txt)
+- [`files/example-outputs/export-workflow.txt`](files/example-outputs/export-workflow.txt)
+- [`files/example-outputs/date-and-range-fields.txt`](files/example-outputs/date-and-range-fields.txt)
+- [`files/example-outputs/selection-fields.txt`](files/example-outputs/selection-fields.txt)
+- [`files/example-outputs/custom-storage.txt`](files/example-outputs/custom-storage.txt)
+- [`files/example-outputs/annotated-schema.txt`](files/example-outputs/annotated-schema.txt)
+- [`files/example-outputs/fastapi-reference.txt`](files/example-outputs/fastapi-reference.txt)
 
 ## Public API Boundaries
 
 If you want to know which modules are stable public entry points versus
 compatibility shims or internal modules, see
-[`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md).
+[`docs/public-api.md`](docs/public-api.md).
 
 ## Import Inspection Names
 
@@ -335,7 +354,7 @@ example:
 - result workbook column titles
 - row validation status labels
 
-The public locale policy is documented in [docs/locale.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/locale.md).
+The public locale policy is documented in [docs/locale.md](docs/locale.md).
 In short:
 
 - runtime exceptions are standardized in English
@@ -446,7 +465,7 @@ This repository intentionally records its evolution:
 - i18n foundation and locale-aware workbook text
 
 These are not incidental refactors; they are the story of the codebase.
-See [ABOUT.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/ABOUT.md) for the migration rationale behind each step.
+See [ABOUT.md](ABOUT.md) for the migration rationale behind each step.
 
 ## Pydantic v1 vs v2
 
@@ -459,15 +478,17 @@ The short version:
 | Validation integration | Deep reliance on internals | Adapter + explicit runtime validation |
 | Upgrade path | Brittle | Layered |
 
-More detail is documented in [ABOUT.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/ABOUT.md).
+More detail is documented in [ABOUT.md](ABOUT.md).
 
 ## Docs Map
 
-- [README.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README.md): product + design overview
-- [README_cn.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README_cn.md): Chinese usage-oriented guide
-- [ABOUT.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/ABOUT.md): engineering rationale and evolution notes
-- [docs/architecture.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/architecture.md): component map and boundaries
-- [docs/limitations.md](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/limitations.md): practical fit, limitations, and gotchas
+- [README.md](README.md): product + design overview
+- [README_cn.md](README_cn.md): Chinese usage-oriented guide
+- [ABOUT.md](ABOUT.md): engineering rationale and evolution notes
+- [docs/architecture.md](docs/architecture.md): component map and boundaries
+- [docs/limitations.md](docs/limitations.md): practical fit, limitations, and gotchas
+- [docs/performance.md](docs/performance.md): operational guidance for large files, memory, and backend guardrails
+- [docs/tool-comparison.md](docs/tool-comparison.md): when ExcelAlchemy fits better than scripting, automation, or dataframe-first approaches
 
 ## Development
 
@@ -484,4 +505,4 @@ uv build
 
 ## License
 
-MIT. See [LICENSE](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/LICENSE).
+MIT. See [LICENSE](LICENSE).
