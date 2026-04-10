@@ -4,22 +4,22 @@ This page helps you choose a reading path through the ExcelAlchemy docs based on
 what you are trying to build.
 
 If you want the fastest general entry point, start with
-[`docs/getting-started.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md).
+[`docs/getting-started.md`](getting-started.md).
 If you want the expectations-setting page for formulas, server-side execution,
 large workbooks, and round-trip limits, see
-[`docs/limitations.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/limitations.md).
+[`docs/limitations.md`](limitations.md).
 If you want screenshots and captured workflow output first, see
-[`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md).
+[`docs/examples-showcase.md`](examples-showcase.md).
 
 ## 1. If You Are Integrating ExcelAlchemy For The First Time
 
 Recommended order:
 
-1. [`docs/getting-started.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md)
-2. [`docs/limitations.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/limitations.md)
-3. [`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md)
-4. [`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)
-5. [`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md)
+1. [`docs/getting-started.md`](getting-started.md)
+2. [`docs/limitations.md`](limitations.md)
+3. [`docs/public-api.md`](public-api.md)
+4. [`examples/README.md`](../examples/README.md)
+5. [`docs/examples-showcase.md`](examples-showcase.md)
 
 Focus on these concepts first:
 
@@ -33,10 +33,10 @@ Focus on these concepts first:
 
 Recommended order:
 
-1. [`docs/result-objects.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md)
-2. [`docs/api-response-cookbook.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md)
-3. [`examples/fastapi_reference/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md)
-4. [`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md)
+1. [`docs/result-objects.md`](result-objects.md)
+2. [`docs/api-response-cookbook.md`](api-response-cookbook.md)
+3. [`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md)
+4. [`docs/public-api.md`](public-api.md)
 
 Focus on these objects:
 
@@ -54,9 +54,9 @@ Use these payload helpers directly in your API layer:
 
 Recommended order:
 
-1. [`docs/result-objects.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md)
-2. [`docs/api-response-cookbook.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md)
-3. [`examples/fastapi_reference/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md)
+1. [`docs/result-objects.md`](result-objects.md)
+2. [`docs/api-response-cookbook.md`](api-response-cookbook.md)
+3. [`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md)
 
 Focus on these payload fields:
 
@@ -81,17 +81,17 @@ And these grouped or summary helpers:
 
 Start here:
 
-- [`examples/employee_import_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/employee_import_workflow.py)
-- [`examples/create_or_update_import.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/create_or_update_import.py)
-- [`examples/export_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/export_workflow.py)
-- [`examples/fastapi_reference/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md)
+- [`examples/employee_import_workflow.py`](../examples/employee_import_workflow.py)
+- [`examples/create_or_update_import.py`](../examples/create_or_update_import.py)
+- [`examples/export_workflow.py`](../examples/export_workflow.py)
+- [`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md)
 
 ## 5. If You Need Migration And Compatibility Context
 
 Read:
 
-1. [`MIGRATIONS.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/MIGRATIONS.md)
-2. [`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md)
+1. [`MIGRATIONS.md`](../MIGRATIONS.md)
+2. [`docs/public-api.md`](public-api.md)
 
 This is the best route when you need to answer:
 

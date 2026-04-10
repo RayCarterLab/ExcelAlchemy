@@ -4,11 +4,11 @@ This page shows practical response shapes for exposing ExcelAlchemy through a
 backend API.
 
 If you are new to the library, start with
-[`docs/getting-started.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md).
+[`docs/getting-started.md`](getting-started.md).
 If you want the result-object reference first, see
-[`docs/result-objects.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md).
+[`docs/result-objects.md`](result-objects.md).
 If you want a copyable FastAPI-oriented example, see
-[`examples/fastapi_reference/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md).
+[`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md).
 
 ## Recommended Top-Level Shape
 
@@ -286,6 +286,6 @@ Common patterns:
 
 ## 6. Related Reading
 
-- [`docs/result-objects.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md)
-- [`examples/fastapi_reference/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md)
-- [`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md)
+- [`docs/result-objects.md`](result-objects.md)
+- [`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md)
+- [`docs/public-api.md`](public-api.md)

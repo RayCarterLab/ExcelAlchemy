@@ -106,27 +106,27 @@ pip install "ExcelAlchemy[minio]"
 
 仓库里有一组更贴近实际接入的示例：
 
-- [`examples/annotated_schema.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/annotated_schema.py)
-- [`examples/employee_import_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/employee_import_workflow.py)
-- [`examples/create_or_update_import.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/create_or_update_import.py)
-- [`examples/date_and_range_fields.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/date_and_range_fields.py)
-- [`examples/selection_fields.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/selection_fields.py)
-- [`examples/custom_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/custom_storage.py)
-- [`examples/export_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/export_workflow.py)
-- [`examples/minio_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/minio_storage.py)
-- [`examples/fastapi_upload.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_upload.py)
-- [`examples/fastapi_reference/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md)
-- [`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)
+- [`examples/annotated_schema.py`](examples/annotated_schema.py)
+- [`examples/employee_import_workflow.py`](examples/employee_import_workflow.py)
+- [`examples/create_or_update_import.py`](examples/create_or_update_import.py)
+- [`examples/date_and_range_fields.py`](examples/date_and_range_fields.py)
+- [`examples/selection_fields.py`](examples/selection_fields.py)
+- [`examples/custom_storage.py`](examples/custom_storage.py)
+- [`examples/export_workflow.py`](examples/export_workflow.py)
+- [`examples/minio_storage.py`](examples/minio_storage.py)
+- [`examples/fastapi_upload.py`](examples/fastapi_upload.py)
+- [`examples/fastapi_reference/README.md`](examples/fastapi_reference/README.md)
+- [`examples/README.md`](examples/README.md)
 
 如果你想按推荐顺序来阅读，建议先看
-[`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)。
+[`examples/README.md`](examples/README.md)。
 
 如果你想看一页汇总好的展示页，里面同时包含截图、代表性工作流和固定输出，
 可以直接看
-[`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md)。
+[`docs/examples-showcase.md`](docs/examples-showcase.md)。
 
 这些固定输出素材由
-[`scripts/generate_example_output_assets.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/scripts/generate_example_output_assets.py)
+[`scripts/generate_example_output_assets.py`](scripts/generate_example_output_assets.py)
 生成。
 
 ### 示例输出
@@ -155,14 +155,14 @@ Uploaded objects: ['employees-export-upload.xlsx']
 
 完整输出：
 
-- [`files/example-outputs/employee-import-workflow.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/employee-import-workflow.txt)
-- [`files/example-outputs/create-or-update-import.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/create-or-update-import.txt)
-- [`files/example-outputs/export-workflow.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/export-workflow.txt)
-- [`files/example-outputs/date-and-range-fields.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/date-and-range-fields.txt)
-- [`files/example-outputs/selection-fields.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/selection-fields.txt)
-- [`files/example-outputs/custom-storage.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/custom-storage.txt)
-- [`files/example-outputs/annotated-schema.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/annotated-schema.txt)
-- [`files/example-outputs/fastapi-reference.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/fastapi-reference.txt)
+- [`files/example-outputs/employee-import-workflow.txt`](files/example-outputs/employee-import-workflow.txt)
+- [`files/example-outputs/create-or-update-import.txt`](files/example-outputs/create-or-update-import.txt)
+- [`files/example-outputs/export-workflow.txt`](files/example-outputs/export-workflow.txt)
+- [`files/example-outputs/date-and-range-fields.txt`](files/example-outputs/date-and-range-fields.txt)
+- [`files/example-outputs/selection-fields.txt`](files/example-outputs/selection-fields.txt)
+- [`files/example-outputs/custom-storage.txt`](files/example-outputs/custom-storage.txt)
+- [`files/example-outputs/annotated-schema.txt`](files/example-outputs/annotated-schema.txt)
+- [`files/example-outputs/fastapi-reference.txt`](files/example-outputs/fastapi-reference.txt)
 
 ## 快速开始
 

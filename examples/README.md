@@ -4,10 +4,10 @@ These examples are organized as a recommended learning path rather than a flat l
 
 If you want a single public-facing page that combines screenshots,
 representative workflows, and captured outputs, see
-[`docs/examples-showcase.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md).
+[`docs/examples-showcase.md`](../docs/examples-showcase.md).
 
 If you want a copyable reference layout rather than a single script, see
-[`examples/fastapi_reference/`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md).
+[`examples/fastapi_reference/`](fastapi_reference/README.md).
 
 ## Recommended Reading Order
 
@@ -16,41 +16,41 @@ If you want a copyable reference layout rather than a single script, see
    - Shows the modern `Annotated[..., Field(...), ExcelMeta(...)]` pattern.
    - Best for: first-time readers who want to understand the schema declaration style.
    - Output: prints the generated template filename and the declared field labels.
-   - Captured output: [`files/example-outputs/annotated-schema.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/annotated-schema.txt)
+   - Captured output: [`files/example-outputs/annotated-schema.txt`](../files/example-outputs/annotated-schema.txt)
 2. `employee_import_workflow.py`
    - Read this next if you want to understand the core import story.
    - Shows template generation, workbook upload, import execution, and result reporting.
    - Best for: backend developers implementing the basic import path.
    - Output: prints success and failure counts, created row count, and uploaded result artifacts.
-   - Captured output: [`files/example-outputs/employee-import-workflow.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/employee-import-workflow.txt)
+   - Captured output: [`files/example-outputs/employee-import-workflow.txt`](../files/example-outputs/employee-import-workflow.txt)
 3. `create_or_update_import.py`
    - Read this after the basic import flow.
    - Shows `ImporterConfig.for_create_or_update(...)` with `is_data_exist`, `creator`, and `updater`.
    - Best for: admin tools and synchronization flows that mix creates and updates.
    - Output: prints created row count, updated row count, and the final import result.
-   - Captured output: [`files/example-outputs/create-or-update-import.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/create-or-update-import.txt)
+   - Captured output: [`files/example-outputs/create-or-update-import.txt`](../files/example-outputs/create-or-update-import.txt)
 4. `export_workflow.py`
    - Read this once the import flow is clear.
    - Shows artifact generation, export uploads, and a custom storage-backed export task.
    - Best for: download centers and reporting tasks that need workbook artifacts and upload URLs.
    - Output: prints artifact filename, byte size, upload URL, and uploaded object names.
-   - Captured output: [`files/example-outputs/export-workflow.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/export-workflow.txt)
+   - Captured output: [`files/example-outputs/export-workflow.txt`](../files/example-outputs/export-workflow.txt)
 5. `custom_storage.py`
    - Read this when you want to implement your own `ExcelStorage`.
    - Keeps the example minimal and focused on the protocol boundary.
    - Best for: teams wiring ExcelAlchemy into their own object storage layer.
    - Output: prints the in-memory upload URL and uploaded byte count.
-   - Captured output: [`files/example-outputs/custom-storage.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/custom-storage.txt)
+   - Captured output: [`files/example-outputs/custom-storage.txt`](../files/example-outputs/custom-storage.txt)
 6. `date_and_range_fields.py`
    - Read this if you want to understand workbook-friendly date, date range, number range, and money fields.
    - Best for: data-entry templates with compensation, effective dates, or range fields.
    - Output: prints the generated template filename and the exported field labels.
-   - Captured output: [`files/example-outputs/date-and-range-fields.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/date-and-range-fields.txt)
+   - Captured output: [`files/example-outputs/date-and-range-fields.txt`](../files/example-outputs/date-and-range-fields.txt)
 7. `selection_fields.py`
    - Read this if your domain uses approval forms, assignments, ownership trees, or selection-heavy templates.
    - Best for: approval forms, personnel assignment forms, and selection-heavy business templates.
    - Output: prints the generated template filename and the declared selection field labels.
-   - Captured output: [`files/example-outputs/selection-fields.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/selection-fields.txt)
+   - Captured output: [`files/example-outputs/selection-fields.txt`](../files/example-outputs/selection-fields.txt)
 8. `minio_storage.py`
    - Read this if you need the built-in Minio path in the current 2.x line.
    - This reflects the current 2.x compatibility-based Minio path rather than a future 3.x-only storage story.
@@ -66,7 +66,7 @@ If you want a copyable reference layout rather than a single script, see
    - Shows a split between route, request/response schema, service, response builder, storage, and workbook schema layers.
    - Best for: teams integrating ExcelAlchemy into a real FastAPI backend.
    - Output: prints the import result, created row count, uploaded artifacts, registered route paths, and structured response sections.
-   - Captured output: [`files/example-outputs/fastapi-reference.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/fastapi-reference.txt)
+   - Captured output: [`files/example-outputs/fastapi-reference.txt`](../files/example-outputs/fastapi-reference.txt)
 
 ## By Goal
 

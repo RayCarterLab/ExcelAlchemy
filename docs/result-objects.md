@@ -4,11 +4,11 @@ This page explains how to read import results from ExcelAlchemy and how to turn
 them into backend or frontend-friendly responses.
 
 If you are new to the library, start with
-[`docs/getting-started.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md).
+[`docs/getting-started.md`](getting-started.md).
 If you want the stable public API boundaries, see
-[`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md).
+[`docs/public-api.md`](public-api.md).
 If you want copyable success / failure / header-invalid response shapes, see
-[`docs/api-response-cookbook.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md).
+[`docs/api-response-cookbook.md`](api-response-cookbook.md).
 
 ## Core Result Objects
 
@@ -305,7 +305,7 @@ This gives you:
 
 For concrete success, data-invalid, and header-invalid API response examples,
 see
-[`docs/api-response-cookbook.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md).
+[`docs/api-response-cookbook.md`](api-response-cookbook.md).
 
 ## Workbook Feedback vs API Feedback
 
@@ -324,8 +324,8 @@ This is especially useful when:
 
 ## Recommended Reading
 
-- [`docs/getting-started.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md)
-- [`docs/public-api.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md)
-- [`docs/api-response-cookbook.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md)
-- [`examples/employee_import_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/employee_import_workflow.py)
-- [`examples/fastapi_reference/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md)
+- [`docs/getting-started.md`](getting-started.md)
+- [`docs/public-api.md`](public-api.md)
+- [`docs/api-response-cookbook.md`](api-response-cookbook.md)
+- [`examples/employee_import_workflow.py`](../examples/employee_import_workflow.py)
+- [`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md)

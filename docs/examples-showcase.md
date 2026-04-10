@@ -5,23 +5,23 @@ This page is the quickest way to understand how ExcelAlchemy looks in practice.
 It complements the repository examples by surfacing the most representative
 workflows, screenshots, and fixed outputs in one place. If you want the full
 guided path through the examples directory, start with
-[`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md).
+[`examples/README.md`](../examples/README.md).
 If you want to see how import results and error maps are meant to be surfaced
 through backend APIs, see
-[`docs/result-objects.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md).
+[`docs/result-objects.md`](result-objects.md).
 If you want copyable success and failure response shapes for backend endpoints,
 see
-[`docs/api-response-cookbook.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md).
+[`docs/api-response-cookbook.md`](api-response-cookbook.md).
 
 ## What ExcelAlchemy Looks Like
 
 ### Template
 
-![Excel template screenshot](https://raw.githubusercontent.com/RayCarterLab/ExcelAlchemy/main/images/portfolio-template-en.png)
+![Excel template screenshot](../images/portfolio-template-en.png)
 
 ### Import Result
 
-![Excel import result screenshot](https://raw.githubusercontent.com/RayCarterLab/ExcelAlchemy/main/images/portfolio-import-result-en.png)
+![Excel import result screenshot](../images/portfolio-import-result-en.png)
 
 ## Representative Workflows
 
@@ -37,7 +37,7 @@ Best entry point if you want to understand the core story:
 
 Source:
 
-- [`examples/employee_import_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/employee_import_workflow.py)
+- [`examples/employee_import_workflow.py`](../examples/employee_import_workflow.py)
 
 Fixed output:
 
@@ -53,7 +53,7 @@ Uploaded artifacts: []
 
 Full captured output:
 
-- [`files/example-outputs/employee-import-workflow.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/employee-import-workflow.txt)
+- [`files/example-outputs/employee-import-workflow.txt`](../files/example-outputs/employee-import-workflow.txt)
 
 ### 2. Create-Or-Update Import
 
@@ -61,7 +61,7 @@ Best entry point if your backend mixes creates and updates in the same upload.
 
 Source:
 
-- [`examples/create_or_update_import.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/create_or_update_import.py)
+- [`examples/create_or_update_import.py`](../examples/create_or_update_import.py)
 
 Fixed output:
 
@@ -78,7 +78,7 @@ Uploaded artifacts: []
 
 Full captured output:
 
-- [`files/example-outputs/create-or-update-import.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/create-or-update-import.txt)
+- [`files/example-outputs/create-or-update-import.txt`](../files/example-outputs/create-or-update-import.txt)
 
 ### 3. Export Workflow
 
@@ -87,7 +87,7 @@ export delivery.
 
 Source:
 
-- [`examples/export_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/export_workflow.py)
+- [`examples/export_workflow.py`](../examples/export_workflow.py)
 
 Fixed output:
 
@@ -101,49 +101,49 @@ Uploaded objects: ['employees-export-upload.xlsx']
 
 Full captured output:
 
-- [`files/example-outputs/export-workflow.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/export-workflow.txt)
+- [`files/example-outputs/export-workflow.txt`](../files/example-outputs/export-workflow.txt)
 
 ### 4. Field Families
 
 If you want to see how workbook-oriented field types read in real schemas:
 
 - date and range fields:
-  - [`examples/date_and_range_fields.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/date_and_range_fields.py)
-  - [`files/example-outputs/date-and-range-fields.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/date-and-range-fields.txt)
+  - [`examples/date_and_range_fields.py`](../examples/date_and_range_fields.py)
+  - [`files/example-outputs/date-and-range-fields.txt`](../files/example-outputs/date-and-range-fields.txt)
 - selection-heavy forms:
-  - [`examples/selection_fields.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/selection_fields.py)
-  - [`files/example-outputs/selection-fields.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/selection-fields.txt)
+  - [`examples/selection_fields.py`](../examples/selection_fields.py)
+  - [`files/example-outputs/selection-fields.txt`](../files/example-outputs/selection-fields.txt)
 
 ### 5. Integration Boundaries
 
 If you want to see how ExcelAlchemy fits into backend systems:
 
 - custom storage protocol:
-  - [`examples/custom_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/custom_storage.py)
-  - [`files/example-outputs/custom-storage.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/custom-storage.txt)
+  - [`examples/custom_storage.py`](../examples/custom_storage.py)
+  - [`files/example-outputs/custom-storage.txt`](../files/example-outputs/custom-storage.txt)
 - built-in Minio path for the current 2.x line:
-  - [`examples/minio_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/minio_storage.py)
+  - [`examples/minio_storage.py`](../examples/minio_storage.py)
 - FastAPI integration:
-  - [`examples/fastapi_upload.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_upload.py)
-  - [`examples/fastapi_reference/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md)
-  - [`files/example-outputs/fastapi-reference.txt`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/fastapi-reference.txt)
+  - [`examples/fastapi_upload.py`](../examples/fastapi_upload.py)
+  - [`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md)
+  - [`files/example-outputs/fastapi-reference.txt`](../files/example-outputs/fastapi-reference.txt)
 
 ## Recommended Reading Order
 
 If you want to work through the examples intentionally rather than browse this
 showcase:
 
-1. [`examples/annotated_schema.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/annotated_schema.py)
-2. [`examples/employee_import_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/employee_import_workflow.py)
-3. [`examples/create_or_update_import.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/create_or_update_import.py)
-4. [`examples/export_workflow.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/export_workflow.py)
-5. [`examples/custom_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/custom_storage.py)
-6. [`examples/date_and_range_fields.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/date_and_range_fields.py)
-7. [`examples/selection_fields.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/selection_fields.py)
-8. [`examples/minio_storage.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/minio_storage.py)
-9. [`examples/fastapi_upload.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_upload.py)
-10. [`examples/fastapi_reference/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md)
+1. [`examples/annotated_schema.py`](../examples/annotated_schema.py)
+2. [`examples/employee_import_workflow.py`](../examples/employee_import_workflow.py)
+3. [`examples/create_or_update_import.py`](../examples/create_or_update_import.py)
+4. [`examples/export_workflow.py`](../examples/export_workflow.py)
+5. [`examples/custom_storage.py`](../examples/custom_storage.py)
+6. [`examples/date_and_range_fields.py`](../examples/date_and_range_fields.py)
+7. [`examples/selection_fields.py`](../examples/selection_fields.py)
+8. [`examples/minio_storage.py`](../examples/minio_storage.py)
+9. [`examples/fastapi_upload.py`](../examples/fastapi_upload.py)
+10. [`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md)
 
 Or start with the dedicated guide:
 
-- [`examples/README.md`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md)
+- [`examples/README.md`](../examples/README.md)
