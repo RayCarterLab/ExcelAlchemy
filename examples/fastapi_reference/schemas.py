@@ -17,6 +17,7 @@ class EmployeeImportResponse(BaseModel):
     result: dict[str, object] = Field(description='High-level import result payload.')
     cell_errors: dict[str, object] = Field(description='Structured cell-level error payload.')
     row_errors: dict[str, object] = Field(description='Structured row-level error payload.')
+    remediation: dict[str, object] = Field(description='Compact remediation-oriented payload for frontend flows.')
     created_rows: int = Field(description='Number of created rows in the demo service.')
     uploaded_artifacts: list[str] = Field(description='Uploaded workbook artifact names.')
     request: EmployeeImportRequest = Field(description='Structured request metadata.')

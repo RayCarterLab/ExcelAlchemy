@@ -55,6 +55,8 @@ These modules are the recommended import paths for application code:
   when you need frontend-friendly or API-friendly validation output.
   The stable helper set also includes `records()`, `summary_by_field()`,
   `summary_by_row()`, and `summary_by_code()` where applicable.
+  For a compact retry-oriented payload, `excelalchemy.results` also exposes
+  `build_frontend_remediation_payload(...)` as an additive helper.
 
 ## Compatibility Modules In 2.x
 
@@ -114,6 +116,7 @@ result helpers are:
 
 - `CellErrorMap.to_api_payload()`
 - `RowIssueMap.to_api_payload()`
+- `build_frontend_remediation_payload(...)`
 - `CellErrorMap.records()`
 - `RowIssueMap.records()`
 - `CellErrorMap.summary_by_field()`

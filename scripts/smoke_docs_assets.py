@@ -22,6 +22,7 @@ REQUIRED_DOC_CHECKS: dict[Path, tuple[str, ...]] = {
         'ImportResult',
         'CellErrorMap',
         'RowIssueMap',
+        'build_frontend_remediation_payload',
         'docs/api-response-cookbook.md',
         'display_message',
     ),

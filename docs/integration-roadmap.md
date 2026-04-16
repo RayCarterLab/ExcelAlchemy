@@ -49,6 +49,7 @@ Use these payload helpers directly in your API layer:
 - `ImportResult.to_api_payload()`
 - `CellErrorMap.to_api_payload()`
 - `RowIssueMap.to_api_payload()`
+- `build_frontend_remediation_payload(...)` when the client wants compact retry guidance
 
 ## 3. If You Are Building Frontend Error Displays
 
@@ -76,6 +77,13 @@ And these grouped or summary helpers:
 - `grouped.messages_by_field`
 - `grouped.messages_by_row`
 - `grouped.messages_by_code`
+
+If the frontend wants a compact retry-oriented payload instead of deriving its
+own remediation summary, also inspect:
+
+- `build_frontend_remediation_payload(...)`
+- `remediation.suggested_action`
+- `remediation.fix_hint`
 
 ## 4. If You Want Copyable Reference Code
 

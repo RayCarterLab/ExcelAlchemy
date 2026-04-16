@@ -2,6 +2,7 @@
 
 from examples.fastapi_reference.schemas import EmployeeImportRequest, EmployeeImportResponse
 from excelalchemy import CellErrorMap, ImportResult, RowIssueMap
+from excelalchemy.results import build_frontend_remediation_payload
 
 
 def build_import_response(
@@ -19,6 +20,11 @@ def build_import_response(
         result=result.to_api_payload(),
         cell_errors=cell_error_map.to_api_payload(),
         row_errors=row_error_map.to_api_payload(),
+        remediation=build_frontend_remediation_payload(
+            result=result,
+            cell_error_map=cell_error_map,
+            row_error_map=row_error_map,
+        ),
         created_rows=created_rows,
         uploaded_artifacts=uploaded_artifacts,
         request=request,

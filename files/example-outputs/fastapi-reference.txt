@@ -6,7 +6,8 @@ Created rows: 1
 Uploaded artifacts: []
 Routes: ['/employee-imports', '/employee-template.xlsx']
 Envelope sections: ['data', 'ok']
-Data sections: ['cell_errors', 'created_rows', 'request', 'result', 'row_errors', 'uploaded_artifacts']
+Data sections: ['cell_errors', 'created_rows', 'remediation', 'request', 'result', 'row_errors', 'uploaded_artifacts']
 Request tenant: tenant-001
 Cell error summary keys: ['by_code', 'by_field', 'by_row']
 Row error summary keys: ['by_code', 'by_row']
+Remediation keys: ['by_code', 'by_field', 'items', 'remediation', 'result']
