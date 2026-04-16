@@ -43,6 +43,24 @@ Application logs use named loggers such as `excelalchemy.codecs`,
 on `code`, `message_key`, `message`, and `display_message` instead of raw log
 output.
 
+If your frontend needs a more task-oriented retry experience, you can add the
+optional remediation payload alongside the existing stable result payloads:
+
+```python
+from excelalchemy.results import build_frontend_remediation_payload
+
+response = {
+    'result': result.to_api_payload(),
+    'cell_errors': alchemy.cell_error_map.to_api_payload(),
+    'row_errors': alchemy.row_error_map.to_api_payload(),
+    'remediation': build_frontend_remediation_payload(
+        result=result,
+        cell_error_map=alchemy.cell_error_map,
+        row_error_map=alchemy.row_error_map,
+    ),
+}
+```
+
 ## 1. Success Response
 
 Use this when the import completed without header or data failures.
@@ -270,7 +288,83 @@ def build_excel_import_response(alchemy, result):
 
 This keeps your route layer thin and your API contract stable.
 
-## 5. Frontend Mapping Ideas
+## 5. Front-end Remediation Example
+
+Use this when the frontend needs one compact section for retry guidance instead
+of deriving everything from `cell_errors` and `row_errors`.
+
+```json
+{
+  "result": {
+    "result": "DATA_INVALID",
+    "is_success": false,
+    "is_header_invalid": false,
+    "is_data_invalid": true,
+    "summary": {
+      "success_count": 0,
+      "fail_count": 1,
+      "result_workbook_url": "memory://employee-import-result.xlsx"
+    }
+  },
+  "remediation": {
+    "result": {
+      "result": "DATA_INVALID",
+      "is_success": false,
+      "is_header_invalid": false,
+      "is_data_invalid": true
+    },
+    "remediation": {
+      "needs_remediation": true,
+      "affected_row_count": 1,
+      "affected_field_count": 1,
+      "affected_code_count": 1,
+      "header_issue_count": 0,
+      "result_workbook_available": true,
+      "suggested_action": "Correct the invalid rows and re-upload the workbook.",
+      "fix_hint": "Download the result workbook and review the highlighted rows before re-uploading."
+    },
+    "by_field": [
+      {
+        "field_label": "Age",
+        "unique_label": "Age",
+        "error_count": 1,
+        "codes": ["ExcelCellError"],
+        "suggested_action": "Review the highlighted cells, correct the invalid values, and re-upload the workbook."
+      }
+    ],
+    "by_code": [
+      {
+        "code": "ExcelCellError",
+        "error_count": 1,
+        "suggested_action": "Review the highlighted cells, correct the invalid values, and re-upload the workbook."
+      }
+    ],
+    "items": [
+      {
+        "scope": "cell",
+        "code": "ExcelCellError",
+        "field_label": "Age",
+        "row_number_for_humans": 1,
+        "column_number_for_humans": 4,
+        "display_message": "【Age】Invalid input; enter a number.",
+        "suggested_action": "Review the highlighted cells, correct the invalid values, and re-upload the workbook."
+      }
+    ]
+  }
+}
+```
+
+Frontend usage:
+
+- use `remediation.remediation.needs_remediation` to decide whether to show a
+  retry-focused panel
+- use `remediation.remediation.suggested_action` for the primary call to action
+- use `remediation.by_field` for field-oriented fix panels or filters
+- use `remediation.by_code` for grouped badges or “most common issue” views
+- use `remediation.items` when the UI needs one compact issue list with
+  optional `fix_hint`
+
+## 6. Frontend Mapping Ideas
 
 Common patterns:
 
@@ -284,7 +378,7 @@ Common patterns:
 - use `message` when you want plain text without workbook decoration
 - use `display_message` when you want ready-to-render text
 
-## 6. Related Reading
+## 7. Related Reading
 
 - [`docs/result-objects.md`](result-objects.md)
 - [`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md)

@@ -160,6 +160,25 @@ Example JSON response:
         "by_code": []
       }
     },
+    "remediation": {
+      "result": {
+        "result": "SUCCESS",
+        "is_success": true,
+        "is_header_invalid": false,
+        "is_data_invalid": false
+      },
+      "remediation": {
+        "needs_remediation": false,
+        "affected_row_count": 0,
+        "affected_field_count": 0,
+        "affected_code_count": 0,
+        "header_issue_count": 0,
+        "result_workbook_available": true
+      },
+      "by_field": [],
+      "by_code": [],
+      "items": []
+    },
     "created_rows": 1,
     "uploaded_artifacts": [],
     "request": {
@@ -177,6 +196,7 @@ structured result payload. Application code can then read:
 - uploaded result workbook names from `uploaded_artifacts`
 - cell-level frontend payloads from `cell_errors`
 - row-level frontend payloads from `row_errors`
+- compact retry guidance from `remediation`
 
 In the reference app, those values live under `data`, while `ok` tells the
 client whether the route returned a success or an API-layer error envelope.
@@ -218,10 +238,44 @@ Example validation-error response shape:
           }
         ]
       }
+    },
+    "remediation": {
+      "result": {
+        "result": "DATA_INVALID",
+        "is_success": false,
+        "is_header_invalid": false,
+        "is_data_invalid": true
+      },
+      "remediation": {
+        "needs_remediation": true,
+        "affected_row_count": 1,
+        "affected_field_count": 1,
+        "affected_code_count": 1,
+        "header_issue_count": 0,
+        "result_workbook_available": true,
+        "suggested_action": "Correct the invalid rows and re-upload the workbook."
+      },
+      "by_field": [
+        {
+          "field_label": "Email",
+          "unique_label": "Email",
+          "error_count": 1,
+          "codes": ["valid_email_required"],
+          "suggested_action": "Enter a complete email address and re-upload the workbook.",
+          "fix_hint": "Use a format such as name@example.com."
+        }
+      ]
     }
   }
 }
 ```
+
+The remediation payload is additive:
+
+- `result`, `cell_errors`, and `row_errors` stay available for full inspection
+- `remediation` is the smaller retry-oriented view
+- `suggested_action` and `fix_hint` are intentionally conservative and may be
+  omitted for unknown issue patterns
 
 Example API-layer error response:
 
@@ -265,6 +319,7 @@ The demo entry point prints:
 - registered route paths
 - response sections
 - request tenant and structured summary keys
+- remediation summary keys
 
 For a captured output artifact, see:
 

@@ -69,6 +69,7 @@ async def _build_import_failure_api_payload() -> dict[str, object]:
     )
 
     from excelalchemy import ExcelAlchemy, ImporterConfig
+    from excelalchemy.results import build_frontend_remediation_payload
 
     storage = InMemorySmokeStorage()
     importer = ExcelAlchemy(
@@ -86,6 +87,11 @@ async def _build_import_failure_api_payload() -> dict[str, object]:
         'result': result.to_api_payload(),
         'cell_errors': importer.cell_error_map.to_api_payload(),
         'row_errors': importer.row_error_map.to_api_payload(),
+        'remediation': build_frontend_remediation_payload(
+            result=result,
+            cell_error_map=importer.cell_error_map,
+            row_error_map=importer.row_error_map,
+        ),
     }
 
 

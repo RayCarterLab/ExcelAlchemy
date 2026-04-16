@@ -119,6 +119,86 @@
       ]
     }
   },
+  "remediation": {
+    "by_code": [
+      {
+        "code": "ExcelCellError",
+        "error_count": 1,
+        "row_indices": [
+          0
+        ],
+        "row_numbers_for_humans": [
+          1
+        ],
+        "suggested_action": "Review the highlighted cells, correct the invalid values, and re-upload the workbook.",
+        "unique_labels": [
+          "Age"
+        ]
+      }
+    ],
+    "by_field": [
+      {
+        "codes": [
+          "ExcelCellError"
+        ],
+        "error_count": 1,
+        "field_label": "Age",
+        "parent_label": null,
+        "row_indices": [
+          0
+        ],
+        "row_numbers_for_humans": [
+          1
+        ],
+        "suggested_action": "Review the highlighted cells, correct the invalid values, and re-upload the workbook.",
+        "unique_label": "Age"
+      }
+    ],
+    "items": [
+      {
+        "code": "ExcelCellError",
+        "column_index": 3,
+        "column_number_for_humans": 4,
+        "display_message": "\u3010Age\u3011Invalid input; enter a number.",
+        "field_label": "Age",
+        "message": "Invalid input; enter a number.",
+        "parent_label": null,
+        "row_index": 0,
+        "row_number_for_humans": 1,
+        "scope": "cell",
+        "suggested_action": "Review the highlighted cells, correct the invalid values, and re-upload the workbook.",
+        "unique_label": "Age"
+      }
+    ],
+    "remediation": {
+      "affected_code_count": 1,
+      "affected_field_count": 1,
+      "affected_row_count": 1,
+      "fix_hint": "Download the result workbook and review the highlighted rows before re-uploading.",
+      "header_issue_count": 0,
+      "needs_remediation": true,
+      "result_workbook_available": true,
+      "suggested_action": "Correct the invalid rows and re-upload the workbook."
+    },
+    "result": {
+      "header_issues": {
+        "duplicated": [],
+        "is_required_missing": false,
+        "missing_primary": [],
+        "missing_required": [],
+        "unrecognized": []
+      },
+      "is_data_invalid": true,
+      "is_header_invalid": false,
+      "is_success": false,
+      "result": "DATA_INVALID",
+      "summary": {
+        "fail_count": 1,
+        "result_workbook_url": "memory://smoke-invalid-result.xlsx",
+        "success_count": 0
+      }
+    }
+  },
   "result": {
     "header_issues": {
       "duplicated": [],

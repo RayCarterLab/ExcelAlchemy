@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from excelalchemy import ExcelAlchemy, ExcelStorage, ExporterConfig, FieldMeta, ImporterConfig, Number, String, UrlStr
 from excelalchemy.core.table import WorksheetTable
+from excelalchemy.results import build_frontend_remediation_payload
 
 
 class SmokeImporter(BaseModel):
@@ -119,6 +120,11 @@ async def main() -> None:
     invalid_result_payload = invalid_result.to_api_payload()
     cell_payload = invalid_importer.cell_error_map.to_api_payload()
     row_payload = invalid_importer.row_error_map.to_api_payload()
+    remediation_payload = build_frontend_remediation_payload(
+        result=invalid_result,
+        cell_error_map=invalid_importer.cell_error_map,
+        row_error_map=invalid_importer.row_error_map,
+    )
     assert invalid_result_payload['result'] == 'DATA_INVALID'
     assert invalid_result_payload['is_data_invalid'] is True
     assert invalid_result_payload['summary']['fail_count'] == 1
@@ -143,6 +149,10 @@ async def main() -> None:
     assert isinstance(first_row_issue['message'], str) and first_row_issue['message']
     assert isinstance(first_row_issue['display_message'], str) and first_row_issue['display_message']
     assert first_row_issue['row_number_for_humans'] == 1
+    assert remediation_payload['remediation']['needs_remediation'] is True
+    assert remediation_payload['remediation']['affected_row_count'] >= 1
+    assert remediation_payload['by_code']
+    assert remediation_payload['items']
 
     exporter = ExcelAlchemy(ExporterConfig.for_storage(SmokeImporter, storage=storage, locale='en'))
     artifact = exporter.export_artifact(

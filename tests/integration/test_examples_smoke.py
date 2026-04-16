@@ -156,6 +156,7 @@ def test_fastapi_reference_project_main_runs_when_optional_dependency_is_availab
     assert 'Envelope sections:' in output
     assert 'Data sections:' in output
     assert 'Request tenant: tenant-001' in output
+    assert 'Remediation keys:' in output
 
 
 @pytest.mark.skipif(importlib.util.find_spec('minio') is None, reason='minio is not installed')
@@ -259,6 +260,7 @@ def test_fastapi_reference_project_endpoints_work_when_optional_dependencies_are
     assert payload['data']['request']['tenant_id'] == 'tenant-001'
     assert payload['data']['cell_errors']['error_count'] == 0
     assert payload['data']['row_errors']['error_count'] == 0
+    assert payload['data']['remediation']['remediation']['needs_remediation'] is False
 
     missing_file_response = client.post('/employee-imports', data={'tenant_id': 'tenant-001'})
     assert missing_file_response.status_code == 400

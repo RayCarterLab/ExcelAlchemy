@@ -82,6 +82,7 @@ def main() -> None:
     print(f'Request tenant: {response_payload.request.tenant_id}')
     print(f"Cell error summary keys: {sorted(response_payload.cell_errors['summary'].keys())}")
     print(f"Row error summary keys: {sorted(response_payload.row_errors['summary'].keys())}")
+    print(f"Remediation keys: {sorted(response_payload.remediation.keys())}")
 
 
 app = create_app() if importlib.util.find_spec('fastapi') is not None else None

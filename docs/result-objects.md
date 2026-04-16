@@ -18,11 +18,19 @@ The most important public result objects are:
 - `CellErrorMap`
 - `RowIssueMap`
 
+The public results module also exposes an additive remediation helper:
+
+- `build_frontend_remediation_payload(...)`
+
 You can import them from:
 
 ```python
 from excelalchemy import ImportResult
-from excelalchemy.results import CellErrorMap, RowIssueMap
+from excelalchemy.results import (
+    CellErrorMap,
+    RowIssueMap,
+    build_frontend_remediation_payload,
+)
 ```
 
 ## Error Payload Layers
@@ -306,6 +314,109 @@ This gives you:
 For concrete success, data-invalid, and header-invalid API response examples,
 see
 [`docs/api-response-cookbook.md`](api-response-cookbook.md).
+
+## Front-end Remediation Payload
+
+`build_frontend_remediation_payload(...)` is an additive serializer for
+frontend-oriented remediation flows. It does not replace the default
+`to_api_payload()` helpers and does not change their output shapes.
+
+Use it when you want a thinner payload that answers:
+
+- does the user need to fix anything before retrying?
+- what is the next suggested action?
+- which fields or codes are the best remediation entry points?
+- are there any conservative fix hints available for known issue patterns?
+
+Recommended usage:
+
+```python
+from excelalchemy.results import build_frontend_remediation_payload
+
+result = await alchemy.import_data('employees.xlsx', 'employee-import-result.xlsx')
+
+remediation = build_frontend_remediation_payload(
+    result=result,
+    cell_error_map=alchemy.cell_error_map,
+    row_error_map=alchemy.row_error_map,
+)
+```
+
+The remediation payload contains these top-level sections:
+
+- `result`
+  - the stable `ImportResult.to_api_payload()` output
+- `remediation`
+  - a compact remediation summary with counts, workbook availability, and an
+    optional top-level `suggested_action` / `fix_hint`
+- `by_field`
+  - field-oriented remediation summaries derived from cell-level issues
+- `by_code`
+  - code-oriented remediation summaries derived from row-level issue grouping
+- `items`
+  - compact issue entries for frontend rendering
+
+Example shape:
+
+```json
+{
+  "result": {
+    "result": "DATA_INVALID",
+    "is_success": false,
+    "is_header_invalid": false,
+    "is_data_invalid": true
+  },
+  "remediation": {
+    "needs_remediation": true,
+    "affected_row_count": 1,
+    "affected_field_count": 1,
+    "affected_code_count": 1,
+    "header_issue_count": 0,
+    "result_workbook_available": true,
+    "suggested_action": "Correct the invalid rows and re-upload the workbook.",
+    "fix_hint": "Download the result workbook and review the highlighted rows before re-uploading."
+  },
+  "by_field": [
+    {
+      "field_label": "Email",
+      "unique_label": "Email",
+      "error_count": 1,
+      "codes": ["valid_email_required"],
+      "suggested_action": "Enter a complete email address and re-upload the workbook.",
+      "fix_hint": "Use a format such as name@example.com."
+    }
+  ],
+  "by_code": [
+    {
+      "code": "valid_email_required",
+      "error_count": 1,
+      "suggested_action": "Enter a complete email address and re-upload the workbook.",
+      "fix_hint": "Use a format such as name@example.com."
+    }
+  ],
+  "items": [
+    {
+      "scope": "cell",
+      "code": "valid_email_required",
+      "field_label": "Email",
+      "row_number_for_humans": 1,
+      "column_number_for_humans": 2,
+      "display_message": "【Email】Enter a valid email address, such as name@example.com",
+      "suggested_action": "Enter a complete email address and re-upload the workbook.",
+      "fix_hint": "Use a format such as name@example.com."
+    }
+  ]
+}
+```
+
+Important constraints:
+
+- the remediation payload is additive and opt-in
+- existing payload helpers remain the primary stable result contracts
+- `suggested_action` and `fix_hint` are intentionally conservative
+- unknown issue patterns may omit remediation hints entirely
+- v1 uses existing result objects and issue metadata; it does not add automatic
+  fixing or change the import pipeline
 
 ## Workbook Feedback vs API Feedback
 
