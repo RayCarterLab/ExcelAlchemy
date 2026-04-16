@@ -16,6 +16,8 @@ ExcelAlchemy is a schema-driven Python library for Excel import and export workf
 It turns Pydantic models into typed workbook contracts: generate templates, validate uploads, map failures back to rows
 and cells, and produce locale-aware result workbooks.
 
+![ExcelAlchemy hero image](images/excelalchemy-hero.png)
+
 This repository is also a design artifact.
 It documents a series of deliberate engineering choices: `src/` layout, Pydantic v2 migration, pandas removal,
 pluggable storage, `uv`-based workflows, and locale-aware workbook output.
