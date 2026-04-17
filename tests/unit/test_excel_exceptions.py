@@ -486,7 +486,9 @@ class TestExcelExceptions(BaseTestCase):
         result = ImportResult(result=ValidateResult.DATA_INVALID, fail_count=1)
         cell_error_map = CellErrorMap()
         row_error_map = RowIssueMap()
-        error = ExcelCellError(label=Label('备注'), message='Custom validation failed', message_key=MessageKey.INVALID_INPUT)
+        error = ExcelCellError(
+            label=Label('备注'), message='Custom validation failed', message_key=MessageKey.INVALID_INPUT
+        )
 
         cell_error_map.add(0, 0, error)
         row_error_map.add(0, error)

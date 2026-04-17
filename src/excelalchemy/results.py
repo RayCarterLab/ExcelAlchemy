@@ -93,11 +93,7 @@ def _merge_remediation_hints(*hints: RemediationHint) -> RemediationHint:
 
 
 def _hint_for_issue(error: RowIssue) -> RemediationHint:
-    message_hint = (
-        _REMEDIATION_HINTS_BY_MESSAGE_KEY.get(error.message_key)
-        if error.message_key is not None
-        else None
-    )
+    message_hint = _REMEDIATION_HINTS_BY_MESSAGE_KEY.get(error.message_key) if error.message_key is not None else None
     code_hint = _REMEDIATION_HINTS_BY_CODE.get(error.code)
     return _merge_remediation_hints(message_hint or RemediationHint(), code_hint or RemediationHint())
 
