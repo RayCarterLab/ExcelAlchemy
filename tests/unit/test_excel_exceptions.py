@@ -3,10 +3,14 @@ from excelalchemy import (
     ConfigError,
     ExcelCellError,
     ExcelRowError,
+    ImportResult,
     Label,
     ProgrammaticError,
     RowIssueMap,
+    ValidateResult,
 )
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.results import build_frontend_remediation_payload
 from tests.support import BaseTestCase
 
 
@@ -369,3 +373,248 @@ class TestExcelExceptions(BaseTestCase):
         assert issue_map.field_labels() == ('邮箱',)
         assert issue_map.codes() == ('ExcelCellError', 'ExcelRowError')
         assert issue_map.row_numbers_for_humans() == (1,)
+
+    async def test_frontend_remediation_payload_uses_message_key_hints_for_cell_errors(self):
+        result = ImportResult(result=ValidateResult.DATA_INVALID, fail_count=1, url='memory://result.xlsx')
+        cell_error_map = CellErrorMap()
+        row_error_map = RowIssueMap()
+        error = ExcelCellError(
+            label=Label('邮箱'),
+            message='Enter a valid email address, such as name@example.com',
+            message_key=MessageKey.VALID_EMAIL_REQUIRED,
+        )
+
+        cell_error_map.add(0, 1, error)
+        row_error_map.add(0, error)
+
+        payload = build_frontend_remediation_payload(
+            result=result,
+            cell_error_map=cell_error_map,
+            row_error_map=row_error_map,
+        )
+
+        assert payload['remediation'] == {
+            'needs_remediation': True,
+            'affected_row_count': 1,
+            'affected_field_count': 1,
+            'affected_code_count': 1,
+            'header_issue_count': 0,
+            'result_workbook_available': True,
+            'suggested_action': 'Correct the invalid rows and re-upload the workbook.',
+            'fix_hint': 'Download the result workbook and review the highlighted rows before re-uploading.',
+        }
+        assert payload['by_field'] == [
+            {
+                'field_label': '邮箱',
+                'parent_label': None,
+                'unique_label': '邮箱',
+                'error_count': 1,
+                'row_indices': [0],
+                'row_numbers_for_humans': [1],
+                'codes': ['valid_email_required'],
+                'suggested_action': 'Enter a complete email address and re-upload the workbook.',
+                'fix_hint': 'Use a format such as name@example.com.',
+            }
+        ]
+        assert payload['by_code'] == [
+            {
+                'code': 'valid_email_required',
+                'error_count': 1,
+                'row_indices': [0],
+                'row_numbers_for_humans': [1],
+                'unique_labels': ['邮箱'],
+                'suggested_action': 'Enter a complete email address and re-upload the workbook.',
+                'fix_hint': 'Use a format such as name@example.com.',
+            }
+        ]
+        assert payload['items'] == [
+            {
+                'scope': 'cell',
+                'code': 'valid_email_required',
+                'message': 'Enter a valid email address, such as name@example.com',
+                'display_message': '【邮箱】Enter a valid email address, such as name@example.com',
+                'row_index': 0,
+                'row_number_for_humans': 1,
+                'column_index': 1,
+                'column_number_for_humans': 2,
+                'field_label': '邮箱',
+                'parent_label': None,
+                'unique_label': '邮箱',
+                'message_key': 'valid_email_required',
+                'suggested_action': 'Enter a complete email address and re-upload the workbook.',
+                'fix_hint': 'Use a format such as name@example.com.',
+            }
+        ]
+
+    async def test_frontend_remediation_payload_falls_back_to_code_hint_for_row_errors(self):
+        result = ImportResult(result=ValidateResult.DATA_INVALID, fail_count=1)
+        row_error_map = RowIssueMap()
+        row_error = ExcelRowError(message='Combination invalid')
+
+        row_error_map.add(0, row_error)
+
+        payload = build_frontend_remediation_payload(
+            result=result,
+            cell_error_map=CellErrorMap(),
+            row_error_map=row_error_map,
+        )
+
+        assert payload['by_field'] == []
+        assert payload['by_code'] == [
+            {
+                'code': 'ExcelRowError',
+                'error_count': 1,
+                'row_indices': [0],
+                'row_numbers_for_humans': [1],
+                'unique_labels': [],
+                'suggested_action': 'Review the row-level validation message, correct the row, and re-upload the workbook.',
+            }
+        ]
+        assert payload['items'] == [
+            {
+                'scope': 'row',
+                'code': 'ExcelRowError',
+                'message': 'Combination invalid',
+                'display_message': 'Combination invalid',
+                'row_index': 0,
+                'row_number_for_humans': 1,
+                'suggested_action': 'Review the row-level validation message, correct the row, and re-upload the workbook.',
+            }
+        ]
+
+    async def test_frontend_remediation_payload_omits_optional_hints_when_no_mapping_exists(self):
+        result = ImportResult(result=ValidateResult.DATA_INVALID, fail_count=1)
+        cell_error_map = CellErrorMap()
+        row_error_map = RowIssueMap()
+        error = ExcelCellError(
+            label=Label('备注'), message='Custom validation failed', message_key=MessageKey.INVALID_INPUT
+        )
+
+        cell_error_map.add(0, 0, error)
+        row_error_map.add(0, error)
+
+        payload = build_frontend_remediation_payload(
+            result=result,
+            cell_error_map=cell_error_map,
+            row_error_map=row_error_map,
+        )
+
+        assert payload['by_field'] == [
+            {
+                'field_label': '备注',
+                'parent_label': None,
+                'unique_label': '备注',
+                'error_count': 1,
+                'row_indices': [0],
+                'row_numbers_for_humans': [1],
+                'codes': ['invalid_input'],
+            }
+        ]
+        assert payload['by_code'] == [
+            {
+                'code': 'invalid_input',
+                'error_count': 1,
+                'row_indices': [0],
+                'row_numbers_for_humans': [1],
+                'unique_labels': ['备注'],
+            }
+        ]
+        assert payload['items'] == [
+            {
+                'scope': 'cell',
+                'code': 'invalid_input',
+                'message': 'Custom validation failed',
+                'display_message': '【备注】Custom validation failed',
+                'row_index': 0,
+                'row_number_for_humans': 1,
+                'column_index': 0,
+                'column_number_for_humans': 1,
+                'field_label': '备注',
+                'parent_label': None,
+                'unique_label': '备注',
+                'message_key': 'invalid_input',
+            }
+        ]
+
+    async def test_frontend_remediation_payload_supports_mixed_issue_types_and_code_fallback_hints(self):
+        result = ImportResult(result=ValidateResult.DATA_INVALID, fail_count=2)
+        cell_error_map = CellErrorMap()
+        row_error_map = RowIssueMap()
+        cell_error = ExcelCellError(label=Label('年龄'), message='Invalid input; enter a number.')
+        row_error = ExcelRowError(message='Combination invalid')
+
+        cell_error_map.add(0, 3, cell_error)
+        row_error_map.add(0, cell_error)
+        row_error_map.add(0, row_error)
+
+        payload = build_frontend_remediation_payload(
+            result=result,
+            cell_error_map=cell_error_map,
+            row_error_map=row_error_map,
+        )
+
+        assert payload['remediation'] == {
+            'needs_remediation': True,
+            'affected_row_count': 1,
+            'affected_field_count': 1,
+            'affected_code_count': 2,
+            'header_issue_count': 0,
+            'result_workbook_available': False,
+            'suggested_action': 'Correct the invalid rows and re-upload the workbook.',
+            'fix_hint': 'Review the invalid rows and field messages before re-uploading.',
+        }
+        assert payload['by_field'] == [
+            {
+                'field_label': '年龄',
+                'parent_label': None,
+                'unique_label': '年龄',
+                'error_count': 1,
+                'row_indices': [0],
+                'row_numbers_for_humans': [1],
+                'codes': ['ExcelCellError'],
+                'suggested_action': 'Review the highlighted cells, correct the invalid values, and re-upload the workbook.',
+            }
+        ]
+        assert payload['by_code'] == [
+            {
+                'code': 'ExcelCellError',
+                'error_count': 1,
+                'row_indices': [0],
+                'row_numbers_for_humans': [1],
+                'unique_labels': ['年龄'],
+                'suggested_action': 'Review the highlighted cells, correct the invalid values, and re-upload the workbook.',
+            },
+            {
+                'code': 'ExcelRowError',
+                'error_count': 1,
+                'row_indices': [0],
+                'row_numbers_for_humans': [1],
+                'unique_labels': [],
+                'suggested_action': 'Review the row-level validation message, correct the row, and re-upload the workbook.',
+            },
+        ]
+        assert payload['items'] == [
+            {
+                'scope': 'cell',
+                'code': 'ExcelCellError',
+                'message': 'Invalid input; enter a number.',
+                'display_message': '【年龄】Invalid input; enter a number.',
+                'row_index': 0,
+                'row_number_for_humans': 1,
+                'column_index': 3,
+                'column_number_for_humans': 4,
+                'field_label': '年龄',
+                'parent_label': None,
+                'unique_label': '年龄',
+                'suggested_action': 'Review the highlighted cells, correct the invalid values, and re-upload the workbook.',
+            },
+            {
+                'scope': 'row',
+                'code': 'ExcelRowError',
+                'message': 'Combination invalid',
+                'display_message': 'Combination invalid',
+                'row_index': 0,
+                'row_number_for_humans': 1,
+                'suggested_action': 'Review the row-level validation message, correct the row, and re-upload the workbook.',
+            },
+        ]

@@ -1,7 +1,13 @@
 import pytest
 
 from excelalchemy import Label, ProgrammaticError, ValidateResult
-from excelalchemy.results import ImportResult, ValidateHeaderResult
+from excelalchemy.results import (
+    CellErrorMap,
+    ImportResult,
+    RowIssueMap,
+    ValidateHeaderResult,
+    build_frontend_remediation_payload,
+)
 
 
 class TestResultContracts:
@@ -131,3 +137,121 @@ class TestResultContracts:
             ImportResult.from_validate_header_result(validate_header)
 
         assert str(context.value) == 'ImportResult can only be built from an invalid header validation result'
+
+    def test_build_frontend_remediation_payload_for_success_case(self):
+        result = ImportResult(result=ValidateResult.SUCCESS, success_count=1)
+
+        payload = build_frontend_remediation_payload(
+            result=result,
+            cell_error_map=CellErrorMap(),
+            row_error_map=RowIssueMap(),
+        )
+
+        assert payload == {
+            'result': result.to_api_payload(),
+            'remediation': {
+                'needs_remediation': False,
+                'affected_row_count': 0,
+                'affected_field_count': 0,
+                'affected_code_count': 0,
+                'header_issue_count': 0,
+                'result_workbook_available': False,
+            },
+            'by_field': [],
+            'by_code': [],
+            'items': [],
+        }
+
+    def test_build_frontend_remediation_payload_for_header_invalid_case(self):
+        result = ImportResult(
+            result=ValidateResult.HEADER_INVALID,
+            is_required_missing=True,
+            missing_required=[Label('年龄')],
+            missing_primary=[Label('邮箱')],
+            unrecognized=[Label('未知列')],
+            duplicated=[Label('姓名')],
+        )
+
+        payload = build_frontend_remediation_payload(
+            result=result,
+            cell_error_map=CellErrorMap(),
+            row_error_map=RowIssueMap(),
+        )
+
+        assert payload['result'] == result.to_api_payload()
+        assert payload['remediation'] == {
+            'needs_remediation': True,
+            'affected_row_count': 0,
+            'affected_field_count': 0,
+            'affected_code_count': 0,
+            'header_issue_count': 4,
+            'result_workbook_available': False,
+            'suggested_action': 'Correct the workbook headers to match the template and retry the import.',
+            'fix_hint': 'Use a fresh template or align missing, duplicated, and unrecognized headers before retrying.',
+        }
+        assert payload['by_field'] == []
+        assert payload['by_code'] == []
+        assert payload['items'] == []
+
+    def test_build_frontend_remediation_payload_does_not_change_existing_result_payloads(self):
+        result = ImportResult(
+            result=ValidateResult.DATA_INVALID,
+            success_count=2,
+            fail_count=1,
+            url='memory://result.xlsx',
+        )
+        expected_result_payload = result.to_api_payload()
+        cell_error_map = CellErrorMap()
+        row_error_map = RowIssueMap()
+
+        payload = build_frontend_remediation_payload(
+            result=result,
+            cell_error_map=cell_error_map,
+            row_error_map=row_error_map,
+        )
+
+        assert result.to_api_payload() == expected_result_payload
+        assert payload['result'] == expected_result_payload
+        assert cell_error_map.to_api_payload() == {
+            'error_count': 0,
+            'items': [],
+            'by_row': {},
+            'facets': {
+                'field_labels': [],
+                'parent_labels': [],
+                'unique_labels': [],
+                'codes': [],
+                'row_numbers_for_humans': [],
+                'column_numbers_for_humans': [],
+            },
+            'grouped': {
+                'messages_by_field': {},
+                'messages_by_row': {},
+                'messages_by_code': {},
+            },
+            'summary': {
+                'by_field': [],
+                'by_row': [],
+                'by_code': [],
+            },
+        }
+        assert row_error_map.to_api_payload() == {
+            'error_count': 0,
+            'items': [],
+            'by_row': {},
+            'facets': {
+                'field_labels': [],
+                'parent_labels': [],
+                'unique_labels': [],
+                'codes': [],
+                'row_numbers_for_humans': [],
+            },
+            'grouped': {
+                'messages_by_row': {},
+                'messages_by_code': {},
+            },
+            'summary': {
+                'by_row': [],
+                'by_code': [],
+            },
+        }

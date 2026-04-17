@@ -8,6 +8,10 @@
 
 [中文 README](README_cn.md) · [About](ABOUT.md) · [Getting Started](docs/getting-started.md) · [Integration Roadmap](docs/integration-roadmap.md) · [Result Objects](docs/result-objects.md) · [API Response Cookbook](docs/api-response-cookbook.md) · [Architecture](docs/architecture.md) · [Examples Showcase](docs/examples-showcase.md) · [Public API](docs/public-api.md) · [Locale Policy](docs/locale.md) · [Limitations](docs/limitations.md) · [Performance](docs/performance.md) · [Changelog](CHANGELOG.md) · [Migration Notes](MIGRATIONS.md)
 
+Repository guides: [AGENTS.md](AGENTS.md) · [Repository Map](docs/repo-map.md) · [Domain Model](docs/domain-model.md) · [Invariants](docs/invariants.md) · [Package Guide](src/excelalchemy/README.md) · [Test Guide](tests/README.md) · [Examples Guide](examples/README.md)
+
+Engineering records: [Plans](plans/README.md) · [Technical Debt](tech_debt/README.md) · [ADRs](adr/README.md)
+
 ExcelAlchemy is a schema-driven Python library for Excel import and export workflows.
 It turns Pydantic models into typed workbook contracts: generate templates, validate uploads, map failures back to rows
 and cells, and produce locale-aware result workbooks.
