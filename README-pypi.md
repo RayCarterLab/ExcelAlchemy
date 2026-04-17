@@ -10,8 +10,6 @@ ExcelAlchemy turns Pydantic models into typed workbook contracts:
 - render workbook-facing output in `zh-CN` or `en`
 - keep storage pluggable through `ExcelStorage`
 
-![ExcelAlchemy hero image](https://raw.githubusercontent.com/RayCarterLab/ExcelAlchemy/main/images/excelalchemy-hero.png)
-
 The current stable release is `2.2.8`, which continues the 2.x line with a clearer integration roadmap, stronger import-failure payload smoke verification, and more direct install-time validation of the FastAPI reference app.
 
 [GitHub Repository](https://github.com/RayCarterLab/ExcelAlchemy) · [Full README](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README.md) · [Getting Started](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md) · [Integration Roadmap](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-roadmap.md) · [Result Objects](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md) · [API Response Cookbook](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md) · [Examples Showcase](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md) · [Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/architecture.md) · [Migration Notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/MIGRATIONS.md)
