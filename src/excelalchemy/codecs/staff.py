@@ -28,13 +28,13 @@ class SingleStaff(Radio):
             if declared.effective_required
             else MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL
         )
-        return '\n'.join(
-            [
-                dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key)),
-                dmsg(MessageKey.COMMENT_HINT, value=extra_hint),
-                *([presentation.comment_example] if presentation.comment_example else []),
-            ]
+        base_comment = (
+            f'{dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key))} '
+            f'\n{dmsg(MessageKey.COMMENT_HINT, value=extra_hint)}'
         )
+        if presentation.comment_example:
+            return f'{base_comment}\n{presentation.comment_example}'
+        return base_comment
 
     @classmethod
     def parse_input(cls, value: object, field_meta: FieldMetaInfo) -> str:
