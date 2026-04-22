@@ -93,6 +93,7 @@ class String(str, ExcelFieldCodec):
                 constraints.comment_max_length,
                 dmsg(MessageKey.COMMENT_STRING_ALLOWED_CONTENT),
                 presentation.comment_hint,
+                *([presentation.comment_example] if presentation.comment_example else []),
             ]
         )
 

@@ -229,6 +229,28 @@ class TestFieldMetadata(BaseTestCase):
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_hint == '提示：请输入邮箱'
 
+    async def test_comment_example_returns_configured_example_value(self):
+        class Importer(BaseModel):
+            email: Email = FieldMeta(
+                label='邮箱',
+                order=1,
+                example_value='name@example.com',
+            )
+
+        alchemy = self.build_alchemy(Importer)
+        assert alchemy.ordered_field_meta[0].comment_example == '示例：name@example.com'
+
+    async def test_comment_example_omits_blank_example_value(self):
+        class Importer(BaseModel):
+            email: Email = FieldMeta(
+                label='邮箱',
+                order=1,
+                example_value='   ',
+            )
+
+        alchemy = self.build_alchemy(Importer)
+        assert alchemy.ordered_field_meta[0].comment_example == ''
+
     async def test_comment_options_lists_available_option_names(self):
         class Importer(BaseModel):
             sex: Radio = FieldMeta(
@@ -339,6 +361,21 @@ class TestFieldMetadata(BaseTestCase):
         assert field_meta.excel_codec is Email
         assert field_meta.comment_max_length == '最大长度：10'
 
+    async def test_excelmeta_supports_example_value_in_annotated_field_declarations(self):
+        class Importer(BaseModel):
+            email: Annotated[
+                Email,
+                Field(max_length=10),
+                ExcelMeta(label='邮箱', order=1, example_value='name@example.com'),
+            ]
+
+        alchemy = self.build_alchemy(Importer)
+        field_meta = alchemy.ordered_field_meta[0]
+
+        assert field_meta.label == '邮箱'
+        assert field_meta.example_value == 'name@example.com'
+        assert field_meta.comment_example == '示例：name@example.com'
+
     async def test_field_metadata_exposes_split_internal_layers(self):
         class Importer(BaseModel):
             email: Email = FieldMeta(
@@ -346,6 +383,7 @@ class TestFieldMetadata(BaseTestCase):
                 order=1,
                 unique=True,
                 hint='请输入邮箱',
+                example_value='name@example.com',
                 max_length=10,
             )
 
@@ -357,6 +395,7 @@ class TestFieldMetadata(BaseTestCase):
         assert field_meta.runtime_binding.parent_label == '邮箱'
         assert field_meta.runtime_binding.parent_key == 'email'
         assert field_meta.presentation_meta.hint == '请输入邮箱'
+        assert field_meta.presentation_meta.example_value == 'name@example.com'
         assert field_meta.import_constraints.max_length == 10
         assert field_meta.declared is field_meta.declared_meta
         assert field_meta.runtime is field_meta.runtime_binding

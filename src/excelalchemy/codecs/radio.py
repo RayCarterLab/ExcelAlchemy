@@ -61,6 +61,7 @@ class Radio(ExcelFieldCodec, str):
                 presentation.comment_options,
                 dmsg(MessageKey.COMMENT_SELECTION_MODE, value=dmsg(MessageKey.COMMENT_SELECTION_VALUE_SINGLE)),
                 presentation.comment_hint,
+                *([presentation.comment_example] if presentation.comment_example else []),
             ]
         )
 

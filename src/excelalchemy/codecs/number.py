@@ -56,6 +56,7 @@ class Number(Decimal, ExcelFieldCodec):
                 presentation.comment_fraction_digits,
                 dmsg(MessageKey.COMMENT_NUMBER_INPUT_RANGE, value=cls.__get_range_description__(field_meta)),
                 presentation.comment_unit,
+                *([presentation.comment_example] if presentation.comment_example else []),
             ]
         )
 

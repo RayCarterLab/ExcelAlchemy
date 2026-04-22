@@ -1,5 +1,5 @@
 Export workflow completed
 Artifact filename: employees-export.xlsx
-Artifact bytes: 6893
+Artifact bytes: 6909
 Upload URL: memory://employees-export-upload.xlsx
 Uploaded objects: ['employees-export-upload.xlsx']

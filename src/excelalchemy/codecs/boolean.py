@@ -39,6 +39,7 @@ class Boolean(ExcelFieldCodec):
             [
                 declared.comment_required,
                 presentation.comment_hint,
+                *([presentation.comment_example] if presentation.comment_example else []),
             ]
         )
 

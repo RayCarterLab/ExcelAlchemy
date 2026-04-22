@@ -41,6 +41,7 @@ class Date(ExcelFieldCodec, datetime):
                 presentation.comment_date_format,
                 presentation.comment_date_range_option,
                 presentation.comment_hint,
+                *([presentation.comment_example] if presentation.comment_example else []),
             ]
         )
 

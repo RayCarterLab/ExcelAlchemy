@@ -17,6 +17,17 @@ REQUIRED_DOC_CHECKS: dict[Path, tuple[str, ...]] = {
     ROOT / 'README.md': (
         'Choosing ExcelAlchemy',
         'docs/tool-comparison.md',
+        'example_value',
+    ),
+    DOCS_DIR / 'getting-started.md': (
+        'example_value',
+        'header comment',
+        'alice@company.com',
+    ),
+    DOCS_DIR / 'public-api.md': (
+        'FieldMeta(...)',
+        'ExcelMeta(...)',
+        'example_value=',
     ),
     DOCS_DIR / 'result-objects.md': (
         'ImportResult',

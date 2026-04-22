@@ -25,6 +25,7 @@ class SingleTreeNode(Radio):
             [
                 declared.comment_required,
                 dmsg(MessageKey.COMMENT_HINT, value=presentation.hint or dmsg(MessageKey.SINGLE_TREE_HINT)),
+                *([presentation.comment_example] if presentation.comment_example else []),
             ]
         )
 
@@ -68,7 +69,11 @@ class MultiTreeNode(MultiCheckbox):
             else MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL
         )
         return '\n'.join(
-            [dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key)), dmsg(MessageKey.COMMENT_HINT, value=extra_hint)]
+            [
+                dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key)),
+                dmsg(MessageKey.COMMENT_HINT, value=extra_hint),
+                *([presentation.comment_example] if presentation.comment_example else []),
+            ]
         )
 
     @classmethod
