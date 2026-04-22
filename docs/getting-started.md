@@ -75,6 +75,29 @@ class EmployeeImporter(BaseModel):
     age: Annotated[Number, Field(ge=18), ExcelMeta(label='Age', order=2)]
 ```
 
+If you want generated templates to give users a more concrete example before
+upload, you can add template UX metadata such as `hint` and `example_value`:
+
+```python
+class EmployeeImporter(BaseModel):
+    work_email: Annotated[
+        String,
+        Field(min_length=8),
+        ExcelMeta(
+            label='Work email',
+            order=3,
+            hint='Use your company email address',
+            example_value='alice@company.com',
+        ),
+    ]
+```
+
+This is additive. It does not change import behavior or worksheet layout. It
+only adds a more helpful header comment in the generated template, for example:
+
+- `Hint: Use your company email address`
+- `Example: alice@company.com`
+
 ## 4. Pick The Workflow You Need
 
 Import-only create flow:

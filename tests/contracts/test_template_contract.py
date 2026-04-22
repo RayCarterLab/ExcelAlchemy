@@ -1,8 +1,9 @@
-from typing import cast
+from typing import Annotated, cast
 
 from minio import Minio
+from pydantic import BaseModel, Field
 
-from excelalchemy import ExcelAlchemy, ImporterConfig
+from excelalchemy import ExcelAlchemy, ExcelMeta, FieldMeta, ImporterConfig, String
 from excelalchemy.const import BACKGROUND_REQUIRED_COLOR, HEADER_HINT
 from tests.support import (
     BaseTestCase,
@@ -62,6 +63,22 @@ class TestTemplateContracts(BaseTestCase):
         assert worksheet['A2'].comment is not None
         assert '必填性：必填' in worksheet['A2'].comment.text
 
+    async def test_download_template_renders_example_value_in_header_comment_only_when_declared(self):
+        class Importer(BaseModel):
+            full_name: String = FieldMeta(label='姓名', order=1, hint='填写法定姓名', example_value='张三')
+            nickname: String = FieldMeta(label='昵称', order=2)
+
+        alchemy = ExcelAlchemy(ImporterConfig(Importer, creator=creator, minio=cast(Minio, self.minio)))
+
+        workbook = decode_prefixed_excel_to_workbook(alchemy.download_template())
+        worksheet = workbook['Sheet1']
+
+        assert worksheet['A2'].comment is not None
+        assert '提示：填写法定姓名' in worksheet['A2'].comment.text
+        assert '示例：张三' in worksheet['A2'].comment.text
+        assert worksheet['B2'].comment is not None
+        assert '示例：' not in worksheet['B2'].comment.text
+
     async def test_download_template_returns_merged_header_with_expected_merge_ranges(self):
         alchemy = ExcelAlchemy(ImporterConfig(MergedContractImporter, creator=creator, minio=cast(Minio, self.minio)))
 
@@ -102,3 +119,20 @@ class TestTemplateContracts(BaseTestCase):
         assert worksheet['A1'].value.startswith('Import instructions:')
         assert worksheet['A2'].comment is not None
         assert 'Required: required' in worksheet['A2'].comment.text
+
+    async def test_download_template_supports_english_example_value_comment(self):
+        class Importer(BaseModel):
+            full_name: Annotated[
+                String,
+                Field(min_length=2),
+                ExcelMeta(label='Full name', order=1, hint='Use the legal name', example_value='Alice Chen'),
+            ]
+
+        alchemy = ExcelAlchemy(ImporterConfig(Importer, creator=creator, minio=cast(Minio, self.minio), locale='en'))
+
+        workbook = decode_prefixed_excel_to_workbook(alchemy.download_template())
+        worksheet = workbook['Sheet1']
+
+        assert worksheet['A2'].comment is not None
+        assert 'Hint: Use the legal name' in worksheet['A2'].comment.text
+        assert 'Example: Alice Chen' in worksheet['A2'].comment.text

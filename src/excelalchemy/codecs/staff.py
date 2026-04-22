@@ -28,7 +28,13 @@ class SingleStaff(Radio):
             if declared.effective_required
             else MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL
         )
-        return f'{dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key))} \n{dmsg(MessageKey.COMMENT_HINT, value=extra_hint)}'
+        return '\n'.join(
+            [
+                dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key)),
+                dmsg(MessageKey.COMMENT_HINT, value=extra_hint),
+                *([presentation.comment_example] if presentation.comment_example else []),
+            ]
+        )
 
     @classmethod
     def parse_input(cls, value: object, field_meta: FieldMetaInfo) -> str:
@@ -64,6 +70,7 @@ class MultiStaff(MultiCheckbox):
             [
                 declared.comment_required,
                 dmsg(MessageKey.COMMENT_HINT, value=presentation.hint or dmsg(MessageKey.MULTI_STAFF_HINT)),
+                *([presentation.comment_example] if presentation.comment_example else []),
             ]
         )
 

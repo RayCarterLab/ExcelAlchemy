@@ -109,6 +109,7 @@ class MessageKey(StrEnum):
     COMMENT_DATE_FORMAT = 'comment_date_format'
     COMMENT_DATE_RANGE_OPTION = 'comment_date_range_option'
     COMMENT_HINT = 'comment_hint'
+    COMMENT_EXAMPLE = 'comment_example'
     COMMENT_OPTIONS = 'comment_options'
     COMMENT_FRACTION_DIGITS = 'comment_fraction_digits'
     COMMENT_UNIT = 'comment_unit'
@@ -293,6 +294,7 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.COMMENT_DATE_FORMAT: 'Format: date ({value})',
         MessageKey.COMMENT_DATE_RANGE_OPTION: 'Range: {value}',
         MessageKey.COMMENT_HINT: 'Hint: {value}',
+        MessageKey.COMMENT_EXAMPLE: 'Example: {value}',
         MessageKey.COMMENT_OPTIONS: 'Options: {value}',
         MessageKey.COMMENT_FRACTION_DIGITS: 'Fraction digits: {value}',
         MessageKey.COMMENT_UNIT: 'Unit: {value}',
@@ -368,6 +370,7 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.COMMENT_DATE_FORMAT: '格式：日期（{value}）',
         MessageKey.COMMENT_DATE_RANGE_OPTION: '范围：{value}',
         MessageKey.COMMENT_HINT: '提示：{value}',
+        MessageKey.COMMENT_EXAMPLE: '示例：{value}',
         MessageKey.COMMENT_OPTIONS: '选项：{value}',
         MessageKey.COMMENT_FRACTION_DIGITS: '小数位数：{value}',
         MessageKey.COMMENT_UNIT: '单位：{value}',

@@ -71,13 +71,22 @@ class Importer(BaseModel):
     email: Annotated[
         Email,
         Field(min_length=10),
-        ExcelMeta(label='Email', order=1, hint='Use your work email'),
+        ExcelMeta(
+            label='Email',
+            order=1,
+            hint='Use your work email',
+            example_value='alice@company.com',
+        ),
     ]
 
 
 alchemy = ExcelAlchemy(ImporterConfig(Importer, locale='en'))
 template = alchemy.download_template_artifact(filename='people-template.xlsx')
 ```
+
+This template metadata is additive: it keeps the worksheet layout unchanged and
+adds clearer header comments for spreadsheet users, such as a free-form hint
+and a concrete example value.
 
 For browser downloads, prefer `template.as_bytes()` with a `Blob`, or return the bytes from your backend with
 `Content-Disposition: attachment`. A top-level navigation to a long `data:` URL is less reliable in modern browsers.

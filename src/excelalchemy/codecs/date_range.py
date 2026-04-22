@@ -62,6 +62,7 @@ class DateRange(CompositeExcelFieldCodec):
                 declared.comment_required,
                 presentation.comment_date_format,
                 dmsg(MessageKey.COMMENT_DATE_RANGE_START_NOT_AFTER_END, extra_hint=presentation.hint or ''),
+                *([presentation.comment_example] if presentation.comment_example else []),
             ]
         )
 

@@ -69,13 +69,22 @@ class Importer(BaseModel):
     email: Annotated[
         Email,
         Field(min_length=10),
-        ExcelMeta(label='Email', order=1, hint='Use your work email'),
+        ExcelMeta(
+            label='Email',
+            order=1,
+            hint='Use your work email',
+            example_value='alice@company.com',
+        ),
     ]
 
 
 alchemy = ExcelAlchemy(ImporterConfig(Importer, locale='en'))
 template = alchemy.download_template_artifact(filename='people-template.xlsx')
 ```
+
+This template metadata is additive: it leaves the worksheet layout alone and
+improves the generated header comment with both guidance text and a concrete
+example value.
 
 ## Example Outputs
 

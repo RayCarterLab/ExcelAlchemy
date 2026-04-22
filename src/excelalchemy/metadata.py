@@ -137,6 +137,7 @@ class WorkbookPresentationMeta:
     options: tuple[Option, ...] | None = None
     unit: str | None = None
     hint: str | None = None
+    example_value: str | None = None
 
     @property
     def comment_date_format(self) -> str:
@@ -160,6 +161,12 @@ class WorkbookPresentationMeta:
         if self.hint is None:
             return ''
         return dmsg(MessageKey.COMMENT_HINT, value=self.hint)
+
+    @property
+    def comment_example(self) -> str:
+        if self.example_value is None or not self.example_value.strip():
+            return ''
+        return dmsg(MessageKey.COMMENT_EXAMPLE, value=self.example_value)
 
     @property
     def comment_options(self) -> str:
@@ -293,6 +300,7 @@ class FieldMetaInfo:
         options: list[Option] | None = None,
         unit: str | None = None,
         hint: str | None = None,
+        example_value: str | None = None,
         ge: float | None = None,
         le: float | None = None,
         max_digits: int | None = None,
@@ -321,6 +329,7 @@ class FieldMetaInfo:
             options=_normalize_options(options),
             unit=unit,
             hint=hint,
+            example_value=example_value,
         )
         self.import_constraints = ImportConstraints(
             ge=ge,
@@ -458,6 +467,10 @@ class FieldMetaInfo:
     @property
     def comment_hint(self) -> str:
         return self.presentation_meta.comment_hint
+
+    @property
+    def comment_example(self) -> str:
+        return self.presentation_meta.comment_example
 
     @property
     def comment_options(self) -> str:
@@ -647,6 +660,14 @@ class FieldMetaInfo:
         self.presentation_meta = replace(self.presentation_meta, hint=value)
 
     @property
+    def example_value(self) -> str | None:
+        return self.presentation_meta.example_value
+
+    @example_value.setter
+    def example_value(self, value: str | None) -> None:
+        self.presentation_meta = replace(self.presentation_meta, example_value=value)
+
+    @property
     def importer_ge(self) -> float | None:
         return self.import_constraints.ge
 
@@ -800,6 +821,7 @@ def _build_excel_metadata(
     options: list[Option] | None = None,
     unit: str | None = None,
     hint: str | None = None,
+    example_value: str | None = None,
     ge: float | None = None,
     le: float | None = None,
     max_digits: int | None = None,
@@ -825,6 +847,7 @@ def _build_excel_metadata(
         options=options,
         unit=unit,
         hint=hint,
+        example_value=example_value,
         ge=ge,
         le=le,
         max_digits=max_digits,
@@ -853,6 +876,7 @@ def ExcelMeta(
     options: list[Option] | None = None,
     unit: str | None = None,
     hint: str | None = None,
+    example_value: str | None = None,
     ge: float | None = None,
     le: float | None = None,
     max_digits: int | None = None,
@@ -879,6 +903,7 @@ def ExcelMeta(
         options=options,
         unit=unit,
         hint=hint,
+        example_value=example_value,
         ge=ge,
         le=le,
         max_digits=max_digits,
@@ -910,6 +935,7 @@ def FieldMeta(
     options: list[Option] | None = None,
     unit: str | None = None,
     hint: str | None = None,
+    example_value: str | None = None,
     default_factory: FieldDefaultFactory | None = None,
     alias: str | None = None,
     title: str | None = None,
@@ -950,6 +976,7 @@ def FieldMeta(
         options=options,
         unit=unit,
         hint=hint,
+        example_value=example_value,
         ge=ge,
         le=le,
         max_digits=max_digits,

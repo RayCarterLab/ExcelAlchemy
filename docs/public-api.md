@@ -30,6 +30,8 @@ These modules are the recommended import paths for application code:
 - `excelalchemy.metadata`
   Public metadata entry points such as `FieldMeta(...)`, `ExcelMeta(...)`, and
   `PatchFieldMeta`.
+  Template guidance metadata such as `hint=` and `example_value=` is part of
+  this additive public surface.
 - `excelalchemy.results`
   Structured import result models such as `ImportResult`,
   `ValidateResult`, and `ValidateHeaderResult`.

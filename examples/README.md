@@ -32,6 +32,7 @@ Use them to understand how the library is intended to be used from application c
 
 - `examples/annotated_schema.py`
   - Demonstrates the modern `Annotated[..., Field(...), ExcelMeta(...)]` declaration style.
+  - Shows additive template UX metadata such as `hint=` and `example_value=`.
   - Type: demo of the recommended declaration style.
 
 - `examples/employee_import_workflow.py`
