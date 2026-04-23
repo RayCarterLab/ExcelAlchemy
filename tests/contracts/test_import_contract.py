@@ -2,11 +2,22 @@ import io
 from typing import cast
 
 from minio import Minio
-from openpyxl import load_workbook
+from openpyxl import Workbook, load_workbook
+from pydantic import BaseModel
 
-from excelalchemy import ExcelAlchemy, ImporterConfig, ValidateResult
+from excelalchemy import (
+    ExcelAlchemy,
+    FieldMeta,
+    ImporterConfig,
+    ImportPreflightStatus,
+    String,
+    ValidateResult,
+    WorksheetNotFoundError,
+)
 from excelalchemy.const import BACKGROUND_ERROR_COLOR, REASON_COLUMN_LABEL, RESULT_COLUMN_LABEL
 from excelalchemy.core.import_session import ImportSessionPhase
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import message as msg
 from tests.support import (
     BaseTestCase,
     FileRegistry,
@@ -18,6 +29,370 @@ from tests.support.contract_models import MergedContractImporter, SimpleContract
 
 
 class TestImportContracts(BaseTestCase):
+    @staticmethod
+    def _build_workbook_bytes(*, sheet_name: str = 'Sheet1', rows: list[list[str | None]]) -> bytes:
+        workbook = Workbook()
+        worksheet = workbook.active
+        assert worksheet is not None
+        worksheet.title = sheet_name
+
+        for row_index, row in enumerate(rows, start=1):
+            for column_index, value in enumerate(row, start=1):
+                worksheet.cell(row=row_index, column=column_index, value=value)
+
+        buffer = io.BytesIO()
+        workbook.save(buffer)
+        workbook.close()
+        return buffer.getvalue()
+
+    async def test_preflight_import_returns_valid_result_for_valid_workbook(self):
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+
+        result = alchemy.preflight_import(FileRegistry.TEST_SIMPLE_IMPORT)
+
+        assert result.status == ImportPreflightStatus.VALID
+        assert result.sheet_name == 'Sheet1'
+        assert result.sheet_exists is True
+        assert result.has_merged_header is False
+        assert result.estimated_row_count == 1
+        assert result.structural_issue_codes == []
+
+    async def test_preflight_import_returns_header_invalid_for_invalid_header(self):
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+
+        result = alchemy.preflight_import(FileRegistry.TEST_HEADER_INVALID_INPUT)
+
+        assert result.status == ImportPreflightStatus.HEADER_INVALID
+        assert result.sheet_exists is True
+        assert result.estimated_row_count == 1
+        assert set(result.unrecognized) == {'不存在的表头'}
+        assert '年龄' in set(result.missing_required)
+        assert result.missing_primary == []
+
+    async def test_preflight_import_reports_missing_primary_fields_in_update_mode(self):
+        class UpdatePrimaryKeyImporter(BaseModel):
+            employee_id: String = FieldMeta(label='员工编号', order=1, is_primary_key=True)
+            name: String = FieldMeta(label='姓名', order=2)
+
+        workbook_bytes = self._build_workbook_bytes(
+            rows=[
+                ['ignored hint'],
+                ['姓名'],
+                ['张三'],
+            ]
+        )
+        storage = InMemoryExcelStorage(fixtures={'preflight-update-missing-primary.xlsx': workbook_bytes})
+        alchemy = ExcelAlchemy(ImporterConfig.for_update(UpdatePrimaryKeyImporter, storage=storage))
+
+        result = alchemy.preflight_import('preflight-update-missing-primary.xlsx')
+
+        assert result.status == ImportPreflightStatus.HEADER_INVALID
+        assert result.sheet_exists is True
+        assert result.estimated_row_count == 1
+        assert result.missing_primary == ['员工编号']
+        assert result.missing_required == []
+        assert result.unrecognized == []
+        assert result.duplicated == []
+
+    async def test_preflight_import_reports_extra_fields_without_masking_present_required_fields(self):
+        workbook_bytes = self._build_workbook_bytes(
+            rows=[
+                ['ignored hint'],
+                [
+                    '年龄',
+                    '姓名',
+                    '地址',
+                    '是否启用',
+                    '出生日期',
+                    '邮箱',
+                    '价格',
+                    '爱好',
+                    '公司',
+                    '经理',
+                    '部门',
+                    '电话',
+                    '单选',
+                    '老板',
+                    '领导',
+                    '团队',
+                    '网址',
+                    '额外列',
+                ],
+                [
+                    '18',
+                    '张三',
+                    '北京市',
+                    '是',
+                    '2021-01-01',
+                    'noreply@example.com',
+                    '100',
+                    '篮球',
+                    '阿里巴巴',
+                    '李四',
+                    '研发部',
+                    '13800138000',
+                    '选项1',
+                    '马云',
+                    '张三',
+                    '研发部',
+                    'https://www.baidu.com',
+                    'unexpected',
+                ],
+            ]
+        )
+        storage = InMemoryExcelStorage(fixtures={'preflight-extra-field.xlsx': workbook_bytes})
+        alchemy = ExcelAlchemy(ImporterConfig.for_create(SimpleContractImporter, creator=creator, storage=storage))
+
+        result = alchemy.preflight_import('preflight-extra-field.xlsx')
+
+        assert result.status == ImportPreflightStatus.HEADER_INVALID
+        assert result.sheet_exists is True
+        assert result.estimated_row_count == 1
+        assert result.missing_required == []
+        assert result.missing_primary == []
+        assert result.unrecognized == ['额外列']
+        assert result.duplicated == []
+
+    async def test_preflight_import_returns_sheet_missing_when_target_sheet_is_absent(self):
+        workbook = Workbook()
+        worksheet = workbook.active
+        assert worksheet is not None
+        worksheet.title = 'OtherSheet'
+        worksheet['A1'] = 'ignored hint'
+        worksheet['A2'] = '年龄'
+        worksheet['B2'] = '姓名'
+
+        buffer = io.BytesIO()
+        workbook.save(buffer)
+        workbook.close()
+
+        input_name = 'contract-preflight-missing-sheet.xlsx'
+        buffer.seek(0)
+        self.minio.put_object(self.minio.bucket_name, input_name, buffer, len(buffer.getvalue()))
+
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+
+        result = alchemy.preflight_import(input_name)
+
+        assert result.status == ImportPreflightStatus.SHEET_MISSING
+        assert result.sheet_name == 'Sheet1'
+        assert result.sheet_exists is False
+        assert result.has_merged_header is None
+        assert result.estimated_row_count == 0
+        assert result.structural_issue_codes == []
+
+    async def test_preflight_import_returns_sheet_missing_for_explicit_storage_sheet_not_found_error(self):
+        class MissingSheetStorage(InMemoryExcelStorage):
+            def read_excel_table(self, input_excel_name: str, *, skiprows: int, sheet_name: str):
+                raise WorksheetNotFoundError(
+                    msg(MessageKey.WORKSHEET_NOT_FOUND, sheet_name=sheet_name),
+                    message_key=MessageKey.WORKSHEET_NOT_FOUND,
+                    sheet_name=sheet_name,
+                )
+
+        storage = MissingSheetStorage(fixtures={'ignored.xlsx': b'ignored'})
+        alchemy = ExcelAlchemy(ImporterConfig.for_create(SimpleContractImporter, creator=creator, storage=storage))
+
+        result = alchemy.preflight_import('ignored.xlsx')
+
+        assert result.status == ImportPreflightStatus.SHEET_MISSING
+        assert result.sheet_name == 'Sheet1'
+        assert result.sheet_exists is False
+        assert result.structural_issue_codes == []
+
+    async def test_preflight_import_returns_structure_invalid_for_missing_header_row(self):
+        workbook_bytes = self._build_workbook_bytes(rows=[['ignored hint']])
+        storage = InMemoryExcelStorage(fixtures={'header-missing.xlsx': workbook_bytes})
+        alchemy = ExcelAlchemy(ImporterConfig.for_create(SimpleContractImporter, creator=creator, storage=storage))
+
+        result = alchemy.preflight_import('header-missing.xlsx')
+
+        assert result.status == ImportPreflightStatus.STRUCTURE_INVALID
+        assert result.sheet_name == 'Sheet1'
+        assert result.sheet_exists is True
+        assert result.has_merged_header is None
+        assert result.estimated_row_count == 0
+        assert result.structural_issue_codes == ['header_row_missing']
+
+    async def test_preflight_import_reraises_unreadable_workbook_errors(self):
+        storage = InMemoryExcelStorage(fixtures={'broken.xlsx': b'not-a-valid-workbook'})
+        alchemy = ExcelAlchemy(ImporterConfig.for_create(SimpleContractImporter, creator=creator, storage=storage))
+
+        with self.assertRaisesRegex(Exception, 'File is not a zip file'):
+            alchemy.preflight_import('broken.xlsx')
+
+    async def test_preflight_import_reraises_unexpected_storage_errors(self):
+        class ExplodingPreflightStorage(InMemoryExcelStorage):
+            def read_excel_table(self, input_excel_name: str, *, skiprows: int, sheet_name: str):
+                raise RuntimeError('boom')
+
+        storage = ExplodingPreflightStorage(fixtures={'ignored.xlsx': b'ignored'})
+        alchemy = ExcelAlchemy(ImporterConfig.for_create(SimpleContractImporter, creator=creator, storage=storage))
+
+        with self.assertRaisesRegex(RuntimeError, 'boom'):
+            alchemy.preflight_import('ignored.xlsx')
+
+    async def test_preflight_import_estimates_rows_for_merged_header_workbook(self):
+        alchemy = ExcelAlchemy(ImporterConfig(MergedContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+
+        result = alchemy.preflight_import(FileRegistry.TEST_IMPORT_WITH_MERGE_HEADER)
+
+        assert result.status == ImportPreflightStatus.VALID
+        assert result.sheet_exists is True
+        assert result.has_merged_header is True
+        assert result.estimated_row_count == 1
+
+    async def test_preflight_import_estimates_rows_for_simple_header_with_multiple_data_rows(self):
+        workbook_bytes = self._build_workbook_bytes(
+            rows=[
+                ['ignored hint'],
+                [
+                    '年龄',
+                    '姓名',
+                    '地址',
+                    '是否启用',
+                    '出生日期',
+                    '邮箱',
+                    '价格',
+                    '爱好',
+                    '公司',
+                    '经理',
+                    '部门',
+                    '电话',
+                    '单选',
+                    '老板',
+                    '领导',
+                    '团队',
+                    '网址',
+                ],
+                [
+                    '18',
+                    '张三',
+                    '北京市',
+                    '是',
+                    '2021-01-01',
+                    'noreply@example.com',
+                    '100',
+                    '篮球',
+                    '阿里巴巴',
+                    '李四',
+                    '研发部',
+                    '13800138000',
+                    '选项1',
+                    '马云',
+                    '张三',
+                    '研发部',
+                    'https://www.baidu.com',
+                ],
+                [
+                    '19',
+                    '李四',
+                    '上海市',
+                    '否',
+                    '2021-01-02',
+                    'person@example.com',
+                    '200',
+                    '足球',
+                    '腾讯',
+                    '王五',
+                    '市场部',
+                    '13900139000',
+                    '选项2',
+                    '马化腾',
+                    '李四',
+                    '市场部',
+                    'https://example.com',
+                ],
+            ]
+        )
+        storage = InMemoryExcelStorage(fixtures={'preflight-two-rows.xlsx': workbook_bytes})
+        alchemy = ExcelAlchemy(ImporterConfig.for_create(SimpleContractImporter, creator=creator, storage=storage))
+
+        result = alchemy.preflight_import('preflight-two-rows.xlsx')
+
+        assert result.status == ImportPreflightStatus.VALID
+        assert result.sheet_exists is True
+        assert result.has_merged_header is False
+        assert result.estimated_row_count == 2
+
+    async def test_preflight_import_does_not_execute_row_callbacks_or_mutate_last_import_session(self):
+        context: dict[str, object] = {'created_rows': []}
+
+        async def tracking_creator(
+            data: dict[str, object], runtime_context: dict[str, object] | None
+        ) -> dict[str, object]:
+            assert runtime_context is not None
+            created_rows = runtime_context.setdefault('created_rows', [])
+            assert isinstance(created_rows, list)
+            created_rows.append(data.copy())
+            return data
+
+        alchemy = ExcelAlchemy(
+            ImporterConfig.for_create(SimpleContractImporter, creator=tracking_creator, minio=cast(Minio, self.minio))
+        )
+        alchemy.add_context(context)
+
+        result = alchemy.preflight_import(FileRegistry.TEST_SIMPLE_IMPORT)
+
+        assert result.status == ImportPreflightStatus.VALID
+        assert context['created_rows'] == []
+        assert alchemy.last_import_snapshot is None
+
+    async def test_preflight_import_does_not_upload_or_populate_error_maps(self):
+        workbook_bytes = self._build_workbook_bytes(
+            rows=[
+                ['ignored hint'],
+                [
+                    '年龄',
+                    '姓名',
+                    '地址',
+                    '是否启用',
+                    '出生日期',
+                    '邮箱',
+                    '价格',
+                    '爱好',
+                    '公司',
+                    '经理',
+                    '部门',
+                    '电话',
+                    '单选',
+                    '老板',
+                    '领导',
+                    '团队',
+                    '网址',
+                ],
+                [
+                    '18',
+                    '张三',
+                    '北京市',
+                    '是',
+                    '2021-01-01',
+                    'noreply@example.com',
+                    '100',
+                    '篮球',
+                    '阿里巴巴',
+                    '李四',
+                    '研发部',
+                    '13800138000',
+                    '选项1',
+                    '马云',
+                    '张三',
+                    '研发部',
+                    'https://www.baidu.com',
+                ],
+            ]
+        )
+        storage = InMemoryExcelStorage(fixtures={'preflight-no-side-effects.xlsx': workbook_bytes})
+        alchemy = ExcelAlchemy(ImporterConfig.for_create(SimpleContractImporter, creator=creator, storage=storage))
+
+        result = alchemy.preflight_import('preflight-no-side-effects.xlsx')
+
+        assert result.status == ImportPreflightStatus.VALID
+        assert storage.uploaded == {}
+        assert alchemy.last_import_snapshot is None
+        assert alchemy.cell_error_map == {}
+        assert alchemy.row_error_map == {}
+
     async def test_import_data_emits_expected_success_events(self):
         alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
         events: list[dict[str, object]] = []

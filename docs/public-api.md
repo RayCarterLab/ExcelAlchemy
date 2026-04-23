@@ -34,7 +34,8 @@ These modules are the recommended import paths for application code:
   this additive public surface.
 - `excelalchemy.results`
   Structured import result models such as `ImportResult`,
-  `ValidateResult`, and `ValidateHeaderResult`.
+  `ValidateResult`, `ValidateHeaderResult`, `ImportPreflightResult`, and
+  `ImportPreflightStatus`.
 - `excelalchemy.exceptions`
   Stable exception module for `ConfigError`, `ExcelCellError`,
   `ExcelRowError`, and `ProgrammaticError`.
@@ -52,6 +53,9 @@ These modules are the recommended import paths for application code:
 - `ExcelAlchemy.import_data(..., on_event=...)`
   The additive public hook for synchronous import lifecycle events during one
   import run.
+- `ExcelAlchemy.preflight_import(...)`
+  The additive public hook for lightweight structural validation before full
+  import execution.
 - import inspection names:
   Prefer `worksheet_table`, `header_table`, `cell_error_map`, and
   `row_error_map` when reading import-run state from the facade.

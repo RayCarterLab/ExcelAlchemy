@@ -15,7 +15,7 @@ from excelalchemy._primitives.identity import UrlStr
 from excelalchemy.config import ExporterConfig, ImporterConfig
 from excelalchemy.core.storage_protocol import ExcelStorage
 from excelalchemy.core.table import WorksheetTable
-from excelalchemy.exceptions import ConfigError
+from excelalchemy.exceptions import ConfigError, WorksheetNotFoundError
 from excelalchemy.i18n.messages import MessageKey
 from excelalchemy.i18n.messages import message as msg
 from excelalchemy.util.file import remove_excel_prefix
@@ -52,7 +52,11 @@ class MinioStorageGateway(ExcelStorage):
             workbook = load_workbook(cast(BinaryIO, file_object), data_only=True)
             try:
                 if sheet_name not in workbook.sheetnames:
-                    raise ValueError(msg(MessageKey.WORKSHEET_NOT_FOUND, sheet_name=sheet_name))
+                    raise WorksheetNotFoundError(
+                        msg(MessageKey.WORKSHEET_NOT_FOUND, sheet_name=sheet_name),
+                        message_key=MessageKey.WORKSHEET_NOT_FOUND,
+                        sheet_name=sheet_name,
+                    )
                 worksheet = workbook[sheet_name]
                 return self._worksheet_to_table(worksheet, skiprows=skiprows)
             finally:

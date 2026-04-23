@@ -1,8 +1,9 @@
 import pytest
 
-from excelalchemy import Label, ProgrammaticError, ValidateResult
+from excelalchemy import ImportPreflightStatus, Label, ProgrammaticError, ValidateResult
 from excelalchemy.results import (
     CellErrorMap,
+    ImportPreflightResult,
     ImportResult,
     RowIssueMap,
     ValidateHeaderResult,
@@ -137,6 +138,105 @@ class TestResultContracts:
             ImportResult.from_validate_header_result(validate_header)
 
         assert str(context.value) == 'ImportResult can only be built from an invalid header validation result'
+
+    def test_import_preflight_result_from_validate_header_result_maps_invalid_header_fields(self):
+        validate_header = ValidateHeaderResult(
+            missing_required=[Label('年龄')],
+            missing_primary=[Label('邮箱')],
+            unrecognized=[Label('未知列')],
+            duplicated=[Label('姓名')],
+            is_valid=False,
+        )
+
+        result = ImportPreflightResult.from_validate_header_result(
+            validate_header,
+            sheet_name='Sheet1',
+            sheet_exists=True,
+            has_merged_header=False,
+            estimated_row_count=3,
+        )
+
+        assert result.status == ImportPreflightStatus.HEADER_INVALID
+        assert result.sheet_name == 'Sheet1'
+        assert result.sheet_exists is True
+        assert result.has_merged_header is False
+        assert result.estimated_row_count == 3
+        assert result.is_required_missing is True
+        assert result.missing_required == [Label('年龄')]
+        assert result.missing_primary == [Label('邮箱')]
+        assert result.unrecognized == [Label('未知列')]
+        assert result.duplicated == [Label('姓名')]
+
+    def test_import_preflight_result_to_api_payload_for_valid_case(self):
+        result = ImportPreflightResult(
+            status=ImportPreflightStatus.VALID,
+            sheet_name='Sheet1',
+            sheet_exists=True,
+            has_merged_header=False,
+            estimated_row_count=1,
+        )
+
+        assert result.to_api_payload() == {
+            'status': 'VALID',
+            'is_valid': True,
+            'is_header_invalid': False,
+            'is_sheet_missing': False,
+            'is_structure_invalid': False,
+            'sheet': {
+                'name': 'Sheet1',
+                'exists': True,
+                'has_merged_header': False,
+            },
+            'summary': {
+                'estimated_row_count': 1,
+                'structural_issue_codes': [],
+            },
+            'header_issues': {
+                'is_required_missing': False,
+                'missing_required': [],
+                'missing_primary': [],
+                'unrecognized': [],
+                'duplicated': [],
+            },
+        }
+
+    def test_import_preflight_result_status_helpers_remain_consistent(self):
+        valid = ImportPreflightResult(status=ImportPreflightStatus.VALID, sheet_name='Sheet1', sheet_exists=True)
+        header_invalid = ImportPreflightResult(
+            status=ImportPreflightStatus.HEADER_INVALID,
+            sheet_name='Sheet1',
+            sheet_exists=True,
+        )
+        sheet_missing = ImportPreflightResult(
+            status=ImportPreflightStatus.SHEET_MISSING,
+            sheet_name='Sheet1',
+            sheet_exists=False,
+        )
+        structure_invalid = ImportPreflightResult(
+            status=ImportPreflightStatus.STRUCTURE_INVALID,
+            sheet_name='Sheet1',
+            sheet_exists=False,
+        )
+
+        assert valid.is_valid is True
+        assert valid.is_header_invalid is False
+        assert valid.is_sheet_missing is False
+        assert valid.is_structure_invalid is False
+
+        assert header_invalid.is_valid is False
+        assert header_invalid.is_header_invalid is True
+        assert header_invalid.is_sheet_missing is False
+        assert header_invalid.is_structure_invalid is False
+
+        assert sheet_missing.is_valid is False
+        assert sheet_missing.is_header_invalid is False
+        assert sheet_missing.is_sheet_missing is True
+        assert sheet_missing.is_structure_invalid is False
+
+        assert structure_invalid.is_valid is False
+        assert structure_invalid.is_header_invalid is False
+        assert structure_invalid.is_sheet_missing is False
+        assert structure_invalid.is_structure_invalid is True
 
     def test_build_frontend_remediation_payload_for_success_case(self):
         result = ImportResult(result=ValidateResult.SUCCESS, success_count=1)

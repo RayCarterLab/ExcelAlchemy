@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from excelalchemy._primitives.identity import DataUrlStr, UrlStr
 from excelalchemy._primitives.payloads import ExportRowPayload
 from excelalchemy.artifacts import ExcelArtifact
-from excelalchemy.results import ImportResult
+from excelalchemy.results import ImportPreflightResult, ImportResult
 
 
 class ABCExcelAlchemy[
@@ -37,6 +37,10 @@ class ABCExcelAlchemy[
         on_event: Callable[[dict[str, object]], None] | None = None,
     ) -> ImportResult:
         """Import workbook data and return a structured result."""
+
+    @abstractmethod
+    def preflight_import(self, input_excel_name: str) -> ImportPreflightResult:
+        """Run lightweight structural validation for one workbook."""
 
     @abstractmethod
     def export(self, data: list[ExportRowPayload], keys: Sequence[str] | None = None) -> DataUrlStr:

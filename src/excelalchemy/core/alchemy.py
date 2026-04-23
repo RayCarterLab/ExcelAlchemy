@@ -22,6 +22,7 @@ from excelalchemy.config import ExcelMode, ExporterConfig, ImporterConfig, Impor
 from excelalchemy.core.abstract import ABCExcelAlchemy
 from excelalchemy.core.headers import ExcelHeaderParser, ExcelHeaderValidator
 from excelalchemy.core.import_session import ImportSession, ImportSessionSnapshot, build_import_result_field_meta
+from excelalchemy.core.preflight import ImportPreflight
 from excelalchemy.core.rendering import ExcelRenderer
 from excelalchemy.core.schema import ExcelSchemaLayout
 from excelalchemy.core.storage import build_storage_gateway
@@ -33,7 +34,7 @@ from excelalchemy.i18n.messages import MessageKey, use_display_locale
 from excelalchemy.i18n.messages import display_message as dmsg
 from excelalchemy.i18n.messages import message as msg
 from excelalchemy.metadata import FieldMetaInfo
-from excelalchemy.results import CellErrorMap, ImportResult, RowIssueMap
+from excelalchemy.results import CellErrorMap, ImportPreflightResult, ImportResult, RowIssueMap
 from excelalchemy.util.file import flatten
 
 HEADER_HINT_LINE_COUNT = 1
@@ -158,6 +159,12 @@ class ExcelAlchemy[
         session = self._new_import_session()
         self._last_import_session = session
         return await session.run(input_excel_name, output_excel_name, on_event=on_event)
+
+    def preflight_import(self, input_excel_name: str) -> ImportPreflightResult:
+        assert isinstance(self.config, ImporterConfig)
+        if self.excel_mode != ExcelMode.IMPORT:
+            raise ConfigError(msg(MessageKey.IMPORT_MODE_ONLY_METHOD))
+        return self._new_import_preflight().run(input_excel_name)
 
     def export(self, data: list[ExportRowPayload], keys: Sequence[str] | None = None) -> DataUrlStr:
         with use_display_locale(self.locale):
@@ -376,6 +383,16 @@ class ExcelAlchemy[
             import_result_label_to_field_meta=self.import_result_label_to_field_meta,
             locale=self.locale,
             context=self._context,
+        )
+
+    def _new_import_preflight(self) -> ImportPreflight[ContextT, ImportCreateModelT, ImportUpdateModelT]:
+        assert isinstance(self.config, ImporterConfig)
+        return ImportPreflight(
+            config=self.config,
+            layout=self._layout,
+            storage_gateway=self._storage_gateway,
+            header_parser=self._header_parser,
+            header_validator=self._header_validator,
         )
 
     def _require_last_import_session(self) -> ImportSession[ContextT, ImportCreateModelT, ImportUpdateModelT]:
