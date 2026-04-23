@@ -6,7 +6,7 @@
 ![Lint](https://img.shields.io/badge/lint-ruff-D7FF64)
 ![Typing](https://img.shields.io/badge/typing-pyright-2C6BED)
 
-[中文 README](README_cn.md) · [About](ABOUT.md) · [Getting Started](docs/getting-started.md) · [Integration Roadmap](docs/integration-roadmap.md) · [Result Objects](docs/result-objects.md) · [API Response Cookbook](docs/api-response-cookbook.md) · [Architecture](docs/architecture.md) · [Examples Showcase](docs/examples-showcase.md) · [Public API](docs/public-api.md) · [Locale Policy](docs/locale.md) · [Limitations](docs/limitations.md) · [Performance](docs/performance.md) · [Changelog](CHANGELOG.md) · [Migration Notes](MIGRATIONS.md)
+[中文 README](README_cn.md) · [About](ABOUT.md) · [Getting Started](docs/getting-started.md) · [Integration Roadmap](docs/integration-roadmap.md) · [Platform Architecture](docs/platform-architecture.md) · [Runtime Model](docs/runtime-model.md) · [Integration Blueprints](docs/integration-blueprints.md) · [Result Objects](docs/result-objects.md) · [API Response Cookbook](docs/api-response-cookbook.md) · [Architecture](docs/architecture.md) · [Examples Showcase](docs/examples-showcase.md) · [Public API](docs/public-api.md) · [Locale Policy](docs/locale.md) · [Limitations](docs/limitations.md) · [Performance](docs/performance.md) · [Changelog](CHANGELOG.md) · [Migration Notes](MIGRATIONS.md)
 
 Repository guides: [AGENTS.md](AGENTS.md) · [Repository Map](docs/repo-map.md) · [Domain Model](docs/domain-model.md) · [Invariants](docs/invariants.md) · [Package Guide](src/excelalchemy/README.md) · [Test Guide](tests/README.md) · [Examples Guide](examples/README.md)
 
@@ -25,6 +25,12 @@ line with a more complete import workflow: clearer template guidance before
 upload, lightweight structural preflight before execution, synchronous
 lifecycle visibility during import, and remediation-oriented payloads after
 failures.
+
+For the platform-layer architecture of that workflow, see:
+
+- [`docs/platform-architecture.md`](docs/platform-architecture.md)
+- [`docs/runtime-model.md`](docs/runtime-model.md)
+- [`docs/integration-blueprints.md`](docs/integration-blueprints.md)
 
 ## At a Glance
 
@@ -104,12 +110,28 @@ For browser downloads, prefer `template.as_bytes()` with a `Blob`, or return the
 ExcelAlchemy is designed to work as a product-ready import layer rather than
 only a row-validation helper.
 
-The practical workflow in the 2.x line is:
+The top-level import workflow in the 2.x line is:
+
+- template authoring
+- preflight gate
+- import runtime
+- result intelligence
+- artifact and delivery
+
+In practical terms, that usually means:
 
 - generate a template with workbook-facing guidance
 - run `preflight_import(...)` as a lightweight structural gate
 - run `import_data(..., on_event=...)` for full validation and execution
+- inspect `ImportResult`, `CellErrorMap`, and `RowIssueMap`
 - build remediation-oriented payloads if the import fails
+- deliver template or result workbook artifacts through the configured storage seam
+
+For the platform view and runtime sequence behind this workflow, see:
+
+- [`docs/platform-architecture.md`](docs/platform-architecture.md)
+- [`docs/runtime-model.md`](docs/runtime-model.md)
+- [`docs/integration-blueprints.md`](docs/integration-blueprints.md)
 
 Use `preflight_import(...)` when you want a fast answer to:
 
@@ -178,9 +200,10 @@ else:
 
 This keeps one clear separation:
 
-- template and preflight help before execution
-- import handles real validation and persistence
-- remediation helps API and frontend retry flows after failure
+- template authoring and preflight help before execution
+- import runtime handles real validation and persistence
+- result intelligence helps API and frontend retry flows after failure
+- artifact and delivery expose files and URLs after the run
 
 ## When To Use / When Not To Use / Limitations & Gotchas
 
@@ -284,6 +307,10 @@ flowchart TD
 ```
 
 See the full breakdown in [docs/architecture.md](docs/architecture.md).
+For the integration-oriented platform view layered above those components, see
+[docs/platform-architecture.md](docs/platform-architecture.md),
+[docs/runtime-model.md](docs/runtime-model.md), and
+[docs/integration-blueprints.md](docs/integration-blueprints.md).
 
 ## Workflow
 
@@ -590,6 +617,9 @@ More detail is documented in [ABOUT.md](ABOUT.md).
 - [README.md](README.md): product + design overview
 - [README_cn.md](README_cn.md): Chinese usage-oriented guide
 - [ABOUT.md](ABOUT.md): engineering rationale and evolution notes
+- [docs/platform-architecture.md](docs/platform-architecture.md): import platform capability model
+- [docs/runtime-model.md](docs/runtime-model.md): runtime sequence across the import workflow
+- [docs/integration-blueprints.md](docs/integration-blueprints.md): backend/frontend integration patterns
 - [docs/architecture.md](docs/architecture.md): component map and boundaries
 - [docs/limitations.md](docs/limitations.md): practical fit, limitations, and gotchas
 - [docs/performance.md](docs/performance.md): operational guidance for large files, memory, and backend guardrails

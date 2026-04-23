@@ -1,5 +1,11 @@
 # Architecture
 
+This page is the internal component view of the repository.
+If you want the integration-oriented platform view introduced for the v2.4
+documentation slice, see [`docs/platform-architecture.md`](platform-architecture.md).
+If you want the runtime sequence on top of that platform view, see
+[`docs/runtime-model.md`](runtime-model.md).
+
 ## Component Map
 
 ```mermaid
