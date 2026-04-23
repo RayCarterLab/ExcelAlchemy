@@ -6,6 +6,10 @@ ones should be treated as internal implementation details.
 
 If you want the quickest path into the library, start with
 [`docs/getting-started.md`](getting-started.md).
+If you want the import platform model first, see
+[`docs/platform-architecture.md`](platform-architecture.md)
+and
+[`docs/runtime-model.md`](runtime-model.md).
 If you want a role-based reading path, see
 [`docs/integration-roadmap.md`](integration-roadmap.md).
 If you want concrete repository examples, see
@@ -16,6 +20,23 @@ If you want result-object guidance for backend or frontend integration, see
 [`docs/result-objects.md`](result-objects.md).
 If you want copyable backend response shapes, see
 [`docs/api-response-cookbook.md`](api-response-cookbook.md).
+
+## Import Platform At A Glance
+
+The stable public import workflow in the 2.x line is:
+
+1. template authoring
+2. preflight gate
+3. import runtime
+4. result intelligence
+5. artifact and delivery
+
+This page documents the public APIs that participate in those stages.
+It does not replace the more detailed platform docs:
+
+- [`docs/platform-architecture.md`](platform-architecture.md)
+- [`docs/runtime-model.md`](runtime-model.md)
+- [`docs/integration-blueprints.md`](integration-blueprints.md)
 
 ## Stable Public Modules
 
@@ -66,6 +87,58 @@ These modules are the recommended import paths for application code:
   `summary_by_row()`, and `summary_by_code()` where applicable.
   For a compact retry-oriented payload, `excelalchemy.results` also exposes
   `build_frontend_remediation_payload(...)` as an additive helper.
+
+## Stable Public Surface By Platform Stage
+
+### Template authoring
+
+- schema models declared with Pydantic
+- `FieldMeta(...)`
+- `ExcelMeta(...)`
+- template generation methods on `ExcelAlchemy`
+- `ExcelArtifact` when you need template bytes, base64, or data URLs
+
+### Preflight gate
+
+- `ExcelAlchemy.preflight_import(...)`
+- `ImportPreflightResult`
+- `ImportPreflightStatus`
+
+### Import runtime
+
+- `ExcelAlchemy.import_data(..., on_event=...)`
+- `ImporterConfig`
+- `ImportMode`
+- `ImporterConfig.for_create(...)`
+- `ImporterConfig.for_update(...)`
+- `ImporterConfig.for_create_or_update(...)`
+
+Important boundary:
+
+- `on_event=...` is an additive synchronous observability hook
+- it is not a separate async or job execution model
+
+### Result intelligence
+
+- `ImportResult`
+- `CellErrorMap`
+- `RowIssueMap`
+- `build_frontend_remediation_payload(...)`
+- facade inspection names:
+  `worksheet_table`, `header_table`, `cell_error_map`, `row_error_map`
+
+Important boundary:
+
+- remediation payloads are opt-in additions on top of the stable result
+  surfaces
+- they do not replace `ImportResult.to_api_payload()` or the issue-map payloads
+
+### Artifact and delivery
+
+- `ExcelArtifact`
+- `ExcelStorage`
+- `storage=...`
+- result workbook URL exposure through `ImportResult`
 
 ## Compatibility Modules In 2.x
 

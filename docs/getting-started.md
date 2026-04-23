@@ -4,6 +4,11 @@ This page is the fastest way to get productive with ExcelAlchemy.
 
 If you want screenshots and fixed workflow outputs first, see
 [`docs/examples-showcase.md`](examples-showcase.md).
+If you want the platform-layer architecture of the import workflow, see
+[`docs/platform-architecture.md`](platform-architecture.md),
+[`docs/runtime-model.md`](runtime-model.md),
+and
+[`docs/integration-blueprints.md`](integration-blueprints.md).
 If you want the full public surface and compatibility boundaries, see
 [`docs/public-api.md`](public-api.md).
 If you want to understand the result objects and how to surface them through an
@@ -99,6 +104,14 @@ only adds a more helpful header comment in the generated template, for example:
 - `Example: alice@company.com`
 
 ## 4. Pick The Workflow You Need
+
+Top-level import workflow:
+
+1. template authoring
+2. preflight gate
+3. import runtime
+4. result intelligence
+5. artifact and delivery
 
 Import-only create flow:
 

@@ -10,6 +10,12 @@ large workbooks, and round-trip limits, see
 [`docs/limitations.md`](limitations.md).
 If you want screenshots and captured workflow output first, see
 [`docs/examples-showcase.md`](examples-showcase.md).
+If you want the new platform-layer architecture view first, see
+[`docs/platform-architecture.md`](platform-architecture.md).
+If you want the runtime sequence and blueprint-style integration guidance, see
+[`docs/runtime-model.md`](runtime-model.md)
+and
+[`docs/integration-blueprints.md`](integration-blueprints.md).
 
 ## 1. If You Are Integrating ExcelAlchemy For The First Time
 
@@ -24,6 +30,7 @@ Recommended order:
 Focus on these concepts first:
 
 - stable import paths
+- template authoring -> preflight gate -> import runtime -> result intelligence -> artifact/delivery
 - schema declaration style
 - `storage=...` as the recommended backend integration path
 - the difference between import, create-or-update, and export workflows
@@ -33,10 +40,12 @@ Focus on these concepts first:
 
 Recommended order:
 
-1. [`docs/result-objects.md`](result-objects.md)
-2. [`docs/api-response-cookbook.md`](api-response-cookbook.md)
-3. [`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md)
-4. [`docs/public-api.md`](public-api.md)
+1. [`docs/platform-architecture.md`](platform-architecture.md)
+2. [`docs/integration-blueprints.md`](integration-blueprints.md)
+3. [`docs/result-objects.md`](result-objects.md)
+4. [`docs/api-response-cookbook.md`](api-response-cookbook.md)
+5. [`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md)
+6. [`docs/public-api.md`](public-api.md)
 
 Focus on these objects:
 
@@ -44,6 +53,12 @@ Focus on these objects:
 - `ImportResult`
 - `CellErrorMap`
 - `RowIssueMap`
+
+Use the platform docs first when you need to decide:
+
+- where to put preflight versus full runtime execution
+- whether result payload shaping belongs in the API layer or UI layer
+- how template generation and result delivery fit the same integration story
 
 Use these payload helpers directly in your API layer:
 
@@ -57,9 +72,11 @@ Use these payload helpers directly in your API layer:
 
 Recommended order:
 
-1. [`docs/result-objects.md`](result-objects.md)
-2. [`docs/api-response-cookbook.md`](api-response-cookbook.md)
-3. [`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md)
+1. [`docs/platform-architecture.md`](platform-architecture.md)
+2. [`docs/integration-blueprints.md`](integration-blueprints.md)
+3. [`docs/result-objects.md`](result-objects.md)
+4. [`docs/api-response-cookbook.md`](api-response-cookbook.md)
+5. [`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md)
 
 Focus on these payload fields:
 
@@ -86,6 +103,12 @@ own remediation summary, also inspect:
 - `build_frontend_remediation_payload(...)`
 - `remediation.suggested_action`
 - `remediation.fix_hint`
+
+Use the blueprint doc when the frontend flow depends on:
+
+- a preflight-first upload experience
+- result workbook download links
+- compact remediation guidance in addition to the stable result surfaces
 
 ## 4. If You Want Copyable Reference Code
 
