@@ -45,7 +45,13 @@ from excelalchemy.codecs.url import Url, UrlCodec
 from excelalchemy.config import ExporterConfig, ImporterConfig, ImportMode
 from excelalchemy.core.alchemy import ExcelAlchemy
 from excelalchemy.core.storage_protocol import ExcelStorage
-from excelalchemy.exceptions import ConfigError, ExcelCellError, ExcelRowError, ProgrammaticError
+from excelalchemy.exceptions import (
+    ConfigError,
+    ExcelCellError,
+    ExcelRowError,
+    ProgrammaticError,
+    WorksheetNotFoundError,
+)
 from excelalchemy.helper.pydantic import extract_pydantic_model
 from excelalchemy.metadata import ExcelMeta, FieldMeta, PatchFieldMeta
 from excelalchemy.results import (
@@ -53,6 +59,8 @@ from excelalchemy.results import (
     CellIssueRecord,
     CodeIssueSummary,
     FieldIssueSummary,
+    ImportPreflightResult,
+    ImportPreflightStatus,
     ImportResult,
     RowIssueMap,
     RowIssueRecord,
@@ -94,6 +102,8 @@ __all__ = [
     'FieldIssueSummary',
     'FieldMeta',
     'ImportMode',
+    'ImportPreflightResult',
+    'ImportPreflightStatus',
     'ImportResult',
     'ImporterConfig',
     'Key',
@@ -140,6 +150,7 @@ __all__ = [
     'ValidateHeaderResult',
     'ValidateResult',
     'ValidateRowResult',
+    'WorksheetNotFoundError',
     'extract_pydantic_model',
     'flatten',
 ]

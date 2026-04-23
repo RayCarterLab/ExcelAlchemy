@@ -160,3 +160,10 @@ class ConfigError(ExcelAlchemyError):
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(message='{self.message}', detail={self.detail!r})"
+
+
+class WorksheetNotFoundError(ExcelAlchemyError):
+    """Raised when the configured worksheet does not exist in the workbook."""
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(message='{self.message}', detail={self.detail!r})"

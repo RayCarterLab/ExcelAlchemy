@@ -193,12 +193,14 @@ These two documents explain:
 If you are integrating ExcelAlchemy into a web backend, the recommended public
 result surface is:
 
+- `ImportPreflightResult`
 - `ImportResult`
 - `alchemy.cell_error_map`
 - `alchemy.row_error_map`
 
 These objects let you return:
 
+- a lightweight preflight summary before import
 - a high-level import summary
 - row-level error summaries
 - cell-level coordinates for UI highlighting
@@ -208,3 +210,44 @@ See:
 - [`docs/result-objects.md`](result-objects.md)
 - [`docs/api-response-cookbook.md`](api-response-cookbook.md)
 - [`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md)
+
+## 9. Use Preflight Before Import When You Need A Quick Structural Check
+
+Use `preflight_import(...)` when you want a fast answer to:
+
+- does the configured sheet exist
+- do the headers match the schema
+- does the workbook look structurally importable
+- about how many rows would a later import process
+
+Use `import_data(...)` when you want the full workflow:
+
+- row validation
+- create / update callback execution
+- cell and row error maps
+- result workbook rendering and upload
+
+Typical backend flow:
+
+```python
+preflight = alchemy.preflight_import('employees.xlsx')
+
+if not preflight.is_valid:
+    return {
+        'preflight': preflight.to_api_payload(),
+    }
+
+result = await alchemy.import_data('employees.xlsx', 'employees-result.xlsx')
+
+return {
+    'preflight': preflight.to_api_payload(),
+    'result': result.to_api_payload(),
+    'cell_errors': alchemy.cell_error_map.to_api_payload(),
+    'row_errors': alchemy.row_error_map.to_api_payload(),
+}
+```
+
+Keep this distinction in mind:
+
+- preflight is lightweight and structural
+- import is the full validation and execution path

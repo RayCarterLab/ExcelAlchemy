@@ -14,6 +14,7 @@ If you want copyable success / failure / header-invalid response shapes, see
 
 The most important public result objects are:
 
+- `ImportPreflightResult`
 - `ImportResult`
 - `CellErrorMap`
 - `RowIssueMap`
@@ -300,6 +301,100 @@ response = {
     'cell_errors': alchemy.cell_error_map.to_api_payload(),
     'row_errors': alchemy.row_error_map.to_api_payload(),
 }
+```
+
+## `ImportPreflightResult`
+
+`ImportPreflightResult` is the high-level summary of one lightweight structural
+preflight run.
+
+Useful fields include:
+
+- `status`
+  Overall status such as `VALID`, `HEADER_INVALID`, `SHEET_MISSING`, or
+  `STRUCTURE_INVALID`.
+- `sheet_name`
+  The configured worksheet name used for preflight.
+- `sheet_exists`
+  Whether the configured worksheet was found.
+- `has_merged_header`
+  Whether the header block was detected as merged when readable.
+- `estimated_row_count`
+  Estimated number of data rows for a later import run.
+- `structural_issue_codes`
+  Stable machine-readable codes for non-header structural failures.
+
+Typical usage:
+
+```python
+result = alchemy.preflight_import('employees.xlsx')
+
+if result.is_valid:
+    ...
+```
+
+Use preflight when you need a quick structural gate before the real import.
+
+Practical cases:
+
+- reject uploads that are missing the target sheet
+- stop early when headers do not match the schema
+- show a lightweight “looks importable” response before running row validation
+
+Do not treat preflight as a replacement for `import_data(...)`.
+
+Preflight does not do:
+
+- row-level validation
+- create / update execution
+- cell or row error collection
+- result workbook generation
+
+Useful helpers:
+
+- `is_valid`
+- `is_header_invalid`
+- `is_sheet_missing`
+- `is_structure_invalid`
+- `to_api_payload()`
+
+Example payload:
+
+```json
+{
+  "status": "HEADER_INVALID",
+  "is_valid": false,
+  "is_header_invalid": true,
+  "is_sheet_missing": false,
+  "is_structure_invalid": false,
+  "sheet": {
+    "name": "Sheet1",
+    "exists": true,
+    "has_merged_header": false
+  },
+  "summary": {
+    "estimated_row_count": 3,
+    "structural_issue_codes": []
+  },
+  "header_issues": {
+    "is_required_missing": true,
+    "missing_required": ["Age"],
+    "missing_primary": [],
+    "unrecognized": ["Unexpected Column"],
+    "duplicated": []
+  }
+}
+```
+
+Simple workflow:
+
+```python
+preflight = alchemy.preflight_import('employees.xlsx')
+
+if not preflight.is_valid:
+    return {'preflight': preflight.to_api_payload()}
+
+result = await alchemy.import_data('employees.xlsx', 'employees-result.xlsx')
 ```
 
 This gives you:

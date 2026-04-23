@@ -6,6 +6,9 @@ from openpyxl import load_workbook
 from excelalchemy import UrlStr
 from excelalchemy.core.storage_protocol import ExcelStorage
 from excelalchemy.core.table import WorksheetTable
+from excelalchemy.exceptions import WorksheetNotFoundError
+from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.i18n.messages import message as msg
 
 
 class InMemoryExcelStorage(ExcelStorage):
@@ -18,6 +21,12 @@ class InMemoryExcelStorage(ExcelStorage):
     def read_excel_table(self, input_excel_name: str, *, skiprows: int, sheet_name: str) -> WorksheetTable:
         workbook = load_workbook(io.BytesIO(self.fixtures[input_excel_name]), data_only=True)
         try:
+            if sheet_name not in workbook.sheetnames:
+                raise WorksheetNotFoundError(
+                    msg(MessageKey.WORKSHEET_NOT_FOUND, sheet_name=sheet_name),
+                    message_key=MessageKey.WORKSHEET_NOT_FOUND,
+                    sheet_name=sheet_name,
+                )
             worksheet = workbook[sheet_name]
             rows = [
                 [None if value is None else str(value) for value in row]
