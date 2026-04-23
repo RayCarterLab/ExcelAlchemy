@@ -46,6 +46,8 @@ flowchart LR
 - owns the user-facing workflow
 - coordinates import/export operations
 - keeps the top-level API compact
+- exposes `import_data(..., on_event=...)` as an additive progress-reporting
+  hook for import runs
 
 ### Schema
 
@@ -76,6 +78,15 @@ flowchart LR
 - validates row payloads
 - dispatches create/update/upsert logic
 - isolates backend execution from parsing concerns
+
+### Import Session
+
+`src/excelalchemy/core/import_session.py`
+
+- owns one import run's lifecycle and mutable runtime state
+- emits structured lifecycle events when `on_event=...` is supplied
+- keeps those events on the same synchronous path as header validation, row
+  execution, and result workbook rendering
 
 ### Rendering
 

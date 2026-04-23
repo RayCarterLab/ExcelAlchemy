@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import cast
 
 from pydantic import BaseModel
@@ -144,14 +144,20 @@ class ExcelAlchemy[
     ) -> ExcelArtifact:
         return ExcelArtifact.from_data_url(self.download_template(sample_data), filename=filename)
 
-    async def import_data(self, input_excel_name: str, output_excel_name: str) -> ImportResult:
+    async def import_data(
+        self,
+        input_excel_name: str,
+        output_excel_name: str,
+        *,
+        on_event: Callable[[dict[str, object]], None] | None = None,
+    ) -> ImportResult:
         assert isinstance(self.config, ImporterConfig)
         if self.excel_mode != ExcelMode.IMPORT:
             raise ConfigError(msg(MessageKey.IMPORT_MODE_ONLY_METHOD))
 
         session = self._new_import_session()
         self._last_import_session = session
-        return await session.run(input_excel_name, output_excel_name)
+        return await session.run(input_excel_name, output_excel_name, on_event=on_event)
 
     def export(self, data: list[ExportRowPayload], keys: Sequence[str] | None = None) -> DataUrlStr:
         with use_display_locale(self.locale):
