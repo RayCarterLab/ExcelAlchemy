@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 from pydantic import BaseModel
 
@@ -29,7 +29,13 @@ class ABCExcelAlchemy[
         """Render an import template and return a structured Excel artifact."""
 
     @abstractmethod
-    async def import_data(self, input_excel_name: str, output_excel_name: str) -> ImportResult:
+    async def import_data(
+        self,
+        input_excel_name: str,
+        output_excel_name: str,
+        *,
+        on_event: Callable[[dict[str, object]], None] | None = None,
+    ) -> ImportResult:
         """Import workbook data and return a structured result."""
 
     @abstractmethod

@@ -49,6 +49,9 @@ These modules are the recommended import paths for application code:
   The recommended backend configuration pattern in the 2.x line.
 - `ExcelArtifact`
   The recommended return shape when you need bytes, base64, or data URLs.
+- `ExcelAlchemy.import_data(..., on_event=...)`
+  The additive public hook for synchronous import lifecycle events during one
+  import run.
 - import inspection names:
   Prefer `worksheet_table`, `header_table`, `cell_error_map`, and
   `row_error_map` when reading import-run state from the facade.
@@ -112,6 +115,35 @@ For most application code, these are the recommended import paths:
   Use this if you want the dedicated metadata entry points directly.
 - `from excelalchemy.results import ...`
   Use this if you need result models or richer error-map helper types directly.
+
+For synchronous job-style progress reporting, you can attach an event callback
+to the existing import call:
+
+```python
+job_state = {'status': 'pending', 'processed_rows': 0, 'total_rows': 0}
+
+def handle_import_event(event: dict[str, object]) -> None:
+    if event['event'] == 'started':
+        job_state['status'] = 'running'
+    elif event['event'] == 'row_processed':
+        job_state['processed_rows'] = event['processed_row_count']
+        job_state['total_rows'] = event['total_row_count']
+    elif event['event'] == 'completed':
+        job_state['status'] = 'completed'
+        job_state['result'] = event['result']
+    elif event['event'] == 'failed':
+        job_state['status'] = 'failed'
+
+result = await alchemy.import_data(
+    'employees.xlsx',
+    'employee-import-result.xlsx',
+    on_event=handle_import_event,
+)
+```
+
+This is still a synchronous import. The callback runs inline during normal
+header validation, row execution, and result rendering, which makes it useful
+for service-layer progress tracking without introducing a new execution model.
 
 If you are building API responses from import failures, the recommended public
 result helpers are:

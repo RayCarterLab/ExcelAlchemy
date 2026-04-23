@@ -33,6 +33,7 @@ For component structure, see [`docs/architecture.md`](architecture.md).
 | Worksheet table | `src/excelalchemy/core/table.py` | Lightweight internal 2D table abstraction used for workbook import/export flow instead of pandas. | Internal, but important to understand |
 | Import session | `src/excelalchemy/core/import_session.py` | Owns one import run’s lifecycle, state, counts, header table, worksheet table, and result rendering decisions. | Internal |
 | Import session snapshot | `src/excelalchemy/core/import_session.py` | Immutable summary of the current import session phase and counts. | Internal |
+| Import lifecycle event callback | `src/excelalchemy/core/alchemy.py`, `src/excelalchemy/core/import_session.py` | Optional per-run callback passed to `ExcelAlchemy.import_data(...)` for synchronous lifecycle events. | Public concept |
 | Row aggregator | `src/excelalchemy/core/rows.py` | Reconstructs flattened worksheet rows back into model-shaped payloads. | Internal |
 | Import issue tracker | `src/excelalchemy/core/rows.py` | Maps cell and row issues back into workbook coordinates and result columns. | Internal |
 | Import executor | `src/excelalchemy/core/executor.py` | Validates row payloads and dispatches configured create/update/upsert callbacks. | Internal |
@@ -69,6 +70,8 @@ For component structure, see [`docs/architecture.md`](architecture.md).
 ### Execution responsibilities
 
 - `ExcelAlchemy` turns a config and schema into a usable workflow object.
+- `ExcelAlchemy.import_data(..., on_event=...)` can report lifecycle progress
+  to a job or service layer while keeping the import itself synchronous.
 - `ExcelSchemaLayout` turns schema declarations into a flattened Excel layout.
 - `ExcelHeaderParser` and `ExcelHeaderValidator` decide whether an uploaded workbook matches that layout.
 - `RowAggregator` reconstructs model-shaped data from worksheet rows.
@@ -106,6 +109,7 @@ For component structure, see [`docs/architecture.md`](architecture.md).
 - `ExcelStorage` provides workbook input as `WorksheetTable` and accepts rendered workbook output for upload.
 - During import:
   - `ImportSession` coordinates the lifecycle
+  - an optional `on_event` callback can observe lifecycle milestones inline
   - `ExcelHeaderParser` parses header rows
   - `ExcelHeaderValidator` validates them against `ExcelSchemaLayout`
   - `RowAggregator` reconstructs row payloads
@@ -137,6 +141,7 @@ For component structure, see [`docs/architecture.md`](architecture.md).
 - `ImportResult`
 - `CellErrorMap`
 - `RowIssueMap`
+- `ExcelAlchemy.import_data(..., on_event=...)`
 
 ### Internal concepts
 
@@ -179,6 +184,9 @@ The import flow is the richest lifecycle in the repository.
 - Start point:
   - `ExcelAlchemy.import_data(...)`
   - implemented in `src/excelalchemy/core/alchemy.py`
+- Optional public progress hook:
+  - `ExcelAlchemy.import_data(..., on_event=...)`
+  - emits simple event dictionaries during the same synchronous import run
 - Runtime owner:
   - `ImportSession`
   - `src/excelalchemy/core/import_session.py`
@@ -197,6 +205,12 @@ The import flow is the richest lifecycle in the repository.
     - `HEADER_INVALID`
     - `DATA_INVALID`
     - `SUCCESS`
+- Event vocabulary:
+  - `started`
+  - `header_validated`
+  - `row_processed`
+  - `completed`
+  - `failed`
 - Workbook-facing row result concept:
   - `ValidateRowResult`
   - values:

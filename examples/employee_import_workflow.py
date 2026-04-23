@@ -82,9 +82,17 @@ async def create_employee(row: dict[str, object], context: dict[str, object] | N
     return row
 
 
-async def run_workflow() -> tuple[ImportResult, InMemoryImportStorage, dict[str, object]]:
+async def run_workflow() -> tuple[ImportResult, InMemoryImportStorage, dict[str, object], list[dict[str, object]]]:
     storage = InMemoryImportStorage()
-    context: dict[str, object] = {'created_rows': []}
+    context: dict[str, object] = {
+        'created_rows': [],
+        'job_progress': {
+            'status': 'pending',
+            'processed_rows': 0,
+            'total_rows': 0,
+        },
+    }
+    events: list[dict[str, object]] = []
 
     alchemy = ExcelAlchemy(
         ImporterConfig.for_create(
@@ -98,14 +106,40 @@ async def run_workflow() -> tuple[ImportResult, InMemoryImportStorage, dict[str,
 
     template = alchemy.download_template_artifact(filename='employee-template.xlsx')
     _build_import_fixture(storage, template.as_bytes())
-    result = await alchemy.import_data('employee-import.xlsx', 'employee-import-result.xlsx')
-    return result, storage, context
+
+    def handle_import_event(event: dict[str, object]) -> None:
+        events.append(event)
+        job_progress = context['job_progress']
+        assert isinstance(job_progress, dict)
+
+        match event['event']:
+            case 'started':
+                job_progress['status'] = 'running'
+            case 'row_processed':
+                job_progress['processed_rows'] = event['processed_row_count']
+                job_progress['total_rows'] = event['total_row_count']
+            case 'completed':
+                job_progress['status'] = 'completed'
+                job_progress['result'] = event['result']
+                job_progress['result_workbook_url'] = event['url']
+            case 'failed':
+                job_progress['status'] = 'failed'
+                job_progress['error'] = event['error_message']
+
+    result = await alchemy.import_data(
+        'employee-import.xlsx',
+        'employee-import-result.xlsx',
+        on_event=handle_import_event,
+    )
+    return result, storage, context, events
 
 
 def main() -> None:
-    result, storage, context = asyncio.run(run_workflow())
+    result, storage, context, events = asyncio.run(run_workflow())
     created_rows = context['created_rows']
+    job_progress = context['job_progress']
     assert isinstance(created_rows, list)
+    assert isinstance(job_progress, dict)
 
     print('Employee import workflow completed')
     print(f'Result: {result.result}')
@@ -114,6 +148,8 @@ def main() -> None:
     print(f'Result workbook URL: {result.url}')
     print(f'Created rows: {len(created_rows)}')
     print(f'Uploaded artifacts: {sorted(storage.uploaded)}')
+    print(f'Observed events: {[event["event"] for event in events]}')
+    print(f'Job progress: {job_progress}')
 
 
 if __name__ == '__main__':

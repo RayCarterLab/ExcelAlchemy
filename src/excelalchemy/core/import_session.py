@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 from enum import StrEnum
 from functools import cached_property
@@ -9,6 +10,7 @@ from functools import cached_property
 from pydantic import BaseModel
 
 from excelalchemy._primitives.constants import REASON_COLUMN_KEY, RESULT_COLUMN_KEY
+from excelalchemy._primitives.diagnostics import runtime_logger
 from excelalchemy._primitives.header_models import ExcelHeader
 from excelalchemy._primitives.identity import DataUrlStr, RowIndex, UniqueLabel, UrlStr
 from excelalchemy._primitives.payloads import FlatRowPayload, ModelRowPayload
@@ -101,6 +103,7 @@ class ImportSession[
         self.row_aggregator = RowAggregator(self.layout, self.behavior.import_mode)
         self.executor = ImportExecutor(self.config, self.issue_tracker, lambda: self.context)
         self._snapshot = ImportSessionSnapshot()
+        self._on_event: Callable[[dict[str, object]], None] | None = None
 
     @property
     def cell_error_map(self) -> CellErrorMap:
@@ -143,61 +146,82 @@ class ImportSession[
                 return 1
         return 0
 
-    async def run(self, input_excel_name: str, output_excel_name: str) -> ImportResult:
+    async def run(
+        self,
+        input_excel_name: str,
+        output_excel_name: str,
+        *,
+        on_event: Callable[[dict[str, object]], None] | None = None,
+    ) -> ImportResult:
+        self._on_event = on_event
         with use_display_locale(self.locale):
-            self._snapshot = replace(
-                self._snapshot,
-                phase=ImportSessionPhase.INITIALIZED,
-                input_excel_name=input_excel_name,
-                output_excel_name=output_excel_name,
-                rendered_result_workbook=False,
-                result=None,
-                data_row_count=0,
-                processed_row_count=0,
-                success_count=0,
-                fail_count=0,
-            )
+            try:
+                self._snapshot = replace(
+                    self._snapshot,
+                    phase=ImportSessionPhase.INITIALIZED,
+                    input_excel_name=input_excel_name,
+                    output_excel_name=output_excel_name,
+                    rendered_result_workbook=False,
+                    result=None,
+                    data_row_count=0,
+                    processed_row_count=0,
+                    success_count=0,
+                    fail_count=0,
+                )
+                self._emit_event({'event': 'started'})
 
-            validate_header = self._validate_header(input_excel_name)
-            if not validate_header.is_valid:
-                header_result = ImportResult.from_validate_header_result(validate_header)
+                validate_header = self._validate_header(input_excel_name)
+                self._emit_event(self._header_validated_event(validate_header))
+                if not validate_header.is_valid:
+                    header_result = ImportResult.from_validate_header_result(validate_header)
+                    self._snapshot = replace(
+                        self._snapshot,
+                        phase=ImportSessionPhase.COMPLETED,
+                        has_merged_header=self.input_excel_has_merged_header,
+                        result=header_result.result,
+                    )
+                    self._emit_event(self._completed_event(header_result))
+                    return header_result
+
+                self._prepare_rows_for_execution()
+
+                all_success, success_count, fail_count = await self._execute_rows()
+
+                url = None
+                if not all_success:
+                    self._add_result_column()
+                    content_with_prefix = self._render_import_result_excel()
+                    url = self._upload_file(output_excel_name, content_with_prefix)
+                    self._snapshot = replace(
+                        self._snapshot,
+                        phase=ImportSessionPhase.RESULT_RENDERED,
+                        rendered_result_workbook=True,
+                    )
+
+                import_result = ImportResult(
+                    result=(ValidateResult.DATA_INVALID, ValidateResult.SUCCESS)[int(all_success)],
+                    url=url,
+                    success_count=success_count,
+                    fail_count=fail_count,
+                )
                 self._snapshot = replace(
                     self._snapshot,
                     phase=ImportSessionPhase.COMPLETED,
-                    has_merged_header=self.input_excel_has_merged_header,
-                    result=header_result.result,
+                    success_count=success_count,
+                    fail_count=fail_count,
+                    result=import_result.result,
                 )
-                return header_result
-
-            self._prepare_rows_for_execution()
-
-            all_success, success_count, fail_count = await self._execute_rows()
-
-            url = None
-            if not all_success:
-                self._add_result_column()
-                content_with_prefix = self._render_import_result_excel()
-                url = self._upload_file(output_excel_name, content_with_prefix)
-                self._snapshot = replace(
-                    self._snapshot,
-                    phase=ImportSessionPhase.RESULT_RENDERED,
-                    rendered_result_workbook=True,
+                self._emit_event(self._completed_event(import_result))
+                return import_result
+            except Exception as error:
+                self._emit_event(
+                    {
+                        'event': 'failed',
+                        'error_type': type(error).__name__,
+                        'error_message': str(error),
+                    }
                 )
-
-            import_result = ImportResult(
-                result=(ValidateResult.DATA_INVALID, ValidateResult.SUCCESS)[int(all_success)],
-                url=url,
-                success_count=success_count,
-                fail_count=fail_count,
-            )
-            self._snapshot = replace(
-                self._snapshot,
-                phase=ImportSessionPhase.COMPLETED,
-                success_count=success_count,
-                fail_count=fail_count,
-                result=import_result.result,
-            )
-            return import_result
+                raise
 
     def _validate_header(self, input_excel_name: str) -> ValidateHeaderResult:
         self._load_workbook(input_excel_name)
@@ -244,6 +268,15 @@ class ImportSession[
             processed_row_count += 1
             all_success = all_success and success
             success_count, fail_count = (success_count + 1, fail_count) if success else (success_count, fail_count + 1)
+            self._emit_event(
+                {
+                    'event': 'row_processed',
+                    'processed_row_count': processed_row_count,
+                    'total_row_count': self._snapshot.data_row_count,
+                    'success_count': success_count,
+                    'fail_count': fail_count,
+                }
+            )
 
         self._snapshot = replace(
             self._snapshot,
@@ -289,6 +322,43 @@ class ImportSession[
             reason_unique_label=self.import_result_field_meta[1].unique_label,
             extra_header_count_on_import=self.extra_header_count_on_import,
         )
+
+    def _emit_event(self, event: dict[str, object]) -> None:
+        if self._on_event is None:
+            return
+        try:
+            self._on_event(event)
+        except Exception:
+            runtime_logger.exception(
+                'Import lifecycle event handler raised an exception while processing event %s.',
+                event.get('event'),
+            )
+
+    @staticmethod
+    def _header_validated_event(validate_header: ValidateHeaderResult) -> dict[str, object]:
+        event: dict[str, object] = {
+            'event': 'header_validated',
+            'is_valid': validate_header.is_valid,
+        }
+        if not validate_header.is_valid:
+            event.update(
+                {
+                    'missing_required': [str(label) for label in validate_header.missing_required],
+                    'missing_primary': [str(label) for label in validate_header.missing_primary],
+                    'unrecognized': [str(label) for label in validate_header.unrecognized],
+                    'duplicated': [str(label) for label in validate_header.duplicated],
+                }
+            )
+        return event
+
+    def _completed_event(self, import_result: ImportResult) -> dict[str, object]:
+        return {
+            'event': 'completed',
+            'result': import_result.result.value,
+            'success_count': import_result.success_count,
+            'fail_count': import_result.fail_count,
+            'url': import_result.url,
+        }
 
     @property
     def df(self) -> WorksheetTable:
