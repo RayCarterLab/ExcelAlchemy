@@ -36,7 +36,7 @@ Use them to understand how the library is intended to be used from application c
   - Type: demo of the recommended declaration style.
 
 - `examples/employee_import_workflow.py`
-  - Demonstrates the basic import flow from template generation through import result handling.
+  - Demonstrates the basic import flow from template generation through preflight, lifecycle-event observation, and import result handling.
   - Type: runnable workflow demo.
 
 - `examples/create_or_update_import.py`

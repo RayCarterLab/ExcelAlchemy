@@ -4,6 +4,64 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog and versioned according to PEP 440.
 
+## [2.3.0] - 2026-04-23
+
+This release continues the stable 2.x line with a more complete import
+workflow: clearer template guidance before upload, lightweight structural
+preflight before execution, synchronous lifecycle visibility during import, and
+compact remediation-oriented payloads after failures.
+
+### Added
+
+- Added additive template UX metadata support through `hint=` and
+  `example_value=` so generated header comments can provide clearer workbook
+  input guidance
+- Added `ExcelAlchemy.preflight_import(...)` for lightweight structural import
+  validation before full import execution
+- Added `ImportPreflightResult` and `ImportPreflightStatus` as stable public
+  preflight result types
+- Added additive `on_event=` support on `ExcelAlchemy.import_data(...)` for
+  synchronous import lifecycle callbacks
+- Added `build_frontend_remediation_payload(...)` for compact retry-oriented
+  remediation payloads alongside the existing import result surfaces
+- Added a dedicated `WorksheetNotFoundError` exception so sheet-missing
+  preflight classification does not rely on backend-specific message parsing
+
+### Changed
+
+- Extended the import workflow so applications can combine template guidance,
+  preflight validation, lifecycle event observation, and remediation payloads
+  without replacing the existing full import API
+- Kept `ExcelAlchemy.import_data(...)` as the full validation and execution
+  path while clarifying that `preflight_import(...)` is structural only
+- Updated storage-backed workbook reading so preflight maps only explicit
+  worksheet-missing failures to `SHEET_MISSING` and re-raises unrelated
+  storage/runtime failures
+- Refined template comment rendering for single-staff guidance formatting
+- Expanded contract coverage for:
+  - preflight header validation
+  - missing and extra field handling
+  - row-count estimation
+  - import lifecycle event payloads
+  - remediation payload behavior
+
+### Documentation
+
+- Updated `README.md`, `README-pypi.md`, and onboarding docs to describe the
+  additive template guidance metadata
+- Updated `docs/getting-started.md` with practical preflight usage guidance and
+  a `preflight -> import` workflow example
+- Updated `docs/public-api.md` and `docs/result-objects.md` to document
+  `preflight_import(...)`, `ImportPreflightResult`, lifecycle callbacks, and
+  remediation payload helpers
+- Updated `docs/architecture.md`, `docs/domain-model.md`, examples, and
+  reference-app guidance to reflect the broader import workflow story
+- Added design plans under `plans/` for:
+  - template UX metadata v1
+  - job-friendly import lifecycle events v1
+  - import preflight v1
+  - front-end remediation payload v1
+
 ## [2.2.8] - 2026-04-05
 
 This release continues the stable 2.x line with a clearer integration reading

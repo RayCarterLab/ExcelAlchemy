@@ -13,6 +13,7 @@ from excelalchemy import (
     ExcelStorage,
     FieldMeta,
     ImporterConfig,
+    ImportPreflightResult,
     ImportResult,
     Number,
     String,
@@ -82,7 +83,13 @@ async def create_employee(row: dict[str, object], context: dict[str, object] | N
     return row
 
 
-async def run_workflow() -> tuple[ImportResult, InMemoryImportStorage, dict[str, object], list[dict[str, object]]]:
+async def run_workflow() -> tuple[
+    ImportPreflightResult,
+    ImportResult,
+    InMemoryImportStorage,
+    dict[str, object],
+    list[dict[str, object]],
+]:
     storage = InMemoryImportStorage()
     context: dict[str, object] = {
         'created_rows': [],
@@ -106,6 +113,8 @@ async def run_workflow() -> tuple[ImportResult, InMemoryImportStorage, dict[str,
 
     template = alchemy.download_template_artifact(filename='employee-template.xlsx')
     _build_import_fixture(storage, template.as_bytes())
+    preflight = alchemy.preflight_import('employee-import.xlsx')
+    assert preflight.is_valid
 
     def handle_import_event(event: dict[str, object]) -> None:
         events.append(event)
@@ -131,17 +140,18 @@ async def run_workflow() -> tuple[ImportResult, InMemoryImportStorage, dict[str,
         'employee-import-result.xlsx',
         on_event=handle_import_event,
     )
-    return result, storage, context, events
+    return preflight, result, storage, context, events
 
 
 def main() -> None:
-    result, storage, context, events = asyncio.run(run_workflow())
+    preflight, result, storage, context, events = asyncio.run(run_workflow())
     created_rows = context['created_rows']
     job_progress = context['job_progress']
     assert isinstance(created_rows, list)
     assert isinstance(job_progress, dict)
 
     print('Employee import workflow completed')
+    print(f'Preflight: {preflight.status}')
     print(f'Result: {result.result}')
     print(f'Success rows: {result.success_count}')
     print(f'Failed rows: {result.fail_count}')

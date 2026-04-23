@@ -20,12 +20,20 @@ This repository is also a design artifact.
 It documents a series of deliberate engineering choices: `src/` layout, Pydantic v2 migration, pandas removal,
 pluggable storage, `uv`-based workflows, and locale-aware workbook output.
 
-The current stable release is `2.2.8`, which continues the ExcelAlchemy 2.x line with a clearer integration roadmap, stronger import-failure payload smoke verification, and more direct install-time validation of the FastAPI reference app.
+The current stable release is `2.3.0`, which continues the ExcelAlchemy 2.x
+line with a more complete import workflow: clearer template guidance before
+upload, lightweight structural preflight before execution, synchronous
+lifecycle visibility during import, and remediation-oriented payloads after
+failures.
 
 ## At a Glance
 
 - Build Excel templates directly from typed Pydantic schemas
+- Guide users with workbook-facing input hints and examples
+- Run lightweight structural preflight checks before full import
 - Validate uploaded workbooks and write failures back to rows and cells
+- Observe import lifecycle progress through additive callbacks
+- Build remediation-oriented payloads for retry workflows
 - Keep storage pluggable through `ExcelStorage`
 - Render workbook-facing text in `zh-CN` or `en`
 - Stay lightweight at runtime with `openpyxl` instead of pandas
@@ -90,6 +98,89 @@ and a concrete example value.
 
 For browser downloads, prefer `template.as_bytes()` with a `Blob`, or return the bytes from your backend with
 `Content-Disposition: attachment`. A top-level navigation to a long `data:` URL is less reliable in modern browsers.
+
+## Import Workflow
+
+ExcelAlchemy is designed to work as a product-ready import layer rather than
+only a row-validation helper.
+
+The practical workflow in the 2.x line is:
+
+- generate a template with workbook-facing guidance
+- run `preflight_import(...)` as a lightweight structural gate
+- run `import_data(..., on_event=...)` for full validation and execution
+- build remediation-oriented payloads if the import fails
+
+Use `preflight_import(...)` when you want a fast answer to:
+
+- does the configured sheet exist
+- do the workbook headers match the schema
+- is the workbook structurally importable
+
+Use `import_data(...)` when you want the full workflow:
+
+- row validation
+- create / update callback execution
+- result workbook rendering
+- structured row and cell failure output
+
+Short example:
+
+```python
+from pydantic import BaseModel
+
+from excelalchemy import ExcelAlchemy, Email, FieldMeta, ImporterConfig, Number, String
+from excelalchemy.results import build_frontend_remediation_payload
+
+
+class EmployeeImporter(BaseModel):
+    full_name: String = FieldMeta(label='Full name', order=1, hint='Use the legal name')
+    age: Number = FieldMeta(label='Age', order=2)
+    work_email: Email = FieldMeta(label='Work email', order=3, example_value='alice@company.com')
+
+
+async def create_employee(row: dict[str, object], context: dict[str, object] | None) -> dict[str, object]:
+    return row
+
+
+alchemy = ExcelAlchemy(
+    ImporterConfig.for_create(
+        EmployeeImporter,
+        creator=create_employee,
+        storage=storage,
+        locale='en',
+    )
+)
+
+template = alchemy.download_template_artifact(filename='employee-template.xlsx')
+
+preflight = alchemy.preflight_import('employees.xlsx')
+if not preflight.is_valid:
+    response = {'preflight': preflight.to_api_payload()}
+else:
+    events: list[dict[str, object]] = []
+    result = await alchemy.import_data(
+        'employees.xlsx',
+        'employees-result.xlsx',
+        on_event=events.append,
+    )
+
+    response = {
+        'result': result.to_api_payload(),
+        'events': events,
+        'remediation': build_frontend_remediation_payload(
+            result=result,
+            cell_error_map=alchemy.cell_error_map,
+            row_error_map=alchemy.row_error_map,
+        ),
+    }
+```
+
+This keeps one clear separation:
+
+- template and preflight help before execution
+- import handles real validation and persistence
+- remediation helps API and frontend retry flows after failure
 
 ## When To Use / When Not To Use / Limitations & Gotchas
 
@@ -271,6 +362,7 @@ Import workflow output:
 
 ```text
 Employee import workflow completed
+Preflight: VALID
 Result: SUCCESS
 Success rows: 1
 Failed rows: 0

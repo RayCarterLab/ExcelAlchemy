@@ -40,12 +40,14 @@ Recommended order:
 
 Focus on these objects:
 
+- `ImportPreflightResult`
 - `ImportResult`
 - `CellErrorMap`
 - `RowIssueMap`
 
 Use these payload helpers directly in your API layer:
 
+- `ExcelAlchemy.preflight_import(...)` when the endpoint wants a lightweight structural gate before the real import
 - `ImportResult.to_api_payload()`
 - `CellErrorMap.to_api_payload()`
 - `RowIssueMap.to_api_payload()`

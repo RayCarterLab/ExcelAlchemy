@@ -1,7 +1,10 @@
 Employee import workflow completed
+Preflight: VALID
 Result: SUCCESS
 Success rows: 1
 Failed rows: 0
 Result workbook URL: None
 Created rows: 1
 Uploaded artifacts: []
+Observed events: ['started', 'header_validated', 'row_processed', 'completed']
+Job progress: {'status': 'completed', 'processed_rows': 1, 'total_rows': 1, 'result': 'SUCCESS', 'result_workbook_url': None}
