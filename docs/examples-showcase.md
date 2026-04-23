@@ -30,6 +30,7 @@ see
 Best entry point if you want to understand the core story:
 
 - generate a workbook template
+- run a lightweight structural preflight
 - accept a filled workbook
 - validate the upload
 - create domain rows
@@ -43,6 +44,7 @@ Fixed output:
 
 ```text
 Employee import workflow completed
+Preflight: VALID
 Result: SUCCESS
 Success rows: 1
 Failed rows: 0
