@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog and versioned according to PEP 440.
 
+## [2.4.0] - 2026-04-24
+
+### Added
+
+- Added `docs/platform-architecture.md`
+- Added `docs/runtime-model.md`
+- Added `docs/integration-blueprints.md`
+
+### Changed
+
+- Improved the documentation structure for the import platform model
+- Unified repository-facing terminology around the import workflow
+- Clarified the import workflow as:
+  - template authoring
+  - preflight gate
+  - import runtime
+  - result intelligence
+  - artifact and delivery
+
+### Internal
+
+- Completed minimal platform alignment for docs and low-risk code comments
+- Improved documentation cross-linking across README, API, result, and
+  integration docs
+
 ## [2.3.0] - 2026-04-23
 
 This release continues the stable 2.x line with a more complete import

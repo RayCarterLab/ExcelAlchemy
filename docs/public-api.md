@@ -117,8 +117,13 @@ Important boundary:
 
 - `on_event=...` is an additive synchronous observability hook
 - it is not a separate async or job execution model
+- platform docs use stage labels such as `Rows Processed`
+- the concrete runtime event name emitted today is `row_processed`
 
 ### Result intelligence
+
+This is the platform-stage label for the post-import consumption layer.
+The concrete stable public surfaces remain the result objects and helpers below.
 
 - `ImportResult`
 - `CellErrorMap`

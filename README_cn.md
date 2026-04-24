@@ -5,7 +5,7 @@
 ExcelAlchemy 是一个面向 Excel 导入导出的 schema-first Python 库。
 它的核心思路不是“读写表格文件”，而是“把 Excel 当成一种带约束的业务契约”。
 
-当前稳定发布版本是 `2.3.0`。在稳定的 ExcelAlchemy 2.x 线上，它进一步补齐了更完整的导入工作流：
+当前稳定发布版本是 `2.4.0`。在稳定的 ExcelAlchemy 2.x 线上，它进一步补齐了更完整的导入工作流：
 
 - 上传前更清晰的模板引导
 - 执行前更轻量的结构化 preflight gate
@@ -108,6 +108,49 @@ flowchart LR
 - [`docs/platform-architecture.md`](./docs/platform-architecture.md)
 - [`docs/runtime-model.md`](./docs/runtime-model.md)
 - [`docs/integration-blueprints.md`](./docs/integration-blueprints.md)
+
+## 导入工作流概览
+
+如果只看最短路径，可以把当前导入平台理解为：
+
+```text
+template -> preflight -> import -> remediation -> delivery
+```
+
+对应到实际接入时，通常就是：
+
+- 先生成模板，给用户明确的 workbook 引导
+- 用 `preflight_import(...)` 先做轻量结构校验
+- 用 `import_data(..., on_event=...)` 跑真正的导入运行时
+- 如果前端需要重试引导，再构造 remediation payload
+- 如果流程需要交付结果文件，再返回或上传 result workbook artifact
+
+如果你需要更细的结果对象说明或 API 响应形状，也可以继续看：
+
+- [`docs/result-objects.md`](./docs/result-objects.md)
+- [`docs/api-response-cookbook.md`](./docs/api-response-cookbook.md)
+
+最小示例：
+
+```python
+from excelalchemy.results import build_frontend_remediation_payload
+
+
+events: list[dict[str, object]] = []
+
+preflight = alchemy.preflight_import('employees.xlsx')
+if preflight.is_valid:
+    result = await alchemy.import_data(
+        'employees.xlsx',
+        'employees-result.xlsx',
+        on_event=events.append,
+    )
+    payload = build_frontend_remediation_payload(
+        result=result,
+        cell_error_map=alchemy.cell_error_map,
+        row_error_map=alchemy.row_error_map,
+    )
+```
 
 ## 安装
 

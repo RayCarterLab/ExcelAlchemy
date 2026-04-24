@@ -6,6 +6,10 @@ Use them to understand how the library is intended to be used from application c
 ## Related docs
 
 - [../README.md](../README.md) for the main user-facing overview.
+- [../docs/platform-architecture.md](../docs/platform-architecture.md) for the
+  capability-oriented import platform view.
+- [../docs/runtime-model.md](../docs/runtime-model.md) for the runtime sequence
+  behind those example workflows.
 - [../docs/public-api.md](../docs/public-api.md) for the supported public import surface.
 - [../docs/repo-map.md](../docs/repo-map.md) for where examples fit into the repository.
 - [../src/excelalchemy/README.md](../src/excelalchemy/README.md) for the implementation details behind the public workflows shown here.
@@ -18,9 +22,10 @@ Use them to understand how the library is intended to be used from application c
   - `storage=...` as the preferred backend integration path
   - facade methods on `ExcelAlchemy`
 - The main user-facing workflows in this repository:
-  - schema declaration
-  - template generation
-  - import validation
+  - schema declaration and template authoring
+  - preflight gate
+  - import runtime
+  - result intelligence and remediation
   - create-or-update import
   - export generation
   - storage integration

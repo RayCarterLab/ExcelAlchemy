@@ -102,7 +102,7 @@ This plan does not itself update any doc other than adding this plan file.
 The recommended documentation model is a capability-oriented import platform
 layer above the existing internal component map.
 
-### 1. Contract Authoring Layer
+### 1. Template Authoring Layer
 
 Responsibility:
 
@@ -123,9 +123,9 @@ Current capability framing:
 
 Recommended platform name:
 
-- `Contract Authoring`
+- `Template Authoring`
 
-### 2. Structural Gate Layer
+### 2. Preflight Gate Layer
 
 Responsibility:
 
@@ -145,9 +145,9 @@ Current capability framing:
 
 Recommended platform name:
 
-- `Structural Gate`
+- `Preflight Gate`
 
-### 3. Execution And Observability Layer
+### 3. Import Runtime Layer
 
 Responsibility:
 
@@ -172,9 +172,9 @@ Current capability framing:
 
 Recommended platform name:
 
-- `Execution and Observability`
+- `Import Runtime`
 
-### 4. Outcome And Remediation Layer
+### 4. Result Intelligence Layer
 
 Responsibility:
 
@@ -197,7 +197,7 @@ Current capability framing:
 
 Recommended platform name:
 
-- `Outcome and Remediation`
+- `Result Intelligence`
 
 ### 5. Cross-cutting Integration Seams
 
@@ -217,10 +217,11 @@ out as cross-cutting seams:
 
 Future docs should describe import capabilities in this order:
 
-1. contract authoring
-2. structural gate
-3. execution and observability
-4. outcome and remediation
+1. template authoring
+2. preflight gate
+3. import runtime
+4. result intelligence
+5. artifact and delivery
 
 Then map those capabilities down to internal components such as
 `schema.py`, `headers.py`, `import_session.py`, `executor.py`, and
@@ -231,27 +232,29 @@ component-level architecture docs.
 
 ## Proposed New Architecture Docs
 
-### New doc
+### New docs
 
-- `docs/import-platform.md`
+- `docs/platform-architecture.md`
   - purpose:
     - define the platform-layer capability model
     - show the before-import / in-import / after-import story
     - link outward to `docs/public-api.md`, `docs/result-objects.md`, and
       `docs/architecture.md`
-  - recommended sections:
-    - platform overview
-    - capability layers
-    - public surface by layer
-    - internal component mapping
-    - integration patterns for backend/API/frontend consumers
-    - boundaries and non-goals
+- `docs/runtime-model.md`
+  - purpose:
+    - explain what happens during import execution
+    - separate preflight from full import runtime semantics
+    - define runtime guarantees and lifecycle event meaning
+- `docs/integration-blueprints.md`
+  - purpose:
+    - show copyable integration compositions for backend and frontend readers
+    - keep API composition examples separate from architecture explanations
 
 ### Existing docs to update
 
 - `README.md`
   - add a concise import-platform framing section and point to
-    `docs/import-platform.md`
+    `docs/platform-architecture.md`
 - `docs/architecture.md`
   - split the current content into:
     - platform view
@@ -276,16 +279,18 @@ Use these terms consistently in v2.4 docs:
 
 - `Import platform layer`
   - the capability-oriented view above internal components
-- `Contract authoring`
+- `Template authoring`
   - schema declaration plus template-side workbook guidance
 - `Template guidance`
   - workbook-facing additive metadata such as `hint` and `example_value`
-- `Structural gate`
+- `Preflight gate`
   - lightweight preflight before full execution
-- `Execution and observability`
+- `Import runtime`
   - full import plus synchronous lifecycle visibility
-- `Outcome and remediation`
+- `Result intelligence`
   - post-import result objects, issue maps, and remediation payloads
+- `Artifact and delivery`
+  - template/result workbook artifacts and storage-backed delivery
 - `Result surfaces`
   - `ImportResult`, `CellErrorMap`, `RowIssueMap`, and related serializers
 - `Remediation payload`
@@ -316,7 +321,7 @@ Purpose:
 
 Recommended home:
 
-- `docs/import-platform.md`
+- `docs/platform-architecture.md`
 
 ### 2. Import lifecycle sequence
 
@@ -331,7 +336,7 @@ Purpose:
 
 Recommended home:
 
-- `docs/import-platform.md`
+- `docs/platform-architecture.md`
 - optionally summarized in `README.md`
 
 ### 3. Public surface to capability map
@@ -373,7 +378,9 @@ Recommended home:
 Primary docs:
 
 - `README.md`
-- `docs/import-platform.md` (new)
+- `docs/platform-architecture.md`
+- `docs/runtime-model.md`
+- `docs/integration-blueprints.md`
 - `docs/architecture.md`
 - `docs/domain-model.md`
 - `docs/public-api.md`
@@ -413,7 +420,8 @@ Risk:
 
 Mitigation:
 
-- keep `docs/import-platform.md` focused on capabilities and public surfaces
+- keep `docs/platform-architecture.md` focused on capabilities and public
+  surfaces
 - keep `docs/architecture.md` focused on internal collaborators and ownership
 
 ### Risk: accidental API signaling
@@ -439,11 +447,11 @@ Mitigation:
 - standardize only the terms needed to describe the current import platform
 - avoid renaming stable public APIs
 
-### Open question: one new platform doc or a broader architecture rewrite
+### Open question: one platform doc set or a broader architecture rewrite
 
 Recommendation:
 
-- start with one new `docs/import-platform.md` and targeted edits elsewhere
+- start with the platform doc set and targeted edits elsewhere
 - avoid a large architecture-doc rewrite in one pass
 
 ### Open question: should preflight and result objects stay in separate docs
@@ -452,7 +460,7 @@ Recommendation:
 
 - yes
 - keep detailed behavior in `docs/result-objects.md`
-- use `docs/import-platform.md` to explain where those objects fit in the
+- use `docs/platform-architecture.md` to explain where those objects fit in the
   broader workflow
 
 ### Open question: should lifecycle events get a dedicated doc
@@ -460,7 +468,8 @@ Recommendation:
 Recommendation:
 
 - not in this phase
-- first group them under `Execution and Observability`
+- first group them under `Import Runtime` and document them as `Lifecycle
+  Events`
 - create a dedicated doc later only if examples and integrations grow enough
 
 ### Open question: how to handle newly discovered design gaps
@@ -476,13 +485,14 @@ Recommendation:
 
 - confirm the four-layer decomposition
 - confirm the standardized terminology
-- confirm the new-doc strategy centered on `docs/import-platform.md`
+- confirm the new-doc strategy centered on the platform doc set
 
 ### Phase 2. Add the platform-level doc
 
-- create `docs/import-platform.md`
-- add the core capability map and lifecycle diagram
-- link to existing public API, architecture, and result docs
+- create `docs/platform-architecture.md`
+- create `docs/runtime-model.md`
+- create `docs/integration-blueprints.md`
+- link them to existing public API, architecture, and result docs
 
 ### Phase 3. Align current docs to the platform model
 
@@ -516,8 +526,10 @@ Recommendation:
   - structural gate
   - execution and observability
   - outcome and remediation
-- The plan names a concrete new architecture doc:
-  - `docs/import-platform.md`
+- The plan names the concrete platform doc set:
+  - `docs/platform-architecture.md`
+  - `docs/runtime-model.md`
+  - `docs/integration-blueprints.md`
 - The plan specifies terminology to standardize across docs.
 - The plan specifies a reusable Mermaid diagram set.
 - The plan identifies the primary docs likely to be updated.

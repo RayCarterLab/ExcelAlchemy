@@ -9,8 +9,17 @@ If you want the stable public API boundaries, see
 [`docs/public-api.md`](public-api.md).
 If you want copyable success / failure / header-invalid response shapes, see
 [`docs/api-response-cookbook.md`](api-response-cookbook.md).
+If you want the higher-level platform framing, see
+[`docs/platform-architecture.md`](platform-architecture.md)
+and
+[`docs/runtime-model.md`](runtime-model.md).
 
 ## Core Result Objects
+
+In the v2.4 platform docs, these surfaces sit in the `Result Intelligence`
+layer.
+That platform label is an umbrella term, not a new subsystem or replacement
+for the concrete result objects documented here.
 
 The most important public result objects are:
 
@@ -307,6 +316,7 @@ response = {
 
 `ImportPreflightResult` is the high-level summary of one lightweight structural
 preflight run.
+It belongs to the `Preflight Gate` layer, not the `Result Intelligence` layer.
 
 Useful fields include:
 
@@ -415,6 +425,8 @@ see
 `build_frontend_remediation_payload(...)` is an additive serializer for
 frontend-oriented remediation flows. It does not replace the default
 `to_api_payload()` helpers and does not change their output shapes.
+In the platform docs, it is a thinner projection built on top of the result
+intelligence surfaces rather than a new primary result contract.
 
 Use it when you want a thinner payload that answers:
 
@@ -530,6 +542,8 @@ This is especially useful when:
 
 ## Recommended Reading
 
+- [`docs/platform-architecture.md`](platform-architecture.md)
+- [`docs/runtime-model.md`](runtime-model.md)
 - [`docs/getting-started.md`](getting-started.md)
 - [`docs/public-api.md`](public-api.md)
 - [`docs/api-response-cookbook.md`](api-response-cookbook.md)

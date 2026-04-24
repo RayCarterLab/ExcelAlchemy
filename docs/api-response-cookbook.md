@@ -7,8 +7,16 @@ If you are new to the library, start with
 [`docs/getting-started.md`](getting-started.md).
 If you want the result-object reference first, see
 [`docs/result-objects.md`](result-objects.md).
+If you want the platform-layer workflow first, see
+[`docs/platform-architecture.md`](platform-architecture.md)
+and
+[`docs/runtime-model.md`](runtime-model.md).
 If you want a copyable FastAPI-oriented example, see
 [`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md).
+
+In the v2.4 platform model, these payloads sit mostly in the `Result
+Intelligence` stage, with the remediation payload acting as an additive
+frontend-oriented projection.
 
 ## Recommended Top-Level Shape
 
@@ -380,6 +388,8 @@ Common patterns:
 
 ## 7. Related Reading
 
+- [`docs/platform-architecture.md`](platform-architecture.md)
+- [`docs/runtime-model.md`](runtime-model.md)
 - [`docs/result-objects.md`](result-objects.md)
 - [`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md)
 - [`docs/public-api.md`](public-api.md)

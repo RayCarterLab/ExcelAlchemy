@@ -45,10 +45,10 @@ system rewrite.
 
 ### Recommended decomposition
 
-The cleanest platform-layer decomposition of the current system is four primary
-capability layers plus three cross-cutting seams.
+The cleanest platform-layer decomposition of the current system is five primary
+capability layers plus a small set of cross-cutting seams.
 
-#### 1. Contract Authoring
+#### 1. Template Authoring
 
 Responsibility:
 
@@ -70,7 +70,7 @@ Internal alignment:
 - `src/excelalchemy/core/writer.py`
 - `src/excelalchemy/codecs/`
 
-#### 2. Structural Gate
+#### 2. Preflight Gate
 
 Responsibility:
 
@@ -88,7 +88,7 @@ Internal alignment:
 - `src/excelalchemy/core/schema.py`
 - `src/excelalchemy/core/storage_protocol.py`
 
-#### 3. Execution and Observability
+#### 3. Import Runtime
 
 Responsibility:
 
@@ -110,7 +110,7 @@ Internal alignment:
 - `src/excelalchemy/core/rows.py`
 - `src/excelalchemy/helper/pydantic.py`
 
-#### 4. Outcome and Remediation
+#### 4. Result Intelligence
 
 Responsibility:
 
@@ -131,6 +131,29 @@ Internal alignment:
 - `src/excelalchemy/core/writer.py`
 - issue production paths in `src/excelalchemy/core/rows.py` and
   `src/excelalchemy/core/executor.py`
+
+#### 5. Artifact and Delivery
+
+Responsibility:
+
+- package and deliver generated template and result workbook outputs
+- expose storage-backed delivery without turning storage into the core
+  architecture story
+
+Public surfaces:
+
+- `ExcelArtifact`
+- `ExcelStorage`
+- artifact-returning facade methods
+- result workbook URL exposure through `ImportResult`
+
+Internal alignment:
+
+- `src/excelalchemy/artifacts.py`
+- `src/excelalchemy/core/rendering.py`
+- `src/excelalchemy/core/writer.py`
+- `src/excelalchemy/core/storage_protocol.py`
+- `src/excelalchemy/core/storage.py`
 
 #### Cross-cutting seams
 
@@ -191,23 +214,26 @@ Internal docs should avoid:
 These should become the official top-level concepts in v2.4 docs:
 
 - `Import platform`
-- `Contract authoring`
+- `Template authoring`
 - `Template guidance`
-- `Structural gate`
-- `Execution`
-- `Observability`
+- `Preflight gate`
+- `Import runtime`
+- `Lifecycle events`
+- `Result intelligence`
 - `Outcome surfaces`
 - `Remediation payload`
 - `Storage seam`
 
 Recommended usage rules:
 
-- use `Contract authoring` for schema and template-facing guidance
+- use `Template authoring` for schema and template-facing guidance
 - use `Template guidance` for additive workbook metadata such as `hint` and
   `example_value`
-- use `Structural gate` for `preflight_import(...)` only
-- use `Execution` for the full import path
-- use `Observability` for `on_event=...` only
+- use `Preflight gate` for `preflight_import(...)` only
+- use `Import runtime` for the full import path
+- use `Lifecycle events` for `on_event=...` only
+- use `Result intelligence` as the platform-stage label above the concrete
+  result objects
 - use `Outcome surfaces` for `ImportResult`, `CellErrorMap`, and `RowIssueMap`
 - use `Remediation payload` only for the opt-in helper, not for all result
   payloads
@@ -243,13 +269,14 @@ Terms to avoid as top-level concepts:
   - should stop carrying both the platform story and the internal component
     story
   - recommended split:
-    - new `docs/import-platform.md` for capability-layer architecture
+    - `docs/platform-architecture.md` for capability-layer architecture
     - retained `docs/architecture.md` for internal component architecture
 
 #### Should mainly be relinked and lightly reframed
 
 - `README.md`
-  - keep short platform summary, then relink to `docs/import-platform.md`
+  - keep short platform summary, then relink to
+    `docs/platform-architecture.md`
 - `docs/getting-started.md`
   - keep onboarding focus, then relink to platform/result docs
 - `docs/integration-roadmap.md`
@@ -274,10 +301,11 @@ Purpose:
 
 Recommended content:
 
-- `Contract authoring`
-- `Structural gate`
-- `Execution and observability`
-- `Outcome and remediation`
+- `Template authoring`
+- `Preflight gate`
+- `Import runtime`
+- `Result intelligence`
+- `Artifact and delivery`
 - side seams:
   - `ExcelStorage`
   - `Locale`
@@ -285,7 +313,7 @@ Recommended content:
 
 Recommended home:
 
-- `docs/import-platform.md`
+- `docs/platform-architecture.md`
 
 #### 2. Runtime sequence view
 
@@ -306,7 +334,7 @@ Recommended sequence:
 
 Recommended home:
 
-- `docs/import-platform.md`
+- `docs/platform-architecture.md`
 - optionally summarized in `README.md`
 
 #### 3. Integration blueprint view
@@ -331,7 +359,7 @@ Recommended nodes:
 
 Recommended home:
 
-- `docs/import-platform.md`
+- `docs/platform-architecture.md`
 - `docs/api-response-cookbook.md`
 - `docs/result-objects.md`
 
@@ -396,7 +424,7 @@ It also creates maintenance pressure:
 
 The cleaner design is:
 
-- new `docs/import-platform.md` for capability architecture
+- `docs/platform-architecture.md` for capability architecture
 - retained `docs/architecture.md` for internal component architecture
 
 ## Exact Scope Boundaries
@@ -427,9 +455,11 @@ The cleaner design is:
 
 ## Likely File Change Checklist
 
-### New doc
+### New docs
 
-- [ ] `docs/import-platform.md`
+- [ ] `docs/platform-architecture.md`
+- [ ] `docs/runtime-model.md`
+- [ ] `docs/integration-blueprints.md`
 
 ### Docs to update directly
 
@@ -473,8 +503,10 @@ The cleaner design is:
       proposing a new runtime model.
 - [ ] The official top-level concepts are few, reusable, and consistent with
       existing docs.
-- [ ] The recommendation introduces only one new primary architecture doc:
-      `docs/import-platform.md`.
+- [ ] The recommendation introduces the platform doc set:
+      `docs/platform-architecture.md`,
+      `docs/runtime-model.md`,
+      `docs/integration-blueprints.md`.
 - [ ] `docs/architecture.md` remains the internal/component architecture
       reference.
 - [ ] `docs/result-objects.md` remains the detailed result reference rather than
@@ -489,10 +521,12 @@ The cleaner design is:
 
 ## Final Recommendation
 
-For v2.4, the cleanest design is a documentation architecture with one new
-platform-level doc and no architectural rewrite:
+For v2.4, the cleanest design is a documentation architecture with a small
+platform-level doc set and no architectural rewrite:
 
-- add `docs/import-platform.md` as the capability-layer architecture page
+- add `docs/platform-architecture.md` as the capability-layer architecture page
+- add `docs/runtime-model.md` as the runtime semantics page
+- add `docs/integration-blueprints.md` as the integration composition page
 - keep `docs/architecture.md` as the internal component map
 - keep `docs/public-api.md`, `docs/result-objects.md`, and
   `docs/api-response-cookbook.md` as separate reference docs

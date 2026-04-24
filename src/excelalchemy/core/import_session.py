@@ -66,7 +66,13 @@ class ImportSession[
     ImportCreateModelT: BaseModel,
     ImportUpdateModelT: BaseModel,
 ]:
-    """Keep all single-run import state outside of the long-lived facade."""
+    """Keep all single-run import state outside of the long-lived facade.
+
+    This class owns the concrete runtime event payloads emitted during one
+    import run. Platform docs may describe broader stage labels such as
+    "Rows Processed", while the runtime event dictionaries emitted here keep
+    their current concrete names such as ``row_processed``.
+    """
 
     def __init__(
         self,

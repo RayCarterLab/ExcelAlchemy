@@ -5,6 +5,10 @@ It is based on the repository as it exists today.
 
 For directory-level navigation, see [`docs/repo-map.md`](repo-map.md).
 For component structure, see [`docs/architecture.md`](architecture.md).
+For the higher-level import platform model, see
+[`docs/platform-architecture.md`](platform-architecture.md)
+and
+[`docs/runtime-model.md`](runtime-model.md).
 
 ## Related docs
 
@@ -14,6 +18,16 @@ For component structure, see [`docs/architecture.md`](architecture.md).
 - [../tests/README.md](../tests/README.md) for where the model is protected by tests.
 
 ## 1. Core concepts and entities
+
+The repository now documents two complementary concept views:
+
+- platform concepts such as `Template Authoring`, `Preflight Gate`,
+  `Import Runtime`, `Result Intelligence`, and `Artifact / Delivery`
+- code and domain concepts such as `ImportSession`, `ExcelSchemaLayout`,
+  `ImportResult`, and `ExcelStorage`
+
+This page focuses on the second view and maps the concepts that actually appear
+in code and public API surfaces.
 
 | Concept | Primary files | Responsibility | Visibility |
 | --- | --- | --- | --- |
@@ -72,6 +86,8 @@ For component structure, see [`docs/architecture.md`](architecture.md).
 - `ExcelAlchemy` turns a config and schema into a usable workflow object.
 - `ExcelAlchemy.import_data(..., on_event=...)` can report lifecycle progress
   to a job or service layer while keeping the import itself synchronous.
+  Platform docs describe this stage as `Import Runtime`; the concrete repeated
+  event emitted during row execution is still `row_processed`.
 - `ExcelSchemaLayout` turns schema declarations into a flattened Excel layout.
 - `ExcelHeaderParser` and `ExcelHeaderValidator` decide whether an uploaded workbook matches that layout.
 - `RowAggregator` reconstructs model-shaped data from worksheet rows.

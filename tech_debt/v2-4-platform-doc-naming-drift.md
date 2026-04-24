@@ -2,10 +2,20 @@
 
 ## Summary
 
-The v2.4 planning documents still refer to `docs/import-platform.md`, while the
-implemented documentation slice uses `docs/platform-architecture.md`.
+This note recorded the earlier mismatch where the v2.4 planning documents still
+referred to `docs/import-platform.md`, while the implemented documentation
+slice used `docs/platform-architecture.md`.
 
-## Impact
+## Current status
+
+Resolved in planning records.
+The canonical platform doc set is now:
+
+- `docs/platform-architecture.md`
+- `docs/runtime-model.md`
+- `docs/integration-blueprints.md`
+
+## Historical impact
 
 - creates avoidable confusion when moving between planning records and the
   current docs
@@ -14,21 +24,20 @@ implemented documentation slice uses `docs/platform-architecture.md`.
 
 ## Current workaround
 
-- the repository-facing docs now consistently link to
-  `docs/platform-architecture.md`
-- planning records still contain the older filename
+- none needed after the planning-record alignment
 
-## Desired fix
+## Resolution
 
-- align the v2.4 plan and design-note references with the implemented doc names:
+- aligned the v2.4 plan and design-note references with the implemented doc
+  names:
   - `docs/platform-architecture.md`
   - `docs/runtime-model.md`
   - `docs/integration-blueprints.md`
-- keep one canonical naming scheme for the platform-layer docs
+- retained one canonical naming scheme for the platform-layer docs
 
 ## Priority
 
-`low`
+`resolved`
 
 ## Relevant paths
 
