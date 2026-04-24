@@ -245,6 +245,7 @@
 - Update `README.md` and `README-pypi.md` when the onboarding story, examples, or recommended API shape changes.
 - Update `docs/public-api.md` when stable vs internal vs compatibility boundaries change.
 - Update `MIGRATIONS.md` when migration guidance, deprecated paths, or recommended replacements change.
+- Keep GitHub release notes concise and readable; detailed release documentation can live under `docs/releases/`.
 - Update `docs/architecture.md` when component responsibilities or workflow boundaries change.
 - Update `docs/result-objects.md` and `docs/api-response-cookbook.md` when result objects or payload shapes change.
 - Update `docs/locale.md` when locale behavior or message policy changes.
