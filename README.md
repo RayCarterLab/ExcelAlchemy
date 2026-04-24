@@ -20,7 +20,7 @@ This repository is also a design artifact.
 It documents a series of deliberate engineering choices: `src/` layout, Pydantic v2 migration, pandas removal,
 pluggable storage, `uv`-based workflows, and locale-aware workbook output.
 
-The current stable release is `2.3.0`, which continues the ExcelAlchemy 2.x
+The current stable release is `2.4.0`, which continues the ExcelAlchemy 2.x
 line with a more complete import workflow: clearer template guidance before
 upload, lightweight structural preflight before execution, synchronous
 lifecycle visibility during import, and remediation-oriented payloads after
@@ -104,6 +104,50 @@ and a concrete example value.
 
 For browser downloads, prefer `template.as_bytes()` with a `Blob`, or return the bytes from your backend with
 `Content-Disposition: attachment`. A top-level navigation to a long `data:` URL is less reliable in modern browsers.
+
+## Import Workflow Overview
+
+The shortest path through the import platform is:
+
+```text
+template -> preflight -> import -> remediation -> delivery
+```
+
+In practical backend terms:
+
+- generate a template with workbook-facing guidance
+- run `preflight_import(...)` to reject structurally invalid workbooks early
+- run `import_data(..., on_event=...)` for the real import runtime
+- build a remediation payload when the client needs retry-oriented guidance
+- return or upload the result workbook artifact when the flow needs delivery
+
+Minimal example:
+
+```python
+from excelalchemy.results import build_frontend_remediation_payload
+
+
+events: list[dict[str, object]] = []
+
+preflight = alchemy.preflight_import('employees.xlsx')
+if preflight.is_valid:
+    result = await alchemy.import_data(
+        'employees.xlsx',
+        'employees-result.xlsx',
+        on_event=events.append,
+    )
+    payload = build_frontend_remediation_payload(
+        result=result,
+        cell_error_map=alchemy.cell_error_map,
+        row_error_map=alchemy.row_error_map,
+    )
+```
+
+If you want the full platform view behind this flow, see:
+
+- [`docs/platform-architecture.md`](docs/platform-architecture.md)
+- [`docs/runtime-model.md`](docs/runtime-model.md)
+- [`docs/integration-blueprints.md`](docs/integration-blueprints.md)
 
 ## Import Workflow
 

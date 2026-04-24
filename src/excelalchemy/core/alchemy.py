@@ -152,6 +152,13 @@ class ExcelAlchemy[
         *,
         on_event: Callable[[dict[str, object]], None] | None = None,
     ) -> ImportResult:
+        """Run one import session and optionally emit additive runtime events.
+
+        The callback receives best-effort event dictionaries emitted inline on
+        the same import path. These events are useful for service-layer
+        progress tracking, but they do not create a separate job framework or
+        background execution model.
+        """
         assert isinstance(self.config, ImporterConfig)
         if self.excel_mode != ExcelMode.IMPORT:
             raise ConfigError(msg(MessageKey.IMPORT_MODE_ONLY_METHOD))

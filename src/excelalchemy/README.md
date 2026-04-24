@@ -20,6 +20,13 @@ It is meant for developers and AI agents who need to change implementation detai
   - the internal orchestration that implements import, export, template generation, rendering, and storage integration
   - compatibility modules retained for the 2.x line
 - The package is organized around a small public facade and a set of focused internal collaborators.
+- In the v2.4 docs, those collaborators are also described through a higher-level
+  import platform model:
+  - template authoring
+  - preflight gate
+  - import runtime
+  - result intelligence
+  - artifact and delivery
 
 ## High-Level Package Structure
 
@@ -262,6 +269,13 @@ These exist to support the 2.x line and should not be treated as preferred imple
   - Internal parsed-header model objects.
 
 ## Major Internal Flows
+
+The package guide keeps the internal ownership view.
+If you want the capability-oriented platform view above these flows, start with:
+
+- [`../../docs/platform-architecture.md`](../../docs/platform-architecture.md)
+- [`../../docs/runtime-model.md`](../../docs/runtime-model.md)
+- [`../../docs/platform-code-mapping.md`](../../docs/platform-code-mapping.md)
 
 ### Import validation flow
 

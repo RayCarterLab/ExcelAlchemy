@@ -6,6 +6,11 @@ ExcelAlchemy into a FastAPI service.
 If you want copyable success / failure response shapes that match this
 reference project, see
 [`docs/api-response-cookbook.md`](../../docs/api-response-cookbook.md).
+If you want the higher-level import platform workflow behind this reference,
+see
+[`docs/platform-architecture.md`](../../docs/platform-architecture.md)
+and
+[`docs/integration-blueprints.md`](../../docs/integration-blueprints.md).
 
 ## Layout
 
@@ -51,6 +56,13 @@ This is intentionally small, but it mirrors the shape of a real backend:
 - workflow logic lives in a service
 - storage is injected instead of hard-coded
 - schema declarations stay separate from transport concerns
+
+At the platform level, this reference follows the same shortest path used in
+the v2.4 docs:
+
+```text
+template -> preflight -> import -> remediation
+```
 
 ## What It Demonstrates
 

@@ -10,7 +10,7 @@ ExcelAlchemy turns Pydantic models into typed workbook contracts:
 - render workbook-facing output in `zh-CN` or `en`
 - keep storage pluggable through `ExcelStorage`
 
-The current stable release is `2.3.0`, which continues the 2.x line with a
+The current stable release is `2.4.0`, which continues the 2.x line with a
 more complete import workflow: clearer template guidance before upload,
 lightweight structural preflight before execution, synchronous lifecycle
 visibility during import, and remediation-oriented payloads after failures.
@@ -96,6 +96,44 @@ template = alchemy.download_template_artifact(filename='people-template.xlsx')
 This template metadata is additive: it leaves the worksheet layout alone and
 improves the generated header comment with both guidance text and a concrete
 example value.
+
+## Import Workflow Overview
+
+The shortest path through the import workflow is:
+
+```text
+template -> preflight -> import -> remediation -> delivery
+```
+
+Minimal example:
+
+```python
+from excelalchemy.results import build_frontend_remediation_payload
+
+
+events: list[dict[str, object]] = []
+
+preflight = alchemy.preflight_import('employees.xlsx')
+if preflight.is_valid:
+    result = await alchemy.import_data(
+        'employees.xlsx',
+        'employees-result.xlsx',
+        on_event=events.append,
+    )
+    payload = build_frontend_remediation_payload(
+        result=result,
+        cell_error_map=alchemy.cell_error_map,
+        row_error_map=alchemy.row_error_map,
+    )
+```
+
+See also:
+
+- [Platform Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/platform-architecture.md)
+- [Runtime Model](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/runtime-model.md)
+- [Integration Blueprints](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-blueprints.md)
+- [Result Objects](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md)
+- [API Response Cookbook](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md)
 
 ## Example Outputs
 
