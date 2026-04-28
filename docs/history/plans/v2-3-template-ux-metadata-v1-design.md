@@ -28,7 +28,7 @@ The current repository state already points to this design:
 - `FieldMetaInfo` already exposes `presentation_meta` and `comment_*` accessors
 - `download_template(sample_data=...)` already covers the separate use case of
   visible example rows
-- `docs/invariants.md` and `tests/contracts/test_template_contract.py` lock in
+- `docs/agent/invariants.md` and `tests/contracts/test_template_contract.py` lock in
   the rule that generated templates do not rely on Excel data-validation rules
 
 So the smallest stable API surface is:
@@ -235,3 +235,4 @@ metadata layer:
 This is the smallest additive API surface, it aligns with the current template
 invariants, it keeps `hint` intact as a separate concept, and it has the
 strongest existing verifier story in the repository.
+

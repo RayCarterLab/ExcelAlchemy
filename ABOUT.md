@@ -250,7 +250,7 @@ Some deliberate tradeoffs:
 If you want the shortest path:
 
 1. Start with [README.md](./README.md)
-2. Read [docs/architecture.md](./docs/architecture.md)
+2. Read [docs/platform-code-mapping.md](./docs/platform-code-mapping.md)
 3. Look at `src/excelalchemy/core/`
 4. Then inspect tests under `tests/contracts/`
 

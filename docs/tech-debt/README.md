@@ -5,10 +5,10 @@ Use it to capture implementation compromises that should be visible and actionab
 
 ## Related docs
 
-- [../AGENTS.md](../AGENTS.md) for repository-local change guidance.
-- [../docs/repo-map.md](../docs/repo-map.md) for locating the affected files.
-- [../plans/README.md](../plans/README.md) for execution plans tied to debt repayment work.
-- [../adr/README.md](../adr/README.md) for the architecture decisions that may explain or constrain a debt item.
+- [../../AGENTS.md](../../AGENTS.md) for repository-local change guidance.
+- [../repo-map.md](../repo-map.md) for locating the affected files.
+- [../../plans/README.md](../../plans/README.md) for execution plans tied to debt repayment work.
+- [../history/adr/README.md](../history/adr/README.md) for historical architecture decisions that may explain or constrain a debt item.
 
 ## What qualifies as technical debt here
 
@@ -58,7 +58,7 @@ Each entry should include:
   - `docs/public-api.md`
   - `tests/unit/test_deprecation_policy.py`
 - If the debt is tightly coupled to a planned piece of work, link the relevant plan under `plans/`.
-- If the debt exists because of a deliberate architecture choice, link the relevant ADR under `adr/`.
+- If the debt exists because of a deliberate architecture choice, link the relevant historical ADR under `docs/history/adr/`.
 
 ## Repository alignment
 

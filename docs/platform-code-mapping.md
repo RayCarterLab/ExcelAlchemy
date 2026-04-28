@@ -17,7 +17,6 @@ Use this page together with:
 
 - [`docs/platform-architecture.md`](platform-architecture.md)
 - [`docs/runtime-model.md`](runtime-model.md)
-- [`docs/architecture.md`](architecture.md)
 - [`docs/public-api.md`](public-api.md)
 
 ## Assessment Summary
@@ -539,8 +538,8 @@ Reason:
 
 ### Recommendation 4
 
-Keep `docs/architecture.md` as the internal ownership map and use this page as
-the platform-to-code bridge.
+Use this page as the human platform-to-code bridge. Agent-facing ownership rules
+live in `docs/agent/architecture-boundaries.md`.
 
 Reason:
 

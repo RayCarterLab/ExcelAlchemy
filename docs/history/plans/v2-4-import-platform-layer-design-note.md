@@ -32,7 +32,7 @@ Current alignment points:
   - `build_frontend_remediation_payload(...)`
 - the main drift is doc-level:
   - `README.md` already tells an import workflow story
-  - `docs/architecture.md` still centers internal collaborators
+  - `docs/agent/architecture-boundaries.md` still centers internal collaborators
   - `docs/public-api.md` lists stable surfaces without fully grouping them as
     one platform model
   - `docs/result-objects.md` explains outcomes well, but not as one layer in a
@@ -265,12 +265,12 @@ Terms to avoid as top-level concepts:
 
 #### Should be split in responsibility
 
-- `docs/architecture.md`
+- `docs/agent/architecture-boundaries.md`
   - should stop carrying both the platform story and the internal component
     story
   - recommended split:
     - `docs/platform-architecture.md` for capability-layer architecture
-    - retained `docs/architecture.md` for internal component architecture
+    - retained `docs/agent/architecture-boundaries.md` for internal component architecture
 
 #### Should mainly be relinked and lightly reframed
 
@@ -396,7 +396,7 @@ Specific non-refactor guidance:
 
 ### Rejected option
 
-Use `docs/architecture.md` as the single umbrella document for both:
+Use `docs/agent/architecture-boundaries.md` as the single umbrella document for both:
 
 - user-facing platform architecture
 - internal component architecture
@@ -425,7 +425,7 @@ It also creates maintenance pressure:
 The cleaner design is:
 
 - `docs/platform-architecture.md` for capability architecture
-- retained `docs/architecture.md` for internal component architecture
+- retained `docs/agent/architecture-boundaries.md` for internal component architecture
 
 ## Exact Scope Boundaries
 
@@ -464,7 +464,7 @@ The cleaner design is:
 ### Docs to update directly
 
 - [ ] `README.md`
-- [ ] `docs/architecture.md`
+- [ ] `docs/agent/architecture-boundaries.md`
 - [ ] `docs/domain-model.md`
 - [ ] `docs/public-api.md`
 - [ ] `docs/result-objects.md`
@@ -507,7 +507,7 @@ The cleaner design is:
       `docs/platform-architecture.md`,
       `docs/runtime-model.md`,
       `docs/integration-blueprints.md`.
-- [ ] `docs/architecture.md` remains the internal/component architecture
+- [ ] `docs/agent/architecture-boundaries.md` remains the internal/component architecture
       reference.
 - [ ] `docs/result-objects.md` remains the detailed result reference rather than
       being absorbed into the platform doc.
@@ -527,7 +527,7 @@ platform-level doc set and no architectural rewrite:
 - add `docs/platform-architecture.md` as the capability-layer architecture page
 - add `docs/runtime-model.md` as the runtime semantics page
 - add `docs/integration-blueprints.md` as the integration composition page
-- keep `docs/architecture.md` as the internal component map
+- keep `docs/agent/architecture-boundaries.md` as the internal component map
 - keep `docs/public-api.md`, `docs/result-objects.md`, and
   `docs/api-response-cookbook.md` as separate reference docs
 - standardize the top-level concepts around contract authoring, structural
@@ -537,3 +537,4 @@ platform-level doc set and no architectural rewrite:
 
 This gives the repository one explicit import platform story while preserving
 the current public API, compatibility posture, and internal architecture seams.
+

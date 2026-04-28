@@ -9,7 +9,7 @@ It is meant for developers and AI agents who need to change implementation detai
 - [../../AGENTS.md](../../AGENTS.md) for repository-local editing guidance.
 - [../../docs/repo-map.md](../../docs/repo-map.md) for top-level repository navigation.
 - [../../docs/domain-model.md](../../docs/domain-model.md) for the main concepts implemented here.
-- [../../docs/invariants.md](../../docs/invariants.md) for important behavioral constraints.
+- [../../docs/agent/invariants.md](../../docs/agent/invariants.md) for important behavioral constraints.
 - [../../tests/README.md](../../tests/README.md) for where this package's behavior is protected.
 
 ## Role of This Package

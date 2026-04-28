@@ -8,7 +8,7 @@ It is meant to help both humans and coding agents find the right files before ma
 - [../README.md](../README.md) for the public-facing overview.
 - [../AGENTS.md](../AGENTS.md) for repo-local editing guidance.
 - [domain-model.md](domain-model.md) for the core concepts behind these directories.
-- [invariants.md](invariants.md) for behavior that should stay stable.
+- [agent/invariants.md](agent/invariants.md) for behavior that should stay stable.
 - [../src/excelalchemy/README.md](../src/excelalchemy/README.md) for the implementation structure inside the main package.
 - [../tests/README.md](../tests/README.md) and [../examples/README.md](../examples/README.md) for the executable contract surface.
 
@@ -24,7 +24,20 @@ It is meant to help both humans and coding agents find the right files before ma
   - Runnable reference workflows and a small FastAPI reference app.
   - These are part of the user-facing contract, not throwaway demos.
 - `docs/`
-  - Markdown documentation for architecture, public API, result objects, limits, performance, and onboarding.
+  - Human documentation, agent rules, history, release notes, and technical debt records.
+- `context/`
+  - Machine-readable runtime context loaded by the harness and agents.
+  - Current v1 layout groups instruction, architecture, and pattern context.
+- `tools/`
+  - Harness-facing deterministic local tool definitions and adapters.
+- `plans/`
+  - Harness task-plan template plus active/archive runtime plan artifacts.
+- `harness/`
+  - Deterministic runtime for driving non-deterministic AI agent work.
+- `eval/`
+  - Local evaluation adapters used by the harness.
+- `runs/`
+  - Ignored harness run-state artifacts.
 - `scripts/`
   - Smoke checks and asset-generation helpers used to validate docs, examples, and package behavior.
 - `files/`
@@ -174,8 +187,8 @@ These compatibility paths remain in the 2.x line, but they are not the preferred
   - Fastest path for new users.
 - `docs/public-api.md`
   - Stable public modules vs compatibility vs internal modules.
-- `docs/architecture.md`
-  - Component map and workflow map.
+- `docs/platform-code-mapping.md`
+  - Human platform-to-code ownership map.
 - `docs/result-objects.md`
   - Import result objects and API-facing error maps.
 - `docs/api-response-cookbook.md`
@@ -194,6 +207,12 @@ These compatibility paths remain in the 2.x line, but they are not the preferred
   - This repository map.
 - `docs/releases/`
   - Release notes for specific versions.
+- `docs/agent/`
+  - Authoritative agent workflow, boundary, invariant, testing, and review rules.
+- `docs/history/`
+  - Archived plans and historical ADRs; not current rules.
+- `docs/tech-debt/`
+  - Maintenance debt records.
 
 ## Examples: `examples/`
 
@@ -324,7 +343,7 @@ These compatibility paths remain in the 2.x line, but they are not the preferred
   - `src/excelalchemy/results.py`
 
 - Understanding import flow:
-  - `docs/architecture.md`
+  - `docs/platform-code-mapping.md`
   - `examples/employee_import_workflow.py`
   - `src/excelalchemy/core/alchemy.py`
   - `src/excelalchemy/core/import_session.py`

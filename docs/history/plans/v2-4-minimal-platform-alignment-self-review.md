@@ -72,7 +72,7 @@ Remaining acceptable distinction:
 ## 4. Documentation Quality
 
 The new and updated docs do provide a real platform-level view.
-They do not simply repeat `docs/architecture.md`.
+They do not simply repeat `docs/agent/architecture-boundaries.md`.
 
 Useful distinction now present:
 
@@ -82,7 +82,7 @@ Useful distinction now present:
   - runtime semantics and stage boundaries
 - `docs/integration-blueprints.md`
   - composition patterns for backend/frontend integration
-- `docs/architecture.md`
+- `docs/agent/architecture-boundaries.md`
   - internal component view
 
 Integrator usefulness is improved for:
@@ -156,3 +156,4 @@ The v2.4 minimal platform alignment achieved its intended outcome:
 - better public-doc and example consistency
 - minimal and safe code-adjacent clarification
 - no feature creep
+

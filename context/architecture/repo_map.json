@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "purpose": "Structured repository map for AI agents working on ExcelAlchemy.",
+  "project": {
+    "name": "ExcelAlchemy",
+    "summary": "Schema-driven Python library for typed Excel import/export workflows built around Pydantic models."
+  },
+  "source_documents": [
+    "AGENTS.md",
+    "docs/repo-map.md",
+    "docs/domain-model.md",
+    "docs/platform-code-mapping.md",
+    "docs/agent/architecture-boundaries.md"
+  ],
+  "top_level": [
+    {
+      "path": "src/excelalchemy/",
+      "responsibility": "Main package source for ExcelAlchemy."
+    },
+    {
+      "path": "tests/",
+      "responsibility": "Contract, integration, and unit tests that protect public behavior and internal expectations."
+    },
+    {
+      "path": "examples/",
+      "responsibility": "Runnable reference workflows and backend integration examples; treated as user-facing contract."
+    },
+    {
+      "path": "docs/",
+      "responsibility": "Human documentation for public API, platform architecture, result objects, limits, performance, onboarding, and release notes."
+    },
+    {
+      "path": "docs/agent/",
+      "responsibility": "Authoritative AI agent SSOT for workflow, boundaries, invariants, testing, and review rules."
+    },
+    {
+      "path": "docs/history/",
+      "responsibility": "Archived plans and historical ADRs; useful for design archaeology but not current rules."
+    },
+    {
+      "path": "docs/tech-debt/",
+      "responsibility": "Maintenance debt records for known repository-local tradeoffs and follow-up work."
+    },
+    {
+      "path": "context/",
+      "responsibility": "Machine-readable runtime context loaded by the deterministic harness and AI agents, grouped into instructions, architecture, and patterns."
+    },
+    {
+      "path": "tools/",
+      "responsibility": "Harness-facing deterministic local tool definitions and adapters."
+    },
+    {
+      "path": "plans/",
+      "responsibility": "Harness runtime task-plan templates and active/archive plan artifacts."
+    },
+    {
+      "path": "harness/",
+      "responsibility": "Deterministic harness runtime for driving non-deterministic AI agent work."
+    },
+    {
+      "path": "eval/",
+      "responsibility": "Local evaluation adapters used by the deterministic harness."
+    },
+    {
+      "path": "runs/",
+      "responsibility": "Ignored harness run-state artifacts."
+    },
+    {
+      "path": "scripts/",
+      "responsibility": "Smoke checks and asset generation helpers."
+    },
+    {
+      "path": "files/",
+      "responsibility": "Example workbooks and generated example outputs used by docs and smoke scripts."
+    }
+  ],
+  "main_modules": [
+    {
+      "path": "src/excelalchemy/__init__.py",
+      "responsibility": "Main public package surface and common re-export facade."
+    },
+    {
+      "path": "src/excelalchemy/config.py",
+      "responsibility": "Public importer/exporter configuration objects and import modes."
+    },
+    {
+      "path": "src/excelalchemy/metadata.py",
+      "responsibility": "Public Excel field metadata entry points and layered field metadata model."
+    },
+    {
+      "path": "src/excelalchemy/results.py",
+      "responsibility": "Public result objects, validation result states, and API-friendly error maps."
+    },
+    {
+      "path": "src/excelalchemy/exceptions.py",
+      "responsibility": "Public exception types for configuration, cell, row, and programmatic errors."
+    },
+    {
+      "path": "src/excelalchemy/artifacts.py",
+      "responsibility": "Public ExcelArtifact wrapper for workbook bytes, base64, and data URL forms."
+    },
+    {
+      "path": "src/excelalchemy/codecs/",
+      "responsibility": "Public field codec namespace and built-in workbook field semantics."
+    },
+    {
+      "path": "src/excelalchemy/core/alchemy.py",
+      "responsibility": "Main workflow facade implementation for template generation, import, export, and upload."
+    },
+    {
+      "path": "src/excelalchemy/core/import_session.py",
+      "responsibility": "One-shot import runtime state, lifecycle, counts, and result rendering decisions."
+    },
+    {
+      "path": "src/excelalchemy/core/schema.py",
+      "responsibility": "Builds flattened Excel-facing schema layout from Pydantic model declarations."
+    },
+    {
+      "path": "src/excelalchemy/core/headers.py",
+      "responsibility": "Parses and validates simple and merged workbook headers."
+    },
+    {
+      "path": "src/excelalchemy/core/rows.py",
+      "responsibility": "Aggregates flattened worksheet rows into model-shaped payloads and tracks row/cell issues."
+    },
+    {
+      "path": "src/excelalchemy/core/executor.py",
+      "responsibility": "Validates row payloads and dispatches create, update, and upsert callbacks."
+    },
+    {
+      "path": "src/excelalchemy/core/rendering.py",
+      "responsibility": "High-level rendering for templates, exports, and import result workbooks."
+    },
+    {
+      "path": "src/excelalchemy/core/writer.py",
+      "responsibility": "Workbook writing, formatting, comments, colors, and result columns."
+    },
+    {
+      "path": "src/excelalchemy/core/storage_protocol.py",
+      "responsibility": "ExcelStorage protocol and storage extension boundary."
+    },
+    {
+      "path": "src/excelalchemy/core/storage.py",
+      "responsibility": "Storage gateway resolution and missing-storage fallback behavior."
+    },
+    {
+      "path": "src/excelalchemy/core/storage_minio.py",
+      "responsibility": "Built-in Minio-compatible ExcelStorage implementation."
+    },
+    {
+      "path": "src/excelalchemy/core/table.py",
+      "responsibility": "WorksheetTable abstraction used for runtime workbook tables instead of pandas."
+    },
+    {
+      "path": "src/excelalchemy/helper/pydantic.py",
+      "responsibility": "Pydantic integration boundary for metadata extraction and validation error mapping."
+    },
+    {
+      "path": "src/excelalchemy/i18n/messages.py",
+      "responsibility": "Runtime and workbook display messages with explicit locale policy."
+    },
+    {
+      "path": "src/excelalchemy/_primitives/",
+      "responsibility": "Internal constants, identity wrappers, payload aliases, diagnostics, deprecation helpers, and header models."
+    },
+    {
+      "path": "src/excelalchemy/types/",
+      "responsibility": "Deprecated compatibility namespace retained for the 2.x line."
+    },
+    {
+      "path": "harness/loop.py",
+      "responsibility": "Deterministic workflow controller and structured agent output schemas."
+    },
+    {
+      "path": "harness/state.py",
+      "responsibility": "Serializable run state, step records, retry state, and fix-context aggregation."
+    },
+    {
+      "path": "eval/local.py",
+      "responsibility": "Local evaluator for test status, diff size, and unrelated-file checks."
+    },
+    {
+      "path": "harness/runner.py",
+      "responsibility": "Public entry point for running one harness task."
+    }
+  ],
+  "workflow_entry_points": {
+    "template_generation": [
+      "src/excelalchemy/core/alchemy.py",
+      "src/excelalchemy/core/schema.py",
+      "src/excelalchemy/core/rendering.py",
+      "src/excelalchemy/core/writer.py"
+    ],
+    "import_validation": [
+      "src/excelalchemy/core/alchemy.py",
+      "src/excelalchemy/core/import_session.py",
+      "src/excelalchemy/core/headers.py",
+      "src/excelalchemy/core/rows.py",
+      "src/excelalchemy/core/executor.py",
+      "src/excelalchemy/helper/pydantic.py"
+    ],
+    "result_rendering": [
+      "src/excelalchemy/results.py",
+      "src/excelalchemy/core/rendering.py",
+      "src/excelalchemy/core/writer.py"
+    ],
+    "storage_integration": [
+      "src/excelalchemy/core/storage_protocol.py",
+      "src/excelalchemy/core/storage.py",
+      "src/excelalchemy/core/storage_minio.py",
+      "src/excelalchemy/core/table.py",
+      "examples/custom_storage.py"
+    ],
+    "backend_api_integration": [
+      "src/excelalchemy/results.py",
+      "docs/result-objects.md",
+      "docs/api-response-cookbook.md",
+      "examples/fastapi_reference/"
+    ]
+  }
+}

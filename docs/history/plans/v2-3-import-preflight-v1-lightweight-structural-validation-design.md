@@ -263,7 +263,7 @@ Likely documentation changes:
 - `docs/public-api.md`
 - `docs/result-objects.md`
 - `docs/domain-model.md`
-- `docs/architecture.md`
+- `docs/agent/architecture-boundaries.md`
 - `README.md` if the preflight workflow becomes part of the main onboarding
   story
 
@@ -395,3 +395,4 @@ When implementation starts, run:
 - `uv run pytest --cov=excelalchemy --cov-report=term-missing:skip-covered tests`
 - `uv run python scripts/smoke_package.py`
 - `uv run python scripts/smoke_examples.py`
+

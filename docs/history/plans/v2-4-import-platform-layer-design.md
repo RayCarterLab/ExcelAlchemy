@@ -239,7 +239,7 @@ component-level architecture docs.
     - define the platform-layer capability model
     - show the before-import / in-import / after-import story
     - link outward to `docs/public-api.md`, `docs/result-objects.md`, and
-      `docs/architecture.md`
+      `docs/agent/architecture-boundaries.md`
 - `docs/runtime-model.md`
   - purpose:
     - explain what happens during import execution
@@ -255,7 +255,7 @@ component-level architecture docs.
 - `README.md`
   - add a concise import-platform framing section and point to
     `docs/platform-architecture.md`
-- `docs/architecture.md`
+- `docs/agent/architecture-boundaries.md`
   - split the current content into:
     - platform view
     - component view
@@ -358,7 +358,7 @@ Purpose:
 
 Recommended home:
 
-- `docs/architecture.md`
+- `docs/agent/architecture-boundaries.md`
 - `src/excelalchemy/README.md`
 
 ### 5. API and frontend consumption map
@@ -381,7 +381,7 @@ Primary docs:
 - `docs/platform-architecture.md`
 - `docs/runtime-model.md`
 - `docs/integration-blueprints.md`
-- `docs/architecture.md`
+- `docs/agent/architecture-boundaries.md`
 - `docs/domain-model.md`
 - `docs/public-api.md`
 - `docs/result-objects.md`
@@ -415,14 +415,14 @@ Mitigation:
 
 Risk:
 
-- adding a platform doc could duplicate `docs/architecture.md` instead of
+- adding a platform doc could duplicate `docs/agent/architecture-boundaries.md` instead of
   clarifying it
 
 Mitigation:
 
 - keep `docs/platform-architecture.md` focused on capabilities and public
   surfaces
-- keep `docs/architecture.md` focused on internal collaborators and ownership
+- keep `docs/agent/architecture-boundaries.md` focused on internal collaborators and ownership
 
 ### Risk: accidental API signaling
 
@@ -477,7 +477,7 @@ Recommendation:
 Recommendation:
 
 - do not expand v2.4 scope inside the docs pass
-- record follow-up gaps in `plans/` or `tech_debt/`
+- record follow-up gaps in `plans/` or `docs/tech-debt/`
 
 ## Phased Implementation Plan
 
@@ -497,7 +497,7 @@ Recommendation:
 ### Phase 3. Align current docs to the platform model
 
 - update `README.md`
-- update `docs/architecture.md`
+- update `docs/agent/architecture-boundaries.md`
 - update `docs/domain-model.md`
 - update `docs/public-api.md`
 - update `docs/result-objects.md`
@@ -513,7 +513,7 @@ Recommendation:
 
 ### Phase 5. Capture follow-up gaps separately
 
-- record any platform/code mismatches in `plans/` or `tech_debt/`
+- record any platform/code mismatches in `plans/` or `docs/tech-debt/`
 - do not fold unrelated design or code changes into the doc-alignment work
 
 ## Acceptance Criteria
@@ -552,3 +552,4 @@ When implementation begins, validate the documentation pass with:
 - `uv run python scripts/smoke_examples.py`
 - `uv run python scripts/smoke_docs_assets.py`
 - `uv run python scripts/smoke_api_payload_snapshot.py`
+

@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "purpose": "Structured module index for classifying ExcelAlchemy source paths by API boundary.",
+  "source_documents": [
+    "docs/public-api.md",
+    "docs/agent/architecture-boundaries.md",
+    "docs/repo-map.md",
+    "docs/domain-model.md"
+  ],
+  "public_api_modules": [
+    {
+      "module": "excelalchemy",
+      "path": "src/excelalchemy/__init__.py",
+      "role": "Package root and common public facade."
+    },
+    {
+      "module": "excelalchemy.config",
+      "path": "src/excelalchemy/config.py",
+      "role": "ImporterConfig, ExporterConfig, and ImportMode."
+    },
+    {
+      "module": "excelalchemy.metadata",
+      "path": "src/excelalchemy/metadata.py",
+      "role": "FieldMeta, ExcelMeta, PatchFieldMeta, and public metadata declarations."
+    },
+    {
+      "module": "excelalchemy.results",
+      "path": "src/excelalchemy/results.py",
+      "role": "ImportResult, ValidateResult, ValidateHeaderResult, CellErrorMap, RowIssueMap, and API helpers."
+    },
+    {
+      "module": "excelalchemy.exceptions",
+      "path": "src/excelalchemy/exceptions.py",
+      "role": "Stable public exception module."
+    },
+    {
+      "module": "excelalchemy.codecs",
+      "path": "src/excelalchemy/codecs/",
+      "role": "Public built-in field codecs and codec extension base classes."
+    },
+    {
+      "module": "excelalchemy.artifacts",
+      "path": "src/excelalchemy/artifacts.py",
+      "role": "ExcelArtifact transport wrapper."
+    }
+  ],
+  "core_modules": [
+    {
+      "module": "excelalchemy.core.alchemy",
+      "path": "src/excelalchemy/core/alchemy.py",
+      "role": "Facade implementation and main workflow orchestration."
+    },
+    {
+      "module": "excelalchemy.core.import_session",
+      "path": "src/excelalchemy/core/import_session.py",
+      "role": "One import run lifecycle, state, and event emission."
+    },
+    {
+      "module": "excelalchemy.core.schema",
+      "path": "src/excelalchemy/core/schema.py",
+      "role": "Excel-facing schema layout extraction and flattening."
+    },
+    {
+      "module": "excelalchemy.core.headers",
+      "path": "src/excelalchemy/core/headers.py",
+      "role": "Workbook header parsing and validation."
+    },
+    {
+      "module": "excelalchemy.core.rows",
+      "path": "src/excelalchemy/core/rows.py",
+      "role": "Worksheet row aggregation and issue tracking."
+    },
+    {
+      "module": "excelalchemy.core.executor",
+      "path": "src/excelalchemy/core/executor.py",
+      "role": "Row validation and callback dispatch."
+    },
+    {
+      "module": "excelalchemy.core.rendering",
+      "path": "src/excelalchemy/core/rendering.py",
+      "role": "Workbook rendering coordination."
+    },
+    {
+      "module": "excelalchemy.core.writer",
+      "path": "src/excelalchemy/core/writer.py",
+      "role": "Low-level workbook writing and styling."
+    },
+    {
+      "module": "excelalchemy.core.storage_protocol",
+      "path": "src/excelalchemy/core/storage_protocol.py",
+      "role": "ExcelStorage protocol."
+    },
+    {
+      "module": "excelalchemy.core.storage",
+      "path": "src/excelalchemy/core/storage.py",
+      "role": "Storage strategy resolution."
+    },
+    {
+      "module": "excelalchemy.core.storage_minio",
+      "path": "src/excelalchemy/core/storage_minio.py",
+      "role": "Built-in Minio-compatible storage backend."
+    },
+    {
+      "module": "excelalchemy.core.table",
+      "path": "src/excelalchemy/core/table.py",
+      "role": "WorksheetTable runtime table abstraction."
+    }
+  ],
+  "internal_modules": [
+    {
+      "module": "excelalchemy.core.*",
+      "path": "src/excelalchemy/core/",
+      "role": "Internal orchestration and workflow implementation."
+    },
+    {
+      "module": "excelalchemy.helper.*",
+      "path": "src/excelalchemy/helper/",
+      "role": "Internal Pydantic and framework adaptation boundary."
+    },
+    {
+      "module": "excelalchemy.i18n.*",
+      "path": "src/excelalchemy/i18n/",
+      "role": "Internal runtime and workbook message handling."
+    },
+    {
+      "module": "excelalchemy._primitives.*",
+      "path": "src/excelalchemy/_primitives/",
+      "role": "Internal constants, identity wrappers, payloads, diagnostics, deprecation helpers, and header models."
+    }
+  ],
+  "compatibility_modules": [
+    {
+      "module": "excelalchemy.exc",
+      "path": "src/excelalchemy/exc.py",
+      "replacement": "excelalchemy.exceptions",
+      "policy": "2.x compatibility shim with deprecation behavior."
+    },
+    {
+      "module": "excelalchemy.identity",
+      "path": "src/excelalchemy/identity.py",
+      "replacement": "package root exports or internal identity modules as appropriate",
+      "policy": "2.x compatibility shim."
+    },
+    {
+      "module": "excelalchemy.header_models",
+      "path": "src/excelalchemy/header_models.py",
+      "replacement": "internal header models only when explicitly working on internals",
+      "policy": "2.x compatibility shim."
+    },
+    {
+      "module": "excelalchemy.types.*",
+      "path": "src/excelalchemy/types/",
+      "replacement": "public package root and public modules",
+      "policy": "Deprecated compatibility namespace retained in 2.x and scheduled for removal in 3.0."
+    },
+    {
+      "module": "excelalchemy.util.convertor",
+      "path": "src/excelalchemy/util/convertor.py",
+      "replacement": "excelalchemy.util.converter",
+      "policy": "Deprecated compatibility import."
+    }
+  ],
+  "harness_modules": [
+    {
+      "module": "harness.loop",
+      "path": "harness/loop.py",
+      "role": "Deterministic workflow loop, retry policy, and agent output validation."
+    },
+    {
+      "module": "harness.state",
+      "path": "harness/state.py",
+      "role": "RunState, StepRecord, JSON serialization, retry state, and fix context."
+    },
+    {
+      "module": "eval.local",
+      "path": "eval/local.py",
+      "role": "Local validation checks for tests, diff size, and unrelated file changes."
+    },
+    {
+      "module": "harness.runner",
+      "path": "harness/runner.py",
+      "role": "Convenience entry point for running harness tasks."
+    }
+  ],
+  "preferred_new_code_imports": [
+    "excelalchemy",
+    "excelalchemy.config",
+    "excelalchemy.metadata",
+    "excelalchemy.results",
+    "excelalchemy.exceptions",
+    "excelalchemy.codecs"
+  ],
+  "avoid_in_application_code": [
+    "excelalchemy.core.*",
+    "excelalchemy.helper.*",
+    "excelalchemy.i18n.*",
+    "excelalchemy._primitives.*"
+  ]
+}

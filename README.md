@@ -6,11 +6,11 @@
 ![Lint](https://img.shields.io/badge/lint-ruff-D7FF64)
 ![Typing](https://img.shields.io/badge/typing-pyright-2C6BED)
 
-[中文 README](README_cn.md) · [About](ABOUT.md) · [Getting Started](docs/getting-started.md) · [Integration Roadmap](docs/integration-roadmap.md) · [Platform Architecture](docs/platform-architecture.md) · [Runtime Model](docs/runtime-model.md) · [Integration Blueprints](docs/integration-blueprints.md) · [Result Objects](docs/result-objects.md) · [API Response Cookbook](docs/api-response-cookbook.md) · [Architecture](docs/architecture.md) · [Examples Showcase](docs/examples-showcase.md) · [Public API](docs/public-api.md) · [Locale Policy](docs/locale.md) · [Limitations](docs/limitations.md) · [Performance](docs/performance.md) · [Changelog](CHANGELOG.md) · [Migration Notes](MIGRATIONS.md)
+[中文 README](README_cn.md) · [About](ABOUT.md) · [Getting Started](docs/getting-started.md) · [Integration Roadmap](docs/integration-roadmap.md) · [Platform Architecture](docs/platform-architecture.md) · [Runtime Model](docs/runtime-model.md) · [Integration Blueprints](docs/integration-blueprints.md) · [Result Objects](docs/result-objects.md) · [API Response Cookbook](docs/api-response-cookbook.md) · [Code Mapping](docs/platform-code-mapping.md) · [Examples Showcase](docs/examples-showcase.md) · [Public API](docs/public-api.md) · [Locale Policy](docs/locale.md) · [Limitations](docs/limitations.md) · [Performance](docs/performance.md) · [Changelog](CHANGELOG.md) · [Migration Notes](MIGRATIONS.md)
 
-Repository guides: [AGENTS.md](AGENTS.md) · [Repository Map](docs/repo-map.md) · [Domain Model](docs/domain-model.md) · [Invariants](docs/invariants.md) · [Package Guide](src/excelalchemy/README.md) · [Test Guide](tests/README.md) · [Examples Guide](examples/README.md)
+Repository guides: [AGENTS.md](AGENTS.md) · [Repository Map](docs/repo-map.md) · [Domain Model](docs/domain-model.md) · [Agent Invariants](docs/agent/invariants.md) · [Package Guide](src/excelalchemy/README.md) · [Test Guide](tests/README.md) · [Examples Guide](examples/README.md)
 
-Engineering records: [Plans](plans/README.md) · [Technical Debt](tech_debt/README.md) · [ADRs](adr/README.md)
+Engineering records: [Plans](plans/README.md) · [Technical Debt](docs/tech-debt/README.md) · [Historical ADRs](docs/history/adr/README.md)
 
 ExcelAlchemy is a schema-driven Python library for Excel import and export workflows.
 It turns Pydantic models into typed workbook contracts: generate templates, validate uploads, map failures back to rows
@@ -350,7 +350,7 @@ flowchart TD
     E --> M[Runtime Error Messages]
 ```
 
-See the full breakdown in [docs/architecture.md](docs/architecture.md).
+See the full breakdown in [docs/platform-code-mapping.md](docs/platform-code-mapping.md).
 For the integration-oriented platform view layered above those components, see
 [docs/platform-architecture.md](docs/platform-architecture.md),
 [docs/runtime-model.md](docs/runtime-model.md), and
@@ -664,7 +664,7 @@ More detail is documented in [ABOUT.md](ABOUT.md).
 - [docs/platform-architecture.md](docs/platform-architecture.md): import platform capability model
 - [docs/runtime-model.md](docs/runtime-model.md): runtime sequence across the import workflow
 - [docs/integration-blueprints.md](docs/integration-blueprints.md): backend/frontend integration patterns
-- [docs/architecture.md](docs/architecture.md): component map and boundaries
+- [docs/platform-code-mapping.md](docs/platform-code-mapping.md): component map and boundaries
 - [docs/limitations.md](docs/limitations.md): practical fit, limitations, and gotchas
 - [docs/performance.md](docs/performance.md): operational guidance for large files, memory, and backend guardrails
 - [docs/tool-comparison.md](docs/tool-comparison.md): when ExcelAlchemy fits better than scripting, automation, or dataframe-first approaches

@@ -176,3 +176,11 @@ cython_debug/
 # .nfs files are created when an open file is removed but is still being accessed
 .nfs*
 .pypirc
+
+# Agent harness runtime artifacts
+.harness-runs/
+runs/*
+!runs/README.md
+!runs/.gitkeep
+plans/active/*.md
+plans/archive/*.md

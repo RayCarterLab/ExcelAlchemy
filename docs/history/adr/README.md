@@ -1,15 +1,16 @@
 # Architecture Decision Records
 
-This directory is for architecture decision records for this repository.
-Use an ADR when a decision changes or clarifies the long-term shape of the codebase.
+This directory contains historical architecture decision records for this
+repository. These records explain past design decisions; they are not current
+agent rules and do not override `AGENTS.md` or `docs/agent/*`.
 
 ## Related docs
 
-- [../AGENTS.md](../AGENTS.md) for repository-local change guidance.
-- [../docs/domain-model.md](../docs/domain-model.md) for the concepts ADRs usually shape.
-- [../docs/invariants.md](../docs/invariants.md) for the constraints ADRs often establish or explain.
-- [../plans/README.md](../plans/README.md) for execution plans that may produce an ADR.
-- [../tech_debt/README.md](../tech_debt/README.md) for debt items that may motivate or result from an architectural decision.
+- [../../../AGENTS.md](../../../AGENTS.md) for current repository-local change guidance.
+- [../../domain-model.md](../../domain-model.md) for the concepts ADRs usually shape.
+- [../../agent/invariants.md](../../agent/invariants.md) for current constraints.
+- [../../../plans/README.md](../../../plans/README.md) for active harness plan artifacts.
+- [../../tech-debt/README.md](../../tech-debt/README.md) for debt items that may motivate or result from an architectural decision.
 
 ## When to create an ADR
 
@@ -73,3 +74,4 @@ In this repository, likely ADR-worthy topics include:
 - why compatibility shims remain in 2.x
 - why result payloads or naming conventions changed
 - why a workflow moved between `core/`, `helper/`, or public modules
+

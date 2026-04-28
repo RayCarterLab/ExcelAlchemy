@@ -4,7 +4,7 @@ This document names the core concepts used by `ExcelAlchemy` and shows how they 
 It is based on the repository as it exists today.
 
 For directory-level navigation, see [`docs/repo-map.md`](repo-map.md).
-For component structure, see [`docs/architecture.md`](architecture.md).
+For component ownership, see [`docs/platform-code-mapping.md`](platform-code-mapping.md).
 For the higher-level import platform model, see
 [`docs/platform-architecture.md`](platform-architecture.md)
 and
@@ -13,7 +13,7 @@ and
 ## Related docs
 
 - [repo-map.md](repo-map.md) for where these concepts live in the repository.
-- [invariants.md](invariants.md) for the constraints that govern these concepts.
+- [agent/invariants.md](agent/invariants.md) for the constraints that govern these concepts.
 - [../src/excelalchemy/README.md](../src/excelalchemy/README.md) for the package-level implementation view.
 - [../tests/README.md](../tests/README.md) for where the model is protected by tests.
 

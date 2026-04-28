@@ -34,7 +34,7 @@
 
 - `ABOUT.md`
   - explicitly states “Excel Metadata Owns Excel Semantics” and “Pydantic Is an Adapter Boundary”
-- `docs/architecture.md`
+- `docs/agent/architecture-boundaries.md`
   - describes metadata as a stable public layer and Pydantic integration as a separate adapter
 - `src/excelalchemy/metadata.py`
   - defines `FieldMetaInfo` as a compatibility facade over:
@@ -55,8 +55,9 @@
 ## Relevant paths
 
 - `ABOUT.md`
-- `docs/architecture.md`
+- `docs/agent/architecture-boundaries.md`
 - `src/excelalchemy/metadata.py`
 - `src/excelalchemy/helper/pydantic.py`
 - `tests/contracts/test_pydantic_contract.py`
 - `tests/unit/test_field_metadata.py`
+

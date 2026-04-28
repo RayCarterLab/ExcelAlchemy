@@ -249,7 +249,7 @@ Tests:
 Docs:
 
 - `docs/public-api.md`
-- `docs/architecture.md`
+- `docs/agent/architecture-boundaries.md`
 - `docs/domain-model.md`
 
 Optional example update:
@@ -291,3 +291,4 @@ When implementation starts, run:
 - `uv run pytest --cov=excelalchemy --cov-report=term-missing:skip-covered tests`
 - `uv run python scripts/smoke_package.py`
 - `uv run python scripts/smoke_examples.py`
+
