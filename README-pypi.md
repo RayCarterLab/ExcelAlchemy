@@ -23,7 +23,7 @@ At the top level, that import workflow is:
 - result intelligence
 - artifact and delivery
 
-[GitHub Repository](https://github.com/RayCarterLab/ExcelAlchemy) · [Full README](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README.md) · [Getting Started](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md) · [Integration Roadmap](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-roadmap.md) · [Platform Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/platform-architecture.md) · [Runtime Model](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/runtime-model.md) · [Integration Blueprints](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-blueprints.md) · [Result Objects](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md) · [API Response Cookbook](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md) · [Examples Showcase](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md) · [Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/architecture.md) · [Migration Notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/MIGRATIONS.md)
+[GitHub Repository](https://github.com/RayCarterLab/ExcelAlchemy) · [Full README](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README.md) · [Getting Started](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md) · [Integration Roadmap](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-roadmap.md) · [Platform Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/platform-architecture.md) · [Runtime Model](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/runtime-model.md) · [Integration Blueprints](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-blueprints.md) · [Result Objects](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md) · [API Response Cookbook](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md) · [Examples Showcase](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md) · [Code Mapping](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/platform-code-mapping.md) · [Migration Notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/MIGRATIONS.md)
 
 ## Screenshots
 
@@ -215,6 +215,6 @@ for configured selection fields.
 - [Platform architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/platform-architecture.md)
 - [Runtime model](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/runtime-model.md)
 - [Integration blueprints](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-blueprints.md)
-- [Architecture notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/architecture.md)
+- [Code mapping](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/platform-code-mapping.md)
 - [Locale policy](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/locale.md)
 - [Migration notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/MIGRATIONS.md)

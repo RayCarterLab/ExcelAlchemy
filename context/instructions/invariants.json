@@ -1,0 +1,227 @@
+{
+  "schema_version": 1,
+  "purpose": "Structured invariants for AI agents maintaining ExcelAlchemy.",
+  "source_documents": [
+    "AGENTS.md",
+    "docs/agent/invariants.md",
+    "docs/agent/architecture-boundaries.md",
+    "docs/locale.md",
+    "docs/limitations.md"
+  ],
+  "agent_operating_invariants": [
+    {
+      "id": "explicit-task-only",
+      "statement": "Agents act only under an explicit task.",
+      "enforcement": "Do not modify code opportunistically."
+    },
+    {
+      "id": "real-context-required",
+      "statement": "Agents must read real repository context before editing.",
+      "enforcement": "Do not imagine code structure; inspect files and search usages first."
+    },
+    {
+      "id": "minimal-scoped-diff",
+      "statement": "Changes must be minimal and scoped to the task.",
+      "enforcement": "Do not modify unrelated files or reformat unrelated areas."
+    },
+    {
+      "id": "validated-changes",
+      "statement": "Behavior changes must be testable and validated.",
+      "enforcement": "Report failed or unrun validation explicitly."
+    },
+    {
+      "id": "deterministic-workflow",
+      "statement": "The workflow harness is deterministic even when the agent is non-deterministic.",
+      "enforcement": "Follow understand, plan, execute, validate, review, fix, and report."
+    },
+    {
+      "id": "no-blind-retry",
+      "statement": "Validation failures must be analyzed before retrying.",
+      "enforcement": "Update the hypothesis and plan before applying a fix."
+    }
+  ],
+  "architecture_invariants": [
+    {
+      "id": "public-api-boundary",
+      "statement": "Stable public imports come from the package root and public modules.",
+      "paths": [
+        "src/excelalchemy/__init__.py",
+        "src/excelalchemy/config.py",
+        "src/excelalchemy/metadata.py",
+        "src/excelalchemy/results.py",
+        "src/excelalchemy/exceptions.py",
+        "src/excelalchemy/codecs/"
+      ]
+    },
+    {
+      "id": "internal-modules-not-public",
+      "statement": "Internal modules must not be presented as stable application-facing API.",
+      "paths": [
+        "src/excelalchemy/core/",
+        "src/excelalchemy/helper/",
+        "src/excelalchemy/i18n/",
+        "src/excelalchemy/_primitives/"
+      ]
+    },
+    {
+      "id": "compatibility-retained-in-2x",
+      "statement": "Compatibility imports and deprecation warnings remain available in the 2.x line.",
+      "paths": [
+        "src/excelalchemy/exc.py",
+        "src/excelalchemy/identity.py",
+        "src/excelalchemy/header_models.py",
+        "src/excelalchemy/types/",
+        "src/excelalchemy/util/convertor.py"
+      ]
+    },
+    {
+      "id": "storage-protocol-boundary",
+      "statement": "Storage is modeled as ExcelStorage, not as a Minio-only architecture.",
+      "paths": [
+        "src/excelalchemy/core/storage_protocol.py",
+        "src/excelalchemy/core/storage.py",
+        "src/excelalchemy/core/storage_minio.py"
+      ]
+    }
+  ],
+  "domain_invariants": [
+    {
+      "id": "codec-abstraction",
+      "statement": "Field behavior belongs in codecs, including parsing, formatting, normalization, and header comments.",
+      "paths": [
+        "src/excelalchemy/codecs/"
+      ]
+    },
+    {
+      "id": "composite-codec-layout",
+      "statement": "Composite codecs preserve stable flattened labels, keys, offsets, and reconstruction behavior.",
+      "paths": [
+        "src/excelalchemy/codecs/base.py",
+        "src/excelalchemy/core/schema.py",
+        "src/excelalchemy/core/rows.py"
+      ]
+    },
+    {
+      "id": "reversible-workbook-transformations",
+      "statement": "Workbook transformations must remain explainable and round-trippable for supported types.",
+      "paths": [
+        "src/excelalchemy/core/schema.py",
+        "src/excelalchemy/core/rows.py",
+        "src/excelalchemy/core/rendering.py",
+        "src/excelalchemy/core/writer.py"
+      ]
+    },
+    {
+      "id": "worksheet-table-runtime",
+      "statement": "Runtime workbook tables use WorksheetTable rather than pandas-first internals.",
+      "paths": [
+        "src/excelalchemy/core/table.py"
+      ]
+    },
+    {
+      "id": "fresh-import-session",
+      "statement": "Each import run reloads workbook state and tracks a fresh session snapshot.",
+      "paths": [
+        "src/excelalchemy/core/import_session.py",
+        "src/excelalchemy/core/alchemy.py"
+      ]
+    },
+    {
+      "id": "cell-vs-row-issues",
+      "statement": "Cell-level and row-level validation issues remain distinct.",
+      "paths": [
+        "src/excelalchemy/exceptions.py",
+        "src/excelalchemy/helper/pydantic.py",
+        "src/excelalchemy/core/rows.py",
+        "src/excelalchemy/results.py"
+      ]
+    }
+  ],
+  "result_and_payload_invariants": [
+    {
+      "id": "stable-result-surfaces",
+      "statement": "ImportResult, CellErrorMap, and RowIssueMap are stable public result surfaces.",
+      "paths": [
+        "src/excelalchemy/results.py",
+        "docs/result-objects.md",
+        "docs/api-response-cookbook.md"
+      ]
+    },
+    {
+      "id": "fixed-import-result-states",
+      "statement": "ImportResult has exactly three top-level states: SUCCESS, HEADER_INVALID, and DATA_INVALID.",
+      "paths": [
+        "src/excelalchemy/results.py",
+        "tests/contracts/test_result_contract.py"
+      ]
+    },
+    {
+      "id": "header-invalid-short-circuit",
+      "statement": "Header-invalid imports end without uploading a result workbook.",
+      "paths": [
+        "src/excelalchemy/core/import_session.py",
+        "tests/contracts/test_import_contract.py"
+      ]
+    },
+    {
+      "id": "data-invalid-result-workbook",
+      "statement": "Data-invalid imports upload a result workbook and report a download URL.",
+      "paths": [
+        "src/excelalchemy/core/import_session.py",
+        "tests/contracts/test_import_contract.py",
+        "tests/contracts/test_storage_contract.py"
+      ]
+    }
+  ],
+  "locale_and_message_invariants": [
+    {
+      "id": "workbook-display-locales",
+      "statement": "Workbook-facing display locale supports zh-CN and en.",
+      "paths": [
+        "src/excelalchemy/config.py",
+        "src/excelalchemy/i18n/messages.py",
+        "docs/locale.md"
+      ]
+    },
+    {
+      "id": "english-runtime-diagnostics",
+      "statement": "Runtime exceptions and diagnostics are English-first in the 2.x line.",
+      "paths": [
+        "src/excelalchemy/i18n/messages.py",
+        "docs/locale.md"
+      ]
+    },
+    {
+      "id": "message-wording-contract",
+      "statement": "Do not change message wording casually when tests or docs treat it as contract.",
+      "paths": [
+        "src/excelalchemy/i18n/messages.py",
+        "tests/contracts/",
+        "tests/unit/test_i18n_messages.py"
+      ]
+    }
+  ],
+  "safety_boundaries": [
+    "Do not delete or replace src/excelalchemy core modules without explicit instruction.",
+    "Do not remove public exports from src/excelalchemy/__init__.py casually.",
+    "Do not remove compatibility modules or deprecation warnings casually.",
+    "Do not replace WorksheetTable with pandas-first internals.",
+    "Do not reframe storage as Minio-only.",
+    "Do not change generated output snapshots without regeneration and validation.",
+    "Do not commit secrets, credentials, tokens, or private endpoint details.",
+    "Do not add uncontrolled network, filesystem, time, randomness, or global-state behavior to core logic."
+  ],
+  "preferred_validation_commands": [
+    "uv run ruff format --check .",
+    "uv run ruff check .",
+    "uv run pyright",
+    "uv run pytest"
+  ],
+  "release_level_validation_commands": [
+    "uv run pytest --cov=excelalchemy --cov-report=term-missing:skip-covered tests",
+    "uv run python scripts/smoke_package.py",
+    "uv run python scripts/smoke_examples.py",
+    "uv run python scripts/smoke_docs_assets.py",
+    "uv run python scripts/smoke_api_payload_snapshot.py"
+  ]
+}

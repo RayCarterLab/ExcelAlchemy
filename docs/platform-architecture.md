@@ -13,7 +13,7 @@ Use this page when you want to answer:
 - how the platform view differs from the internal component view
 
 If you want the internal module map, see
-[`docs/architecture.md`](architecture.md).
+[`docs/platform-code-mapping.md`](platform-code-mapping.md).
 If you want the runtime sequence in more detail, see
 [`docs/runtime-model.md`](runtime-model.md).
 If you want blueprint-style backend and frontend integration patterns, see
@@ -311,7 +311,7 @@ collaborators architecture.
 It is not a second implementation tree.
 
 Use the platform view to understand how to build an import flow.
-Use [`docs/architecture.md`](architecture.md) to understand which internal
+Use [`docs/platform-code-mapping.md`](platform-code-mapping.md) to understand which internal
 modules own the behavior.
 
 The mapping is intentionally simple:
@@ -367,7 +367,7 @@ flowchart TD
 
 This is the key distinction:
 
-- `docs/architecture.md`
+- `docs/platform-code-mapping.md`
   - explains internal collaborators and ownership
 - `docs/platform-architecture.md`
   - explains how a backend engineer should compose the existing capabilities
@@ -441,7 +441,7 @@ understanding the architecture.
 
 - It does not introduce a new async or job system.
 - It does not redefine the import runtime.
-- It does not replace `docs/architecture.md`.
+- It does not replace `docs/platform-code-mapping.md`.
 - It does not add a new execution engine or storage abstraction.
 - It does not change existing public APIs.
 
@@ -451,4 +451,4 @@ understanding the architecture.
 - [`docs/integration-blueprints.md`](integration-blueprints.md)
 - [`docs/public-api.md`](public-api.md)
 - [`docs/result-objects.md`](result-objects.md)
-- [`docs/architecture.md`](architecture.md)
+- [`docs/platform-code-mapping.md`](platform-code-mapping.md)

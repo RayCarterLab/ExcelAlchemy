@@ -10,7 +10,7 @@ during integration and debugging.
 If you want the higher-level platform view, see
 [`docs/platform-architecture.md`](platform-architecture.md).
 If you want internal module ownership, see
-[`docs/architecture.md`](architecture.md).
+[`docs/platform-code-mapping.md`](platform-code-mapping.md).
 If you want integration patterns built on top of this runtime, see
 [`docs/integration-blueprints.md`](integration-blueprints.md).
 
@@ -466,4 +466,4 @@ library into a job orchestration framework.
 - [`docs/integration-blueprints.md`](integration-blueprints.md)
 - [`docs/result-objects.md`](result-objects.md)
 - [`docs/api-response-cookbook.md`](api-response-cookbook.md)
-- [`docs/architecture.md`](architecture.md)
+- [`docs/platform-code-mapping.md`](platform-code-mapping.md)

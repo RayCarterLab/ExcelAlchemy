@@ -1,14 +1,15 @@
 # Plans
 
-This directory is for execution plans for repository work.
-Use it when the work is large enough that a short issue, PR description, or commit message is not enough.
+This directory is for active harness task-plan artifacts and the plan template.
+Historical hand-written plans live in `docs/history/plans/`.
 
 ## Related docs
 
 - [../AGENTS.md](../AGENTS.md) for repository-local change guidance.
 - [../docs/repo-map.md](../docs/repo-map.md) for the main directories plans usually touch.
-- [../tech_debt/README.md](../tech_debt/README.md) for recording maintenance burdens discovered while planning.
-- [../adr/README.md](../adr/README.md) for decisions that should become lasting architecture records instead of plan notes.
+- [../docs/tech-debt/README.md](../docs/tech-debt/README.md) for recording maintenance burdens discovered while planning.
+- [../docs/history/adr/README.md](../docs/history/adr/README.md) for historical architecture decision records.
+- [../docs/history/plans/README.md](../docs/history/plans/README.md) for archived plans.
 
 ## What belongs in a plan
 
@@ -72,7 +73,7 @@ Put the status near the top of the file so it is easy to scan.
 ## Decision logs
 
 - Record only plan-local decisions here.
-- If a decision changes the repository’s architectural direction or public design, create an ADR under `adr/` instead of burying it in a plan.
+- If a decision changes the repository’s architectural direction or public design, record the historical ADR under `docs/history/adr/` instead of burying it in a plan.
 - For plan-local decisions, include:
   - the decision
   - why it was made

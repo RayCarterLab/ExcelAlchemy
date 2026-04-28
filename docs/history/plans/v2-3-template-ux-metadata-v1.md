@@ -268,7 +268,7 @@ Risk:
 Planned response:
 
 - keep v1 to one metadata field and one rendering surface
-- record broader ideas in `tech_debt/` or a later plan instead of expanding
+- record broader ideas in `docs/tech-debt/` or a later plan instead of expanding
   this slice
 
 ## Phased Implementation Steps

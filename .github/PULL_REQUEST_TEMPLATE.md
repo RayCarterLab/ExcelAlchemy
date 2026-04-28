@@ -4,7 +4,7 @@ Repository-local references:
 - [docs/documentation-maintenance-checklist.md](../docs/documentation-maintenance-checklist.md)
 - [docs/repo-map.md](../docs/repo-map.md)
 - [docs/domain-model.md](../docs/domain-model.md)
-- [docs/invariants.md](../docs/invariants.md)
+- [docs/agent/invariants.md](../docs/agent/invariants.md)
 - [src/excelalchemy/README.md](../src/excelalchemy/README.md)
 - [tests/README.md](../tests/README.md)
 - [examples/README.md](../examples/README.md)

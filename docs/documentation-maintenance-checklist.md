@@ -8,10 +8,10 @@ It is intentionally lightweight and specific to the current `ExcelAlchemy` repos
 - [../AGENTS.md](../AGENTS.md) for repository-local editing guidance.
 - [repo-map.md](repo-map.md) for the top-level repository map.
 - [domain-model.md](domain-model.md) for core concepts and relationships.
-- [invariants.md](invariants.md) for behavior that should not drift accidentally.
+- [agent/invariants.md](agent/invariants.md) for behavior that should not drift accidentally.
 - [../src/excelalchemy/README.md](../src/excelalchemy/README.md) for the main package implementation guide.
 - [../tests/README.md](../tests/README.md) and [../examples/README.md](../examples/README.md) for executable contract surfaces.
-- [../plans/README.md](../plans/README.md), [../tech_debt/README.md](../tech_debt/README.md), and [../adr/README.md](../adr/README.md) for planning, debt tracking, and architecture records.
+- [../plans/README.md](../plans/README.md), [tech-debt/README.md](tech-debt/README.md), and [history/adr/README.md](history/adr/README.md) for planning, debt tracking, and historical architecture records.
 
 ## Use this checklist when
 
@@ -64,7 +64,7 @@ It is intentionally lightweight and specific to the current `ExcelAlchemy` repos
 - the public vs internal distinction changes for a concept
 - import, template, export, or storage lifecycle steps change in a way users or maintainers need to reason about
 
-## Update `docs/invariants.md` when
+## Update `docs/agent/invariants.md` when
 
 - a public behavior becomes newly stable or stops being stable
 - a result state, payload shape, fallback rule, or compatibility expectation changes
@@ -107,7 +107,7 @@ It is intentionally lightweight and specific to the current `ExcelAlchemy` repos
   - locale or message-layer policy
 - the reasoning should outlive a single PR or execution plan
 
-Use `adr/README.md` for the expected structure.
+Use `docs/history/adr/README.md` for the expected structure.
 
 ## Create a new execution plan when
 
@@ -130,7 +130,7 @@ Use `plans/README.md` for status conventions and logging format.
 - the recommended public API and the current implementation still diverge
 - documentation, examples, tests, or smoke scripts must stay synchronized through awkward manual steps
 
-Use `tech_debt/README.md` and include:
+Use `docs/tech-debt/README.md` and include:
 
 - impact
 - current workaround
@@ -140,7 +140,7 @@ Use `tech_debt/README.md` and include:
 
 ## Verify before merging a PR
 
-- `AGENTS.md`, `docs/repo-map.md`, `docs/domain-model.md`, and `docs/invariants.md` still match the changed code paths.
+- `AGENTS.md`, `docs/repo-map.md`, `docs/domain-model.md`, and `docs/agent/invariants.md` still match the changed code paths.
 - `src/excelalchemy/README.md`, `tests/README.md`, and `examples/README.md` still describe the current implementation and workflow shape.
 - `docs/public-api.md` is updated if public-vs-internal or compatibility guidance changed.
 - `MIGRATIONS.md` is updated if deprecation or migration guidance changed.

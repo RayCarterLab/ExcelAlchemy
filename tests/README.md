@@ -7,7 +7,7 @@ It is organized around stable public behavior first, then workflow integration, 
 
 - [../README.md](../README.md) for the public-facing workflow overview.
 - [../docs/repo-map.md](../docs/repo-map.md) for where the tested code lives.
-- [../docs/invariants.md](../docs/invariants.md) for the behaviors this suite is meant to lock down.
+- [../docs/agent/invariants.md](../docs/agent/invariants.md) for the behaviors this suite is meant to lock down.
 - [../src/excelalchemy/README.md](../src/excelalchemy/README.md) for the implementation structure behind the tests.
 - [../examples/README.md](../examples/README.md) for the example workflows that integration and smoke coverage protect.
 

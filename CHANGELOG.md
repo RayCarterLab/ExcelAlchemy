@@ -79,7 +79,7 @@ compact remediation-oriented payloads after failures.
 - Updated `docs/public-api.md` and `docs/result-objects.md` to document
   `preflight_import(...)`, `ImportPreflightResult`, lifecycle callbacks, and
   remediation payload helpers
-- Updated `docs/architecture.md`, `docs/domain-model.md`, examples, and
+- Updated `docs/agent/architecture-boundaries.md`, `docs/domain-model.md`, examples, and
   reference-app guidance to reflect the broader import workflow story
 - Added design plans under `plans/` for:
   - template UX metadata v1
@@ -588,7 +588,7 @@ is intended to validate the release pipeline before the final `2.0.0` release.
 - A pluggable `ExcelStorage` protocol for custom storage backends
 - An optional built-in Minio backend installable via `ExcelAlchemy[minio]`
 - Internal `WorksheetTable` abstraction for workbook IO without pandas
-- Architecture and design documentation in `README.md`, `ABOUT.md`, and `docs/architecture.md`
+- Architecture and design documentation in `README.md`, `ABOUT.md`, and `docs/agent/architecture-boundaries.md`
 - A lightweight i18n message layer for runtime and workbook display messages
 
 ### Changed

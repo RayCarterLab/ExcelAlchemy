@@ -42,7 +42,7 @@
 - `MIGRATIONS.md`
   - states that `excelalchemy.types.*` remains available in 2.x and is scheduled for removal in ExcelAlchemy 3.0
   - states that old import-inspection names still work in 2.x but clearer names are preferred
-- `docs/architecture.md`
+- `docs/agent/architecture-boundaries.md`
   - includes a compatibility policy section for 2.x imports
 - `src/excelalchemy/types/`
 - `src/excelalchemy/exc.py`
@@ -64,7 +64,7 @@
 
 - `docs/public-api.md`
 - `MIGRATIONS.md`
-- `docs/architecture.md`
+- `docs/agent/architecture-boundaries.md`
 - `src/excelalchemy/types/`
 - `src/excelalchemy/exc.py`
 - `src/excelalchemy/identity.py`
@@ -72,3 +72,4 @@
 - `src/excelalchemy/util/convertor.py`
 - `src/excelalchemy/core/alchemy.py`
 - `tests/unit/test_deprecation_policy.py`
+

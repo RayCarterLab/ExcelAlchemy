@@ -33,7 +33,7 @@
 
 - `ABOUT.md`
   - explicitly names “Facade Outside, Components Inside” as an architecture decision
-- `docs/architecture.md`
+- `docs/agent/architecture-boundaries.md`
   - maps `ExcelAlchemy` to `ExcelSchemaLayout`, `ExcelHeaderParser`, `ExcelHeaderValidator`, `RowAggregator`, `ImportExecutor`, `ExcelRenderer`, and `ExcelStorage`
 - `src/excelalchemy/core/alchemy.py`
   - keeps the facade methods and delegates core work to collaborators
@@ -52,7 +52,7 @@
 ## Relevant paths
 
 - `ABOUT.md`
-- `docs/architecture.md`
+- `docs/agent/architecture-boundaries.md`
 - `src/excelalchemy/core/alchemy.py`
 - `src/excelalchemy/core/schema.py`
 - `src/excelalchemy/core/headers.py`
@@ -60,3 +60,4 @@
 - `src/excelalchemy/core/executor.py`
 - `src/excelalchemy/core/rendering.py`
 - `src/excelalchemy/core/storage.py`
+
