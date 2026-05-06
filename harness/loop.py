@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
 from eval.local import EvaluationResult, Evaluator
+from harness.adapters.codex import AgentAdapter
 from harness.context import ContextLoader
 from harness.plan_artifact import append_plan_event, create_plan_artifact
 from harness.state import RunState, StepRecord
 from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import Field as PydanticField
+from tools.executor import execute_tool
 
 StepName = Literal[
     'understand',
@@ -25,10 +29,34 @@ StepName = Literal[
 AgentFn = Callable[[StepName, RunState], dict[str, Any]]
 
 
+class ToolCall(BaseModel):
+    """One controlled repository tool request emitted by the agent."""
+
+    model_config = ConfigDict(extra='forbid')
+
+    name: str
+    args: dict[str, Any] = PydanticField(default_factory=dict)
+
+
+class ToolExecutionRecord(BaseModel):
+    """Structured result for one executed repository tool."""
+
+    model_config = ConfigDict(extra='forbid')
+
+    name: str
+    args: dict[str, Any]
+    success: bool
+    output: str
+    error: str
+
+
 class AgentOutput(BaseModel):
     """Base schema for constrained agent step outputs."""
 
     model_config = ConfigDict(extra='forbid')
+
+    tool_calls: list[ToolCall] = PydanticField(default_factory=list)
+    tool_results: list[ToolExecutionRecord] = PydanticField(default_factory=list)
 
 
 class UnderstandOutput(AgentOutput):
@@ -50,7 +78,9 @@ class PlanOutput(AgentOutput):
     rollback_plan: str
 
 
-class ChangeRecord(AgentOutput):
+class ChangeRecord(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
     path: str
     action: Literal['create', 'modify', 'delete']
     summary: str
@@ -169,7 +199,8 @@ class HarnessLoop:
     """
 
     evaluator: Evaluator = field(default_factory=Evaluator)
-    agent: AgentFn = default_agent
+    agent: AgentFn | None = default_agent
+    agent_adapter: AgentAdapter | None = None
     state_dir: Path | None = None
     max_retries: int = 3
     context_loader: ContextLoader | None = None
@@ -201,19 +232,19 @@ class HarnessLoop:
         return state
 
     def step1_understand(self, state: RunState) -> dict[str, Any]:
-        record = state.start_step('understand', input=self._step_input(state))
+        record = state.start_step('understand', input=self._step_input(state, 'understand'))
         output = self._agent_output('understand', state, record)
         self._finish(state, record, output=output)
         return output
 
     def step2_plan(self, state: RunState) -> dict[str, Any]:
-        record = state.start_step('plan', input=self._step_input(state))
+        record = state.start_step('plan', input=self._step_input(state, 'plan'))
         output = self._agent_output('plan', state, record)
         self._finish(state, record, output=output)
         return output
 
     def step3_execute(self, state: RunState) -> dict[str, Any]:
-        record = state.start_step('execute', input=self._step_input(state))
+        record = state.start_step('execute', input=self._step_input(state, 'execute'))
         output = self._agent_output('execute', state, record)
         plan_issues = _plan_alignment_issues(state, output['changes'])
         output['plan_alignment_issues'].extend(plan_issues)
@@ -222,7 +253,7 @@ class HarnessLoop:
         return output
 
     def step4_validate(self, state: RunState) -> EvaluationResult:
-        record = state.start_step('validate', input={'task': state.task})
+        record = state.start_step('validate', input=self._step_input(state, 'validate'))
         result = self.evaluator.evaluate(state)
         status = 'success' if result.passed else 'failed'
         self._finish(
@@ -231,7 +262,9 @@ class HarnessLoop:
         return result
 
     def step5_review(self, state: RunState, validation: EvaluationResult) -> dict[str, Any]:
-        record = state.start_step('review', input=self._step_input(state, validation_passed=validation.passed))
+        record = state.start_step(
+            'review', input=self._step_input(state, 'review', validation_passed=validation.passed)
+        )
         output = self._agent_output('review', state, record)
         self._finish(state, record, output=output)
         return output
@@ -240,7 +273,13 @@ class HarnessLoop:
         if validation.passed:
             record = state.start_step(
                 'fix',
-                input=self._step_input(state, validation_passed=True, attempt=0, max_retries=self.max_retries),
+                input=self._step_input(
+                    state,
+                    'fix',
+                    validation_passed=True,
+                    attempt=0,
+                    max_retries=self.max_retries,
+                ),
             )
             output = FixOutput(
                 needed=False,
@@ -263,14 +302,15 @@ class HarnessLoop:
         for attempt in range(1, self.max_retries + 1):
             record = state.start_step(
                 'fix',
-                input={
-                    'validation_passed': False,
-                    'attempt': attempt,
-                    'max_retries': self.max_retries,
-                    'previous_error': current_validation.reason,
-                    'fix_context': state.get_fix_context(),
-                    'context_summary': state.context_summary,
-                },
+                input=self._step_input(
+                    state,
+                    'fix',
+                    validation_passed=False,
+                    attempt=attempt,
+                    max_retries=self.max_retries,
+                    previous_error=current_validation.reason,
+                    fix_context=state.get_fix_context(),
+                ),
             )
             state.record_retry(error=current_validation.reason)
             output = self._agent_output('fix', state, record)
@@ -296,24 +336,94 @@ class HarnessLoop:
         return last_output
 
     def step7_report(self, state: RunState) -> dict[str, Any]:
-        record = state.start_step('report', input={'status': state.status})
-        raw_output = self.agent('report', state)
+        record = state.start_step('report', input=self._step_input(state, 'report', status=state.status))
+        try:
+            raw_output = self._parse_agent_response(self._call_agent('report', state, record))
+        except (TypeError, ValueError) as exc:
+            self._finish(state, record, status='failed', output={}, error=str(exc))
+            raise
+        raw_output.pop('tool_results', None)
         raw_output = {**_default_report_output(state), **raw_output}
         try:
             output = self._validate_agent_output('report', raw_output)
         except ValueError as exc:
             self._finish(state, record, status='failed', output={'raw_output': raw_output}, error=str(exc))
             raise
+        output = self._execute_tool_calls(output)
         self._finish(state, record, output=output)
         return output
 
     def _agent_output(self, step: StepName, state: RunState, record: StepRecord) -> dict[str, Any]:
-        raw_output = self.agent(step, state)
         try:
-            return self._validate_agent_output(step, raw_output)
+            raw_output = self._parse_agent_response(self._call_agent(step, state, record))
+        except (TypeError, ValueError) as exc:
+            self._finish(state, record, status='failed', output={}, error=str(exc))
+            raise
+        raw_output.pop('tool_results', None)
+        try:
+            output = self._validate_agent_output(step, raw_output)
         except ValueError as exc:
             self._finish(state, record, status='failed', output={'raw_output': raw_output}, error=str(exc))
             raise
+        return self._execute_tool_calls(output)
+
+    def _call_agent(self, step: StepName, state: RunState, record: StepRecord) -> object:
+        if self.agent_adapter is not None:
+            return self.agent_adapter.run(self._build_prompt(step, state), record.input.get('context', {}))
+        if self.agent is None:
+            return default_agent(step, state)
+        return self.agent(step, state)
+
+    def _build_prompt(self, step: StepName, state: RunState) -> str:
+        schema = OUTPUT_SCHEMAS[step].model_json_schema()
+        return (
+            f'Workflow step: {step}\n'
+            f'Task: {state.task}\n'
+            'Return a JSON object matching this schema. '
+            'Use tool_calls only for registered deterministic repository tools.\n'
+            f'{json.dumps(schema, ensure_ascii=False)}'
+        )
+
+    def _parse_agent_response(self, response: object) -> dict[str, Any]:
+        if isinstance(response, dict):
+            content = response.get('content')
+            if isinstance(content, str) and len(response) == 1:
+                return self._parse_agent_response(content)
+            return response
+        if isinstance(response, str):
+            try:
+                parsed = json.loads(response)
+            except json.JSONDecodeError as exc:
+                raise ValueError(f'Agent response must be JSON: {exc.msg}') from exc
+            if not isinstance(parsed, dict):
+                raise ValueError('Agent response JSON must be an object.')
+            return parsed
+        raise TypeError(f'Agent response must be a dict or JSON string, got {type(response).__name__}.')
+
+    def _execute_tool_calls(self, output: dict[str, Any]) -> dict[str, Any]:
+        calls = output.get('tool_calls')
+        if not isinstance(calls, list) or not calls:
+            return output
+
+        results: list[dict[str, Any]] = []
+        for call in calls:
+            if not isinstance(call, dict):
+                continue
+            args = dict(call.get('args', {}))
+            if 'repo_root' not in args and self.context_loader is not None:
+                args['repo_root'] = str(self.context_loader.repo_root)
+            result = execute_tool(str(call.get('name')), args)
+            results.append(
+                {
+                    'name': str(call.get('name')),
+                    'args': args,
+                    'success': bool(result['success']),
+                    'output': str(result['output']),
+                    'error': str(result['error']),
+                }
+            )
+        output['tool_results'] = results
+        return output
 
     def _validate_agent_output(self, step: StepName, output: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -346,8 +456,22 @@ class HarnessLoop:
             return {}
         return self.context_loader.load().summary()
 
-    def _step_input(self, state: RunState, **extra: object) -> dict[str, object]:
-        return {'task': state.task, 'context_summary': state.context_summary, **extra}
+    def _step_input(self, state: RunState, step: StepName, **extra: object) -> dict[str, object]:
+        context = self._step_context(state, step)
+        summary = context.get('summary')
+        if isinstance(summary, dict):
+            state.context_summary = summary
+        return {
+            'task': state.task,
+            'context': context,
+            'context_summary': state.context_summary,
+            **extra,
+        }
+
+    def _step_context(self, state: RunState, step: StepName) -> dict[str, object]:
+        if self.context_loader is None:
+            return {'step': step, 'task': state.task, 'summary': state.context_summary}
+        return self.context_loader.get_context(step, state.task)
 
     def _append_plan_step_event(self, state: RunState, record: StepRecord) -> None:
         if state.plan_artifact_path is None:
@@ -488,13 +612,15 @@ def run(
     task: str,
     *,
     evaluator: Evaluator | None = None,
-    agent: AgentFn = default_agent,
+    agent: AgentFn | None = default_agent,
+    agent_adapter: AgentAdapter | None = None,
     max_retries: int = 3,
     context_loader: ContextLoader | None = None,
 ) -> RunState:
     return HarnessLoop(
         evaluator=evaluator or Evaluator(),
         agent=agent,
+        agent_adapter=agent_adapter,
         max_retries=max_retries,
         context_loader=context_loader,
     ).run(task)

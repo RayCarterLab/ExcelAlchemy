@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Literal
 
 from harness.state import RunState
+from tools.executor import execute_tool
+from tools.repo_tools import get_repo_tools
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +49,7 @@ class Evaluator:
     """Evaluate local repository state without external services."""
 
     repo_root: Path = field(default_factory=lambda: Path.cwd())
+    test_tools: tuple[str, ...] = ()
     test_commands: tuple[tuple[str, ...], ...] = ()
     max_diff_lines: int = 500
     allowed_paths: tuple[str, ...] = ()
@@ -80,6 +83,9 @@ class Evaluator:
         return EvaluationResult(passed=True, reason='All evaluator checks passed.', checks=checks)
 
     def check_tests_passed(self) -> CheckResult:
+        if self.test_tools:
+            return self._check_test_tools_passed()
+
         if not self.test_commands:
             return CheckResult(
                 name='tests',
@@ -90,22 +96,25 @@ class Evaluator:
 
         results: list[dict[str, object]] = []
         for command in self.test_commands:
-            completed = subprocess.run(
-                command,
-                cwd=self.repo_root,
-                capture_output=True,
-                check=False,
-                text=True,
-            )
+            tool_name, extra_args = self._tool_for_command(command)
+            if tool_name is None:
+                return CheckResult(
+                    name='tests',
+                    passed=False,
+                    reason=f'Test command is not registered as a repository tool: {" ".join(command)}',
+                    details={'results': results},
+                )
+            result = execute_tool(tool_name, {'repo_root': str(self.repo_root), 'extra_args': list(extra_args)})
             results.append(
                 {
                     'command': ' '.join(command),
-                    'returncode': completed.returncode,
-                    'stdout': completed.stdout[-4000:],
-                    'stderr': completed.stderr[-4000:],
+                    'tool': tool_name,
+                    'success': result['success'],
+                    'stdout': str(result['output'])[-4000:],
+                    'stderr': str(result['error'])[-4000:],
                 }
             )
-            if completed.returncode != 0:
+            if not result['success']:
                 return CheckResult(
                     name='tests',
                     passed=False,
@@ -115,6 +124,40 @@ class Evaluator:
 
         return CheckResult(
             name='tests', passed=True, reason='Configured test commands passed.', details={'results': results}
+        )
+
+    def _tool_for_command(self, command: tuple[str, ...]) -> tuple[str | None, tuple[str, ...]]:
+        for tool in get_repo_tools():
+            if not tool.command:
+                continue
+            if command == tool.command:
+                return tool.name, ()
+            if tool.allow_extra_args and command[: len(tool.command)] == tool.command:
+                return tool.name, command[len(tool.command) :]
+        return None, ()
+
+    def _check_test_tools_passed(self) -> CheckResult:
+        results: list[dict[str, object]] = []
+        for tool_name in self.test_tools:
+            result = execute_tool(tool_name, {'repo_root': str(self.repo_root)})
+            results.append(
+                {
+                    'tool': tool_name,
+                    'success': result['success'],
+                    'stdout': str(result['output'])[-4000:],
+                    'stderr': str(result['error'])[-4000:],
+                }
+            )
+            if not result['success']:
+                return CheckResult(
+                    name='tests',
+                    passed=False,
+                    reason=f'Test tool failed: {tool_name}',
+                    details={'results': results},
+                )
+
+        return CheckResult(
+            name='tests', passed=True, reason='Configured test tools passed.', details={'results': results}
         )
 
     def check_diff_size(self) -> CheckResult:

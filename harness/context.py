@@ -6,7 +6,7 @@ import json
 from dataclasses import dataclass, field
 from json import JSONDecodeError
 from pathlib import Path
-from typing import Self
+from typing import Any, Self
 
 
 class ContextLoadError(ValueError):
@@ -15,6 +15,9 @@ class ContextLoadError(ValueError):
 
 @dataclass(frozen=True, slots=True)
 class ContextBundle:
+    instructions: dict[str, object] = field(default_factory=dict)
+    architecture: dict[str, dict[str, object]] = field(default_factory=dict)
+    patterns: dict[str, dict[str, object]] = field(default_factory=dict)
     repo_map: dict[str, object] = field(default_factory=dict)
     module_index: dict[str, object] = field(default_factory=dict)
     invariants: dict[str, object] = field(default_factory=dict)
@@ -35,6 +38,10 @@ class ContextBundle:
                 'preferred_new_code_imports': self.module_index.get('preferred_new_code_imports', []),
                 'avoid_in_application_code': self.module_index.get('avoid_in_application_code', []),
             },
+            'instructions': {
+                'root_agents_loaded': bool(self.instructions.get('root_agents')),
+                'context_agents_loaded': bool(self.instructions.get('context_agents')),
+            },
             'invariants': {
                 'agent_operating_invariants': _invariant_summaries(self.invariants.get('agent_operating_invariants')),
                 'architecture_invariants': _invariant_summaries(self.invariants.get('architecture_invariants')),
@@ -47,6 +54,9 @@ class ContextBundle:
                 ),
                 'safety_boundaries': self.invariants.get('safety_boundaries', []),
             },
+            'patterns': {
+                'validation': self.patterns.get('validation', {}),
+            },
         }
 
 
@@ -56,11 +66,41 @@ class ContextLoader:
 
     def load(self) -> ContextBundle:
         context_dir = self.repo_root / 'context'
+        repo_map = self._read_json(context_dir / 'architecture' / 'repo_map.json')
+        module_index = self._read_json(context_dir / 'architecture' / 'module_index.json')
+        invariants = self._read_json(context_dir / 'instructions' / 'invariants.json')
+        validation = self._read_json(context_dir / 'patterns' / 'validation.json')
         return ContextBundle(
-            repo_map=self._read_json(context_dir / 'architecture' / 'repo_map.json'),
-            module_index=self._read_json(context_dir / 'architecture' / 'module_index.json'),
-            invariants=self._read_json(context_dir / 'instructions' / 'invariants.json'),
+            instructions={
+                'root_agents': self._read_text(self.repo_root / 'AGENTS.md'),
+                'context_agents': self._read_text(context_dir / 'instructions' / 'AGENTS.md'),
+                'invariants': invariants,
+            },
+            architecture={
+                'repo_map': repo_map,
+                'module_index': module_index,
+            },
+            patterns={
+                'validation': validation,
+            },
+            repo_map=repo_map,
+            module_index=module_index,
+            invariants=invariants,
         )
+
+    def get_context(self, step: str, task: str) -> dict[str, object]:
+        """Return dynamic context scoped to one workflow step."""
+
+        bundle = self.load()
+        return {
+            'step': step,
+            'task': task,
+            'instructions': bundle.instructions,
+            'architecture': bundle.architecture,
+            'patterns': bundle.patterns,
+            'validation': _validation_context(step, bundle.patterns.get('validation', {})),
+            'summary': bundle.summary(),
+        }
 
     @classmethod
     def for_cwd(cls) -> Self:
@@ -76,6 +116,11 @@ class ContextLoader:
         if not isinstance(payload, dict):
             raise ContextLoadError(f'Context file {path} must contain a JSON object.')
         return payload
+
+    def _read_text(self, path: Path) -> str:
+        if not path.exists():
+            return ''
+        return path.read_text(encoding='utf-8')
 
 
 def _module_names(value: object) -> list[str]:
@@ -104,3 +149,17 @@ def _invariant_summaries(value: object) -> list[dict[str, object]]:
         for item in value
         if isinstance(item, dict)
     ]
+
+
+def _validation_context(step: str, validation: dict[str, Any]) -> dict[str, object]:
+    focused = validation.get('focused', [])
+    release_level = validation.get('release_level', [])
+    if step in {'validate', 'fix', 'report'}:
+        return {
+            'recommended_commands': focused if isinstance(focused, list) else [],
+            'release_level_commands': release_level if isinstance(release_level, list) else [],
+        }
+    return {
+        'recommended_commands': focused if step == 'plan' and isinstance(focused, list) else [],
+        'release_level_commands': [],
+    }

@@ -12,9 +12,27 @@ class RepoTool:
     name: str
     command: tuple[str, ...]
     description: str
+    timeout_seconds: int = 300
+    allow_extra_args: bool = False
 
 
 REPO_TOOLS: tuple[RepoTool, ...] = (
+    RepoTool(
+        name='read_file',
+        command=(),
+        description='Read a UTF-8 text file from inside the repository.',
+    ),
+    RepoTool(
+        name='search_code',
+        command=(),
+        description='Search repository text with ripgrep.',
+        timeout_seconds=60,
+    ),
+    RepoTool(
+        name='apply_patch',
+        command=(),
+        description='Apply a unified diff patch to files inside the repository.',
+    ),
     RepoTool(
         name='format_check',
         command=('uv', 'run', 'ruff', 'format', '--check', '.'),
@@ -34,6 +52,15 @@ REPO_TOOLS: tuple[RepoTool, ...] = (
         name='tests',
         command=('uv', 'run', 'pytest'),
         description='Run the test suite.',
+        timeout_seconds=600,
+        allow_extra_args=True,
+    ),
+    RepoTool(
+        name='run_tests',
+        command=('uv', 'run', 'pytest'),
+        description='Run pytest with optional deterministic extra arguments.',
+        timeout_seconds=600,
+        allow_extra_args=True,
     ),
 )
 
