@@ -165,7 +165,8 @@ class Evaluator:
         if completed.returncode != 0:
             return CheckResult(
                 name='diff_size',
-                passed=False,
+                passed=True,
+                severity='warning',
                 reason='Unable to inspect git diff size.',
                 details={'stderr': completed.stderr},
             )

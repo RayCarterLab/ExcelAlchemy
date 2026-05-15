@@ -72,6 +72,39 @@ jobs:
       - name: Run pyright
         run: uv run pyright
 
+  harness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            pyproject.toml
+            uv.lock
+
+      - name: Sync development environment
+        run: uv sync --locked --extra development
+
+      - name: Run harness tests
+        run: uv run pytest tests/unit/test_harness_wiring.py tests/unit/test_harness_runtime.py
+
+      - name: Run harness smoke
+        run: |
+          uv run python -m harness.runner "ci harness smoke"
+          test "$(find runs -maxdepth 1 -name '*.json' | wc -l)" -ge 1
+          test "$(find plans/active -maxdepth 1 -name '*.md' | wc -l)" -ge 1
+
   tests:
     runs-on: ubuntu-latest
     timeout-minutes: 20

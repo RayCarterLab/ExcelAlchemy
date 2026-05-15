@@ -350,6 +350,7 @@ class HarnessLoop:
             self._finish(state, record, status='failed', output={'raw_output': raw_output}, error=str(exc))
             raise
         output = self._execute_tool_calls(output)
+        output['report'] = build_report(state, current_report_status='success')
         self._finish(state, record, output=output)
         return output
 
@@ -369,7 +370,7 @@ class HarnessLoop:
 
     def _call_agent(self, step: StepName, state: RunState, record: StepRecord) -> object:
         if self.agent_adapter is not None:
-            return self.agent_adapter.run(self._build_prompt(step, state), record.input.get('context', {}))
+            return self.agent_adapter.run(self._build_prompt(step, state), self._step_context(state, step))
         if self.agent is None:
             return default_agent(step, state)
         return self.agent(step, state)
@@ -454,17 +455,13 @@ class HarnessLoop:
     def _load_context_summary(self) -> dict[str, object]:
         if self.context_loader is None:
             return {}
-        return self.context_loader.load().summary()
+        return self.context_loader.context_references()
 
     def _step_input(self, state: RunState, step: StepName, **extra: object) -> dict[str, object]:
-        context = self._step_context(state, step)
-        summary = context.get('summary')
-        if isinstance(summary, dict):
-            state.context_summary = summary
+        context_references = self._step_context_references(state, step)
         return {
             'task': state.task,
-            'context': context,
-            'context_summary': state.context_summary,
+            'context': context_references,
             **extra,
         }
 
@@ -473,13 +470,27 @@ class HarnessLoop:
             return {'step': step, 'task': state.task, 'summary': state.context_summary}
         return self.context_loader.get_context(step, state.task)
 
+    def _step_context_references(self, state: RunState, step: StepName) -> dict[str, object]:
+        if self.context_loader is None:
+            return {'step': step, 'task': state.task, 'sources': []}
+        references = self.context_loader.context_references()
+        sources = references.get('sources', [])
+        source_ids = [source.get('id') for source in sources if isinstance(source, dict)]
+        return {
+            'step': step,
+            'task': state.task,
+            'context_digest': references.get('digest'),
+            'source_count': references.get('source_count', 0),
+            'source_ids': source_ids,
+        }
+
     def _append_plan_step_event(self, state: RunState, record: StepRecord) -> None:
         if state.plan_artifact_path is None:
             return
         append_plan_event(Path(state.plan_artifact_path), _plan_event(state, record))
 
 
-def build_report(state: RunState) -> str:
+def build_report(state: RunState, *, current_report_status: str | None = None) -> str:
     lines = [
         f'Run ID: {state.run_id}',
         f'Status: {state.status}',
@@ -487,8 +498,9 @@ def build_report(state: RunState) -> str:
         'Steps:',
     ]
     for record in state.history:
+        status = current_report_status if record.name == 'report' and record.status == 'running' else record.status
         suffix = f' - {record.error}' if record.error else ''
-        lines.append(f'- {record.name}: {record.status}{suffix}')
+        lines.append(f'- {record.name}: {status}{suffix}')
     return '\n'.join(lines)
 
 

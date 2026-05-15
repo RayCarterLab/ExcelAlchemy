@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -82,9 +81,7 @@ Status: `{state.status}`
 
 ## Context
 
-```json
-{json.dumps(state.context_summary, ensure_ascii=False, indent=2)}
-```
+{_render_context_references(state.context_summary)}
 
 ## Constraints
 
@@ -115,6 +112,26 @@ Status: `{state.status}`
 
 - {_utc_now()} Plan artifact created.
 """
+
+
+def _render_context_references(context_summary: dict[str, object]) -> str:
+    sources = context_summary.get('sources')
+    if not isinstance(sources, list) or not sources:
+        return '- No context source references recorded.'
+
+    lines = ['Context sources are stored by reference; run artifacts do not embed full context payloads.']
+    for source in sources:
+        if not isinstance(source, dict):
+            continue
+        source_id = source.get('id', '<unknown>')
+        path = source.get('path', '<unknown>')
+        if not source.get('exists', False):
+            lines.append(f'- `{source_id}` -> `{path}` (missing)')
+            continue
+        digest = str(source.get('sha256', ''))[:12]
+        chars = source.get('chars', 0)
+        lines.append(f'- `{source_id}` -> `{path}` (sha256 `{digest}`, {chars} chars)')
+    return '\n'.join(lines)
 
 
 def _utc_now() -> str:

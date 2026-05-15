@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass, field
 from json import JSONDecodeError
 from pathlib import Path
 from typing import Any, Self
+
+DEFAULT_CONTEXT_BUDGET_CHARS = 12000
 
 
 class ContextLoadError(ValueError):
@@ -88,18 +91,63 @@ class ContextLoader:
             invariants=invariants,
         )
 
-    def get_context(self, step: str, task: str) -> dict[str, object]:
+    def get_context(
+        self,
+        step: str,
+        task: str,
+        *,
+        char_budget: int = DEFAULT_CONTEXT_BUDGET_CHARS,
+    ) -> dict[str, object]:
         """Return dynamic context scoped to one workflow step."""
 
         bundle = self.load()
+        sections = _budget_sections(_context_sections(step, bundle), char_budget)
         return {
             'step': step,
             'task': task,
-            'instructions': bundle.instructions,
-            'architecture': bundle.architecture,
-            'patterns': bundle.patterns,
+            'char_budget': char_budget,
+            'context_references': self.context_references(),
+            'sections': sections,
+            'instructions': _section_index(sections, 'instructions'),
+            'architecture': _section_index(sections, 'architecture'),
+            'patterns': _section_index(sections, 'patterns'),
             'validation': _validation_context(step, bundle.patterns.get('validation', {})),
             'summary': bundle.summary(),
+        }
+
+    def context_references(self) -> dict[str, object]:
+        """Return compact context source references suitable for run artifacts."""
+
+        sources: list[dict[str, object]] = []
+        for source_id, relative_path, category in _context_source_specs():
+            path = self.repo_root / relative_path
+            if not path.exists():
+                sources.append(
+                    {
+                        'id': source_id,
+                        'path': relative_path,
+                        'category': category,
+                        'exists': False,
+                    }
+                )
+                continue
+            text = path.read_text(encoding='utf-8')
+            sources.append(
+                {
+                    'id': source_id,
+                    'path': relative_path,
+                    'category': category,
+                    'exists': True,
+                    'sha256': hashlib.sha256(text.encode('utf-8')).hexdigest(),
+                    'chars': len(text),
+                }
+            )
+        digest = hashlib.sha256(json.dumps(sources, sort_keys=True).encode('utf-8')).hexdigest()
+        return {
+            'schema_version': 1,
+            'digest': digest,
+            'source_count': len(sources),
+            'sources': sources,
         }
 
     @classmethod
@@ -149,6 +197,98 @@ def _invariant_summaries(value: object) -> list[dict[str, object]]:
         for item in value
         if isinstance(item, dict)
     ]
+
+
+def _context_source_specs() -> tuple[tuple[str, str, str], ...]:
+    return (
+        ('instructions.root_agents', 'AGENTS.md', 'instructions'),
+        ('instructions.context_agents', 'context/instructions/AGENTS.md', 'instructions'),
+        ('instructions.invariants', 'context/instructions/invariants.json', 'instructions'),
+        ('architecture.repo_map', 'context/architecture/repo_map.json', 'architecture'),
+        ('architecture.module_index', 'context/architecture/module_index.json', 'architecture'),
+        ('patterns.validation', 'context/patterns/validation.json', 'patterns'),
+    )
+
+
+def _context_sections(step: str, bundle: ContextBundle) -> list[dict[str, object]]:
+    sections = [
+        {
+            'id': 'instructions.root_agents',
+            'category': 'instructions',
+            'content': str(bundle.instructions.get('root_agents', '')),
+        },
+        {
+            'id': 'instructions.context_agents',
+            'category': 'instructions',
+            'content': str(bundle.instructions.get('context_agents', '')),
+        },
+        {
+            'id': 'instructions.invariants',
+            'category': 'instructions',
+            'content': _json_text(bundle.invariants),
+        },
+        {
+            'id': 'patterns.validation',
+            'category': 'patterns',
+            'content': _json_text(bundle.patterns.get('validation', {})),
+        },
+    ]
+    if step in {'understand', 'plan', 'execute', 'review', 'fix'}:
+        sections.extend(
+            [
+                {
+                    'id': 'architecture.repo_map',
+                    'category': 'architecture',
+                    'content': _json_text(bundle.repo_map),
+                },
+                {
+                    'id': 'architecture.module_index',
+                    'category': 'architecture',
+                    'content': _json_text(bundle.module_index),
+                },
+            ]
+        )
+    return sections
+
+
+def _budget_sections(sections: list[dict[str, object]], char_budget: int) -> list[dict[str, object]]:
+    remaining = max(char_budget, 0)
+    budgeted: list[dict[str, object]] = []
+    for section in sections:
+        content = str(section.get('content', ''))
+        original_chars = len(content)
+        if remaining <= 0:
+            budgeted.append({**section, 'content': '', 'original_chars': original_chars, 'truncated': True})
+            continue
+        truncated = original_chars > remaining
+        included = content[:remaining]
+        remaining -= len(included)
+        budgeted.append(
+            {
+                **section,
+                'content': included,
+                'original_chars': original_chars,
+                'included_chars': len(included),
+                'truncated': truncated,
+            }
+        )
+    return budgeted
+
+
+def _section_index(sections: list[dict[str, object]], category: str) -> dict[str, object]:
+    return {
+        str(section['id']): {
+            'included_chars': section.get('included_chars', 0),
+            'original_chars': section.get('original_chars', 0),
+            'truncated': section.get('truncated', False),
+        }
+        for section in sections
+        if section.get('category') == category
+    }
+
+
+def _json_text(value: object) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2)
 
 
 def _validation_context(step: str, validation: dict[str, Any]) -> dict[str, object]:
