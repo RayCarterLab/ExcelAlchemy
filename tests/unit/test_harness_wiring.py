@@ -59,6 +59,26 @@ def test_evaluator_rejects_unregistered_test_commands(tmp_path: Path) -> None:
     assert 'not registered as a repository tool' in result.reason
 
 
+def test_agent_context_smoke_passes_for_current_repository() -> None:
+    _prepend_repo_root()
+    from scripts.smoke_agent_context import validate_agent_context
+
+    assert validate_agent_context(Path.cwd()) == []
+
+
+def test_agent_context_smoke_reports_missing_and_invalid_context(tmp_path: Path) -> None:
+    _prepend_repo_root()
+    from scripts.smoke_agent_context import validate_agent_context
+
+    _write_minimal_context(tmp_path)
+    (tmp_path / 'context' / 'architecture' / 'repo_map.json').write_text('{', encoding='utf-8')
+
+    errors = validate_agent_context(tmp_path)
+
+    assert any('docs/agent/workflow.md' in error for error in errors)
+    assert any('Invalid JSON' in error for error in errors)
+
+
 def test_loop_injects_context_parses_adapter_json_and_executes_tools() -> None:
     _prepend_repo_root()
     from eval.local import Evaluator
@@ -87,7 +107,7 @@ def test_loop_injects_context_parses_adapter_json_and_executes_tools() -> None:
                 'steps': ['inspect', 'wire', 'validate'],
                 'expected_files_to_modify': [],
                 'files_to_inspect': [],
-                'validation_commands': ['uv run pytest'],
+                'validation_commands': [],
                 'risks': [],
                 'rollback_plan': 'Revert harness-only changes.',
             }
@@ -137,6 +157,180 @@ def test_loop_injects_context_parses_adapter_json_and_executes_tools() -> None:
     assert seen_context_steps == ['understand', 'plan', 'execute', 'review', 'report']
     assert execute is not None
     assert execute.output['tool_results'][0]['success'] is True
+
+
+def test_runner_uses_external_agent_command(tmp_path: Path, monkeypatch) -> None:
+    _prepend_repo_root()
+    from harness.runner import run_task
+
+    _write_minimal_context(tmp_path)
+    agent = tmp_path / 'agent.py'
+    agent.write_text(
+        """
+from __future__ import annotations
+
+import json
+import sys
+
+payload = json.loads(sys.stdin.read())
+step = payload["context"]["step"]
+
+if step == "understand":
+    output = {
+        "understanding": "command-backed task",
+        "task_type": "investigation",
+        "relevant_areas": ["harness"],
+        "inspected_context": ["context"],
+        "assumptions": [],
+        "blockers": [],
+    }
+elif step == "plan":
+    output = {
+        "goal": "command-backed task",
+        "steps": ["inspect", "validate"],
+        "expected_files_to_modify": [],
+        "files_to_inspect": [],
+        "validation_commands": [],
+        "risks": [],
+        "rollback_plan": "No file changes.",
+    }
+elif step == "execute":
+    output = {
+        "changes": [],
+        "modified_files": [],
+        "commands_run": [],
+        "deviations_from_plan": [],
+        "note": "No changes needed.",
+    }
+elif step == "review":
+    output = {
+        "findings": [],
+        "decision": "ready",
+        "risks": [],
+        "missing_tests": [],
+        "unrelated_changes": [],
+    }
+elif step == "fix":
+    output = {
+        "needed": False,
+        "root_cause": "Validation passed.",
+        "hypothesis": "No fix required.",
+        "changes": [],
+        "modified_files": [],
+        "commands_run": [],
+        "note": "No fix required.",
+    }
+else:
+    output = {}
+
+print(json.dumps(output))
+""",
+        encoding='utf-8',
+    )
+
+    monkeypatch.chdir(tmp_path)
+    report = run_task('command-backed task', agent_command=f'{sys.executable} {agent}')
+
+    assert 'Run ID:' in report
+    assert '- report: success' in report
+    assert list((tmp_path / 'runs').glob('*.json'))
+    assert list((tmp_path / 'plans' / 'active').glob('*.md'))
+
+
+def test_loop_runs_plan_validation_commands_through_evaluator(monkeypatch) -> None:
+    _prepend_repo_root()
+    import eval.local
+    from eval.local import Evaluator
+    from harness.loop import HarnessLoop
+
+    calls: list[tuple[str, dict[str, object]]] = []
+
+    def fake_execute_tool(name: str, args: dict[str, object] | None = None) -> dict[str, bool | str]:
+        calls.append((name, args or {}))
+        return {'success': True, 'output': 'pytest ok', 'error': ''}
+
+    monkeypatch.setattr(eval.local, 'execute_tool', fake_execute_tool)
+
+    def agent(step: str, _state) -> dict[str, object]:
+        if step == 'understand':
+            return {
+                'understanding': 'validate from plan',
+                'task_type': 'investigation',
+                'relevant_areas': ['harness'],
+                'inspected_context': [],
+                'assumptions': [],
+                'blockers': [],
+            }
+        if step == 'plan':
+            return {
+                'goal': 'validate from plan',
+                'steps': ['inspect', 'validate'],
+                'expected_files_to_modify': [],
+                'files_to_inspect': [],
+                'validation_commands': ['uv run pytest tests/unit/test_harness_wiring.py'],
+                'risks': [],
+                'rollback_plan': 'No file changes.',
+            }
+        if step == 'execute':
+            return {
+                'changes': [],
+                'modified_files': [],
+                'commands_run': [],
+                'deviations_from_plan': [],
+                'note': 'No changes needed.',
+            }
+        if step == 'review':
+            return {
+                'findings': [],
+                'decision': 'ready',
+                'risks': [],
+                'missing_tests': [],
+                'unrelated_changes': [],
+            }
+        if step == 'fix':
+            return {
+                'needed': False,
+                'root_cause': 'Validation passed.',
+                'hypothesis': 'No fix required.',
+                'changes': [],
+                'modified_files': [],
+                'commands_run': [],
+                'note': 'No fix required.',
+            }
+        return {}
+
+    state = HarnessLoop(
+        agent=agent,
+        evaluator=Evaluator(max_diff_lines=99999),
+        plan_artifacts_enabled=False,
+    ).run('validate from plan')
+
+    validate = state.get_latest_step('validate')
+    assert state.status == 'success'
+    assert validate is not None
+    assert calls == [
+        (
+            'tests',
+            {
+                'repo_root': str(Path.cwd()),
+                'extra_args': ['tests/unit/test_harness_wiring.py'],
+            },
+        )
+    ]
+
+
+def _write_minimal_context(root: Path) -> None:
+    _write_json(root / 'context' / 'architecture' / 'repo_map.json', {})
+    _write_json(root / 'context' / 'architecture' / 'module_index.json', {})
+    _write_json(root / 'context' / 'instructions' / 'invariants.json', {})
+    _write_json(root / 'context' / 'patterns' / 'validation.json', {})
+    (root / 'AGENTS.md').write_text('# Rules', encoding='utf-8')
+    (root / 'context' / 'instructions' / 'AGENTS.md').write_text('# Context', encoding='utf-8')
+
+
+def _write_json(path: Path, payload: dict[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload), encoding='utf-8')
 
 
 def _prepend_repo_root() -> None:

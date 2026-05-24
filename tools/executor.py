@@ -42,7 +42,11 @@ def execute_tool(name: str, args: dict[str, Any] | None = None) -> ToolResult:
     except FileNotFoundError as exc:
         return _result(False, '', f'Command not found for tool {name}: {exc.filename}')
     except subprocess.TimeoutExpired as exc:
-        return _result(False, exc.stdout or '', f'Tool {name} timed out after {timeout_seconds}s: {exc.stderr or ""}')
+        return _result(
+            False,
+            _timeout_output(exc.stdout),
+            f'Tool {name} timed out after {timeout_seconds}s: {_timeout_output(exc.stderr)}',
+        )
     except OSError as exc:
         return _result(False, '', f'Tool {name} failed to start: {exc}')
 
@@ -147,7 +151,7 @@ def _search_code(args: dict[str, Any], repo_root: Path, timeout_seconds: int) ->
     except FileNotFoundError:
         return _result(False, '', 'Command not found for tool search_code: rg')
     except subprocess.TimeoutExpired as exc:
-        return _result(False, exc.stdout or '', f'Tool search_code timed out: {exc.stderr or ""}')
+        return _result(False, _timeout_output(exc.stdout), f'Tool search_code timed out: {_timeout_output(exc.stderr)}')
 
     if completed.returncode not in {0, 1}:
         return _result(False, completed.stdout[:max_chars], completed.stderr)
@@ -172,7 +176,7 @@ def _apply_patch(args: dict[str, Any], repo_root: Path, timeout_seconds: int) ->
     except FileNotFoundError:
         return _result(False, '', 'Command not found for tool apply_patch: git')
     except subprocess.TimeoutExpired as exc:
-        return _result(False, exc.stdout or '', f'Tool apply_patch timed out: {exc.stderr or ""}')
+        return _result(False, _timeout_output(exc.stdout), f'Tool apply_patch timed out: {_timeout_output(exc.stderr)}')
 
     return _result(completed.returncode == 0, completed.stdout, completed.stderr if completed.returncode else '')
 
@@ -195,3 +199,11 @@ def _result(success: bool, output: str, error: str) -> ToolResult:
         'output': output,
         'error': error,
     }
+
+
+def _timeout_output(value: str | bytes | None) -> str:
+    if value is None:
+        return ''
+    if isinstance(value, bytes):
+        return value.decode(errors='replace')
+    return value

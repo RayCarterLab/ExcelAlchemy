@@ -11,6 +11,7 @@ storage, result payloads, docs smoke expectations, or examples.
 uv run ruff format --check .
 uv run ruff check .
 uv run pyright
+uv run python scripts/smoke_agent_context.py
 uv run pytest --cov=excelalchemy --cov-report=term-missing:skip-covered tests
 uv run python scripts/smoke_package.py
 uv run python scripts/smoke_examples.py
@@ -31,6 +32,8 @@ Choose focused checks for narrow changes:
 - Storage behavior: `tests/contracts/test_storage_contract.py`.
 - Compatibility and deprecations: `tests/unit/test_deprecation_policy.py`.
 - Locale behavior: `docs/locale.md` plus relevant contract tests.
+- Harness or agent context behavior: `uv run python scripts/smoke_agent_context.py`
+  and `tests/unit/test_harness_wiring.py tests/unit/test_harness_runtime.py`.
 
 ## Failure Handling
 

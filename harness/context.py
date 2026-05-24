@@ -211,7 +211,7 @@ def _context_source_specs() -> tuple[tuple[str, str, str], ...]:
 
 
 def _context_sections(step: str, bundle: ContextBundle) -> list[dict[str, object]]:
-    sections = [
+    sections: list[dict[str, object]] = [
         {
             'id': 'instructions.root_agents',
             'category': 'instructions',

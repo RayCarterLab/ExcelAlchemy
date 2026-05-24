@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shlex
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -254,6 +255,7 @@ class HarnessLoop:
 
     def step4_validate(self, state: RunState) -> EvaluationResult:
         record = state.start_step('validate', input=self._step_input(state, 'validate'))
+        self._configure_evaluator_from_plan(state)
         result = self.evaluator.evaluate(state)
         status = 'success' if result.passed else 'failed'
         self._finish(
@@ -475,7 +477,9 @@ class HarnessLoop:
             return {'step': step, 'task': state.task, 'sources': []}
         references = self.context_loader.context_references()
         sources = references.get('sources', [])
-        source_ids = [source.get('id') for source in sources if isinstance(source, dict)]
+        source_ids = []
+        if isinstance(sources, list):
+            source_ids = [source.get('id') for source in sources if isinstance(source, dict)]
         return {
             'step': step,
             'task': state.task,
@@ -483,6 +487,14 @@ class HarnessLoop:
             'source_count': references.get('source_count', 0),
             'source_ids': source_ids,
         }
+
+    def _configure_evaluator_from_plan(self, state: RunState) -> None:
+        if self.evaluator.test_tools or self.evaluator.test_commands:
+            return
+
+        commands = _plan_validation_commands(state)
+        if commands:
+            self.evaluator.test_commands = commands
 
     def _append_plan_step_event(self, state: RunState, record: StepRecord) -> None:
         if state.plan_artifact_path is None:
@@ -606,6 +618,25 @@ def _plan_alignment_issues(state: RunState, changes: list[dict[str, Any]]) -> li
         elif plan_step not in plan_steps:
             issues.append(f'{path} references unknown plan step: {plan_step}.')
     return issues
+
+
+def _plan_validation_commands(state: RunState) -> tuple[tuple[str, ...], ...]:
+    plan = state.get_latest_step('plan')
+    if plan is None:
+        return ()
+
+    raw_commands = plan.output.get('validation_commands')
+    if not isinstance(raw_commands, list):
+        return ()
+
+    commands: list[tuple[str, ...]] = []
+    for raw_command in raw_commands:
+        if not isinstance(raw_command, str) or not raw_command.strip():
+            continue
+        parts = tuple(shlex.split(raw_command))
+        if parts:
+            commands.append(parts)
+    return tuple(commands)
 
 
 def _validation_results(state: RunState) -> list[str]:

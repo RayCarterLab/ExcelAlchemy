@@ -49,6 +49,11 @@ REPO_TOOLS: tuple[RepoTool, ...] = (
         description='Run Pyright type checking.',
     ),
     RepoTool(
+        name='agent_context_smoke',
+        command=('uv', 'run', 'python', 'scripts/smoke_agent_context.py'),
+        description='Validate harness-readable agent context files and digests.',
+    ),
+    RepoTool(
         name='tests',
         command=('uv', 'run', 'pytest'),
         description='Run the test suite.',
