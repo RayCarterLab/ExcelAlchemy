@@ -1,139 +1,88 @@
 # ExcelAlchemy
 
-[English README](./README.md) · [项目说明](./docs/about.md) · [快速开始](./docs/getting-started.md) · [接入路线图](./docs/integration-roadmap.md) · [平台架构](./docs/platform-architecture.md) · [运行时模型](./docs/runtime-model.md) · [集成蓝图](./docs/integration-blueprints.md) · [结果对象](./docs/result-objects.md) · [代码映射](./docs/platform-code-mapping.md) · [Locale Policy](./docs/locale.md) · [Changelog](./CHANGELOG.md) · [迁移说明](./docs/migrations.md)
+[English README](README.md) · [快速开始](docs/getting-started.md) · [示例](examples/README.md) · [Public API](docs/public-api.md) · [迁移说明](docs/migrations.md) · [限制说明](docs/limitations.md) · [Changelog](CHANGELOG.md)
 
-ExcelAlchemy 是一个面向 Excel 导入导出的 schema-first Python 库。
-它的核心思路不是“读写表格文件”，而是“把 Excel 当成一种带约束的业务契约”。
+仓库指南：[AGENTS.md](AGENTS.md) · [Coding Agent Guide](docs/agent/coding-agent-guide.md) · [Repository Map](docs/repo-map.md)
 
-当前 3.0 开发线使用普通 Python 类型标注配合显式的
-`ExcelColumn(...)` 元数据。2.x 的兼容导入、字段工厂包装和 legacy
-配置路径不再作为当前 API 保留。
+ExcelAlchemy 是一个基于 Pydantic 模型的 schema-driven Excel 导入/导出库。
 
-- 上传前更清晰的模板引导
-- 执行前更轻量的结构化 preflight gate
-- 导入过程中的同步 lifecycle visibility
-- 导入失败后的 remediation-oriented payload
+它把 Python 类型模型变成 Excel 工作簿契约：
 
-从平台层视角看，这条导入链路可以概括为：
+- 从类型模型生成 Excel 模板
+- 校验用户上传的工作簿
+- 把错误映射回行和单元格
+- 生成面向用户的结果工作簿
+- 通过 `ExcelStorage` 支持可替换的存储实现
 
-- 模板编排
-- preflight gate
-- 导入运行时
-- 结果智能
-- 制品与交付
-
-你用 Pydantic 模型定义结构，用 `ExcelColumn(...)` 定义 Excel 元数据，
-用显式的导入/导出流程去完成模板生成、数据校验、错误回写和后端集成。
+当前主线是 ExcelAlchemy 3.0。3.0 使用普通 Python 类型标注配合显式
+`ExcelColumn(...)` 元数据。2.x 的字段工厂、兼容导入、legacy 配置字段和
+facade 别名都不再是当前 API。
 
 ## 截图
 
-这些截图由仓库内的 [`scripts/generate_portfolio_assets.py`](./scripts/generate_portfolio_assets.py) 生成。
-
 | 模板 | 导入结果 |
 | --- | --- |
-| ![Excel 模板截图](./docs/assets/images/portfolio-template-en.png) | ![Excel 导入结果截图](./docs/assets/images/portfolio-import-result-en.png) |
+| ![Excel 模板截图](docs/assets/images/portfolio-template-en.png) | ![Excel 导入结果截图](docs/assets/images/portfolio-import-result-en.png) |
 
-## 这个项目适合什么
+## 安装
 
-- 需要给业务方发 Excel 模板并回收数据
-- 需要把 Excel 输入和后端模型保持一致
-- 需要在失败结果中明确指出哪一格有问题
-- 想要一个可以接自定义存储的 Excel 工作流库
-
-## 这个项目不打算做什么
-
-- 不做通用表格分析库
-- 不做 pandas 风格的数据处理框架
-- 不做桌面表格编辑器
-- 不追求“魔法式自动推断一切”
-
-## 核心特点
-
-- 基于 Pydantic v2 的 schema 驱动设计
-- 支持 `locale='zh-CN' | 'en'` 的 Excel 展示文案
-- 支持可插拔存储后端 `ExcelStorage`
-- 运行时不依赖 pandas
-- 支持 Python 3.12-3.14，主支持版本是 3.14
-- 使用 `uv` 管理开发与 CI
-
-## 项目定位
-
-这个仓库不只是“一个能用的库”，也是一个展示工程思考的作品：
-
-- 为什么要从 Pydantic v1 迁到 v2
-- 为什么要去掉 pandas
-- 为什么要做 storage abstraction
-- 为什么 facade 外面要简洁，里面要分层
-- 为什么国际化先从消息层和 workbook display text 开始
-
-详细设计思路见 [docs/about.md](./docs/about.md)。
-
-## 架构概览
-
-```mermaid
-flowchart TD
-    A[ExcelAlchemy 门面]
-    A --> B[ExcelSchemaLayout]
-    A --> C[ExcelHeaderParser / Validator]
-    A --> D[RowAggregator]
-    A --> E[ImportExecutor]
-    A --> F[ExcelRenderer / writer.py]
-    A --> G[ExcelStorage 协议]
-
-    G --> H[MinioStorageGateway]
-    G --> I[自定义存储实现]
-
-    B --> J[ExcelColumn / FieldMetaInfo]
-    E --> K[Pydantic Adapter]
-    F --> L[i18n Display Messages]
-    E --> M[Runtime Error Messages]
+```bash
+pip install ExcelAlchemy
 ```
 
-完整分层说明见 [docs/platform-code-mapping.md](./docs/platform-code-mapping.md)。
+如果需要内置 Minio-compatible 存储支持：
 
-## 工作流概览
-
-```mermaid
-flowchart LR
-    A[Pydantic 模型 + ExcelColumn] --> B[ExcelAlchemy 门面]
-    B --> C[模板渲染]
-    B --> D[Worksheet 解析]
-    D --> E[表头校验]
-    D --> F[行聚合]
-    F --> G[导入执行器]
-    G --> H[导入结果工作簿]
-    C --> I[给用户的工作簿]
-    H --> I
+```bash
+pip install "ExcelAlchemy[minio]"
 ```
 
-如果你想先看平台层文档，而不是内部组件图，可以继续看：
+## 快速示例
 
-- [`docs/platform-architecture.md`](./docs/platform-architecture.md)
-- [`docs/runtime-model.md`](./docs/runtime-model.md)
-- [`docs/integration-blueprints.md`](./docs/integration-blueprints.md)
+```python
+from typing import Annotated
 
-## 导入工作流概览
+from pydantic import BaseModel, Field
 
-如果只看最短路径，可以把当前导入平台理解为：
+from excelalchemy import EmailCodec, ExcelAlchemy, ExcelColumn, ImporterConfig
+
+
+class EmployeeImport(BaseModel):
+    name: Annotated[str, ExcelColumn(label='姓名', order=1)]
+    email: Annotated[
+        str,
+        Field(min_length=8),
+        ExcelColumn(
+            label='邮箱',
+            codec=EmailCodec(),
+            order=2,
+            hint='使用工作邮箱',
+            example_value='alice@company.com',
+        ),
+    ]
+
+
+alchemy = ExcelAlchemy(ImporterConfig(EmployeeImport, locale='zh-CN'))
+template = alchemy.download_template_artifact(filename='employees-template.xlsx')
+
+excel_bytes = template.as_bytes()
+```
+
+Python 类型标注定义数据形状，Pydantic `Field(...)` 定义 Pydantic 校验，
+`ExcelColumn(...)` 定义 Excel 表头、顺序、提示、示例值和 codec 行为。
+
+浏览器下载时，优先从后端返回 `template.as_bytes()` 并设置
+`Content-Disposition: attachment`，或者在前端构造 `Blob`。不要依赖很长的
+顶层 `data:` URL 导航。
+
+## 导入工作流
+
+最短路径可以概括为：
 
 ```text
 template -> preflight -> import -> remediation -> delivery
 ```
 
-对应到实际接入时，通常就是：
-
-- 先生成模板，给用户明确的 workbook 引导
-- 用 `preflight_import(...)` 先做轻量结构校验
-- 用 `import_data(..., on_event=...)` 跑真正的导入运行时
-- 如果前端需要重试引导，再构造 remediation payload
-- 如果流程需要交付结果文件，再返回或上传 result workbook artifact
-
-如果你需要更细的结果对象说明或 API 响应形状，也可以继续看：
-
-- [`docs/result-objects.md`](./docs/result-objects.md)
-- [`docs/api-response-cookbook.md`](./docs/api-response-cookbook.md)
-
-最小示例：
+后端代码中通常是：
 
 ```python
 from excelalchemy.results import ImportLifecycleEvent, build_frontend_remediation_payload
@@ -142,310 +91,79 @@ from excelalchemy.results import ImportLifecycleEvent, build_frontend_remediatio
 events: list[ImportLifecycleEvent] = []
 
 preflight = alchemy.preflight_import('employees.xlsx')
-if preflight.is_valid:
+if not preflight.is_valid:
+    response = {'preflight': preflight.to_api_payload()}
+else:
     result = await alchemy.import_data(
         'employees.xlsx',
         'employees-result.xlsx',
         on_event=events.append,
     )
-    payload = build_frontend_remediation_payload(
-        result=result,
-        cell_error_map=alchemy.cell_error_map,
-        row_error_map=alchemy.row_error_map,
-    )
+    response = {
+        'result': result.to_api_payload(),
+        'events': [event.model_dump(mode='json', exclude_none=True) for event in events],
+        'cell_errors': alchemy.cell_error_map.to_api_payload(),
+        'row_errors': alchemy.row_error_map.to_api_payload(),
+        'remediation': build_frontend_remediation_payload(
+            result=result,
+            cell_error_map=alchemy.cell_error_map,
+            row_error_map=alchemy.row_error_map,
+        ),
+    }
 ```
 
-## 安装
+更完整的入门说明见 [docs/getting-started.md](docs/getting-started.md)，可运行
+示例见 [examples/README.md](examples/README.md)。
 
-```bash
-pip install ExcelAlchemy
-```
+## 适合什么场景
 
-如果你要使用内置的 Minio 后端：
+ExcelAlchemy 适合后端导入/导出工作流，尤其是 Excel 模板本身就是业务契约的一部分时。
 
-```bash
-pip install "ExcelAlchemy[minio]"
-```
+适合：
 
-## 示例
+- 给业务用户发模板并回收 Excel 数据
+- 保持 Excel 输入和后端 Pydantic 模型一致
+- 在失败结果中指出具体哪一行、哪一格有问题
+- 给前端返回可用于重试和修复的结构化 payload
+- 接入自定义对象存储或工作簿 IO
 
-仓库里有一组更贴近实际接入的示例：
+不适合：
 
-- [`examples/annotated_schema.py`](examples/annotated_schema.py)
-- [`examples/employee_import_workflow.py`](examples/employee_import_workflow.py)
-- [`examples/create_or_update_import.py`](examples/create_or_update_import.py)
-- [`examples/date_and_range_fields.py`](examples/date_and_range_fields.py)
-- [`examples/selection_fields.py`](examples/selection_fields.py)
-- [`examples/custom_storage.py`](examples/custom_storage.py)
-- [`examples/export_workflow.py`](examples/export_workflow.py)
-- [`examples/minio_storage.py`](examples/minio_storage.py)
-- [`examples/fastapi_upload.py`](examples/fastapi_upload.py)
-- [`examples/fastapi_reference/README.md`](examples/fastapi_reference/README.md)
-- [`examples/README.md`](examples/README.md)
+- 桌面 Excel 自动化
+- 宏执行或公式重算
+- pandas-first 数据分析
+- 字节级完整保留原工作簿
+- 实时表格编辑器
 
-如果你想按推荐顺序来阅读，建议先看
-[`examples/README.md`](examples/README.md)。
+工具选择说明见 [docs/tool-comparison.md](docs/tool-comparison.md)。公式、文件保真和
+大文件预期见 [docs/limitations.md](docs/limitations.md) 与
+[docs/performance.md](docs/performance.md)。
 
-如果你想看一页汇总好的展示页，里面同时包含截图、代表性工作流和固定输出，
-可以直接看
-[`docs/examples-showcase.md`](docs/examples-showcase.md)。
+## 下一步
 
-这些固定输出素材由
-[`scripts/generate_example_output_assets.py`](scripts/generate_example_output_assets.py)
-生成。
-
-### 示例输出
-
-导入工作流输出节选：
-
-```text
-Employee import workflow completed
-Preflight: VALID
-Result: SUCCESS
-Success rows: 1
-Failed rows: 0
-Result workbook URL: None
-Created rows: 1
-Uploaded artifacts: []
-```
-
-导出工作流输出：
-
-```text
-Export workflow completed
-Artifact filename: employees-export.xlsx
-Artifact bytes: 6893
-Upload URL: memory://employees-export-upload.xlsx
-Uploaded objects: ['employees-export-upload.xlsx']
-```
-
-完整输出：
-
-- [`docs/assets/example-outputs/employee-import-workflow.txt`](docs/assets/example-outputs/employee-import-workflow.txt)
-- [`docs/assets/example-outputs/create-or-update-import.txt`](docs/assets/example-outputs/create-or-update-import.txt)
-- [`docs/assets/example-outputs/export-workflow.txt`](docs/assets/example-outputs/export-workflow.txt)
-- [`docs/assets/example-outputs/date-and-range-fields.txt`](docs/assets/example-outputs/date-and-range-fields.txt)
-- [`docs/assets/example-outputs/selection-fields.txt`](docs/assets/example-outputs/selection-fields.txt)
-- [`docs/assets/example-outputs/custom-storage.txt`](docs/assets/example-outputs/custom-storage.txt)
-- [`docs/assets/example-outputs/annotated-schema.txt`](docs/assets/example-outputs/annotated-schema.txt)
-- [`docs/assets/example-outputs/fastapi-reference.txt`](docs/assets/example-outputs/fastapi-reference.txt)
-
-## 快速开始
-
-```python
-from typing import Annotated
-
-from pydantic import BaseModel
-
-from excelalchemy import ExcelAlchemy, ExcelColumn, ImporterConfig
-
-
-class Importer(BaseModel):
-    age: Annotated[int, ExcelColumn(label='年龄', order=1)]
-    name: Annotated[str, ExcelColumn(label='姓名', order=2)]
-
-
-alchemy = ExcelAlchemy(ImporterConfig(Importer))
-template = alchemy.download_template_artifact(filename='people-template.xlsx')
-
-excel_bytes = template.as_bytes()
-template_data_url = template.as_data_url()
-```
-
-浏览器下载时，优先使用 `excel_bytes` 构造 `Blob`，或者让后端直接返回二进制并带上
-`Content-Disposition: attachment`。现代浏览器对超长 `data:` URL 的顶层导航并不稳定。
-
-## 选择模板 / 结果语言
-
-`locale` 会影响 Excel 里真正给用户看的文案，例如：
-
-- 第一行填写须知
-- 表头批注
-- 结果列标题
-- “校验通过 / 校验不通过” 文本
-
-默认是 `zh-CN`，如果你想生成英文模板或英文结果工作簿，可以传 `locale='en'`。
-
-更完整的公共策略见 [docs/locale.md](./docs/locale.md)：
-
-- 运行时异常默认并稳定使用英文
-- workbook 展示文案当前支持 `zh-CN` 和 `en`
-- workbook 展示文案默认是 `zh-CN`
-
-```python
-from typing import Annotated
-
-from pydantic import BaseModel
-
-from excelalchemy import ExcelAlchemy, ExcelColumn, ImporterConfig
-
-
-class Importer(BaseModel):
-    age: Annotated[int, ExcelColumn(label='Age', order=1)]
-    name: Annotated[str, ExcelColumn(label='Name', order=2)]
-
-
-template_zh = ExcelAlchemy(ImporterConfig(Importer, locale='zh-CN')).download_template_artifact()
-template_en = ExcelAlchemy(ImporterConfig(Importer, locale='en')).download_template_artifact()
-```
-
-导入结果工作簿也会使用同一个 `locale`：
-
-```python
-alchemy = ExcelAlchemy(
-    ImporterConfig(
-        Importer,
-        creator=create_func,
-        storage=storage,
-        locale='en',
-    )
-)
-result = await alchemy.import_data("people.xlsx", "people-result.xlsx")
-```
-
-## 存储扩展点
-
-ExcelAlchemy 接受任何实现了 `ExcelStorage` 协议的存储后端。
-
-```python
-from excelalchemy import ExcelAlchemy, ExcelStorage, ExporterConfig, UrlStr
-from excelalchemy.workbook.table import WorksheetTable
-
-
-class InMemoryExcelStorage(ExcelStorage):
-    def read_excel_table(self, input_excel_name: str, *, skiprows: int, sheet_name: str) -> WorksheetTable:
-        ...
-
-    def upload_excel(self, output_name: str, content_with_prefix: str) -> UrlStr:
-        ...
-
-
-alchemy = ExcelAlchemy(ExporterConfig(Importer, storage=InMemoryExcelStorage()))
-```
-
-如果你希望使用内置 Minio 实现，推荐显式传入 `storage=MinioStorageGateway(...)`，而不是再把 Minio 配置散落到门面层。
-
-## 导入结果状态查看命名
-
-如果你需要从 facade 上查看一次导入后的中间状态，请使用 3.0 的显式命名：
-
-- `alchemy.worksheet_table`
-- `alchemy.header_table`
-- `alchemy.cell_error_map`
-- `alchemy.row_error_map`
-
-旧别名：
-
-- `alchemy.df`
-- `alchemy.header_df`
-- `alchemy.cell_errors`
-- `alchemy.row_errors`
-
-这些旧别名已经不属于当前 3.0 API。应用代码应统一使用前面这组更明确的名字。
-
-## 结构化错误读取
-
-现在导入失败不仅能回写到 workbook，也更适合被后端服务和前端界面读取。
-
-- `alchemy.cell_error_map`
-- `alchemy.row_error_map`
-
-这两个对象仍然保持 mapping 风格的直接读取能力，同时提供了更适合业务代码使用的辅助方法：
-
-- `at(...)`
-- `messages_at(...)`
-- `messages_for_row(...)`
-- `numbered_messages_for_row(...)`
-- `flatten()`
-- `to_dict()`
-- `to_api_payload()`
-
-这意味着你可以更容易地：
-
-- 构造前端可直接消费的校验响应
-- 渲染按行和按单元格的失败摘要
-- 保持 workbook 提示和 API 提示的一致性
-
-常见字段类型的错误提示也更贴近业务语义了，例如：
-
-- 日期字段会直接提示期望的日期格式
-- 日期区间和数值区间字段会提示期望的组合输入格式
-- 邮箱、手机号、URL 会给出更自然的示例格式
-- 选项、组织、人员类字段会明确提示“必须来自配置项”
-
-## 为什么这样设计
-
-### 为什么去掉 pandas
-
-这个项目真正需要的是：
-
-- 读写 Excel
-- 一个稳定的中间表格抽象
-- 对表头 / 行 / 错误坐标的精确控制
-
-并不需要 pandas 擅长的分析能力。
-因此改成 `openpyxl + WorksheetTable` 更贴合问题域，也让安装和依赖稳定性更好。
-
-### 为什么做 Pydantic adapter
-
-Excel 元数据不应该深绑到 Pydantic 内部结构上。
-所以现在的分层是：
-
-- `ExcelColumn(...)` 是公开声明入口，解析后进入分层的运行时元数据
-- `adapters/pydantic.py` 只做适配
-- 真正的业务校验仍然由 ExcelAlchemy 控制
-
-这就是为什么 Pydantic v2 迁移可以做得比较稳。
-
-### 为什么做 storage abstraction
-
-这个项目不应该等于 Minio。
-Minio 只是一个默认实现，真正稳定的接口应该是 `ExcelStorage`。
-
-这样用户可以接：
-
-- 对象存储
-- 本地文件系统
-- 测试替身
-- 内存存储
-
-## 演进记录
-
-这个仓库的价值，很大一部分来自它的演进过程：
-
-- `src/` layout 迁移
-- CI / 发布链路现代化
-- Pydantic 元数据层解耦
-- Pydantic v2 迁移
-- Python 3.12-3.14 现代化
-- 核心架构拆分
-- 去 pandas 化
-- 存储抽象化
-- 国际化基础层与 workbook locale 化
-
-这些不是零碎优化，而是整套工程判断的痕迹。
-
-## 文档索引
-
-- [README.md](./README.md): 英文首页，偏作品集表达
-- [README_cn.md](./README_cn.md): 中文说明页，偏使用和理解
-- [docs/about.md](./docs/about.md): 设计原则、迁移记录、架构取舍
-- [docs/platform-architecture.md](./docs/platform-architecture.md): 导入平台层能力模型
-- [docs/runtime-model.md](./docs/runtime-model.md): 导入工作流的运行时顺序
-- [docs/integration-blueprints.md](./docs/integration-blueprints.md): 后端 / 前端接入蓝图
-- [docs/platform-code-mapping.md](./docs/platform-code-mapping.md): 组件边界与扩展点
+- [快速开始](docs/getting-started.md)：安装、定义 schema、选择工作流。
+- [示例](examples/README.md)：导入、导出、存储和 FastAPI 示例。
+- [Public API](docs/public-api.md)：当前 3.0 公共模块和已移除的 2.x 名称。
+- [Result Objects](docs/result-objects.md)：`ImportResult`、`CellErrorMap`、`RowIssueMap` 和 API payload。
+- [API Response Cookbook](docs/api-response-cookbook.md)：后端/前端响应形状。
+- [Integration Blueprints](docs/integration-blueprints.md)：同步上传、worker 导入和 remediation loop。
+- [迁移说明](docs/migrations.md)：3.0 升级说明和历史升级资料。
 
 ## 开发
 
+本仓库使用 `uv`：
+
 ```bash
 uv sync --extra development
-uv run pre-commit install
+uv run ruff format --check .
 uv run ruff check .
 uv run pyright
-uv run pytest --cov=excelalchemy --cov-report=term-missing:skip-covered tests
-uv build
+uv run pytest
 ```
+
+仓库内 agent 规则见 [AGENTS.md](AGENTS.md)。面向 Codex、Claude Code、Cursor 等
+coding agent 的项目入口见 [docs/agent/coding-agent-guide.md](docs/agent/coding-agent-guide.md)。
 
 ## 许可证
 
-MIT。详见 [LICENSE](./LICENSE)。
+MIT. See [LICENSE](LICENSE).

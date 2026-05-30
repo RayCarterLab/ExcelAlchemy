@@ -7,6 +7,8 @@ It is meant to help both humans and coding agents find the right files before ma
 
 - [../README.md](../README.md) for the public-facing overview.
 - [../AGENTS.md](../AGENTS.md) for repo-local editing guidance.
+- [agent/coding-agent-guide.md](agent/coding-agent-guide.md) for a
+  coding-agent-oriented project brief.
 - [domain-model.md](domain-model.md) for the core concepts behind these directories.
 - [agent/invariants.md](agent/invariants.md) for behavior that should stay stable.
 - [../src/excelalchemy/README.md](../src/excelalchemy/README.md) for the implementation structure inside the main package.
@@ -45,6 +47,8 @@ It is meant to help both humans and coding agents find the right files before ma
   - Release history and notable behavior/documentation changes.
 - `AGENTS.md`
   - Agent-focused guidance for safe navigation and modification.
+- `docs/agent/coding-agent-guide.md`
+  - Coding-agent-oriented project brief, public contract summary, and task routing guide.
 - `pyproject.toml`
   - Packaging, dependencies, Ruff, Pyright, and pytest configuration.
 - `uv.lock`
@@ -186,6 +190,8 @@ These compatibility paths are removed in 3.0.
   - Release notes for specific versions.
 - `docs/agent/`
   - Authoritative agent workflow, boundary, invariant, testing, and review rules.
+  - Start with `docs/agent/coding-agent-guide.md` when a coding agent needs the
+    project-level README equivalent before choosing files.
 - `docs/history/`
   - Archived plans and historical ADRs; not current rules.
 - `docs/tech-debt/`

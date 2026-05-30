@@ -102,6 +102,9 @@ Core rules:
 
 - [docs/agent/workflow.md](docs/agent/workflow.md): deterministic workflow,
   tool rules, and retry policy.
+- [docs/agent/coding-agent-guide.md](docs/agent/coding-agent-guide.md):
+  project brief and routing guide for Codex, Claude Code, Cursor, and similar
+  coding agents.
 - [docs/agent/architecture-boundaries.md](docs/agent/architecture-boundaries.md):
   public/internal/compatibility boundaries and docs update rules.
 - [docs/agent/invariants.md](docs/agent/invariants.md): ExcelAlchemy invariants
@@ -117,6 +120,8 @@ Core rules:
 ## Key Project Docs
 
 - [README.md](README.md): user-facing overview.
+- [docs/agent/coding-agent-guide.md](docs/agent/coding-agent-guide.md):
+  coding-agent-oriented project overview.
 - [docs/repo-map.md](docs/repo-map.md): repository navigation.
 - [docs/domain-model.md](docs/domain-model.md): core concepts.
 - [docs/public-api.md](docs/public-api.md): public API boundaries.

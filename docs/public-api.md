@@ -1,8 +1,9 @@
 # Public API Guide
 
-This page summarizes the current ExcelAlchemy 3.0 public surface. It is written
-for application code and Codex tasks; historical 2.x migration paths are not
-current API.
+This page summarizes the current ExcelAlchemy 3.0 public surface for
+application code. Historical 2.x migration paths are not current API. Coding
+agents should pair this with `docs/agent/coding-agent-guide.md` before editing
+public contracts.
 
 ## Public Modules
 

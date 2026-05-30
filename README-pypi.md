@@ -1,28 +1,22 @@
 # ExcelAlchemy
 
-Schema-driven Python library for typed Excel import/export workflows with Pydantic and locale-aware workbooks.
+Schema-driven Python library for typed Excel import/export workflows with
+Pydantic and locale-aware workbooks.
 
-ExcelAlchemy turns Pydantic models into typed workbook contracts:
+ExcelAlchemy turns Pydantic models into workbook contracts:
 
 - generate Excel templates from code
 - validate uploaded workbooks
 - map failures back to rows and cells
-- render workbook-facing output in `zh-CN` or `en`
-- keep storage pluggable through `ExcelStorage`
+- return result workbooks and API-friendly error payloads
+- keep workbook IO pluggable through `ExcelStorage`
 
-The 3.0 development line uses ordinary Python annotations plus explicit
-`ExcelColumn(...)` metadata. It intentionally removes 2.x compatibility shims,
-legacy import paths, and field-factory wrappers.
+The current mainline is ExcelAlchemy 3.0. It uses ordinary Python annotations
+plus explicit `ExcelColumn(...)` metadata. Old 2.x field factories,
+compatibility imports, legacy config fields, and facade aliases are not current
+API.
 
-At the top level, that import workflow is:
-
-- template authoring
-- preflight gate
-- import runtime
-- result intelligence
-- artifact and delivery
-
-[GitHub Repository](https://github.com/RayCarterLab/ExcelAlchemy) · [Full README](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README.md) · [Getting Started](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md) · [Integration Roadmap](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-roadmap.md) · [Platform Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/platform-architecture.md) · [Runtime Model](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/runtime-model.md) · [Integration Blueprints](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-blueprints.md) · [Result Objects](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md) · [API Response Cookbook](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md) · [Examples Showcase](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md) · [Code Mapping](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/platform-code-mapping.md) · [Migration Notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/migrations.md)
+[GitHub Repository](https://github.com/RayCarterLab/ExcelAlchemy) · [Full README](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README.md) · [Getting Started](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md) · [Examples](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/README.md) · [Public API](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/public-api.md) · [Migration Notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/migrations.md)
 
 ## Screenshots
 
@@ -40,34 +34,13 @@ At the top level, that import workflow is:
 pip install ExcelAlchemy
 ```
 
-Optional Minio support:
+Optional Minio-compatible storage support:
 
 ```bash
 pip install "ExcelAlchemy[minio]"
 ```
 
-## Minimal Example
-
-```python
-from typing import Annotated
-
-from pydantic import BaseModel
-
-from excelalchemy import ExcelAlchemy, ExcelColumn, ImporterConfig
-
-
-class Importer(BaseModel):
-    age: Annotated[int, ExcelColumn(label='Age', order=1)]
-    name: Annotated[str, ExcelColumn(label='Name', order=2)]
-
-
-alchemy = ExcelAlchemy(ImporterConfig(Importer, locale='en'))
-template = alchemy.download_template_artifact(filename='people-template.xlsx')
-
-excel_bytes = template.as_bytes()
-```
-
-## Modern Annotated Example
+## Quick Example
 
 ```python
 from typing import Annotated
@@ -77,37 +50,36 @@ from pydantic import BaseModel, Field
 from excelalchemy import EmailCodec, ExcelAlchemy, ExcelColumn, ImporterConfig
 
 
-class Importer(BaseModel):
+class EmployeeImport(BaseModel):
+    name: Annotated[str, ExcelColumn(label='Name', order=1)]
     email: Annotated[
         str,
-        Field(min_length=10),
+        Field(min_length=8),
         ExcelColumn(
             label='Email',
             codec=EmailCodec(),
-            order=1,
+            order=2,
             hint='Use your work email',
             example_value='alice@company.com',
         ),
     ]
 
 
-alchemy = ExcelAlchemy(ImporterConfig(Importer, locale='en'))
-template = alchemy.download_template_artifact(filename='people-template.xlsx')
+alchemy = ExcelAlchemy(ImporterConfig(EmployeeImport, locale='en'))
+template = alchemy.download_template_artifact(filename='employees-template.xlsx')
+
+excel_bytes = template.as_bytes()
 ```
 
-This template metadata is additive: it leaves the worksheet layout alone and
-improves the generated header comment with both guidance text and a concrete
-example value.
+## Import Workflow
 
-## Import Workflow Overview
-
-The shortest path through the import workflow is:
+The shortest import path is:
 
 ```text
 template -> preflight -> import -> remediation -> delivery
 ```
 
-Minimal example:
+Minimal backend sketch:
 
 ```python
 from excelalchemy.results import ImportLifecycleEvent, build_frontend_remediation_payload
@@ -122,92 +94,23 @@ if preflight.is_valid:
         'employees-result.xlsx',
         on_event=events.append,
     )
-    payload = build_frontend_remediation_payload(
-        result=result,
-        cell_error_map=alchemy.cell_error_map,
-        row_error_map=alchemy.row_error_map,
-    )
+    payload = {
+        'result': result.to_api_payload(),
+        'cell_errors': alchemy.cell_error_map.to_api_payload(),
+        'row_errors': alchemy.row_error_map.to_api_payload(),
+        'remediation': build_frontend_remediation_payload(
+            result=result,
+            cell_error_map=alchemy.cell_error_map,
+            row_error_map=alchemy.row_error_map,
+        ),
+    }
 ```
-
-See also:
-
-- [Platform Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/platform-architecture.md)
-- [Runtime Model](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/runtime-model.md)
-- [Integration Blueprints](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-blueprints.md)
-- [Result Objects](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md)
-- [API Response Cookbook](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md)
-
-## Example Outputs
-
-These fixed outputs are generated from the repository examples by
-[`scripts/generate_example_output_assets.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/scripts/generate_example_output_assets.py).
-
-Import workflow excerpt:
-
-```text
-Employee import workflow completed
-Preflight: VALID
-Result: SUCCESS
-Success rows: 1
-Failed rows: 0
-Result workbook URL: None
-Created rows: 1
-Uploaded artifacts: []
-```
-
-Export workflow:
-
-```text
-Export workflow completed
-Artifact filename: employees-export.xlsx
-Artifact bytes: 6893
-Upload URL: memory://employees-export-upload.xlsx
-Uploaded objects: ['employees-export-upload.xlsx']
-```
-
-Full captured outputs:
-
-- [employee-import-workflow.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/assets/example-outputs/employee-import-workflow.txt)
-- [create-or-update-import.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/assets/example-outputs/create-or-update-import.txt)
-- [export-workflow.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/assets/example-outputs/export-workflow.txt)
-- [date-and-range-fields.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/assets/example-outputs/date-and-range-fields.txt)
-- [selection-fields.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/assets/example-outputs/selection-fields.txt)
-- [fastapi-reference.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/assets/example-outputs/fastapi-reference.txt)
-
-For a single GitHub page that combines screenshots, representative workflows,
-and captured outputs, see the
-[Examples Showcase](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md).
-
-If you want a copyable FastAPI-oriented reference layout rather than a single
-example script, see the
-[FastAPI reference project](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/examples/fastapi_reference/README.md).
-
-## Error Feedback
-
-ExcelAlchemy keeps workbook-facing validation feedback readable while also
-supporting API-friendly inspection in application code.
-
-The current result inspection surface includes:
-
-- `alchemy.cell_error_map`
-- `alchemy.row_error_map`
-
-These objects remain mapping-like for direct inspection, and also expose helpers
-such as:
-
-- `messages_at(...)`
-- `messages_for_row(...)`
-- `flatten()`
-- `to_api_payload()`
-
-Common field types now also produce more business-oriented error wording, such
-as expected date formats, sample email/phone/URL formats, and clearer messages
-for configured selection fields.
 
 ## Why ExcelAlchemy
 
 - Pydantic v2-based schema extraction and validation
-- locale-aware workbook comments and result workbooks
+- `Annotated[..., ExcelColumn(...)]` declaration style
+- workbook comments and result workbooks in `zh-CN` or `en`
 - pluggable storage instead of a hard-coded backend
 - `openpyxl`-based runtime path without pandas
 - contract tests, Ruff, and Pyright in the development workflow
@@ -215,9 +118,9 @@ for configured selection fields.
 ## Learn More
 
 - [Full project README](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README.md)
+- [Getting started](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md)
+- [Examples showcase](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md)
+- [Result objects](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md)
+- [API response cookbook](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md)
 - [Platform architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/platform-architecture.md)
-- [Runtime model](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/runtime-model.md)
-- [Integration blueprints](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-blueprints.md)
-- [Code mapping](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/platform-code-mapping.md)
-- [Locale policy](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/locale.md)
 - [Migration notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/migrations.md)
