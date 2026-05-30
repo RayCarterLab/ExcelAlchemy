@@ -5,7 +5,9 @@
 ExcelAlchemy 是一个面向 Excel 导入导出的 schema-first Python 库。
 它的核心思路不是“读写表格文件”，而是“把 Excel 当成一种带约束的业务契约”。
 
-当前稳定发布版本是 `2.4.0`。在稳定的 ExcelAlchemy 2.x 线上，它进一步补齐了更完整的导入工作流：
+当前 3.0 开发线使用普通 Python 类型标注配合显式的
+`ExcelColumn(...)` 元数据。2.x 的兼容导入、字段工厂包装和 legacy
+配置路径不再作为当前 API 保留。
 
 - 上传前更清晰的模板引导
 - 执行前更轻量的结构化 preflight gate
@@ -20,7 +22,8 @@ ExcelAlchemy 是一个面向 Excel 导入导出的 schema-first Python 库。
 - 结果智能
 - 制品与交付
 
-你用 Pydantic 模型定义结构，用 `FieldMeta` 定义 Excel 元数据，用显式的导入/导出流程去完成模板生成、数据校验、错误回写和后端集成。
+你用 Pydantic 模型定义结构，用 `ExcelColumn(...)` 定义 Excel 元数据，
+用显式的导入/导出流程去完成模板生成、数据校验、错误回写和后端集成。
 
 ## 截图
 
@@ -80,7 +83,7 @@ flowchart TD
     G --> H[MinioStorageGateway]
     G --> I[自定义存储实现]
 
-    B --> J[FieldMeta / FieldMetaInfo]
+    B --> J[ExcelColumn / FieldMetaInfo]
     E --> K[Pydantic Adapter]
     F --> L[i18n Display Messages]
     E --> M[Runtime Error Messages]
@@ -92,7 +95,7 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    A[Pydantic 模型 + FieldMeta] --> B[ExcelAlchemy 门面]
+    A[Pydantic 模型 + ExcelColumn] --> B[ExcelAlchemy 门面]
     B --> C[模板渲染]
     B --> D[Worksheet 解析]
     D --> E[表头校验]
@@ -133,10 +136,10 @@ template -> preflight -> import -> remediation -> delivery
 最小示例：
 
 ```python
-from excelalchemy.results import build_frontend_remediation_payload
+from excelalchemy.results import ImportLifecycleEvent, build_frontend_remediation_payload
 
 
-events: list[dict[str, object]] = []
+events: list[ImportLifecycleEvent] = []
 
 preflight = alchemy.preflight_import('employees.xlsx')
 if preflight.is_valid:
@@ -229,21 +232,23 @@ Uploaded objects: ['employees-export-upload.xlsx']
 ## 快速开始
 
 ```python
+from typing import Annotated
+
 from pydantic import BaseModel
 
-from excelalchemy import ExcelAlchemy, FieldMeta, ImporterConfig, Number, String
+from excelalchemy import ExcelAlchemy, ExcelColumn, ImporterConfig
 
 
 class Importer(BaseModel):
-    age: Number = FieldMeta(label='年龄', order=1)
-    name: String = FieldMeta(label='姓名', order=2)
+    age: Annotated[int, ExcelColumn(label='年龄', order=1)]
+    name: Annotated[str, ExcelColumn(label='姓名', order=2)]
 
 
 alchemy = ExcelAlchemy(ImporterConfig(Importer))
 template = alchemy.download_template_artifact(filename='people-template.xlsx')
 
 excel_bytes = template.as_bytes()
-template_data_url = template.as_data_url()  # 兼容旧的浏览器集成方式
+template_data_url = template.as_data_url()
 ```
 
 浏览器下载时，优先使用 `excel_bytes` 构造 `Blob`，或者让后端直接返回二进制并带上
@@ -264,16 +269,19 @@ template_data_url = template.as_data_url()  # 兼容旧的浏览器集成方式
 
 - 运行时异常默认并稳定使用英文
 - workbook 展示文案当前支持 `zh-CN` 和 `en`
-- 2.x 版本线默认 workbook locale 仍是 `zh-CN`
+- workbook 展示文案默认是 `zh-CN`
 
 ```python
-from excelalchemy import ExcelAlchemy, FieldMeta, ImporterConfig, Number, String
+from typing import Annotated
+
 from pydantic import BaseModel
+
+from excelalchemy import ExcelAlchemy, ExcelColumn, ImporterConfig
 
 
 class Importer(BaseModel):
-    age: Number = FieldMeta(label='Age', order=1)
-    name: String = FieldMeta(label='Name', order=2)
+    age: Annotated[int, ExcelColumn(label='Age', order=1)]
+    name: Annotated[str, ExcelColumn(label='Name', order=2)]
 
 
 template_zh = ExcelAlchemy(ImporterConfig(Importer, locale='zh-CN')).download_template_artifact()
@@ -300,7 +308,7 @@ ExcelAlchemy 接受任何实现了 `ExcelStorage` 协议的存储后端。
 
 ```python
 from excelalchemy import ExcelAlchemy, ExcelStorage, ExporterConfig, UrlStr
-from excelalchemy.core.table import WorksheetTable
+from excelalchemy.workbook.table import WorksheetTable
 
 
 class InMemoryExcelStorage(ExcelStorage):
@@ -382,8 +390,8 @@ alchemy = ExcelAlchemy(ExporterConfig(Importer, storage=InMemoryExcelStorage()))
 Excel 元数据不应该深绑到 Pydantic 内部结构上。
 所以现在的分层是：
 
-- `FieldMetaInfo` 是对外兼容 façade，内部再组合声明层、运行时绑定层、展示层和导入约束层
-- `helper/pydantic.py` 只做适配
+- `ExcelColumn(...)` 是公开声明入口，解析后进入分层的运行时元数据
+- `adapters/pydantic.py` 只做适配
 - 真正的业务校验仍然由 ExcelAlchemy 控制
 
 这就是为什么 Pydantic v2 迁移可以做得比较稳。

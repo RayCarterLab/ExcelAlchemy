@@ -45,6 +45,9 @@ documentation directory.
 - Do not hide failed or unrun validation.
 - Do not remove public exports, compatibility shims, or deprecation warnings
   casually.
+- For tasks explicitly scoped to ExcelAlchemy 3.0, follow
+  [`docs/agent/v3-prd.md`](docs/agent/v3-prd.md); 3.0 compatibility removal is
+  intentional when it is part of that plan.
 - Do not move or rewrite `src/`, `tests/`, `examples/`, or existing non-agent
   docs as part of agent-structure work.
 - Stop and report blockers when the task cannot be completed safely.
@@ -102,6 +105,8 @@ Core rules:
 - [docs/agent/testing.md](docs/agent/testing.md): focused and full validation.
 - [docs/agent/review.md](docs/agent/review.md): review mode, final response,
   and Definition of Done.
+- [docs/agent/v3-prd.md](docs/agent/v3-prd.md): ExcelAlchemy 3.0 PRD,
+  no-compatibility premise, target API, and Codex task dependency graph.
 
 ## Key Project Docs
 

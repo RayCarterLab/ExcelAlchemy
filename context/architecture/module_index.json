@@ -19,19 +19,34 @@
       "role": "ImporterConfig, ExporterConfig, and ImportMode."
     },
     {
+      "module": "excelalchemy.columns",
+      "path": "src/excelalchemy/columns.py",
+      "role": "ExcelColumn declarations and immutable column specs."
+    },
+    {
       "module": "excelalchemy.metadata",
       "path": "src/excelalchemy/metadata.py",
-      "role": "FieldMeta, ExcelMeta, PatchFieldMeta, and public metadata declarations."
+      "role": "Resolved runtime field metadata."
     },
     {
       "module": "excelalchemy.results",
       "path": "src/excelalchemy/results.py",
-      "role": "ImportResult, ValidateResult, ValidateHeaderResult, CellErrorMap, RowIssueMap, and API helpers."
+      "role": "ImportResult, preflight results, lifecycle events, issue maps, and API helpers."
+    },
+    {
+      "module": "excelalchemy.errors",
+      "path": "src/excelalchemy/errors.py",
+      "role": "Public exception re-export module."
     },
     {
       "module": "excelalchemy.exceptions",
       "path": "src/excelalchemy/exceptions.py",
       "role": "Stable public exception module."
+    },
+    {
+      "module": "excelalchemy.storage",
+      "path": "src/excelalchemy/storage.py",
+      "role": "ExcelStorage protocol."
     },
     {
       "module": "excelalchemy.codecs",
@@ -44,121 +59,99 @@
       "role": "ExcelArtifact transport wrapper."
     }
   ],
-  "core_modules": [
+  "implementation_modules": [
     {
-      "module": "excelalchemy.core.alchemy",
-      "path": "src/excelalchemy/core/alchemy.py",
+      "module": "excelalchemy.runtime.facade",
+      "path": "src/excelalchemy/runtime/facade.py",
       "role": "Facade implementation and main workflow orchestration."
     },
     {
-      "module": "excelalchemy.core.import_session",
-      "path": "src/excelalchemy/core/import_session.py",
+      "module": "excelalchemy.runtime.import_session",
+      "path": "src/excelalchemy/runtime/import_session.py",
       "role": "One import run lifecycle, state, and event emission."
     },
     {
-      "module": "excelalchemy.core.schema",
-      "path": "src/excelalchemy/core/schema.py",
+      "module": "excelalchemy.runtime.preflight",
+      "path": "src/excelalchemy/runtime/preflight.py",
+      "role": "Read-only structural preflight workflow."
+    },
+    {
+      "module": "excelalchemy.schema.layout",
+      "path": "src/excelalchemy/schema/layout.py",
       "role": "Excel-facing schema layout extraction and flattening."
     },
     {
-      "module": "excelalchemy.core.headers",
-      "path": "src/excelalchemy/core/headers.py",
+      "module": "excelalchemy.workbook.headers",
+      "path": "src/excelalchemy/workbook/headers.py",
       "role": "Workbook header parsing and validation."
     },
     {
-      "module": "excelalchemy.core.rows",
-      "path": "src/excelalchemy/core/rows.py",
+      "module": "excelalchemy.workbook.header_models",
+      "path": "src/excelalchemy/workbook/header_models.py",
+      "role": "Header validation result models and merged-header records."
+    },
+    {
+      "module": "excelalchemy.workbook.table",
+      "path": "src/excelalchemy/workbook/table.py",
+      "role": "WorksheetTable runtime table abstraction."
+    },
+    {
+      "module": "excelalchemy.runtime.rows",
+      "path": "src/excelalchemy/runtime/rows.py",
       "role": "Worksheet row aggregation and issue tracking."
     },
     {
-      "module": "excelalchemy.core.executor",
-      "path": "src/excelalchemy/core/executor.py",
+      "module": "excelalchemy.runtime.executor",
+      "path": "src/excelalchemy/runtime/executor.py",
       "role": "Row validation and callback dispatch."
     },
     {
-      "module": "excelalchemy.core.rendering",
-      "path": "src/excelalchemy/core/rendering.py",
+      "module": "excelalchemy.rendering.renderer",
+      "path": "src/excelalchemy/rendering/renderer.py",
       "role": "Workbook rendering coordination."
     },
     {
-      "module": "excelalchemy.core.writer",
-      "path": "src/excelalchemy/core/writer.py",
+      "module": "excelalchemy.rendering.writer",
+      "path": "src/excelalchemy/rendering/writer.py",
       "role": "Low-level workbook writing and styling."
     },
     {
-      "module": "excelalchemy.core.storage_protocol",
-      "path": "src/excelalchemy/core/storage_protocol.py",
-      "role": "ExcelStorage protocol."
+      "module": "excelalchemy.adapters.pydantic",
+      "path": "src/excelalchemy/adapters/pydantic.py",
+      "role": "Pydantic integration boundary."
     },
     {
-      "module": "excelalchemy.core.storage",
-      "path": "src/excelalchemy/core/storage.py",
-      "role": "Storage strategy resolution."
+      "module": "excelalchemy.messages",
+      "path": "src/excelalchemy/messages.py",
+      "role": "Runtime and workbook display message handling."
     },
     {
-      "module": "excelalchemy.core.storage_minio",
-      "path": "src/excelalchemy/core/storage_minio.py",
+      "module": "excelalchemy.storage_gateway",
+      "path": "src/excelalchemy/storage_gateway.py",
+      "role": "Configured storage resolution and missing-storage fallback."
+    },
+    {
+      "module": "excelalchemy.storage_minio",
+      "path": "src/excelalchemy/storage_minio.py",
       "role": "Built-in Minio-compatible storage backend."
     },
     {
-      "module": "excelalchemy.core.table",
-      "path": "src/excelalchemy/core/table.py",
-      "role": "WorksheetTable runtime table abstraction."
+      "module": "excelalchemy.primitives.*",
+      "path": "src/excelalchemy/primitives/",
+      "role": "Internal constants, identity wrappers, and row payload aliases."
     }
   ],
-  "internal_modules": [
-    {
-      "module": "excelalchemy.core.*",
-      "path": "src/excelalchemy/core/",
-      "role": "Internal orchestration and workflow implementation."
-    },
-    {
-      "module": "excelalchemy.helper.*",
-      "path": "src/excelalchemy/helper/",
-      "role": "Internal Pydantic and framework adaptation boundary."
-    },
-    {
-      "module": "excelalchemy.i18n.*",
-      "path": "src/excelalchemy/i18n/",
-      "role": "Internal runtime and workbook message handling."
-    },
-    {
-      "module": "excelalchemy._primitives.*",
-      "path": "src/excelalchemy/_primitives/",
-      "role": "Internal constants, identity wrappers, payloads, diagnostics, deprecation helpers, and header models."
-    }
-  ],
-  "compatibility_modules": [
-    {
-      "module": "excelalchemy.exc",
-      "path": "src/excelalchemy/exc.py",
-      "replacement": "excelalchemy.exceptions",
-      "policy": "2.x compatibility shim with deprecation behavior."
-    },
-    {
-      "module": "excelalchemy.identity",
-      "path": "src/excelalchemy/identity.py",
-      "replacement": "package root exports or internal identity modules as appropriate",
-      "policy": "2.x compatibility shim."
-    },
-    {
-      "module": "excelalchemy.header_models",
-      "path": "src/excelalchemy/header_models.py",
-      "replacement": "internal header models only when explicitly working on internals",
-      "policy": "2.x compatibility shim."
-    },
-    {
-      "module": "excelalchemy.types.*",
-      "path": "src/excelalchemy/types/",
-      "replacement": "public package root and public modules",
-      "policy": "Deprecated compatibility namespace retained in 2.x and scheduled for removal in 3.0."
-    },
-    {
-      "module": "excelalchemy.util.convertor",
-      "path": "src/excelalchemy/util/convertor.py",
-      "replacement": "excelalchemy.util.converter",
-      "policy": "Deprecated compatibility import."
-    }
+  "removed_compatibility_modules": [
+    "excelalchemy.const",
+    "excelalchemy.exc",
+    "excelalchemy.identity",
+    "excelalchemy.header_models",
+    "excelalchemy.types.*",
+    "excelalchemy.util.convertor",
+    "excelalchemy.core.*",
+    "excelalchemy.helper.*",
+    "excelalchemy.i18n.*",
+    "excelalchemy._primitives.*"
   ],
   "harness_modules": [
     {
@@ -185,15 +178,20 @@
   "preferred_new_code_imports": [
     "excelalchemy",
     "excelalchemy.config",
+    "excelalchemy.columns",
     "excelalchemy.metadata",
     "excelalchemy.results",
+    "excelalchemy.errors",
     "excelalchemy.exceptions",
+    "excelalchemy.storage",
     "excelalchemy.codecs"
   ],
   "avoid_in_application_code": [
-    "excelalchemy.core.*",
-    "excelalchemy.helper.*",
-    "excelalchemy.i18n.*",
-    "excelalchemy._primitives.*"
+    "excelalchemy.runtime.*",
+    "excelalchemy.schema.*",
+    "excelalchemy.workbook.*",
+    "excelalchemy.rendering.*",
+    "excelalchemy.adapters.*",
+    "excelalchemy.primitives.*"
   ]
 }

@@ -43,7 +43,7 @@
     },
     {
       "path": "context/",
-      "responsibility": "Machine-readable runtime context loaded by the deterministic harness and AI agents, grouped into instructions, architecture, and patterns."
+      "responsibility": "Machine-readable runtime context loaded by the deterministic harness and AI agents."
     },
     {
       "path": "tools/",
@@ -84,12 +84,16 @@
       "responsibility": "Public importer/exporter configuration objects and import modes."
     },
     {
+      "path": "src/excelalchemy/columns.py",
+      "responsibility": "Public ExcelColumn declaration helper and immutable column specs."
+    },
+    {
       "path": "src/excelalchemy/metadata.py",
       "responsibility": "Public Excel field metadata entry points and layered field metadata model."
     },
     {
       "path": "src/excelalchemy/results.py",
-      "responsibility": "Public result objects, validation result states, and API-friendly error maps."
+      "responsibility": "Public result objects, validation result states, lifecycle events, and API-friendly error maps."
     },
     {
       "path": "src/excelalchemy/exceptions.py",
@@ -104,68 +108,72 @@
       "responsibility": "Public field codec namespace and built-in workbook field semantics."
     },
     {
-      "path": "src/excelalchemy/core/alchemy.py",
+      "path": "src/excelalchemy/runtime/facade.py",
       "responsibility": "Main workflow facade implementation for template generation, import, export, and upload."
     },
     {
-      "path": "src/excelalchemy/core/import_session.py",
+      "path": "src/excelalchemy/runtime/import_session.py",
       "responsibility": "One-shot import runtime state, lifecycle, counts, and result rendering decisions."
     },
     {
-      "path": "src/excelalchemy/core/schema.py",
+      "path": "src/excelalchemy/runtime/preflight.py",
+      "responsibility": "Read-only structural preflight workflow."
+    },
+    {
+      "path": "src/excelalchemy/schema/layout.py",
       "responsibility": "Builds flattened Excel-facing schema layout from Pydantic model declarations."
     },
     {
-      "path": "src/excelalchemy/core/headers.py",
+      "path": "src/excelalchemy/workbook/headers.py",
       "responsibility": "Parses and validates simple and merged workbook headers."
     },
     {
-      "path": "src/excelalchemy/core/rows.py",
-      "responsibility": "Aggregates flattened worksheet rows into model-shaped payloads and tracks row/cell issues."
+      "path": "src/excelalchemy/workbook/header_models.py",
+      "responsibility": "Header validation result models and merged-header records."
     },
     {
-      "path": "src/excelalchemy/core/executor.py",
-      "responsibility": "Validates row payloads and dispatches create, update, and upsert callbacks."
-    },
-    {
-      "path": "src/excelalchemy/core/rendering.py",
-      "responsibility": "High-level rendering for templates, exports, and import result workbooks."
-    },
-    {
-      "path": "src/excelalchemy/core/writer.py",
-      "responsibility": "Workbook writing, formatting, comments, colors, and result columns."
-    },
-    {
-      "path": "src/excelalchemy/core/storage_protocol.py",
-      "responsibility": "ExcelStorage protocol and storage extension boundary."
-    },
-    {
-      "path": "src/excelalchemy/core/storage.py",
-      "responsibility": "Storage gateway resolution and missing-storage fallback behavior."
-    },
-    {
-      "path": "src/excelalchemy/core/storage_minio.py",
-      "responsibility": "Built-in Minio-compatible ExcelStorage implementation."
-    },
-    {
-      "path": "src/excelalchemy/core/table.py",
+      "path": "src/excelalchemy/workbook/table.py",
       "responsibility": "WorksheetTable abstraction used for runtime workbook tables instead of pandas."
     },
     {
-      "path": "src/excelalchemy/helper/pydantic.py",
+      "path": "src/excelalchemy/runtime/rows.py",
+      "responsibility": "Aggregates flattened worksheet rows into model-shaped payloads and tracks row/cell issues."
+    },
+    {
+      "path": "src/excelalchemy/runtime/executor.py",
+      "responsibility": "Validates row payloads and dispatches create, update, and upsert callbacks."
+    },
+    {
+      "path": "src/excelalchemy/adapters/pydantic.py",
       "responsibility": "Pydantic integration boundary for metadata extraction and validation error mapping."
     },
     {
-      "path": "src/excelalchemy/i18n/messages.py",
+      "path": "src/excelalchemy/rendering/renderer.py",
+      "responsibility": "High-level rendering for templates, exports, and import result workbooks."
+    },
+    {
+      "path": "src/excelalchemy/rendering/writer.py",
+      "responsibility": "Workbook writing, formatting, comments, colors, and result columns."
+    },
+    {
+      "path": "src/excelalchemy/storage.py",
+      "responsibility": "ExcelStorage protocol and storage extension boundary."
+    },
+    {
+      "path": "src/excelalchemy/storage_gateway.py",
+      "responsibility": "Storage gateway resolution and missing-storage fallback behavior."
+    },
+    {
+      "path": "src/excelalchemy/storage_minio.py",
+      "responsibility": "Built-in Minio-compatible ExcelStorage implementation."
+    },
+    {
+      "path": "src/excelalchemy/messages.py",
       "responsibility": "Runtime and workbook display messages with explicit locale policy."
     },
     {
-      "path": "src/excelalchemy/_primitives/",
-      "responsibility": "Internal constants, identity wrappers, payload aliases, diagnostics, deprecation helpers, and header models."
-    },
-    {
-      "path": "src/excelalchemy/types/",
-      "responsibility": "Deprecated compatibility namespace retained for the 2.x line."
+      "path": "src/excelalchemy/primitives/",
+      "responsibility": "Internal constants, identity wrappers, and payload aliases."
     },
     {
       "path": "harness/loop.py",
@@ -186,29 +194,29 @@
   ],
   "workflow_entry_points": {
     "template_generation": [
-      "src/excelalchemy/core/alchemy.py",
-      "src/excelalchemy/core/schema.py",
-      "src/excelalchemy/core/rendering.py",
-      "src/excelalchemy/core/writer.py"
+      "src/excelalchemy/runtime/facade.py",
+      "src/excelalchemy/schema/layout.py",
+      "src/excelalchemy/rendering/renderer.py",
+      "src/excelalchemy/rendering/writer.py"
     ],
     "import_validation": [
-      "src/excelalchemy/core/alchemy.py",
-      "src/excelalchemy/core/import_session.py",
-      "src/excelalchemy/core/headers.py",
-      "src/excelalchemy/core/rows.py",
-      "src/excelalchemy/core/executor.py",
-      "src/excelalchemy/helper/pydantic.py"
+      "src/excelalchemy/runtime/facade.py",
+      "src/excelalchemy/runtime/import_session.py",
+      "src/excelalchemy/workbook/headers.py",
+      "src/excelalchemy/runtime/rows.py",
+      "src/excelalchemy/runtime/executor.py",
+      "src/excelalchemy/adapters/pydantic.py"
     ],
     "result_rendering": [
       "src/excelalchemy/results.py",
-      "src/excelalchemy/core/rendering.py",
-      "src/excelalchemy/core/writer.py"
+      "src/excelalchemy/rendering/renderer.py",
+      "src/excelalchemy/rendering/writer.py"
     ],
     "storage_integration": [
-      "src/excelalchemy/core/storage_protocol.py",
-      "src/excelalchemy/core/storage.py",
-      "src/excelalchemy/core/storage_minio.py",
-      "src/excelalchemy/core/table.py",
+      "src/excelalchemy/storage.py",
+      "src/excelalchemy/storage_gateway.py",
+      "src/excelalchemy/storage_minio.py",
+      "src/excelalchemy/workbook/table.py",
       "examples/custom_storage.py"
     ],
     "backend_api_integration": [
@@ -217,5 +225,17 @@
       "docs/api-response-cookbook.md",
       "examples/fastapi_reference/"
     ]
-  }
+  },
+  "removed_compatibility_paths": [
+    "src/excelalchemy/core/",
+    "src/excelalchemy/helper/",
+    "src/excelalchemy/i18n/",
+    "src/excelalchemy/_primitives/",
+    "src/excelalchemy/types/",
+    "src/excelalchemy/const.py",
+    "src/excelalchemy/exc.py",
+    "src/excelalchemy/identity.py",
+    "src/excelalchemy/header_models.py",
+    "src/excelalchemy/util/convertor.py"
+  ]
 }

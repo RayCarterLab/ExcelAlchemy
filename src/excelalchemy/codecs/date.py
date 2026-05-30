@@ -1,11 +1,12 @@
 from datetime import datetime
+from datetime import timezone as DateTimeZone
 from typing import cast
 
 import pendulum
 from pendulum import DateTime
 
-from excelalchemy._primitives.constants import DATE_FORMAT_TO_HINT_MAPPING, MILLISECOND_TO_SECOND, DataRangeOption
 from excelalchemy.codecs.base import (
+    ExcelCodecConfig,
     ExcelFieldCodec,
     NormalizedImportValue,
     WorkbookDisplayValue,
@@ -14,12 +15,18 @@ from excelalchemy.codecs.base import (
     log_codec_parse_fallback,
 )
 from excelalchemy.exceptions import ConfigError
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import message as msg
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import message as msg
 from excelalchemy.metadata import FieldMetaInfo
+from excelalchemy.primitives.constants import (
+    DATE_FORMAT_TO_HINT_MAPPING,
+    MILLISECOND_TO_SECOND,
+    DataRangeOption,
+    DateFormat,
+)
 
 
-class Date(ExcelFieldCodec, datetime):
+class Date(ExcelFieldCodec):
     __name__ = 'Date'
 
     @classmethod
@@ -139,4 +146,51 @@ class Date(ExcelFieldCodec, datetime):
         return errors
 
 
-DateCodec = Date
+class DateCodec:
+    """Factory for explicit date codec configuration."""
+
+    @staticmethod
+    def day(
+        *,
+        timezone: DateTimeZone | None = None,
+        date_range_option: DataRangeOption | None = None,
+    ) -> ExcelCodecConfig:
+        return DateCodec.format(DateFormat.DAY, timezone=timezone, date_range_option=date_range_option)
+
+    @staticmethod
+    def month(
+        *,
+        timezone: DateTimeZone | None = None,
+        date_range_option: DataRangeOption | None = None,
+    ) -> ExcelCodecConfig:
+        return DateCodec.format(DateFormat.MONTH, timezone=timezone, date_range_option=date_range_option)
+
+    @staticmethod
+    def year(
+        *,
+        timezone: DateTimeZone | None = None,
+        date_range_option: DataRangeOption | None = None,
+    ) -> ExcelCodecConfig:
+        return DateCodec.format(DateFormat.YEAR, timezone=timezone, date_range_option=date_range_option)
+
+    @staticmethod
+    def minute(
+        *,
+        timezone: DateTimeZone | None = None,
+        date_range_option: DataRangeOption | None = None,
+    ) -> ExcelCodecConfig:
+        return DateCodec.format(DateFormat.MINUTE, timezone=timezone, date_range_option=date_range_option)
+
+    @staticmethod
+    def format(
+        date_format: DateFormat,
+        *,
+        timezone: DateTimeZone | None = None,
+        date_range_option: DataRangeOption | None = None,
+    ) -> ExcelCodecConfig:
+        return ExcelCodecConfig.create(
+            Date,
+            date_format=date_format,
+            timezone=timezone,
+            date_range_option=date_range_option,
+        )

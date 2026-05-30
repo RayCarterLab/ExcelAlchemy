@@ -1,7 +1,6 @@
 from decimal import Decimal
-from typing import cast
+from typing import Annotated, cast
 
-from minio import Minio
 from pendulum import DateTime, today
 from pendulum.tz.timezone import Timezone
 from pydantic import BaseModel
@@ -9,14 +8,15 @@ from pydantic import BaseModel
 from excelalchemy import (
     ConfigError,
     DataRangeOption,
-    Date,
+    DateCodec,
     DateFormat,
     ExcelAlchemy,
     ExcelCellError,
-    FieldMeta,
+    ExcelColumn,
     ImporterConfig,
     ValidateResult,
 )
+from excelalchemy.codecs.date import Date
 from tests.support import BaseTestCase, FileRegistry
 
 
@@ -25,9 +25,9 @@ class TestDateValueType(BaseTestCase):
         """测试导入时，日期格式未指定"""
 
         class Importer(BaseModel):
-            birth_date: Date = FieldMeta(label='出生日期', order=6)
+            birth_date: Annotated[int, ExcelColumn(codec=Date, label='出生日期', order=6)]
 
-        config = ImporterConfig(Importer, minio=cast(Minio, self.minio))
+        config = ImporterConfig(Importer, storage=self.storage_gateway)
         alchemy = ExcelAlchemy(config)
 
         with self.assertRaises(ConfigError):
@@ -38,7 +38,9 @@ class TestDateValueType(BaseTestCase):
 
     async def test_import_rejects_dates_that_do_not_match_month_format(self):
         class Importer(BaseModel):
-            birth_date: Date = FieldMeta(label='出生日期', order=6, date_format=DateFormat.MONTH)
+            birth_date: Annotated[
+                int, ExcelColumn(codec=DateCodec.month(), label='出生日期', order=6, date_format=DateFormat.MONTH)
+            ]
 
         alchemy = self.build_alchemy(Importer)
 
@@ -47,7 +49,7 @@ class TestDateValueType(BaseTestCase):
             output_excel_name='result.xlsx',
         )
         assert result.result == ValidateResult.DATA_INVALID
-        error = alchemy.cell_errors[self.first_data_row][self.first_data_col][0]
+        error = alchemy.cell_error_map[self.first_data_row][self.first_data_col][0]
         assert isinstance(error, ExcelCellError)
         assert error.label == '出生日期'
         assert (
@@ -61,7 +63,9 @@ class TestDateValueType(BaseTestCase):
 
     async def test_import_rejects_dates_that_do_not_match_day_format(self):
         class Importer(BaseModel):
-            birth_date: Date = FieldMeta(label='出生日期', order=6, date_format=DateFormat.DAY)
+            birth_date: Annotated[
+                int, ExcelColumn(codec=DateCodec.day(), label='出生日期', order=6, date_format=DateFormat.DAY)
+            ]
 
         alchemy = self.build_alchemy(Importer)
         result = await alchemy.import_data(
@@ -70,109 +74,133 @@ class TestDateValueType(BaseTestCase):
         )
 
         assert result.result == ValidateResult.DATA_INVALID
-        error = alchemy.cell_errors[self.first_data_row][self.first_data_col][0]
+        error = alchemy.cell_error_map[self.first_data_row][self.first_data_col][0]
         assert isinstance(error, ExcelCellError)
         assert error.label == '出生日期'
         assert error.message == 'Enter a date in yyyy/mm/dd format'
 
     async def test_serialize_parses_supported_date_inputs(self):
         class Importer(BaseModel):
-            birth_date: Date = FieldMeta(label='出生日期', order=6, date_format=DateFormat.DAY)
+            birth_date: Annotated[
+                int, ExcelColumn(codec=DateCodec.day(), label='出生日期', order=6, date_format=DateFormat.DAY)
+            ]
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
 
-        assert field.value_type.serialize('', field) == ''
-        assert field.value_type.serialize('2022-02-02', field) == DateTime(
+        assert field.excel_codec.parse_input('', field) == ''
+        assert field.excel_codec.parse_input('2022-02-02', field) == DateTime(
             2022, 2, 2, 0, 0, 0, tzinfo=Timezone('Asia/Shanghai')
         )
-        assert field.value_type.serialize('2022-02-02 12:12:12', field) == DateTime(
+        assert field.excel_codec.parse_input('2022-02-02 12:12:12', field) == DateTime(
             2022, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai')
         )
-        assert field.value_type.serialize('2022-02-02 25:00:00', field) == '2022-02-02 25:00:00'
-        assert field.value_type.serialize(
+        assert field.excel_codec.parse_input('2022-02-02 25:00:00', field) == '2022-02-02 25:00:00'
+        assert field.excel_codec.parse_input(
             DateTime(2022, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai')), field
         ) == DateTime(2022, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai'))
 
     async def test_deserialize_formats_supported_runtime_values(self):
         class Importer(BaseModel):
-            birth_date: Date = FieldMeta(label='出生日期', order=6, date_format=DateFormat.DAY)
+            birth_date: Annotated[
+                int, ExcelColumn(codec=DateCodec.day(), label='出生日期', order=6, date_format=DateFormat.DAY)
+            ]
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
 
-        field.value_type = cast(Date, field.value_type)
-        assert field.value_type.deserialize('', field) == ''
-        assert field.value_type.deserialize('2022-02-02', field) == '2022-02-02'
-        assert field.value_type.deserialize('2022-02-02 12:12:12', field) == '2022-02-02 12:12:12'
-        assert field.value_type.deserialize(1682408817000, field) == '2023-04-25'
-        assert field.value_type.deserialize(Decimal('1682408817000'), field) == '1682408817000'
+        field.excel_codec = cast(Date, field.excel_codec)
+        assert field.excel_codec.format_display_value('', field) == ''
+        assert field.excel_codec.format_display_value('2022-02-02', field) == '2022-02-02'
+        assert field.excel_codec.format_display_value('2022-02-02 12:12:12', field) == '2022-02-02 12:12:12'
+        assert field.excel_codec.format_display_value(1682408817000, field) == '2023-04-25'
+        assert field.excel_codec.format_display_value(Decimal('1682408817000'), field) == '1682408817000'
         assert (
-            field.value_type.deserialize(DateTime(2022, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai')), field)
+            field.excel_codec.format_display_value(
+                DateTime(2022, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai')), field
+            )
             == '2022-02-02'
         )
 
     async def test_validate_day_format_normalizes_to_day_timestamp(self):
         class Importer(BaseModel):
-            birth_date: Date = FieldMeta(label='出生日期', order=6, date_format=DateFormat.DAY)
+            birth_date: Annotated[
+                int, ExcelColumn(codec=DateCodec.day(), label='出生日期', order=6, date_format=DateFormat.DAY)
+            ]
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.value_type = cast(Date, field.value_type)
+        field.excel_codec = cast(Date, field.excel_codec)
 
-        self.assertRaises(ValueError, field.value_type.__validate__, '2022-02-02', field)
+        self.assertRaises(ValueError, field.excel_codec.normalize_import_value, '2022-02-02', field)
         assert (
-            field.value_type.__validate__(DateTime(2022, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai')), field)
+            field.excel_codec.normalize_import_value(
+                DateTime(2022, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai')), field
+            )
             == 1643731200000
         )
 
     async def test_validate_month_format_normalizes_to_month_timestamp(self):
         class Importer(BaseModel):
-            birth_date: Date = FieldMeta(label='出生日期', order=6, date_format=DateFormat.MONTH)
+            birth_date: Annotated[
+                int, ExcelColumn(codec=DateCodec.month(), label='出生日期', order=6, date_format=DateFormat.MONTH)
+            ]
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.value_type = cast(Date, field.value_type)
+        field.excel_codec = cast(Date, field.excel_codec)
 
-        self.assertRaises(ValueError, field.value_type.__validate__, '2022-02-02', field)
+        self.assertRaises(ValueError, field.excel_codec.normalize_import_value, '2022-02-02', field)
         assert (
-            field.value_type.__validate__(DateTime(2022, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai')), field)
+            field.excel_codec.normalize_import_value(
+                DateTime(2022, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai')), field
+            )
             == 1643644800000
         )
 
     async def test_validate_year_format_normalizes_to_year_timestamp(self):
         class Importer(BaseModel):
-            birth_date: Date = FieldMeta(label='出生日期', order=6, date_format=DateFormat.YEAR)
+            birth_date: Annotated[
+                int, ExcelColumn(codec=DateCodec.year(), label='出生日期', order=6, date_format=DateFormat.YEAR)
+            ]
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.value_type = cast(Date, field.value_type)
+        field.excel_codec = cast(Date, field.excel_codec)
 
-        self.assertRaises(ValueError, field.value_type.__validate__, '2022-02-02', field)
+        self.assertRaises(ValueError, field.excel_codec.normalize_import_value, '2022-02-02', field)
         assert (
-            field.value_type.__validate__(DateTime(2022, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai')), field)
+            field.excel_codec.normalize_import_value(
+                DateTime(2022, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai')), field
+            )
             == 1640966400000
         )
         field.date_format = None
-        self.assertRaises(ConfigError, field.value_type.__validate__, '2022-02-02', field)
+        self.assertRaises(ConfigError, field.excel_codec.normalize_import_value, '2022-02-02', field)
 
     async def test_validate_minute_format_normalizes_to_minute_timestamp(self):
         class Importer(BaseModel):
-            birth_date: Date = FieldMeta(label='出生日期', order=6, date_format=DateFormat.MINUTE)
+            birth_date: Annotated[
+                int, ExcelColumn(codec=DateCodec.minute(), label='出生日期', order=6, date_format=DateFormat.MINUTE)
+            ]
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.value_type = cast(Date, field.value_type)
+        field.excel_codec = cast(Date, field.excel_codec)
 
-        self.assertRaises(ValueError, field.value_type.__validate__, '2022-02-02', field)
+        self.assertRaises(ValueError, field.excel_codec.normalize_import_value, '2022-02-02', field)
         assert (
-            field.value_type.__validate__(DateTime(2022, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai')), field)
+            field.excel_codec.normalize_import_value(
+                DateTime(2022, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai')), field
+            )
             == 1643775120000
         )
 
     async def test_validate_respects_date_range_option_constraints(self):
         class Importer(BaseModel):
-            birth_date: Date = FieldMeta(label='出生日期', order=6, date_format=DateFormat.DAY)
+            birth_date: Annotated[
+                int, ExcelColumn(codec=DateCodec.day(), label='出生日期', order=6, date_format=DateFormat.DAY)
+            ]
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
@@ -181,7 +209,7 @@ class TestDateValueType(BaseTestCase):
 
         self.assertRaises(
             ValueError,
-            field.value_type.__validate__,
+            field.excel_codec.normalize_import_value,
             '2022-02-02',
             field,
         )
@@ -190,13 +218,13 @@ class TestDateValueType(BaseTestCase):
 
         self.assertRaises(
             ValueError,
-            field.value_type.__validate__,
+            field.excel_codec.normalize_import_value,
             DateTime(1970, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai')).add(today().year),
             field,
         )
 
         field.date_range_option = DataRangeOption.NONE
-        assert field.value_type.__validate__(
+        assert field.excel_codec.normalize_import_value(
             DateTime(1970, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai')).add(today().year),
             field,
         )

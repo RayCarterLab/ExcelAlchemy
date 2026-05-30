@@ -30,7 +30,7 @@ Choose focused checks for narrow changes:
 - Result payloads: `tests/contracts/test_result_contract.py`,
   `scripts/smoke_api_payload_snapshot.py`.
 - Storage behavior: `tests/contracts/test_storage_contract.py`.
-- Compatibility and deprecations: `tests/unit/test_deprecation_policy.py`.
+- 3.0 removal contracts: `tests/contracts/test_v3_public_api_contract.py`.
 - Locale behavior: `docs/locale.md` plus relevant contract tests.
 - Harness or agent context behavior: `uv run python scripts/smoke_agent_context.py`
   and `tests/unit/test_harness_wiring.py tests/unit/test_harness_runtime.py`.

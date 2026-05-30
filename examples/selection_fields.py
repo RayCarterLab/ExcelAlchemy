@@ -1,19 +1,21 @@
 """Example schema that focuses on selection-heavy business forms."""
 
+from typing import Annotated
+
 from pydantic import BaseModel
 
 from excelalchemy import (
     ExcelAlchemy,
-    FieldMeta,
+    ExcelColumn,
     ImporterConfig,
-    MultiCheckbox,
-    MultiOrganization,
-    MultiStaff,
+    MultiChoiceCodec,
+    MultiOrganizationCodec,
+    MultiStaffCodec,
     Option,
     OptionId,
-    Radio,
-    SingleOrganization,
-    SingleStaff,
+    SingleChoiceCodec,
+    SingleOrganizationCodec,
+    SingleStaffCodec,
 )
 
 DEPARTMENT_OPTIONS = [
@@ -34,12 +36,26 @@ STAFF_OPTIONS = [
 
 
 class ApprovalFormImporter(BaseModel):
-    request_type: Radio = FieldMeta(label='Request type', order=1, options=DEPARTMENT_OPTIONS)
-    impacted_teams: MultiCheckbox = FieldMeta(label='Impacted teams', order=2, options=DEPARTMENT_OPTIONS)
-    owner_org: SingleOrganization = FieldMeta(label='Owner organization', order=3, options=ORGANIZATION_OPTIONS)
-    partner_orgs: MultiOrganization = FieldMeta(label='Partner organizations', order=4, options=ORGANIZATION_OPTIONS)
-    owner: SingleStaff = FieldMeta(label='Owner', order=5, options=STAFF_OPTIONS)
-    reviewers: MultiStaff = FieldMeta(label='Reviewers', order=6, options=STAFF_OPTIONS)
+    request_type: Annotated[
+        str, ExcelColumn(codec=SingleChoiceCodec(), label='Request type', order=1, options=DEPARTMENT_OPTIONS)
+    ]
+    impacted_teams: Annotated[
+        list[str], ExcelColumn(codec=MultiChoiceCodec(), label='Impacted teams', order=2, options=DEPARTMENT_OPTIONS)
+    ]
+    owner_org: Annotated[
+        str,
+        ExcelColumn(codec=SingleOrganizationCodec(), label='Owner organization', order=3, options=ORGANIZATION_OPTIONS),
+    ]
+    partner_orgs: Annotated[
+        list[str],
+        ExcelColumn(
+            codec=MultiOrganizationCodec(), label='Partner organizations', order=4, options=ORGANIZATION_OPTIONS
+        ),
+    ]
+    owner: Annotated[str, ExcelColumn(codec=SingleStaffCodec(), label='Owner', order=5, options=STAFF_OPTIONS)]
+    reviewers: Annotated[
+        list[str], ExcelColumn(codec=MultiStaffCodec(), label='Reviewers', order=6, options=STAFF_OPTIONS)
+    ]
 
 
 def main() -> None:

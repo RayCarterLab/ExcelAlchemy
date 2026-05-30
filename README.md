@@ -20,11 +20,9 @@ This repository is also a design artifact.
 It documents a series of deliberate engineering choices: `src/` layout, Pydantic v2 migration, pandas removal,
 pluggable storage, `uv`-based workflows, and locale-aware workbook output.
 
-The current stable release is `2.4.0`, which continues the ExcelAlchemy 2.x
-line with a more complete import workflow: clearer template guidance before
-upload, lightweight structural preflight before execution, synchronous
-lifecycle visibility during import, and remediation-oriented payloads after
-failures.
+The 3.0 development line uses ordinary Python annotations plus explicit
+`ExcelColumn(...)` metadata. It intentionally removes 2.x compatibility shims,
+legacy import paths, and field-factory wrappers.
 
 For the platform-layer architecture of that workflow, see:
 
@@ -70,21 +68,23 @@ ExcelAlchemy keeps those concerns explicit: schemas define data shape, metadata 
 ## Minimal Example
 
 ```python
+from typing import Annotated
+
 from pydantic import BaseModel
 
-from excelalchemy import ExcelAlchemy, FieldMeta, ImporterConfig, Number, String
+from excelalchemy import ExcelAlchemy, ExcelColumn, ImporterConfig
 
 
 class Importer(BaseModel):
-    age: Number = FieldMeta(label='Age', order=1)
-    name: String = FieldMeta(label='Name', order=2)
+    age: Annotated[int, ExcelColumn(label='Age', order=1)]
+    name: Annotated[str, ExcelColumn(label='Name', order=2)]
 
 
 alchemy = ExcelAlchemy(ImporterConfig(Importer, locale='en'))
 template = alchemy.download_template_artifact(filename='people-template.xlsx')
 
 excel_bytes = template.as_bytes()
-template_data_url = template.as_data_url()  # compatibility path for older browser integrations
+template_data_url = template.as_data_url()
 ```
 
 ## Modern Annotated Example
@@ -94,15 +94,16 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from excelalchemy import Email, ExcelAlchemy, ExcelMeta, ImporterConfig
+from excelalchemy import EmailCodec, ExcelAlchemy, ExcelColumn, ImporterConfig
 
 
 class Importer(BaseModel):
     email: Annotated[
-        Email,
+        str,
         Field(min_length=10),
-        ExcelMeta(
+        ExcelColumn(
             label='Email',
+            codec=EmailCodec(),
             order=1,
             hint='Use your work email',
             example_value='alice@company.com',
@@ -140,10 +141,10 @@ In practical backend terms:
 Minimal example:
 
 ```python
-from excelalchemy.results import build_frontend_remediation_payload
+from excelalchemy.results import ImportLifecycleEvent, build_frontend_remediation_payload
 
 
-events: list[dict[str, object]] = []
+events: list[ImportLifecycleEvent] = []
 
 preflight = alchemy.preflight_import('employees.xlsx')
 if preflight.is_valid:
@@ -170,7 +171,7 @@ If you want the full platform view behind this flow, see:
 ExcelAlchemy is designed to work as a product-ready import layer rather than
 only a row-validation helper.
 
-The top-level import workflow in the 2.x line is:
+The top-level import workflow is:
 
 - template authoring
 - preflight gate
@@ -209,16 +210,21 @@ Use `import_data(...)` when you want the full workflow:
 Short example:
 
 ```python
+from typing import Annotated
+
 from pydantic import BaseModel
 
-from excelalchemy import ExcelAlchemy, Email, FieldMeta, ImporterConfig, Number, String
-from excelalchemy.results import build_frontend_remediation_payload
+from excelalchemy import EmailCodec, ExcelAlchemy, ExcelColumn, ImporterConfig
+from excelalchemy.results import ImportLifecycleEvent, build_frontend_remediation_payload
 
 
 class EmployeeImporter(BaseModel):
-    full_name: String = FieldMeta(label='Full name', order=1, hint='Use the legal name')
-    age: Number = FieldMeta(label='Age', order=2)
-    work_email: Email = FieldMeta(label='Work email', order=3, example_value='alice@company.com')
+    full_name: Annotated[str, ExcelColumn(label='Full name', order=1, hint='Use the legal name')]
+    age: Annotated[int, ExcelColumn(label='Age', order=2)]
+    work_email: Annotated[
+        str,
+        ExcelColumn(label='Work email', codec=EmailCodec(), order=3, example_value='alice@company.com'),
+    ]
 
 
 async def create_employee(row: dict[str, object], context: dict[str, object] | None) -> dict[str, object]:
@@ -240,7 +246,7 @@ preflight = alchemy.preflight_import('employees.xlsx')
 if not preflight.is_valid:
     response = {'preflight': preflight.to_api_payload()}
 else:
-    events: list[dict[str, object]] = []
+    events: list[ImportLifecycleEvent] = []
     result = await alchemy.import_data(
         'employees.xlsx',
         'employees-result.xlsx',
@@ -249,7 +255,7 @@ else:
 
     response = {
         'result': result.to_api_payload(),
-        'events': events,
+        'events': [event.model_dump(mode='json', exclude_none=True) for event in events],
         'remediation': build_frontend_remediation_payload(
             result=result,
             cell_error_map=alchemy.cell_error_map,
@@ -339,7 +345,7 @@ The painful part is rarely “reading a file”; it is keeping templates, valida
 ExcelAlchemy treats Excel as a typed contract:
 
 - the model defines the shape
-- field metadata defines the workbook experience
+- `ExcelColumn(...)` metadata defines the workbook experience
 - import execution is separated from parsing
 - storage is an interchangeable strategy, not a hard-coded implementation
 
@@ -360,7 +366,7 @@ flowchart TD
     G --> H[MinioStorageGateway]
     G --> I[Custom Storage]
 
-    B --> J[FieldMeta / FieldMetaInfo]
+    B --> J[ExcelColumn / FieldMetaInfo]
     E --> K[Pydantic Adapter]
     F --> L[i18n Display Messages]
     E --> M[Runtime Error Messages]
@@ -376,7 +382,7 @@ For the integration-oriented platform view layered above those components, see
 
 ```mermaid
 flowchart LR
-    A[Pydantic model + FieldMeta] --> B[ExcelAlchemy facade]
+    A[Pydantic model + ExcelColumn] --> B[ExcelAlchemy facade]
     B --> C[Template rendering]
     B --> D[Worksheet parsing]
     D --> E[Header validation]
@@ -494,15 +500,14 @@ When you inspect import-run state from the facade, prefer the clearer 2.2 names:
 - `alchemy.cell_error_map`
 - `alchemy.row_error_map`
 
-The older aliases:
+The old 2.x aliases:
 
 - `alchemy.df`
 - `alchemy.header_df`
 - `alchemy.cell_errors`
 - `alchemy.row_errors`
 
-still work in the 2.x line as compatibility paths, but new application code
-should use the clearer names above.
+are removed in 3.0. Application code should use the clearer names above.
 
 ## Structured Error Access
 
@@ -551,16 +556,19 @@ In short:
 
 - runtime exceptions are standardized in English
 - workbook display locales currently support `zh-CN` and `en`
-- workbook display defaults to `zh-CN` for the 2.x line
+- workbook display defaults to `zh-CN`
 
 ```python
-from excelalchemy import ExcelAlchemy, FieldMeta, ImporterConfig, Number, String
+from typing import Annotated
+
 from pydantic import BaseModel
+
+from excelalchemy import ExcelAlchemy, ExcelColumn, ImporterConfig
 
 
 class Importer(BaseModel):
-    age: Number = FieldMeta(label='Age', order=1)
-    name: String = FieldMeta(label='Name', order=2)
+    age: Annotated[int, ExcelColumn(label='Age', order=1)]
+    name: Annotated[str, ExcelColumn(label='Name', order=2)]
 
 
 zh_template = ExcelAlchemy(ImporterConfig(Importer, locale='zh-CN')).download_template_artifact()
@@ -587,7 +595,7 @@ Storage is modeled as a protocol, not a product decision.
 
 ```python
 from excelalchemy import ExcelAlchemy, ExcelStorage, ExporterConfig, UrlStr
-from excelalchemy.core.table import WorksheetTable
+from excelalchemy.workbook.table import WorksheetTable
 
 
 class InMemoryExcelStorage(ExcelStorage):
@@ -624,7 +632,7 @@ The project used to lean on Pydantic internals more directly.
 That becomes fragile during major-version upgrades.
 Now the design is:
 
-- `FieldMeta` owns Excel metadata
+- `ExcelColumn(...)` owns Excel-facing declaration metadata
 - the Pydantic adapter reads model structure
 - the adapter does not own the domain semantics
 
@@ -666,7 +674,7 @@ The short version:
 | Topic | v1-style risk | Current v2 design |
 | --- | --- | --- |
 | Field access | Tight coupling to `__fields__` / `ModelField` | Adapter over `model_fields` |
-| Metadata ownership | Excel metadata mixed with validation internals | `FieldMetaInfo` is a compatibility facade over layered Excel metadata |
+| Metadata ownership | Excel metadata mixed with validation internals | `ExcelColumn(...)` feeds layered runtime metadata |
 | Validation integration | Deep reliance on internals | Adapter + explicit runtime validation |
 | Upgrade path | Brittle | Layered |
 

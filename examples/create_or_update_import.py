@@ -3,18 +3,27 @@
 import asyncio
 import io
 from base64 import b64decode
+from typing import Annotated
 
 from openpyxl import load_workbook
 from pydantic import BaseModel
 
-from excelalchemy import Email, ExcelAlchemy, ExcelStorage, FieldMeta, ImporterConfig, ImportResult, String, UrlStr
-from excelalchemy.core.table import WorksheetTable
+from excelalchemy import (
+    EmailCodec,
+    ExcelAlchemy,
+    ExcelColumn,
+    ExcelStorage,
+    ImporterConfig,
+    ImportResult,
+    UrlStr,
+)
+from excelalchemy.workbook.table import WorksheetTable
 
 
 class CustomerImporter(BaseModel):
-    customer_name: String = FieldMeta(label='Customer name', order=1)
-    work_email: Email = FieldMeta(label='Work email', order=2)
-    team: String = FieldMeta(label='Team', order=3)
+    customer_name: Annotated[str, ExcelColumn(label='Customer name', order=1)]
+    work_email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='Work email', order=2)]
+    team: Annotated[str, ExcelColumn(label='Team', order=3)]
 
 
 class InMemoryUpsertStorage(ExcelStorage):

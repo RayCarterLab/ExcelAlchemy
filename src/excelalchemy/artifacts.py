@@ -5,7 +5,7 @@ from __future__ import annotations
 import base64
 from dataclasses import dataclass, replace
 
-from excelalchemy._primitives.identity import DataUrlStr
+from excelalchemy.primitives.identity import DataUrlStr
 from excelalchemy.util.file import EXCEL_MEDIA_TYPE, add_excel_prefix, remove_excel_prefix
 
 

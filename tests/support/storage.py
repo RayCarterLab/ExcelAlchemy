@@ -4,11 +4,11 @@ from base64 import b64decode
 from openpyxl import load_workbook
 
 from excelalchemy import UrlStr
-from excelalchemy.core.storage_protocol import ExcelStorage
-from excelalchemy.core.table import WorksheetTable
 from excelalchemy.exceptions import WorksheetNotFoundError
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import message as msg
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import message as msg
+from excelalchemy.storage import ExcelStorage
+from excelalchemy.workbook.table import WorksheetTable
 
 
 class InMemoryExcelStorage(ExcelStorage):

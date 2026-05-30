@@ -169,7 +169,7 @@ def test_minio_storage_example_main_builds_gateway() -> None:
 
     output = buffer.getvalue()
     assert 'Built gateway: MinioStorageGateway' in output
-    assert 'Uses built-in Minio path: True' in output
+    assert 'Uses explicit storage path: True' in output
     assert 'Gateway type check: True' in output
 
 

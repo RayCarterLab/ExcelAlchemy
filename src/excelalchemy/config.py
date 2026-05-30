@@ -2,28 +2,20 @@
 
 from __future__ import annotations
 
-import warnings
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import TYPE_CHECKING, Self
+from typing import Self
 
 from pydantic import BaseModel
 
-from excelalchemy._primitives.deprecation import DEPRECATION_REMOVAL_VERSION, ExcelAlchemyDeprecationWarning
-from excelalchemy._primitives.payloads import DataConverter, DmlCallback, ExistenceCheckCallback, ImportContext
-from excelalchemy.core.storage_protocol import ExcelStorage
+from excelalchemy.adapters.pydantic import get_model_field_names
 from excelalchemy.exceptions import ConfigError
-from excelalchemy.helper.pydantic import get_model_field_names
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import message as msg
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import message as msg
+from excelalchemy.primitives.payloads import DataConverter, DmlCallback, ExistenceCheckCallback, ImportContext
+from excelalchemy.storage import ExcelStorage
 from excelalchemy.util.converter import export_data_converter, import_data_converter
-
-if TYPE_CHECKING:
-    from minio import Minio
-
-
-_EMITTED_STORAGE_DEPRECATION_WARNINGS: set[bool] = set()
 
 
 class ExcelMode(StrEnum):
@@ -44,21 +36,10 @@ class StorageOptions:
     """Normalized storage backend settings shared by importer and exporter configs."""
 
     storage: ExcelStorage | None
-    minio: Minio | None
-    bucket_name: str
-    url_expires: int
 
     @property
-    def has_explicit_storage(self) -> bool:
+    def has_storage(self) -> bool:
         return self.storage is not None
-
-    @property
-    def has_legacy_minio(self) -> bool:
-        return self.minio is not None
-
-    @property
-    def uses_legacy_minio_path(self) -> bool:
-        return self.storage is None and self.minio is not None
 
 
 @dataclass(slots=True, frozen=True)
@@ -117,9 +98,6 @@ class ImporterConfig[ContextT, ImportCreateModelT: BaseModel, ImportUpdateModelT
     import_mode: ImportMode = ImportMode.CREATE
 
     storage: ExcelStorage | None = None
-    minio: Minio | None = None
-    bucket_name: str = 'excel'
-    url_expires: int = 3600
     locale: str = 'zh-CN'
 
     sheet_name: str = 'Sheet1'
@@ -139,9 +117,6 @@ class ImporterConfig[ContextT, ImportCreateModelT: BaseModel, ImportUpdateModelT
         is_data_exist: ExistenceCheckCallback[ContextT] | None = None,
         exec_formatter: Callable[[Exception], str] = str,
         storage: ExcelStorage | None = None,
-        minio: Minio | None = None,
-        bucket_name: str = 'excel',
-        url_expires: int = 3600,
         locale: str = 'zh-CN',
         sheet_name: str = 'Sheet1',
     ) -> Self:
@@ -156,9 +131,6 @@ class ImporterConfig[ContextT, ImportCreateModelT: BaseModel, ImportUpdateModelT
             exec_formatter=exec_formatter,
             import_mode=ImportMode.CREATE,
             storage=storage,
-            minio=minio,
-            bucket_name=bucket_name,
-            url_expires=url_expires,
             locale=locale,
             sheet_name=sheet_name,
         )
@@ -175,9 +147,6 @@ class ImporterConfig[ContextT, ImportCreateModelT: BaseModel, ImportUpdateModelT
         is_data_exist: ExistenceCheckCallback[ContextT] | None = None,
         exec_formatter: Callable[[Exception], str] = str,
         storage: ExcelStorage | None = None,
-        minio: Minio | None = None,
-        bucket_name: str = 'excel',
-        url_expires: int = 3600,
         locale: str = 'zh-CN',
         sheet_name: str = 'Sheet1',
     ) -> Self:
@@ -192,9 +161,6 @@ class ImporterConfig[ContextT, ImportCreateModelT: BaseModel, ImportUpdateModelT
             exec_formatter=exec_formatter,
             import_mode=ImportMode.UPDATE,
             storage=storage,
-            minio=minio,
-            bucket_name=bucket_name,
-            url_expires=url_expires,
             locale=locale,
             sheet_name=sheet_name,
         )
@@ -212,9 +178,6 @@ class ImporterConfig[ContextT, ImportCreateModelT: BaseModel, ImportUpdateModelT
         context: ImportContext[ContextT] = None,
         exec_formatter: Callable[[Exception], str] = str,
         storage: ExcelStorage | None = None,
-        minio: Minio | None = None,
-        bucket_name: str = 'excel',
-        url_expires: int = 3600,
         locale: str = 'zh-CN',
         sheet_name: str = 'Sheet1',
     ) -> Self:
@@ -230,9 +193,6 @@ class ImporterConfig[ContextT, ImportCreateModelT: BaseModel, ImportUpdateModelT
             exec_formatter=exec_formatter,
             import_mode=ImportMode.CREATE_OR_UPDATE,
             storage=storage,
-            minio=minio,
-            bucket_name=bucket_name,
-            url_expires=url_expires,
             locale=locale,
             sheet_name=sheet_name,
         )
@@ -294,14 +254,7 @@ class ImporterConfig[ContextT, ImportCreateModelT: BaseModel, ImportUpdateModelT
             exec_formatter=self.exec_formatter,
             import_mode=self.import_mode,
         )
-        self.storage_options = StorageOptions(
-            storage=self.storage,
-            minio=self.minio,
-            bucket_name=self.bucket_name,
-            url_expires=self.url_expires,
-        )
-        if self.storage_options.has_legacy_minio:
-            _warn_legacy_storage_path(has_explicit_storage=self.storage_options.has_explicit_storage)
+        self.storage_options = StorageOptions(storage=self.storage)
 
 
 @dataclass(slots=True)
@@ -311,9 +264,6 @@ class ExporterConfig[ExportModelT: BaseModel]:
     data_converter: DataConverter | None = export_data_converter
 
     storage: ExcelStorage | None = None
-    minio: Minio | None = None
-    bucket_name: str = 'excel'
-    url_expires: int = 3600
     locale: str = 'zh-CN'
 
     sheet_name: str = 'Sheet1'
@@ -328,9 +278,6 @@ class ExporterConfig[ExportModelT: BaseModel]:
         *,
         data_converter: DataConverter | None = export_data_converter,
         storage: ExcelStorage | None = None,
-        minio: Minio | None = None,
-        bucket_name: str = 'excel',
-        url_expires: int = 3600,
         locale: str = 'zh-CN',
         sheet_name: str = 'Sheet1',
     ) -> Self:
@@ -339,9 +286,6 @@ class ExporterConfig[ExportModelT: BaseModel]:
             exporter_model=exporter_model,
             data_converter=data_converter,
             storage=storage,
-            minio=minio,
-            bucket_name=bucket_name,
-            url_expires=url_expires,
             locale=locale,
             sheet_name=sheet_name,
         )
@@ -378,32 +322,8 @@ class ExporterConfig[ExportModelT: BaseModel]:
             locale=self.locale,
         )
         self.behavior = ExportBehavior(data_converter=self.data_converter)
-        self.storage_options = StorageOptions(
-            storage=self.storage,
-            minio=self.minio,
-            bucket_name=self.bucket_name,
-            url_expires=self.url_expires,
-        )
-        if self.storage_options.has_legacy_minio:
-            _warn_legacy_storage_path(has_explicit_storage=self.storage_options.has_explicit_storage)
+        self.storage_options = StorageOptions(storage=self.storage)
 
 
-def _warn_legacy_storage_path(*, has_explicit_storage: bool) -> None:
-    """Emit a deprecation warning for the legacy built-in Minio config path."""
-    if has_explicit_storage in _EMITTED_STORAGE_DEPRECATION_WARNINGS:
-        return
-    _EMITTED_STORAGE_DEPRECATION_WARNINGS.add(has_explicit_storage)
-
-    detail = (
-        ' The explicit `storage=` backend will be used.'
-        if has_explicit_storage
-        else ' Prefer passing `storage=` with `MinioStorageGateway` or a custom `ExcelStorage` implementation.'
-    )
-    warnings.warn(
-        (
-            '`minio`, `bucket_name`, and `url_expires` are deprecated configuration fields and will be removed in '
-            f'ExcelAlchemy {DEPRECATION_REMOVAL_VERSION}.{detail}'
-        ),
-        category=ExcelAlchemyDeprecationWarning,
-        stacklevel=3,
-    )
+ImportConfig = ImporterConfig
+ExportConfig = ExporterConfig

@@ -1,8 +1,8 @@
 import re
 
-from excelalchemy._primitives.constants import FIELD_DATA_KEY
-from excelalchemy._primitives.identity import Key
-from excelalchemy._primitives.payloads import ModelRowPayload
+from excelalchemy.primitives.constants import FIELD_DATA_KEY
+from excelalchemy.primitives.identity import Key
+from excelalchemy.primitives.payloads import ModelRowPayload
 
 
 def import_data_converter(data: ModelRowPayload) -> ModelRowPayload:

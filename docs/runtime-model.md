@@ -27,7 +27,7 @@ runtime decisions:
 - how should failures be surfaced after the run
 - how should the generated workbook artifact be delivered
 
-The runtime model in the 2.x line is intentionally simple:
+The runtime model is intentionally simple:
 
 - `preflight` is a lightweight structural gate
 - `import` is the real synchronous execution path
@@ -450,7 +450,7 @@ The runtime model is designed to keep three things true at the same time:
 2. the real import path remains explicit and observable
 3. post-run failures can be consumed both by humans and by APIs
 
-That is why the 2.x line keeps these boundaries:
+That is why the runtime keeps these boundaries:
 
 - preflight is separate from execution
 - lifecycle events are additive to the same runtime call

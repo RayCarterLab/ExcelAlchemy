@@ -1,6 +1,7 @@
 from decimal import ROUND_DOWN, Context, Decimal, InvalidOperation
 
 from excelalchemy.codecs.base import (
+    ExcelCodecConfig,
     ExcelFieldCodec,
     NormalizedImportValue,
     WorkbookDisplayValue,
@@ -8,9 +9,9 @@ from excelalchemy.codecs.base import (
     codec_logger,
     log_codec_parse_fallback,
 )
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import display_message as dmsg
-from excelalchemy.i18n.messages import message as msg
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import display_message as dmsg
+from excelalchemy.messages import message as msg
 from excelalchemy.metadata import FieldMetaInfo
 
 
@@ -42,7 +43,7 @@ def transform_decimal(value: Decimal | int | float | None) -> float | int | None
         return float(value)
 
 
-class Number(Decimal, ExcelFieldCodec):
+class Number(ExcelFieldCodec):
     __name__ = 'Number'
 
     @classmethod
@@ -165,4 +166,13 @@ class Number(Decimal, ExcelFieldCodec):
         return value
 
 
-NumberCodec = Number
+class NumberCodec:
+    """Factory for explicit number codec configuration."""
+
+    def __new__(
+        cls,
+        *,
+        fraction_digits: int | None = None,
+        unit: str | None = None,
+    ) -> ExcelCodecConfig:
+        return ExcelCodecConfig.create(Number, fraction_digits=fraction_digits, unit=unit)

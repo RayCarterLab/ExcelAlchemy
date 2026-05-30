@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog and versioned according to PEP 440.
 
+## [3.0.0a0] - 2026-05-30
+
+This is a breaking 3.0 alpha release focused on a cleaner public API and module
+layout.
+
+### Changed
+
+- Use the 3.0 public API from `excelalchemy`, `excelalchemy.config`,
+  `excelalchemy.codecs`, `excelalchemy.storage`, and related public modules.
+- Internal modules now use explicit responsibility names such as `runtime`,
+  `schema`, `workbook`, `rendering`, `adapters`, and `primitives`.
+- Storage configuration uses `storage=...` with an `ExcelStorage`
+  implementation.
+
+### Removed
+
+- Removed 2.x compatibility import paths:
+  - `excelalchemy.types.*`
+  - `excelalchemy.exc`
+  - `excelalchemy.identity`
+  - `excelalchemy.header_models`
+  - `excelalchemy.const`
+  - `excelalchemy.util.convertor`
+- Removed old internal bridge packages:
+  - `excelalchemy.core.*`
+  - `excelalchemy.helper.*`
+  - `excelalchemy.i18n.*`
+  - `excelalchemy._primitives.*`
+- Removed legacy facade aliases such as `df`, `header_df`, `cell_errors`, and
+  `row_errors`.
+- Removed legacy Minio config fields such as `minio`, `bucket_name`, and
+  `url_expires`.
+
 ## [2.4.0] - 2026-04-24
 
 ### Added

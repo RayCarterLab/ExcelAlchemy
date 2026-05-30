@@ -10,10 +10,9 @@ ExcelAlchemy turns Pydantic models into typed workbook contracts:
 - render workbook-facing output in `zh-CN` or `en`
 - keep storage pluggable through `ExcelStorage`
 
-The current stable release is `2.4.0`, which continues the 2.x line with a
-more complete import workflow: clearer template guidance before upload,
-lightweight structural preflight before execution, synchronous lifecycle
-visibility during import, and remediation-oriented payloads after failures.
+The 3.0 development line uses ordinary Python annotations plus explicit
+`ExcelColumn(...)` metadata. It intentionally removes 2.x compatibility shims,
+legacy import paths, and field-factory wrappers.
 
 At the top level, that import workflow is:
 
@@ -50,14 +49,16 @@ pip install "ExcelAlchemy[minio]"
 ## Minimal Example
 
 ```python
+from typing import Annotated
+
 from pydantic import BaseModel
 
-from excelalchemy import ExcelAlchemy, FieldMeta, ImporterConfig, Number, String
+from excelalchemy import ExcelAlchemy, ExcelColumn, ImporterConfig
 
 
 class Importer(BaseModel):
-    age: Number = FieldMeta(label='Age', order=1)
-    name: String = FieldMeta(label='Name', order=2)
+    age: Annotated[int, ExcelColumn(label='Age', order=1)]
+    name: Annotated[str, ExcelColumn(label='Name', order=2)]
 
 
 alchemy = ExcelAlchemy(ImporterConfig(Importer, locale='en'))
@@ -73,15 +74,16 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from excelalchemy import Email, ExcelAlchemy, ExcelMeta, ImporterConfig
+from excelalchemy import EmailCodec, ExcelAlchemy, ExcelColumn, ImporterConfig
 
 
 class Importer(BaseModel):
     email: Annotated[
-        Email,
+        str,
         Field(min_length=10),
-        ExcelMeta(
+        ExcelColumn(
             label='Email',
+            codec=EmailCodec(),
             order=1,
             hint='Use your work email',
             example_value='alice@company.com',
@@ -108,10 +110,10 @@ template -> preflight -> import -> remediation -> delivery
 Minimal example:
 
 ```python
-from excelalchemy.results import build_frontend_remediation_payload
+from excelalchemy.results import ImportLifecycleEvent, build_frontend_remediation_payload
 
 
-events: list[dict[str, object]] = []
+events: list[ImportLifecycleEvent] = []
 
 preflight = alchemy.preflight_import('employees.xlsx')
 if preflight.is_valid:

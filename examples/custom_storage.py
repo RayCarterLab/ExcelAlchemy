@@ -1,11 +1,12 @@
 """Custom storage example that keeps uploaded workbooks in memory."""
 
 from base64 import b64decode
+from typing import Annotated
 
 from pydantic import BaseModel
 
-from excelalchemy import ExcelAlchemy, ExcelStorage, ExporterConfig, FieldMeta, Number, String, UrlStr
-from excelalchemy.core.table import WorksheetTable
+from excelalchemy import ExcelAlchemy, ExcelColumn, ExcelStorage, ExporterConfig, UrlStr
+from excelalchemy.workbook.table import WorksheetTable
 
 
 class InMemoryStorage(ExcelStorage):
@@ -22,8 +23,8 @@ class InMemoryStorage(ExcelStorage):
 
 
 class EmployeeExporter(BaseModel):
-    full_name: String = FieldMeta(label='Full name', order=1)
-    age: Number = FieldMeta(label='Age', order=2)
+    full_name: Annotated[str, ExcelColumn(label='Full name', order=1)]
+    age: Annotated[float, ExcelColumn(label='Age', order=2)]
 
 
 def main() -> None:

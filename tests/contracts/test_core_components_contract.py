@@ -1,12 +1,14 @@
+from typing import Annotated
+
 from pydantic import BaseModel
 
-from excelalchemy import DateFormat, DateRange, ExcelCellError, FieldMeta, Key, Label, RowIndex
+from excelalchemy import DateFormat, DateRangeCodec, ExcelCellError, ExcelColumn, Key, Label, RowIndex
 from excelalchemy.config import ImportMode
-from excelalchemy.core.alchemy import REASON_COLUMN, RESULT_COLUMN
-from excelalchemy.core.headers import ExcelHeaderParser, ExcelHeaderValidator
-from excelalchemy.core.rows import ImportIssueTracker, RowAggregator
-from excelalchemy.core.schema import ExcelSchemaLayout
-from excelalchemy.core.table import WorksheetTable
+from excelalchemy.runtime.facade import REASON_COLUMN, RESULT_COLUMN
+from excelalchemy.runtime.rows import ImportIssueTracker, RowAggregator
+from excelalchemy.schema import ExcelSchemaLayout
+from excelalchemy.workbook.headers import ExcelHeaderParser, ExcelHeaderValidator
+from excelalchemy.workbook.table import WorksheetTable
 from tests.support.contract_models import MergedContractImporter, SimpleContractImporter
 
 
@@ -35,8 +37,14 @@ class TestCoreComponentContracts:
 
     def test_header_validator_accepts_merged_headers_with_repeated_child_labels_under_different_parents(self):
         class DualRangeImporter(BaseModel):
-            stay_range: DateRange = FieldMeta(label='停留时间', order=1, date_format=DateFormat.DAY)
-            travel_range: DateRange = FieldMeta(label='出行时间', order=2, date_format=DateFormat.DAY)
+            stay_range: Annotated[
+                dict[str, object],
+                ExcelColumn(codec=DateRangeCodec.day(), label='停留时间', order=1, date_format=DateFormat.DAY),
+            ]
+            travel_range: Annotated[
+                dict[str, object],
+                ExcelColumn(codec=DateRangeCodec.day(), label='出行时间', order=2, date_format=DateFormat.DAY),
+            ]
 
         layout = ExcelSchemaLayout.from_model(DualRangeImporter)
         header_df = WorksheetTable(

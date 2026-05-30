@@ -1,23 +1,24 @@
-"""Minimal example that uses Annotated + ExcelMeta declarations."""
+"""Minimal example that uses Annotated + ExcelColumn declarations."""
 
 from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from excelalchemy import Email, ExcelAlchemy, ExcelMeta, ImporterConfig, Number, String
+from excelalchemy import EmailCodec, ExcelAlchemy, ExcelColumn, ImporterConfig
 
 
 class EmployeeImporter(BaseModel):
     full_name: Annotated[
-        String,
+        str,
         Field(min_length=2),
-        ExcelMeta(label='Full name', order=1, hint='Use the legal name', example_value='Alice Chen'),
+        ExcelColumn(label='Full name', order=1, hint='Use the legal name', example_value='Alice Chen'),
     ]
-    age: Annotated[Number, Field(ge=18), ExcelMeta(label='Age', order=2)]
+    age: Annotated[float, Field(ge=18), ExcelColumn(label='Age', order=2)]
     work_email: Annotated[
-        Email,
+        str,
         Field(min_length=8),
-        ExcelMeta(
+        ExcelColumn(
+            codec=EmailCodec(),
             label='Work email',
             order=3,
             hint='Use your company email address',

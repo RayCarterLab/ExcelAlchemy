@@ -2,45 +2,34 @@
 
 import copy
 import datetime
-from collections.abc import Callable, Mapping, Set
 from dataclasses import dataclass, field, replace
 from functools import cached_property
-from typing import Any, Self, cast
+from typing import Self
 
-from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo
-from pydantic_core import PydanticUndefined
 
-from excelalchemy._primitives.constants import (
+from excelalchemy.codecs.base import ExcelFieldCodec, UndefinedFieldCodec
+from excelalchemy.diagnostics import (
+    log_metadata_large_option_set,
+    log_metadata_missing_option_id,
+)
+from excelalchemy.exceptions import ConfigError, ProgrammaticError
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import display_message as dmsg
+from excelalchemy.messages import message as msg
+from excelalchemy.policies import WORKBOOK_UNIQUE_KEY_SEPARATOR, WORKBOOK_UNIQUE_LABEL_SEPARATOR
+from excelalchemy.primitives.constants import (
     DATE_FORMAT_TO_HINT_MAPPING,
     DATE_FORMAT_TO_PYTHON_MAPPING,
     DEFAULT_FIELD_META_ORDER,
     MAX_OPTIONS_COUNT,
     MULTI_CHECKBOX_SEPARATOR,
-    UNIQUE_HEADER_CONNECTOR,
     CharacterSet,
     DataRangeOption,
     DateFormat,
-    IntStr,
     Option,
 )
-from excelalchemy._primitives.diagnostics import (
-    log_metadata_large_option_set,
-    log_metadata_missing_option_id,
-)
-from excelalchemy._primitives.identity import Key, Label, OptionId, UniqueKey, UniqueLabel
-from excelalchemy.codecs.base import ExcelFieldCodec, UndefinedFieldCodec
-from excelalchemy.exceptions import ConfigError, ProgrammaticError
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import display_message as dmsg
-from excelalchemy.i18n.messages import message as msg
-
-EXCEL_FIELD_METADATA_KEY = 'excelalchemy_metadata'
-type FieldDefaultFactory = Callable[[], object]
-type FieldIncludeExclude = Set[IntStr] | bool | None
-type FieldSchemaExtra = dict[str, Any]
-type FieldKwargs = dict[str, Any]
-type FieldFactoryReturn = Any
+from excelalchemy.primitives.identity import Key, Label, OptionId, UniqueKey, UniqueLabel
 
 
 def _normalize_character_set(character_set: set[CharacterSet] | None) -> frozenset[CharacterSet]:
@@ -51,13 +40,6 @@ def _normalize_options(options: list[Option] | tuple[Option, ...] | None) -> tup
     if options is None:
         return None
     return tuple(options)
-
-
-class PatchFieldMeta(BaseModel):
-    unique: bool | None = False  # Workbook hint only. Runtime uniqueness is enforced elsewhere.
-    is_primary_key: bool | None = False  # Workbook hint only. Runtime primary-key behavior is configured separately.
-    hint: str | None = None  # Workbook-facing help text rendered into header comments.
-    options: list[Option] | None = None
 
 
 @dataclass(slots=True, frozen=True)
@@ -110,7 +92,9 @@ class RuntimeFieldBinding:
                 msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME),
                 message_key=MessageKey.PARENT_LABEL_EMPTY_RUNTIME,
             )
-        unique_label = f'{self.parent_label}{UNIQUE_HEADER_CONNECTOR}{label}' if self.parent_label != label else label
+        unique_label = (
+            f'{self.parent_label}{WORKBOOK_UNIQUE_LABEL_SEPARATOR}{label}' if self.parent_label != label else label
+        )
         return UniqueLabel(unique_label)
 
     def make_unique_key(self, *, key: Key | None) -> UniqueKey:
@@ -121,7 +105,7 @@ class RuntimeFieldBinding:
             )
         if key is None:
             raise ProgrammaticError(msg(MessageKey.KEY_EMPTY_RUNTIME), message_key=MessageKey.KEY_EMPTY_RUNTIME)
-        unique_key = f'{self.parent_key}{UNIQUE_HEADER_CONNECTOR}{key}' if self.parent_key != key else key
+        unique_key = f'{self.parent_key}{WORKBOOK_UNIQUE_KEY_SEPARATOR}{key}' if self.parent_key != key else key
         return UniqueKey(unique_key)
 
 
@@ -268,19 +252,19 @@ class ImportConstraints:
 
 
 class FieldMetaInfo:
-    """Compatibility facade over layered Excel metadata objects.
+    """Resolved Excel column metadata used by the runtime.
 
-    The public 2.x API still exposes a single ``FieldMetaInfo`` object because
-    ``FieldMeta(...)`` and ``ExcelMeta(...)`` are intentionally concise. The
-    actual metadata state, however, is split across:
+    Public 3.0 declarations use ``Annotated[T, ExcelColumn(...)]``. Schema
+    extraction resolves those declarations into this object, which keeps the
+    runtime-facing state split across:
 
     - ``DeclaredFieldMeta`` for declaration semantics
     - ``RuntimeFieldBinding`` for flattened runtime identity
     - ``WorkbookPresentationMeta`` for workbook-facing hints and formatting
     - ``ImportConstraints`` for importer-side validation hints
 
-    New internal code should prefer these layer objects over treating
-    ``FieldMetaInfo`` as a flat mutable record.
+    New code should prefer these layer objects over treating ``FieldMetaInfo``
+    as a flat mutable record.
     """
 
     def __init__(
@@ -400,15 +384,6 @@ class FieldMetaInfo:
     def excel_codec(self, value: type[ExcelFieldCodec]) -> None:
         self.runtime_binding = replace(self.runtime_binding, excel_codec=value)
 
-    @property
-    def value_type(self) -> type[ExcelFieldCodec]:
-        """Backward-compatible alias for excel_codec."""
-        return self.excel_codec
-
-    @value_type.setter
-    def value_type(self, value: type[ExcelFieldCodec]) -> None:
-        self.excel_codec = value
-
     def set_is_primary_key(self, is_primary_key: bool | None) -> None:
         if is_primary_key is None:
             return
@@ -502,7 +477,7 @@ class FieldMetaInfo:
 
     def __repr__(self) -> str:
         return (
-            f'FieldMeta(label={self.label!r}, '
+            f'ExcelColumn(label={self.label!r}, '
             f'order={self.order!r}, '
             f'excel_codec={self.excel_codec.__name__!r}, '
             f'required={self.required!r}, '
@@ -746,25 +721,19 @@ def extract_declared_field_metadata(field_info: FieldInfo) -> FieldMetaInfo:
 
 
 def _resolve_declared_field_metadata(field_info: FieldInfo) -> FieldMetaInfo:
-    for item in field_info.metadata:
-        if isinstance(item, FieldMetaInfo):
-            return item
+    from excelalchemy.columns import ExcelColumnSpec
 
-    if isinstance(field_info.default, FieldMetaInfo):
+    for item in field_info.metadata:
+        if isinstance(item, ExcelColumnSpec):
+            return item.to_field_metadata()
+
+    if isinstance(field_info.default, (FieldMetaInfo, ExcelColumnSpec)):
         raise ProgrammaticError(
-            'Annotated fields must place ExcelMeta(...) inside Annotated metadata; '
-            'use `field: Annotated[T, Field(...), ExcelMeta(...)]`'
+            'Annotated fields must place ExcelColumn(...) inside Annotated metadata; '
+            'use `field: Annotated[T, Field(...), ExcelColumn(...)]`'
         )
 
-    json_schema_extra = field_info.json_schema_extra
-    if not isinstance(json_schema_extra, Mapping):
-        raise ProgrammaticError(msg(MessageKey.FIELD_DEFINITIONS_MUST_USE_FIELDMETA))
-
-    json_schema_mapping = cast(Mapping[str, object], json_schema_extra)
-    metadata = json_schema_mapping.get(EXCEL_FIELD_METADATA_KEY)
-    if not isinstance(metadata, FieldMetaInfo):
-        raise ProgrammaticError(msg(MessageKey.FIELD_DEFINITIONS_MUST_USE_FIELDMETA))
-    return metadata
+    raise ProgrammaticError(msg(MessageKey.FIELD_DEFINITIONS_MUST_USE_EXCELCOLUMN))
 
 
 def _overlay_pydantic_field_constraints(metadata: FieldMetaInfo, field_info: FieldInfo) -> FieldMetaInfo:
@@ -803,238 +772,3 @@ def _overlay_pydantic_field_constraints(metadata: FieldMetaInfo, field_info: Fie
             metadata.importer_unique_items = unique_items
 
     return metadata
-
-
-def _build_excel_metadata(
-    *,
-    label: str | Label,
-    is_primary_key: bool = False,
-    unique: bool = False,
-    ignore_import: bool = False,
-    required: bool | None = None,
-    order: int = DEFAULT_FIELD_META_ORDER,
-    character_set: set[CharacterSet] | None = None,
-    fraction_digits: int | None = None,
-    timezone: datetime.timezone | None = None,
-    date_format: DateFormat | None = None,
-    date_range_option: DataRangeOption | None = None,
-    options: list[Option] | None = None,
-    unit: str | None = None,
-    hint: str | None = None,
-    example_value: str | None = None,
-    ge: float | None = None,
-    le: float | None = None,
-    max_digits: int | None = None,
-    decimal_places: int | None = None,
-    min_items: int | None = None,
-    max_items: int | None = None,
-    unique_items: bool | None = None,
-    min_length: int | None = None,
-    max_length: int | None = None,
-) -> FieldMetaInfo:
-    return FieldMetaInfo(
-        label=label,
-        is_primary_key=is_primary_key,
-        unique=unique,
-        ignore_import=ignore_import,
-        required=required,
-        order=order,
-        character_set=character_set,
-        fraction_digits=fraction_digits,
-        timezone=timezone,
-        date_format=date_format,
-        date_range_option=date_range_option,
-        options=options,
-        unit=unit,
-        hint=hint,
-        example_value=example_value,
-        ge=ge,
-        le=le,
-        max_digits=max_digits,
-        decimal_places=decimal_places,
-        min_items=min_items,
-        max_items=max_items,
-        unique_items=unique_items,
-        min_length=min_length,
-        max_length=max_length,
-    )
-
-
-def ExcelMeta(
-    *,
-    label: str,
-    is_primary_key: bool = False,
-    unique: bool = False,
-    ignore_import: bool = False,
-    required: bool | None = None,
-    order: int = DEFAULT_FIELD_META_ORDER,
-    character_set: set[CharacterSet] | None = None,
-    fraction_digits: int | None = None,
-    timezone: datetime.timezone | None = None,
-    date_format: DateFormat | None = None,
-    date_range_option: DataRangeOption | None = None,
-    options: list[Option] | None = None,
-    unit: str | None = None,
-    hint: str | None = None,
-    example_value: str | None = None,
-    ge: float | None = None,
-    le: float | None = None,
-    max_digits: int | None = None,
-    decimal_places: int | None = None,
-    min_items: int | None = None,
-    max_items: int | None = None,
-    unique_items: bool | None = None,
-    min_length: int | None = None,
-    max_length: int | None = None,
-) -> FieldMetaInfo:
-    """Excel-specific metadata for use with Annotated[..., Field(...), ExcelMeta(...)]."""
-    return _build_excel_metadata(
-        label=label,
-        is_primary_key=is_primary_key,
-        unique=unique,
-        ignore_import=ignore_import,
-        required=required,
-        order=order,
-        character_set=character_set,
-        fraction_digits=fraction_digits,
-        timezone=timezone,
-        date_format=date_format,
-        date_range_option=date_range_option,
-        options=options,
-        unit=unit,
-        hint=hint,
-        example_value=example_value,
-        ge=ge,
-        le=le,
-        max_digits=max_digits,
-        decimal_places=decimal_places,
-        min_items=min_items,
-        max_items=max_items,
-        unique_items=unique_items,
-        min_length=min_length,
-        max_length=max_length,
-    )
-
-
-# pylint: disable=invalid-name
-# pylint: disable=too-many-locals
-def FieldMeta(
-    default: object = PydanticUndefined,
-    *,
-    label: str,
-    is_primary_key: bool = False,
-    unique: bool = False,
-    ignore_import: bool = False,
-    required: bool | None = None,
-    order: int = DEFAULT_FIELD_META_ORDER,
-    character_set: set[CharacterSet] | None = None,
-    fraction_digits: int | None = None,
-    timezone: datetime.timezone | None = None,
-    date_format: DateFormat | None = None,
-    date_range_option: DataRangeOption | None = None,
-    options: list[Option] | None = None,
-    unit: str | None = None,
-    hint: str | None = None,
-    example_value: str | None = None,
-    default_factory: FieldDefaultFactory | None = None,
-    alias: str | None = None,
-    title: str | None = None,
-    description: str | None = None,
-    exclude: FieldIncludeExclude = None,
-    include: FieldIncludeExclude = None,
-    const: bool | None = None,
-    ge: float | None = None,
-    le: float | None = None,
-    multiple_of: float | None = None,
-    allow_inf_nan: bool | None = None,
-    max_digits: int | None = None,
-    decimal_places: int | None = None,
-    min_items: int | None = None,
-    max_items: int | None = None,
-    unique_items: bool | None = None,
-    min_length: int | None = None,
-    max_length: int | None = None,
-    allow_mutation: bool | None = True,
-    regex: str | None = None,
-    discriminator: str | None = None,
-    repr: bool = True,
-    **extra: object,
-) -> FieldFactoryReturn:
-    """Compatibility wrapper over pydantic.Field for workbook-aware declarations."""
-    metadata = _build_excel_metadata(
-        label=label,
-        is_primary_key=is_primary_key,
-        unique=unique,
-        ignore_import=ignore_import,
-        required=required,
-        order=order,
-        character_set=character_set,
-        fraction_digits=fraction_digits,
-        timezone=timezone,
-        date_format=date_format,
-        date_range_option=date_range_option,
-        options=options,
-        unit=unit,
-        hint=hint,
-        example_value=example_value,
-        ge=ge,
-        le=le,
-        max_digits=max_digits,
-        decimal_places=decimal_places,
-        min_items=min_items,
-        max_items=max_items,
-        unique_items=unique_items,
-        min_length=min_length,
-        max_length=max_length,
-    )
-
-    json_schema_extra: FieldSchemaExtra = {EXCEL_FIELD_METADATA_KEY: metadata} | dict(extra)
-    if include is not None:
-        json_schema_extra['include'] = include
-    if const is not None:
-        json_schema_extra['const'] = const
-    if min_items is not None:
-        json_schema_extra['min_items'] = min_items
-    if max_items is not None:
-        json_schema_extra['max_items'] = max_items
-    if unique_items is not None:
-        json_schema_extra['unique_items'] = unique_items
-
-    field_kwargs: FieldKwargs = {
-        'repr': repr,
-        'json_schema_extra': json_schema_extra,
-    }
-    if default_factory is not None:
-        field_kwargs['default_factory'] = default_factory
-    if alias is not None:
-        field_kwargs['alias'] = alias
-    if title is not None:
-        field_kwargs['title'] = title
-    if description is not None:
-        field_kwargs['description'] = description
-    if isinstance(exclude, bool):
-        field_kwargs['exclude'] = exclude
-    if ge is not None:
-        field_kwargs['ge'] = ge
-    if le is not None:
-        field_kwargs['le'] = le
-    if multiple_of is not None:
-        field_kwargs['multiple_of'] = multiple_of
-    if allow_inf_nan is not None:
-        field_kwargs['allow_inf_nan'] = allow_inf_nan
-    if max_digits is not None:
-        field_kwargs['max_digits'] = max_digits
-    if decimal_places is not None:
-        field_kwargs['decimal_places'] = decimal_places
-    if min_length is not None:
-        field_kwargs['min_length'] = min_length
-    if max_length is not None:
-        field_kwargs['max_length'] = max_length
-    if regex is not None:
-        field_kwargs['pattern'] = regex
-    if discriminator is not None:
-        field_kwargs['discriminator'] = discriminator
-    if allow_mutation is not None and allow_mutation is not True:
-        field_kwargs['frozen'] = not allow_mutation
-
-    return Field(default, **field_kwargs)

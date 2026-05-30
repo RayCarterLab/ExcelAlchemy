@@ -5,23 +5,26 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from excelalchemy import (
     DateFormat,
-    DateRange,
-    Email,
+    DateRangeCodec,
+    EmailCodec,
     ExcelCellError,
+    ExcelColumn,
     ExcelFieldCodec,
-    ExcelMeta,
     ExcelRowError,
-    FieldMeta,
     Label,
     ProgrammaticError,
 )
-from excelalchemy.helper.pydantic import extract_pydantic_model, instantiate_pydantic_model
+from excelalchemy.adapters.pydantic import extract_pydantic_model, instantiate_pydantic_model
+from excelalchemy.codecs.date_range import DateRange
 from excelalchemy.metadata import FieldMetaInfo, extract_declared_field_metadata
 
 
 class ContractPydanticModel(BaseModel):
-    email: Email = FieldMeta(label='邮箱', order=1)
-    stay_range: DateRange = FieldMeta(label='停留时间', order=2, date_format=DateFormat.DAY)
+    email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', order=1)]
+    stay_range: Annotated[
+        dict[str, object],
+        ExcelColumn(codec=DateRangeCodec.day(), label='停留时间', order=2, date_format=DateFormat.DAY),
+    ]
 
 
 class TestPydanticContracts:
@@ -69,7 +72,7 @@ class TestPydanticContracts:
 
     def test_instantiate_pydantic_model_applies_field_constraints_and_field_validators(self):
         class FieldValidatedModel(BaseModel):
-            name: Email = FieldMeta(label='邮箱', order=1, min_length=20)
+            name: Annotated[str, Field(min_length=20), ExcelColumn(codec=EmailCodec(), label='邮箱', order=1)]
 
             @field_validator('name')
             @classmethod
@@ -91,8 +94,11 @@ class TestPydanticContracts:
 
     def test_instantiate_pydantic_model_maps_model_validators_to_row_errors(self):
         class ModelValidatedContract(BaseModel):
-            email: Email = FieldMeta(label='邮箱', order=1)
-            stay_range: DateRange = FieldMeta(label='停留时间', order=2, date_format=DateFormat.DAY)
+            email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', order=1)]
+            stay_range: Annotated[
+                dict[str, object],
+                ExcelColumn(codec=DateRangeCodec.day(), label='停留时间', order=2, date_format=DateFormat.DAY),
+            ]
 
             @model_validator(mode='after')
             def reject_combination(self):
@@ -112,7 +118,7 @@ class TestPydanticContracts:
         assert str(result[0]) == 'Combination invalid'
 
     def test_custom_excel_field_codec_can_define_new_style_extension_surface(self):
-        class UppercaseTextCodec(str, ExcelFieldCodec):
+        class UppercaseTextCodec(ExcelFieldCodec):
             @classmethod
             def build_comment(cls, field_meta: FieldMetaInfo) -> str:
                 return f'Normalize {field_meta.label} to uppercase'
@@ -130,22 +136,22 @@ class TestPydanticContracts:
                 return str(value).upper()
 
         class CodecContractModel(BaseModel):
-            name: UppercaseTextCodec = FieldMeta(label='名称', order=1)
+            name: Annotated[str, ExcelColumn(codec=UppercaseTextCodec, label='名称', order=1)]
 
         metas = extract_pydantic_model(CodecContractModel)
         result = instantiate_pydantic_model({'name': 'alice'}, CodecContractModel)
 
         assert metas[0].excel_codec is UppercaseTextCodec
-        assert metas[0].value_type is UppercaseTextCodec
+        assert metas[0].excel_codec is UppercaseTextCodec
         assert isinstance(result, CodecContractModel)
         assert result.name == 'ALICE'
 
     def test_annotated_excel_meta_supports_explicit_pydantic_v2_style_declarations(self):
         class AnnotatedContractModel(BaseModel):
-            email: Annotated[Email, Field(min_length=20), ExcelMeta(label='邮箱', order=1)]
+            email: Annotated[str, Field(min_length=20), ExcelColumn(codec=EmailCodec(), label='邮箱', order=1)]
             stay_range: Annotated[
-                DateRange,
-                ExcelMeta(label='停留时间', order=2, date_format=DateFormat.DAY),
+                dict[str, object],
+                ExcelColumn(codec=DateRangeCodec.day(), label='停留时间', order=2, date_format=DateFormat.DAY),
             ]
 
         raw_field_info = AnnotatedContractModel.model_fields['email']

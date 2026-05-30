@@ -4,6 +4,7 @@ import asyncio
 import io
 from base64 import b64decode
 from io import BytesIO
+from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
@@ -12,20 +13,18 @@ from pydantic import BaseModel
 
 from excelalchemy import (
     ExcelAlchemy,
+    ExcelColumn,
     ExcelStorage,
-    FieldMeta,
     ImporterConfig,
     ImportResult,
-    Number,
-    String,
     UrlStr,
 )
-from excelalchemy.core.table import WorksheetTable
+from excelalchemy.workbook.table import WorksheetTable
 
 
 class EmployeeImporter(BaseModel):
-    full_name: String = FieldMeta(label='Full name', order=1, hint='Use the legal name')
-    age: Number = FieldMeta(label='Age', order=2)
+    full_name: Annotated[str, ExcelColumn(label='Full name', order=1, hint='Use the legal name')]
+    age: Annotated[float, ExcelColumn(label='Age', order=2)]
 
 
 class RequestScopedStorage(ExcelStorage):

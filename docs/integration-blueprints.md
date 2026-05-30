@@ -170,10 +170,13 @@ return {
 
 ```python
 # worker path
+from excelalchemy.results import ImportLifecycleEvent
+
+
 alchemy = build_alchemy(storage=storage)
 
-def handle_event(event: dict[str, object]) -> None:
-    update_job_progress(job_id, event)
+def handle_event(event: ImportLifecycleEvent) -> None:
+    update_job_progress(job_id, event.model_dump(mode='json', exclude_none=True))
 
 result = await alchemy.import_data(
     'employees.xlsx',

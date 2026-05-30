@@ -1,6 +1,6 @@
 # Examples
 
-This directory contains runnable examples for the current 2.x API shape.
+This directory contains runnable examples for the current 3.0 API shape.
 Use them to understand how the library is intended to be used from application code.
 
 ## Related docs
@@ -36,7 +36,7 @@ Use them to understand how the library is intended to be used from application c
 ### Core workflow demos
 
 - `examples/annotated_schema.py`
-  - Demonstrates the modern `Annotated[..., Field(...), ExcelMeta(...)]` declaration style.
+  - Demonstrates the `Annotated[..., ExcelColumn(...)]` declaration style.
   - Shows additive template UX metadata such as `hint=` and `example_value=`.
   - Type: demo of the recommended declaration style.
 
@@ -62,15 +62,15 @@ Use them to understand how the library is intended to be used from application c
   - Demonstrates option-driven field families such as radio, tree, organization, and staff selection fields.
   - Type: focused field-behavior demo.
 
-### Storage and compatibility examples
+### Storage examples
 
 - `examples/custom_storage.py`
   - Demonstrates a minimal custom `ExcelStorage` implementation.
   - Type: reference integration example.
 
 - `examples/minio_storage.py`
-  - Demonstrates the built-in Minio path that still exists in the current 2.x line.
-  - Type: compatibility example, not the preferred new-code path.
+  - Demonstrates explicit `storage=MinioStorageGateway(...)` configuration.
+  - Type: reference integration example.
 
 ### Backend integration examples
 
@@ -97,16 +97,19 @@ Use them to understand how the library is intended to be used from application c
 ## What An Agent Should Infer
 
 - The examples are part of the user-facing contract of this repository.
-- The examples generally reflect the preferred 2.x usage story.
+- The examples generally reflect the preferred 3.0 usage story.
 - `examples/custom_storage.py` and `examples/fastapi_reference/` are the best examples for real integration patterns.
-- `examples/custom_storage.py` is the narrow case where application-side example code currently touches `src/excelalchemy/core/table.py`, because `ExcelStorage.read_excel_table(...)` uses `WorksheetTable` in the 2.x line.
-- `examples/minio_storage.py` is intentionally a compatibility-oriented example for the current 2.x line.
+- `examples/custom_storage.py` may touch `WorksheetTable` because
+  `ExcelStorage.read_excel_table(...)` returns that runtime table type.
+- `examples/minio_storage.py` is an explicit storage-backend example.
 
 ## What An Agent Should Not Infer
 
-- Do not infer that internal modules under `src/excelalchemy/core/` are the intended application import path just because an example touches a low-level concept.
-- Do not generalize the imports in `examples/minio_storage.py` into the recommended application API; that example exists to show the built-in Minio compatibility path.
-- Do not infer that legacy Minio config fields are the preferred new-code path; the repo docs prefer `storage=...`.
+- Do not infer that implementation modules under `src/excelalchemy/runtime/`,
+  `src/excelalchemy/schema/`, `src/excelalchemy/workbook/`, or
+  `src/excelalchemy/primitives/` are intended application import paths just
+  because an example touches a low-level concept.
+- Do not reintroduce legacy Minio config fields; use `storage=...`.
 - Do not infer that examples are exploratory or disposable; they are covered by smoke-style tests.
 - Do not infer that example output text can change freely; docs and generated assets depend on it.
 

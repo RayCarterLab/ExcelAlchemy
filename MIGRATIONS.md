@@ -1,5 +1,69 @@
 # Migration Notes
 
+## Upgrading To 3.0
+
+ExcelAlchemy 3.0 is a breaking release. It removes the 2.x compatibility layer
+and keeps only the current public API.
+
+### Recommended imports
+
+Prefer imports from the package root and public modules:
+
+```python
+from excelalchemy import ExcelAlchemy, ExcelColumn, ImporterConfig, NumberCodec
+from excelalchemy.config import ExporterConfig, ImportMode
+from excelalchemy.storage import ExcelStorage
+```
+
+Do not import from old 2.x compatibility paths. They are removed in 3.0:
+
+- `excelalchemy.types.*`
+- `excelalchemy.exc`
+- `excelalchemy.identity`
+- `excelalchemy.header_models`
+- `excelalchemy.const`
+- `excelalchemy.util.convertor`
+- `excelalchemy.core.*`
+- `excelalchemy.helper.*`
+- `excelalchemy.i18n.*`
+- `excelalchemy._primitives.*`
+
+### Storage
+
+Use an explicit storage object:
+
+```python
+from excelalchemy import ExporterConfig
+from excelalchemy.storage_minio import MinioStorageGateway
+
+config = ExporterConfig.for_storage(
+    ExporterModel,
+    storage=MinioStorageGateway(minio_client, bucket_name='excel-files'),
+)
+```
+
+The old `minio=...`, `bucket_name=...`, and `url_expires=...` config fields are
+removed. Pass `storage=...` instead.
+
+### Import inspection names
+
+Use the explicit 3.0 names:
+
+- `worksheet_table`
+- `header_table`
+- `cell_error_map`
+- `row_error_map`
+
+The old aliases `df`, `header_df`, `cell_errors`, and `row_errors` are removed.
+
+### Upgrade checklist
+
+1. Replace old compatibility imports with public 3.0 imports.
+2. Replace legacy Minio config fields with `storage=...`.
+3. Replace old facade inspection aliases with the explicit names above.
+4. Run your import, export, template, and storage flows in staging before
+   upgrading production.
+
 ## Upgrading To 2.0
 
 ExcelAlchemy 2.0 keeps the public workflow recognizable, but the project has changed
@@ -59,7 +123,7 @@ Prefer explicit storage objects:
 
 ```python
 from excelalchemy import ExporterConfig
-from excelalchemy.core.storage_minio import MinioStorageGateway
+from excelalchemy.storage_minio import MinioStorageGateway
 
 config = ExporterConfig.for_storage(
     ExporterModel,

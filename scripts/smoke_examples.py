@@ -26,7 +26,7 @@ REQUIRED_EXAMPLES: dict[str, tuple[str, ...]] = {
 
 OPTIONAL_EXAMPLES: dict[str, tuple[tuple[str, bool], tuple[str, ...]]] = {
     'fastapi_upload.py': (('fastapi', True), ('FastAPI upload example completed', '/employee-imports')),
-    'minio_storage.py': (('minio', True), ('Built gateway: MinioStorageGateway', 'Uses built-in Minio path: True')),
+    'minio_storage.py': (('minio', True), ('Built gateway: MinioStorageGateway', 'Uses explicit storage path: True')),
 }
 
 REQUIRED_MODULE_EXAMPLES: dict[str, tuple[str, ...]] = {

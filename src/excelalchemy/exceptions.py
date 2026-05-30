@@ -1,9 +1,9 @@
 """Public exception types raised by ExcelAlchemy."""
 
-from excelalchemy._primitives.constants import UNIQUE_HEADER_CONNECTOR
-from excelalchemy._primitives.identity import Label, UniqueLabel
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import message as msg
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import message as msg
+from excelalchemy.policies import WORKBOOK_UNIQUE_LABEL_SEPARATOR
+from excelalchemy.primitives.identity import Label, UniqueLabel
 
 
 class ExcelAlchemyError(Exception):
@@ -106,7 +106,7 @@ class ExcelCellError(ExcelAlchemyError):
     @property
     def unique_label(self) -> UniqueLabel:
         label = (
-            f'{self.parent_label}{UNIQUE_HEADER_CONNECTOR}{self.label}'
+            f'{self.parent_label}{WORKBOOK_UNIQUE_LABEL_SEPARATOR}{self.label}'
             if (self.parent_label and self.parent_label != self.label)
             else self.label
         )

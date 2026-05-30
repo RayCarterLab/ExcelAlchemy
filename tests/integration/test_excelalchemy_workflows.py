@@ -2,41 +2,37 @@ import datetime
 import random
 from typing import Annotated, Any, cast
 
-from minio import Minio
 from pydantic import BaseModel, Field
 
 from excelalchemy import (
-    Boolean,
     ConfigError,
-    Date,
+    DateCodec,
     DateFormat,
-    DateRange,
-    Email,
+    DateRangeCodec,
+    EmailCodec,
     ExcelAlchemy,
     ExcelCellError,
-    ExcelMeta,
+    ExcelColumn,
     ExporterConfig,
-    FieldMeta,
+    ImportConfig,
     ImporterConfig,
     ImportMode,
     Label,
-    Money,
-    MultiCheckbox,
-    MultiOrganization,
-    MultiStaff,
-    MultiTreeNode,
-    Number,
-    NumberRange,
+    MoneyCodec,
+    MultiChoiceCodec,
+    MultiOrganizationCodec,
+    MultiStaffCodec,
+    MultiTreeNodeCodec,
+    NumberRangeCodec,
     Option,
     OptionId,
-    PhoneNumber,
+    PhoneNumberCodec,
     ProgrammaticError,
-    Radio,
-    SingleOrganization,
-    SingleStaff,
-    SingleTreeNode,
-    String,
-    Url,
+    SingleChoiceCodec,
+    SingleOrganizationCodec,
+    SingleStaffCodec,
+    SingleTreeNodeCodec,
+    UrlCodec,
     ValidateResult,
 )
 from tests.support import BaseTestCase, FileRegistry
@@ -44,163 +40,200 @@ from tests.support import BaseTestCase, FileRegistry
 
 class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
     class NoMergeHeaderImporter(BaseModel):
-        age: Number = FieldMeta(label='年龄', order=1)
-        name: String = FieldMeta(label='姓名', order=2)
-        address: String | None = FieldMeta(label='地址', order=4)
-        is_active: Boolean = FieldMeta(label='是否启用', order=5)
-        birth_date: Date = FieldMeta(label='出生日期', order=6, date_format=DateFormat.YEAR)
-        email: Email = FieldMeta(label='邮箱', order=7)
-        price: Money = FieldMeta(label='价格', order=8)
-        web: Url = FieldMeta(label='网址', order=9)
-        hobby: MultiCheckbox = FieldMeta(
-            label='爱好',
-            order=10,
-            options=[
-                Option(
-                    id=OptionId('1'),
-                    name='篮球',
-                ),
-                Option(
-                    id=OptionId('2'),
-                    name='足球',
-                ),
-                Option(
-                    id=OptionId('3'),
-                    name='乒乓球',
-                ),
-            ],
-        )
-        company: MultiOrganization = FieldMeta(
-            label='公司',
-            order=11,
-            options=[
-                Option(
-                    id=OptionId('1'),
-                    name='腾讯',
-                ),
-                Option(
-                    id=OptionId('2'),
-                    name='阿里巴巴',
-                ),
-                Option(
-                    id=OptionId('3'),
-                    name='百度',
-                ),
-            ],
-        )
-        manager: MultiStaff = FieldMeta(
-            label='经理',
-            order=12,
-            options=[
-                Option(
-                    id=OptionId('1'),
-                    name='张三',
-                ),
-                Option(
-                    id=OptionId('2'),
-                    name='李四',
-                ),
-                Option(
-                    id=OptionId('3'),
-                    name='王五',
-                ),
-            ],
-        )
-        department: MultiTreeNode = FieldMeta(
-            label='部门',
-            order=13,
-            options=[
-                Option(
-                    id=OptionId('1'),
-                    name='研发部',
-                ),
-                Option(
-                    id=OptionId('2'),
-                    name='市场部',
-                ),
-                Option(
-                    id=OptionId('3'),
-                    name='销售部',
-                ),
-            ],
-        )
-        team: SingleTreeNode = FieldMeta(
-            label='团队',
-            order=14,
-            options=[
-                Option(
-                    id=OptionId('1'),
-                    name='研发部',
-                ),
-                Option(
-                    id=OptionId('2'),
-                    name='市场部',
-                ),
-                Option(
-                    id=OptionId('3'),
-                    name='销售部',
-                ),
-            ],
-        )
-        phone: PhoneNumber = FieldMeta(label='电话', order=15)
-        radio: Radio = FieldMeta(
-            label='单选',
-            order=16,
-            options=[
-                Option(
-                    id=OptionId('1'),
-                    name='选项1',
-                ),
-                Option(
-                    id=OptionId('2'),
-                    name='选项2',
-                ),
-                Option(
-                    id=OptionId('3'),
-                    name='选项3',
-                ),
-            ],
-        )
-        boss: SingleOrganization = FieldMeta(
-            label='老板',
-            order=17,
-            options=[
-                Option(
-                    id=OptionId('1'),
-                    name='马云',
-                ),
-                Option(
-                    id=OptionId('2'),
-                    name='马化腾',
-                ),
-                Option(
-                    id=OptionId('3'),
-                    name='李彦宏',
-                ),
-            ],
-        )
-        leader: SingleStaff = FieldMeta(
-            label='领导',
-            order=18,
-            options=[
-                Option(
-                    id=OptionId('1'),
-                    name='张三',
-                ),
-                Option(
-                    id=OptionId('2'),
-                    name='李四',
-                ),
-                Option(
-                    id=OptionId('3'),
-                    name='王五',
-                ),
-            ],
-        )
+        age: Annotated[float, ExcelColumn(label='年龄', order=1)]
+        name: Annotated[str, ExcelColumn(label='姓名', order=2)]
+        address: Annotated[str | None, ExcelColumn(label='地址', order=4)]
+        is_active: Annotated[bool, ExcelColumn(label='是否启用', order=5)]
+        birth_date: Annotated[
+            int, ExcelColumn(codec=DateCodec.year(), label='出生日期', order=6, date_format=DateFormat.YEAR)
+        ]
+        email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', order=7)]
+        price: Annotated[float, ExcelColumn(codec=MoneyCodec(), label='价格', order=8)]
+        web: Annotated[str, ExcelColumn(codec=UrlCodec(), label='网址', order=9)]
+        hobby: Annotated[
+            list[str],
+            ExcelColumn(
+                codec=MultiChoiceCodec(),
+                label='爱好',
+                order=10,
+                options=[
+                    Option(
+                        id=OptionId('1'),
+                        name='篮球',
+                    ),
+                    Option(
+                        id=OptionId('2'),
+                        name='足球',
+                    ),
+                    Option(
+                        id=OptionId('3'),
+                        name='乒乓球',
+                    ),
+                ],
+            ),
+        ]
+        company: Annotated[
+            list[str],
+            ExcelColumn(
+                codec=MultiOrganizationCodec(),
+                label='公司',
+                order=11,
+                options=[
+                    Option(
+                        id=OptionId('1'),
+                        name='腾讯',
+                    ),
+                    Option(
+                        id=OptionId('2'),
+                        name='阿里巴巴',
+                    ),
+                    Option(
+                        id=OptionId('3'),
+                        name='百度',
+                    ),
+                ],
+            ),
+        ]
+        manager: Annotated[
+            list[str],
+            ExcelColumn(
+                codec=MultiStaffCodec(),
+                label='经理',
+                order=12,
+                options=[
+                    Option(
+                        id=OptionId('1'),
+                        name='张三',
+                    ),
+                    Option(
+                        id=OptionId('2'),
+                        name='李四',
+                    ),
+                    Option(
+                        id=OptionId('3'),
+                        name='王五',
+                    ),
+                ],
+            ),
+        ]
+        department: Annotated[
+            list[str],
+            ExcelColumn(
+                codec=MultiTreeNodeCodec(),
+                label='部门',
+                order=13,
+                options=[
+                    Option(
+                        id=OptionId('1'),
+                        name='研发部',
+                    ),
+                    Option(
+                        id=OptionId('2'),
+                        name='市场部',
+                    ),
+                    Option(
+                        id=OptionId('3'),
+                        name='销售部',
+                    ),
+                ],
+            ),
+        ]
+        team: Annotated[
+            str,
+            ExcelColumn(
+                codec=SingleTreeNodeCodec(),
+                label='团队',
+                order=14,
+                options=[
+                    Option(
+                        id=OptionId('1'),
+                        name='研发部',
+                    ),
+                    Option(
+                        id=OptionId('2'),
+                        name='市场部',
+                    ),
+                    Option(
+                        id=OptionId('3'),
+                        name='销售部',
+                    ),
+                ],
+            ),
+        ]
+        phone: Annotated[str, ExcelColumn(codec=PhoneNumberCodec(), label='电话', order=15)]
+        radio: Annotated[
+            str,
+            ExcelColumn(
+                codec=SingleChoiceCodec(),
+                label='单选',
+                order=16,
+                options=[
+                    Option(
+                        id=OptionId('1'),
+                        name='选项1',
+                    ),
+                    Option(
+                        id=OptionId('2'),
+                        name='选项2',
+                    ),
+                    Option(
+                        id=OptionId('3'),
+                        name='选项3',
+                    ),
+                ],
+            ),
+        ]
+        boss: Annotated[
+            str,
+            ExcelColumn(
+                codec=SingleOrganizationCodec(),
+                label='老板',
+                order=17,
+                options=[
+                    Option(
+                        id=OptionId('1'),
+                        name='马云',
+                    ),
+                    Option(
+                        id=OptionId('2'),
+                        name='马化腾',
+                    ),
+                    Option(
+                        id=OptionId('3'),
+                        name='李彦宏',
+                    ),
+                ],
+            ),
+        ]
+        leader: Annotated[
+            str,
+            ExcelColumn(
+                codec=SingleStaffCodec(),
+                label='领导',
+                order=18,
+                options=[
+                    Option(
+                        id=OptionId('1'),
+                        name='张三',
+                    ),
+                    Option(
+                        id=OptionId('2'),
+                        name='李四',
+                    ),
+                    Option(
+                        id=OptionId('3'),
+                        name='王五',
+                    ),
+                ],
+            ),
+        ]
 
     class MergeHeaderImporter(NoMergeHeaderImporter):
-        max_stay_date: DateRange = FieldMeta(label='最大停留日期', order=19, date_format=DateFormat.YEAR)
-        salary: NumberRange = FieldMeta(label='工资', order=20)
+        max_stay_date: Annotated[
+            dict[str, object],
+            ExcelColumn(codec=DateRangeCodec.year(), label='最大停留日期', order=19, date_format=DateFormat.YEAR),
+        ]
+        salary: Annotated[dict[str, object], ExcelColumn(codec=NumberRangeCodec(), label='工资', order=20)]
 
     @staticmethod
     async def creator(data: dict[str, Any], context: dict[str, Any] | None) -> dict[str, Any]:
@@ -226,7 +259,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
 
     async def test_import_create_mode_returns_success_for_valid_simple_workbook(self):
         """Test import excel with no merged header"""
-        config = ImporterConfig(self.NoMergeHeaderImporter, creator=self.creator, minio=cast(Minio, self.minio))
+        config = ImporterConfig(self.NoMergeHeaderImporter, creator=self.creator, storage=self.storage_gateway)
         alchemy = ExcelAlchemy(config)
         template = alchemy.download_template()
         assert template is not None
@@ -246,7 +279,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         config = ImporterConfig(
             update_importer_model=self.NoMergeHeaderImporter,
             updater=self.updater,
-            minio=cast(Minio, self.minio),
+            storage=self.storage_gateway,
             import_mode=ImportMode.UPDATE,
         )
         alchemy = ExcelAlchemy(config)
@@ -277,7 +310,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
                 is_data_exist=self.is_data_exist,
                 creator=self.creator,
                 updater=self.updater,
-                minio=cast(Minio, self.minio),
+                storage=self.storage_gateway,
                 import_mode=ImportMode.CREATE_OR_UPDATE,
             )
         )
@@ -293,7 +326,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
 
     async def test_import_records_cell_errors_for_invalid_simple_workbook(self):
         """Test import excel with no merged header"""
-        config = ImporterConfig(self.NoMergeHeaderImporter, creator=self.creator, minio=cast(Minio, self.minio))
+        config = ImporterConfig(self.NoMergeHeaderImporter, creator=self.creator, storage=self.storage_gateway)
         alchemy = ExcelAlchemy(config)
         template = alchemy.download_template()
         assert template is not None
@@ -305,12 +338,9 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         assert result is not None
         assert result.result == ValidateResult.DATA_INVALID
 
-        assert alchemy.worksheet_table is alchemy.df
-        assert alchemy.header_table is alchemy.header_df
-        assert alchemy.cell_error_map == alchemy.cell_errors
-        assert alchemy.row_error_map == alchemy.row_errors
-
-        assert alchemy.cell_errors == {
+        assert alchemy.worksheet_table is not None
+        assert alchemy.header_table is not None
+        assert alchemy.cell_error_map == {
             0: {
                 6: [ExcelCellError(label=Label('出生日期'), message='Enter a date in yyyy format')],
                 7: [
@@ -370,7 +400,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         }
 
     async def test_export_returns_simple_header_dataframe_for_flat_model(self):
-        config = ExporterConfig(self.NoMergeHeaderImporter, minio=cast(Minio, self.minio))
+        config = ExporterConfig(self.NoMergeHeaderImporter, storage=self.storage_gateway)
         alchemy = ExcelAlchemy(config)
         data = [
             {
@@ -405,14 +435,17 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
 
     async def test_duplicate_field_order_raises_config_error(self):
         class DuplicateOrderImporter(self.NoMergeHeaderImporter):
-            max_stay_date: DateRange = FieldMeta(label='最大停留日期', order=7, date_format=DateFormat.YEAR)
-            salary: NumberRange = FieldMeta(label='工资', order=14)
+            max_stay_date: Annotated[
+                dict[str, object],
+                ExcelColumn(codec=DateRangeCodec.year(), label='最大停留日期', order=7, date_format=DateFormat.YEAR),
+            ]
+            salary: Annotated[dict[str, object], ExcelColumn(codec=NumberRangeCodec(), label='工资', order=14)]
 
-        config = ExporterConfig(DuplicateOrderImporter, minio=cast(Minio, self.minio))
+        config = ExporterConfig(DuplicateOrderImporter, storage=self.storage_gateway)
         self.assertRaises(ConfigError, ExcelAlchemy, config)
 
     async def test_export_detects_merged_header_layout_for_composite_fields(self):
-        config = ExporterConfig(self.MergeHeaderImporter, minio=cast(Minio, self.minio))
+        config = ExporterConfig(self.MergeHeaderImporter, storage=self.storage_gateway)
         alchemy = ExcelAlchemy(config)
         data = [
             {
@@ -444,7 +477,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         assert has_merged_header is True
 
     async def test_import_returns_success_for_merged_header_workbook(self):
-        config = ImporterConfig(self.MergeHeaderImporter, creator=self.creator, minio=cast(Minio, self.minio))
+        config = ImporterConfig(self.MergeHeaderImporter, creator=self.creator, storage=self.storage_gateway)
         alchemy = ExcelAlchemy(config)
 
         result = await alchemy.import_data(
@@ -459,7 +492,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
     async def test_empty_importer_model_raises_config_error(self):
         class EmptyCModel(BaseModel): ...
 
-        config = ImporterConfig(EmptyCModel, creator=self.creator, minio=cast(Minio, self.minio))
+        config = ImporterConfig(EmptyCModel, creator=self.creator, storage=self.storage_gateway)
         with self.assertRaises(ConfigError) as cm:
             ExcelAlchemy(config)
 
@@ -469,37 +502,37 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         )
 
     async def test_non_fieldmeta_definition_raises_programmatic_error(self):
-        class EmptyFieldMetaModel(BaseModel):
+        class EmptyExcelColumnModel(BaseModel):
             name: str
 
-        config = ImporterConfig(EmptyFieldMetaModel, creator=self.creator, minio=cast(Minio, self.minio))
+        config = ImporterConfig(EmptyExcelColumnModel, creator=self.creator, storage=self.storage_gateway)
         with self.assertRaises(ProgrammaticError) as cm:
             ExcelAlchemy(config)
         self.assertEqual(
             str(cm.exception),
-            'Field definitions must be created with FieldMeta or Annotated[..., ExcelMeta(...)]',
+            'Field definitions must be created with ExcelColumn or Annotated[..., ExcelColumn(...)]',
         )
 
     async def test_misplaced_excelmeta_default_raises_helpful_programmatic_error(self):
-        class MisplacedAnnotatedExcelMetaModel(BaseModel):
-            name: Annotated[str, Field(min_length=3)] = cast(str, ExcelMeta(label='Name', order=1))
+        class MisplacedAnnotatedExcelColumnModel(BaseModel):
+            name: Annotated[str, Field(min_length=3)] = cast(str, ExcelColumn(label='Name', order=1))
 
-        config = ImporterConfig(MisplacedAnnotatedExcelMetaModel, creator=self.creator, minio=cast(Minio, self.minio))
+        config = ImporterConfig(MisplacedAnnotatedExcelColumnModel, creator=self.creator, storage=self.storage_gateway)
 
         with self.assertRaises(ProgrammaticError) as cm:
             ExcelAlchemy(config)
 
         self.assertEqual(
             str(cm.exception),
-            'Annotated fields must place ExcelMeta(...) inside Annotated metadata; '
-            'use `field: Annotated[T, Field(...), ExcelMeta(...)]`',
+            'Annotated fields must place ExcelColumn(...) inside Annotated metadata; '
+            'use `field: Annotated[T, Field(...), ExcelColumn(...)]`',
         )
 
     async def test_annotated_excel_meta_definition_can_build_template(self):
         class AnnotatedImporter(BaseModel):
-            email: Annotated[Email, Field(min_length=10), ExcelMeta(label='邮箱', order=1)]
+            email: Annotated[str, Field(min_length=10), ExcelColumn(codec=EmailCodec(), label='邮箱', order=1)]
 
-        config = ImporterConfig(AnnotatedImporter, creator=self.creator, minio=cast(Minio, self.minio))
+        config = ImporterConfig(AnnotatedImporter, creator=self.creator, storage=self.storage_gateway)
         alchemy = ExcelAlchemy(config)
 
         template = alchemy.download_template()
@@ -508,28 +541,25 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
             template.startswith('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,')
         )
 
-    async def test_annotated_native_python_type_with_excelmeta_raises_programmatic_error(self):
-        class UnsupportedAnnotatedImporter(BaseModel):
-            name: Annotated[str, Field(min_length=3), ExcelMeta(label='Name', order=1)]
+    async def test_annotated_native_python_type_with_excelcolumn_can_build_template(self):
+        class NativeAnnotatedImporter(BaseModel):
+            name: Annotated[str, Field(min_length=3), ExcelColumn(label='Name', order=1)]
 
-        config = ImporterConfig(
-            UnsupportedAnnotatedImporter,
+        config = ImportConfig(
+            NativeAnnotatedImporter,
             creator=self.creator,
-            minio=cast(Minio, self.minio),
         )
+        alchemy = ExcelAlchemy(config)
 
-        with self.assertRaises(ProgrammaticError) as cm:
-            ExcelAlchemy(config)
+        template = alchemy.download_template()
 
-        self.assertEqual(
-            str(cm.exception),
-            'Field definitions must use an ExcelFieldCodec or CompositeExcelFieldCodec subclass; '
-            "<class 'str'> is not supported",
+        self.assertTrue(
+            template.startswith('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,')
         )
 
     async def test_passing_non_config_object_raises_config_error(self):
         class NotImporterConfigModel(BaseModel):
-            name: str = FieldMeta(label='姓名')
+            name: Annotated[str, ExcelColumn(label='姓名')]
 
         with self.assertRaises(ConfigError) as cm:
             ExcelAlchemy(cast(Any, NotImporterConfigModel))
@@ -537,7 +567,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         self.assertEqual(str(cm.exception), 'Export mode requires an ExporterConfig instance')
 
     async def test_download_template_in_export_mode_raises_config_error(self):
-        config = ExporterConfig(self.MergeHeaderImporter, minio=cast(Minio, self.minio))
+        config = ExporterConfig(self.MergeHeaderImporter, storage=self.storage_gateway)
         alchemy = ExcelAlchemy(config)
 
         with self.assertRaises(ConfigError) as cm:

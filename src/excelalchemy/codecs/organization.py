@@ -1,13 +1,13 @@
 from typing import cast
 
-from excelalchemy._primitives.constants import MULTI_CHECKBOX_SEPARATOR
-from excelalchemy._primitives.identity import OptionId
-from excelalchemy.codecs.base import log_codec_option_resolution_fallback, log_codec_render_fallback
+from excelalchemy.codecs.base import ExcelCodecConfig, log_codec_option_resolution_fallback, log_codec_render_fallback
 from excelalchemy.codecs.multi_checkbox import MultiCheckbox
 from excelalchemy.codecs.radio import Radio
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import display_message as dmsg
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import display_message as dmsg
 from excelalchemy.metadata import FieldMetaInfo
+from excelalchemy.primitives.constants import MULTI_CHECKBOX_SEPARATOR
+from excelalchemy.primitives.identity import OptionId
 
 
 class SingleOrganization(Radio):
@@ -106,5 +106,15 @@ class MultiOrganization(MultiCheckbox):
         return super().normalize_import_value(value, field_meta)
 
 
-SingleOrganizationCodec = SingleOrganization
-MultiOrganizationCodec = MultiOrganization
+class SingleOrganizationCodec:
+    """Factory for explicit single-organization codec configuration."""
+
+    def __new__(cls) -> ExcelCodecConfig:
+        return ExcelCodecConfig.create(SingleOrganization)
+
+
+class MultiOrganizationCodec:
+    """Factory for explicit multi-organization codec configuration."""
+
+    def __new__(cls) -> ExcelCodecConfig:
+        return ExcelCodecConfig.create(MultiOrganization)

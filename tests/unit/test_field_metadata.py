@@ -6,38 +6,29 @@ from pydantic import BaseModel, Field
 from excelalchemy import (
     ConfigError,
     DataRangeOption,
-    Date,
+    DateCodec,
     DateFormat,
-    Email,
     EmailCodec,
-    ExcelMeta,
-    FieldMeta,
-    Number,
+    ExcelColumn,
     Option,
     OptionId,
-    Radio,
+    SingleChoiceCodec,
 )
+from excelalchemy.codecs.date import Date
+from excelalchemy.codecs.email import Email
 from tests.support import BaseTestCase
 
 
-class TestFieldMetadata(BaseTestCase):
+class TestExcelColumndata(BaseTestCase):
     async def test_set_is_primary_key_marks_field_as_required_and_unique(self):
         class Importer(BaseModel):
-            email: Email = FieldMeta(
-                label='邮箱',
-                is_primary_key=True,
-                order=1,
-            )
+            email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', is_primary_key=True, order=1)]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].is_primary_key
 
         class Importer(BaseModel):
-            email: Email = FieldMeta(
-                label='邮箱',
-                is_primary_key=False,
-                order=1,
-            )
+            email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', is_primary_key=False, order=1)]
 
         alchemy = self.build_alchemy(Importer)
         assert not alchemy.ordered_field_meta[0].is_primary_key
@@ -48,21 +39,13 @@ class TestFieldMetadata(BaseTestCase):
 
     async def test_set_unique_marks_field_as_required(self):
         class Importer(BaseModel):
-            email: Email = FieldMeta(
-                label='邮箱',
-                unique=True,
-                order=1,
-            )
+            email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', unique=True, order=1)]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].unique
 
         class Importer(BaseModel):
-            email: Email = FieldMeta(
-                label='邮箱',
-                unique=False,
-                order=1,
-            )
+            email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', unique=False, order=1)]
 
         alchemy = self.build_alchemy(Importer)
         assert not alchemy.ordered_field_meta[0].unique
@@ -73,21 +56,22 @@ class TestFieldMetadata(BaseTestCase):
 
     async def test_validate_state_accepts_consistent_field_configuration(self):
         class Importer(BaseModel):
-            email: Email = FieldMeta(
-                label='邮箱',
-                order=1,
-            )
+            email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', order=1)]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].validate_state() is None
 
     async def test_exchange_option_ids_to_names(self):
         class Importer(BaseModel):
-            sex: Radio = FieldMeta(
-                label='邮箱',
-                order=1,
-                options=[Option(id=OptionId('male'), name='男'), Option(id=OptionId('female'), name='女')],
-            )
+            sex: Annotated[
+                str,
+                ExcelColumn(
+                    codec=SingleChoiceCodec(),
+                    label='邮箱',
+                    order=1,
+                    options=[Option(id=OptionId('male'), name='男'), Option(id=OptionId('female'), name='女')],
+                ),
+            ]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].exchange_option_ids_to_names([OptionId('male')]) == ['男']
@@ -95,11 +79,15 @@ class TestFieldMetadata(BaseTestCase):
 
     async def test_exchange_names_to_option_ids_with_errors(self):
         class Importer(BaseModel):
-            sex: Radio = FieldMeta(
-                label='邮箱',
-                order=1,
-                options=[Option(id=OptionId('male'), name='男'), Option(id=OptionId('female'), name='女')],
-            )
+            sex: Annotated[
+                str,
+                ExcelColumn(
+                    codec=SingleChoiceCodec(),
+                    label='邮箱',
+                    order=1,
+                    options=[Option(id=OptionId('male'), name='男'), Option(id=OptionId('female'), name='女')],
+                ),
+            ]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].exchange_names_to_option_ids_with_errors(
@@ -108,14 +96,8 @@ class TestFieldMetadata(BaseTestCase):
 
     async def test_unique_label_uses_parent_label_for_nested_fields(self):
         class Importer(BaseModel):
-            email: Email = FieldMeta(
-                label='邮箱',
-                order=1,
-            )
-            email2: Email = FieldMeta(
-                label='邮箱2',
-                order=2,
-            )
+            email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', order=1)]
+            email2: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱2', order=2)]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].unique_label == '邮箱'
@@ -126,14 +108,8 @@ class TestFieldMetadata(BaseTestCase):
 
     async def test_unique_key_uses_parent_key_for_nested_fields(self):
         class Importer(BaseModel):
-            email: Email = FieldMeta(
-                label='邮箱',
-                order=1,
-            )
-            email2: Email = FieldMeta(
-                label='邮箱',
-                order=2,
-            )
+            email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', order=1)]
+            email2: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', order=2)]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].unique_key == 'email'
@@ -144,11 +120,15 @@ class TestFieldMetadata(BaseTestCase):
 
     async def test_options_id_map_indexes_options_by_id(self):
         class Importer(BaseModel):
-            sex: Radio = FieldMeta(
-                label='邮箱',
-                order=1,
-                options=[Option(id=OptionId('male'), name='男'), Option(id=OptionId('female'), name='女')],
-            )
+            sex: Annotated[
+                str,
+                ExcelColumn(
+                    codec=SingleChoiceCodec(),
+                    label='邮箱',
+                    order=1,
+                    options=[Option(id=OptionId('male'), name='男'), Option(id=OptionId('female'), name='女')],
+                ),
+            ]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].options_id_map == {
@@ -158,11 +138,15 @@ class TestFieldMetadata(BaseTestCase):
 
     async def test_options_name_map_indexes_options_by_name(self):
         class Importer(BaseModel):
-            sex: Radio = FieldMeta(
-                label='邮箱',
-                order=1,
-                options=[Option(id=OptionId('male'), name='男'), Option(id=OptionId('female'), name='女')],
-            )
+            sex: Annotated[
+                str,
+                ExcelColumn(
+                    codec=SingleChoiceCodec(),
+                    label='邮箱',
+                    order=1,
+                    options=[Option(id=OptionId('male'), name='男'), Option(id=OptionId('female'), name='女')],
+                ),
+            ]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].options_name_map == {
@@ -172,15 +156,8 @@ class TestFieldMetadata(BaseTestCase):
 
     async def test_comment_required_reflects_required_flag(self):
         class Importer(BaseModel):
-            email: Email = FieldMeta(
-                label='邮箱',
-                order=1,
-            )
-            email2: Email | None = FieldMeta(
-                label='邮箱',
-                order=2,
-                required=False,
-            )
+            email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', order=1)]
+            email2: Annotated[str | None, ExcelColumn(codec=EmailCodec(), label='邮箱', order=2, required=False)]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_required == '必填性：必填'
@@ -188,8 +165,10 @@ class TestFieldMetadata(BaseTestCase):
 
     async def test_comment_date_format_uses_configured_date_pattern(self):
         class Importer(BaseModel):
-            date: Date = FieldMeta(label='日期', order=1, date_format=DateFormat.DAY)
-            date2: Date = FieldMeta(label='日期', order=2, date_format=DateFormat.MONTH)
+            date: Annotated[int, ExcelColumn(codec=DateCodec.day(), label='日期', order=1, date_format=DateFormat.DAY)]
+            date2: Annotated[
+                int, ExcelColumn(codec=DateCodec.month(), label='日期', order=2, date_format=DateFormat.MONTH)
+            ]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_date_format == '格式：日期（yyyy/mm/dd）'
@@ -197,21 +176,9 @@ class TestFieldMetadata(BaseTestCase):
 
     async def test_comment_date_range_option_reflects_range_constraint(self):
         class Importer(BaseModel):
-            ne: Date = FieldMeta(
-                label='日期',
-                order=1,
-                date_range_option=DataRangeOption.NEXT,
-            )
-            no: Date = FieldMeta(
-                label='日期',
-                order=2,
-                date_range_option=DataRangeOption.NONE,
-            )
-            pre: Date = FieldMeta(
-                label='日期',
-                order=3,
-                date_range_option=DataRangeOption.PRE,
-            )
+            ne: Annotated[int, ExcelColumn(codec=Date, label='日期', order=1, date_range_option=DataRangeOption.NEXT)]
+            no: Annotated[int, ExcelColumn(codec=Date, label='日期', order=2, date_range_option=DataRangeOption.NONE)]
+            pre: Annotated[int, ExcelColumn(codec=Date, label='日期', order=3, date_range_option=DataRangeOption.PRE)]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_date_range_option == '范围：晚于当前时间'
@@ -220,99 +187,74 @@ class TestFieldMetadata(BaseTestCase):
 
     async def test_comment_hint_returns_configured_hint(self):
         class Importer(BaseModel):
-            email: Email = FieldMeta(
-                label='邮箱',
-                order=1,
-                hint='请输入邮箱',
-            )
+            email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', order=1, hint='请输入邮箱')]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_hint == '提示：请输入邮箱'
 
     async def test_comment_example_returns_configured_example_value(self):
         class Importer(BaseModel):
-            email: Email = FieldMeta(
-                label='邮箱',
-                order=1,
-                example_value='name@example.com',
-            )
+            email: Annotated[
+                str, ExcelColumn(codec=EmailCodec(), label='邮箱', order=1, example_value='name@example.com')
+            ]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_example == '示例：name@example.com'
 
     async def test_comment_example_omits_blank_example_value(self):
         class Importer(BaseModel):
-            email: Email = FieldMeta(
-                label='邮箱',
-                order=1,
-                example_value='   ',
-            )
+            email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', order=1, example_value='   ')]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_example == ''
 
     async def test_comment_options_lists_available_option_names(self):
         class Importer(BaseModel):
-            sex: Radio = FieldMeta(
-                label='邮箱',
-                order=1,
-                options=[Option(id=OptionId('male'), name='男'), Option(id=OptionId('female'), name='女')],
-            )
+            sex: Annotated[
+                str,
+                ExcelColumn(
+                    codec=SingleChoiceCodec(),
+                    label='邮箱',
+                    order=1,
+                    options=[Option(id=OptionId('male'), name='男'), Option(id=OptionId('female'), name='女')],
+                ),
+            ]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_options == '选项：男，女'
 
     async def test_comment_fraction_digits_reflects_numeric_precision(self):
         class Importer(BaseModel):
-            decimal: Number = FieldMeta(
-                label='邮箱',
-                order=1,
-                fraction_digits=2,
-            )
+            decimal: Annotated[float, ExcelColumn(label='邮箱', order=1, fraction_digits=2)]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_fraction_digits == '小数位数：2'
 
     async def test_comment_unit_reflects_configured_unit(self):
         class Importer(BaseModel):
-            decimal: Number = FieldMeta(
-                label='邮箱',
-                order=1,
-                unit='元',
-            )
+            decimal: Annotated[float, ExcelColumn(label='邮箱', order=1, unit='元')]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_unit == '单位：元'
 
     async def test_comment_unique_reflects_unique_constraint(self):
         class Importer(BaseModel):
-            email: Email = FieldMeta(
-                label='邮箱',
-                order=1,
-                unique=True,
-            )
+            email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', order=1, unique=True)]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_unique == '唯一性：唯一'
 
     async def test_comment_max_length_reflects_string_length_limit(self):
         class Importer(BaseModel):
-            email: Email = FieldMeta(
-                label='邮箱',
-                order=1,
-                max_length=10,
-            )
+            email: Annotated[str, Field(max_length=10), ExcelColumn(codec=EmailCodec(), label='邮箱', order=1)]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_max_length == '最大长度：10'
 
     async def test_must_date_format_returns_configured_format_or_raises(self):
         class Importer(BaseModel):
-            date: Date = FieldMeta(label='日期', order=1, date_format=DateFormat.DAY)
-            date2: Date = FieldMeta(
-                label='日期',
-                order=2,
-            )
+            date: Annotated[int, ExcelColumn(codec=DateCodec.day(), label='日期', order=1, date_format=DateFormat.DAY)]
+            date2: Annotated[int, ExcelColumn(codec=Date, label='日期', order=2)]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].must_date_format == DateFormat.DAY
@@ -322,11 +264,8 @@ class TestFieldMetadata(BaseTestCase):
 
     async def test_python_date_format_maps_enum_to_strftime_pattern(self):
         class Importer(BaseModel):
-            date: Date = FieldMeta(label='日期', order=1, date_format=DateFormat.DAY)
-            date2: Date = FieldMeta(
-                label='日期',
-                order=2,
-            )
+            date: Annotated[int, ExcelColumn(codec=DateCodec.day(), label='日期', order=1, date_format=DateFormat.DAY)]
+            date2: Annotated[int, ExcelColumn(codec=Date, label='日期', order=2)]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].python_date_format == '%Y-%m-%d'
@@ -336,23 +275,19 @@ class TestFieldMetadata(BaseTestCase):
 
     async def test_repr_summarizes_field_metadata_state(self):
         class Importer(BaseModel):
-            email: Email = FieldMeta(
-                label='邮箱',
-                order=1,
-                unique=True,
-            )
+            email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', order=1, unique=True)]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].excel_codec is Email
-        assert alchemy.ordered_field_meta[0].value_type is EmailCodec
+        assert alchemy.ordered_field_meta[0].excel_codec is Email
         assert repr(alchemy.ordered_field_meta[0]) == (
-            "FieldMeta(label='邮箱', order=1, excel_codec='Email', required=True, "
+            "ExcelColumn(label='邮箱', order=1, excel_codec='Email', required=True, "
             "unique=True, comment_required='必填性：必填', comment_unique='唯一性：唯一')"
         )
 
     async def test_excelmeta_supports_annotated_field_declarations(self):
         class Importer(BaseModel):
-            email: Annotated[Email, Field(max_length=10), ExcelMeta(label='邮箱', order=1)]
+            email: Annotated[str, Field(max_length=10), ExcelColumn(codec=EmailCodec(), label='邮箱', order=1)]
 
         alchemy = self.build_alchemy(Importer)
         field_meta = alchemy.ordered_field_meta[0]
@@ -364,9 +299,9 @@ class TestFieldMetadata(BaseTestCase):
     async def test_excelmeta_supports_example_value_in_annotated_field_declarations(self):
         class Importer(BaseModel):
             email: Annotated[
-                Email,
+                str,
                 Field(max_length=10),
-                ExcelMeta(label='邮箱', order=1, example_value='name@example.com'),
+                ExcelColumn(codec=EmailCodec(), label='邮箱', order=1, example_value='name@example.com'),
             ]
 
         alchemy = self.build_alchemy(Importer)
@@ -378,14 +313,18 @@ class TestFieldMetadata(BaseTestCase):
 
     async def test_field_metadata_exposes_split_internal_layers(self):
         class Importer(BaseModel):
-            email: Email = FieldMeta(
-                label='邮箱',
-                order=1,
-                unique=True,
-                hint='请输入邮箱',
-                example_value='name@example.com',
-                max_length=10,
-            )
+            email: Annotated[
+                str,
+                Field(max_length=10),
+                ExcelColumn(
+                    codec=EmailCodec(),
+                    label='邮箱',
+                    order=1,
+                    unique=True,
+                    hint='请输入邮箱',
+                    example_value='name@example.com',
+                ),
+            ]
 
         alchemy = self.build_alchemy(Importer)
         field_meta = alchemy.ordered_field_meta[0]
@@ -404,14 +343,18 @@ class TestFieldMetadata(BaseTestCase):
 
     async def test_split_layers_own_comment_and_option_mapping_logic(self):
         class Importer(BaseModel):
-            email: Email = FieldMeta(
-                label='邮箱',
-                order=1,
-                unique=True,
-                hint='请输入邮箱',
-                max_length=10,
-                options=[Option(id=OptionId('work'), name='工作邮箱')],
-            )
+            email: Annotated[
+                str,
+                Field(max_length=10),
+                ExcelColumn(
+                    codec=EmailCodec(),
+                    label='邮箱',
+                    order=1,
+                    unique=True,
+                    hint='请输入邮箱',
+                    options=[Option(id=OptionId('work'), name='工作邮箱')],
+                ),
+            ]
 
         alchemy = self.build_alchemy(Importer)
         field_meta = alchemy.ordered_field_meta[0]
@@ -426,7 +369,7 @@ class TestFieldMetadata(BaseTestCase):
 
     async def test_clone_keeps_split_internal_layers_independent(self):
         class Importer(BaseModel):
-            email: Email = FieldMeta(label='邮箱', order=1, hint='原始提示')
+            email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', order=1, hint='原始提示')]
 
         alchemy = self.build_alchemy(Importer)
         original = alchemy.ordered_field_meta[0]
@@ -441,7 +384,7 @@ class TestFieldMetadata(BaseTestCase):
 
     async def test_split_internal_layers_are_immutable_value_objects(self):
         class Importer(BaseModel):
-            email: Email = FieldMeta(label='邮箱', order=1, hint='原始提示')
+            email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', order=1, hint='原始提示')]
 
         alchemy = self.build_alchemy(Importer)
         field_meta = alchemy.ordered_field_meta[0]
@@ -460,12 +403,16 @@ class TestFieldMetadata(BaseTestCase):
 
     async def test_mutating_facade_replaces_internal_layers_instead_of_mutating_in_place(self):
         class Importer(BaseModel):
-            email: Email = FieldMeta(
-                label='邮箱',
-                order=1,
-                hint='原始提示',
-                options=[Option(id=OptionId('work'), name='工作邮箱')],
-            )
+            email: Annotated[
+                str,
+                ExcelColumn(
+                    codec=EmailCodec(),
+                    label='邮箱',
+                    order=1,
+                    hint='原始提示',
+                    options=[Option(id=OptionId('work'), name='工作邮箱')],
+                ),
+            ]
 
         alchemy = self.build_alchemy(Importer)
         field_meta = alchemy.ordered_field_meta[0]

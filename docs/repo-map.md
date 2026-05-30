@@ -58,7 +58,7 @@ It is meant to help both humans and coding agents find the right files before ma
 - `ABOUT.md`
   - Design rationale, architectural intent, and evolution notes.
 - `MIGRATIONS.md`
-  - Compatibility and upgrade guidance for the 2.x line.
+  - Compatibility and upgrade guidance.
 - `CHANGELOG.md`
   - Release history and notable behavior/documentation changes.
 - `AGENTS.md`
@@ -78,11 +78,10 @@ It is meant to help both humans and coding agents find the right files before ma
   - `ImporterConfig`
   - `ExporterConfig`
   - `ImportMode`
+- `src/excelalchemy/columns.py`
+  - Public `ExcelColumn(...)` declaration helper and immutable column specs.
 - `src/excelalchemy/metadata.py`
-  - Public field metadata entry points:
-  - `FieldMeta(...)`
-  - `ExcelMeta(...)`
-  - Also contains the layered metadata model behind `FieldMetaInfo`.
+  - Resolved runtime metadata model behind `FieldMetaInfo`.
 - `src/excelalchemy/results.py`
   - Public import result objects and API-friendly error maps:
   - `ImportResult`
@@ -93,33 +92,37 @@ It is meant to help both humans and coding agents find the right files before ma
 - `src/excelalchemy/artifacts.py`
   - Public `ExcelArtifact` wrapper for bytes, data URLs, and related helpers.
 
-## Internal Implementation: `src/excelalchemy/core/`
+## Implementation Areas: `src/excelalchemy/`
 
-- `src/excelalchemy/core/alchemy.py`
+- `src/excelalchemy/runtime/facade.py`
   - Main facade implementation behind `excelalchemy.ExcelAlchemy`.
   - Good starting point for understanding how import, export, template generation, and storage fit together.
-- `src/excelalchemy/core/import_session.py`
+- `src/excelalchemy/runtime/import_session.py`
   - One-shot import runtime state and lifecycle.
   - Central to the import execution path.
-- `src/excelalchemy/core/schema.py`
+- `src/excelalchemy/runtime/preflight.py`
+  - Read-only structural preflight workflow.
+- `src/excelalchemy/schema/layout.py`
   - Builds flattened Excel-facing schema layout from Pydantic models.
-- `src/excelalchemy/core/headers.py`
+- `src/excelalchemy/workbook/headers.py`
   - Parses and validates simple and merged workbook headers.
-- `src/excelalchemy/core/rows.py`
+- `src/excelalchemy/workbook/header_models.py`
+  - Header validation result models and merged-header records.
+- `src/excelalchemy/runtime/rows.py`
   - Aggregates worksheet rows back into model-shaped payloads and tracks row/cell issues.
-- `src/excelalchemy/core/executor.py`
+- `src/excelalchemy/runtime/executor.py`
   - Validates row payloads and dispatches create/update/create-or-update callbacks.
-- `src/excelalchemy/core/rendering.py`
+- `src/excelalchemy/rendering/renderer.py`
   - High-level rendering entry points for templates, exports, and import result workbooks.
-- `src/excelalchemy/core/writer.py`
+- `src/excelalchemy/rendering/writer.py`
   - Lower-level workbook writing logic used by rendering.
-- `src/excelalchemy/core/storage_protocol.py`
+- `src/excelalchemy/storage.py`
   - `ExcelStorage` protocol; the main storage extension point.
-- `src/excelalchemy/core/storage.py`
-  - Storage gateway resolution and fallback behavior.
-- `src/excelalchemy/core/storage_minio.py`
+- `src/excelalchemy/storage_gateway.py`
+  - Storage gateway resolution and missing-storage fallback behavior.
+- `src/excelalchemy/storage_minio.py`
   - Built-in Minio-backed storage implementation.
-- `src/excelalchemy/core/table.py`
+- `src/excelalchemy/workbook/table.py`
   - Internal `WorksheetTable` abstraction used instead of pandas.
 
 ## Field Codecs: `src/excelalchemy/codecs/`
@@ -129,7 +132,8 @@ It is meant to help both humans and coding agents find the right files before ma
   - `ExcelFieldCodec`
   - `CompositeExcelFieldCodec`
 - `src/excelalchemy/codecs/*.py`
-  - Built-in field codec implementations behind public aliases such as `Email`, `NumberRange`, and `DateRange`:
+  - Built-in codec implementations and public helper factories such as
+    `EmailCodec()`, `DateCodec.day()`, and `NumberRangeCodec()`:
   - `string.py`
   - `number.py`
   - `date.py`
@@ -148,38 +152,29 @@ It is meant to help both humans and coding agents find the right files before ma
 
 ## Internal Support Modules
 
-- `src/excelalchemy/helper/pydantic.py`
+- `src/excelalchemy/adapters/pydantic.py`
   - Pydantic adaptation boundary.
   - Important for metadata extraction and mapping validation errors back into ExcelAlchemy errors.
-- `src/excelalchemy/i18n/messages.py`
+- `src/excelalchemy/messages.py`
   - Runtime and workbook display messages.
   - Important when changing wording, message keys, or locale behavior.
-- `src/excelalchemy/_primitives/`
-  - Internal constants, identity wrappers, payload aliases, diagnostics, and deprecation helpers.
+- `src/excelalchemy/primitives/`
+  - Internal constants, identity wrappers, and payload aliases.
   - Important files include:
-  - `src/excelalchemy/_primitives/constants.py`
-  - `src/excelalchemy/_primitives/identity.py`
-  - `src/excelalchemy/_primitives/payloads.py`
-  - `src/excelalchemy/_primitives/diagnostics.py`
-  - `src/excelalchemy/_primitives/deprecation.py`
-  - `src/excelalchemy/_primitives/header_models.py`
+  - `src/excelalchemy/primitives/constants.py`
+  - `src/excelalchemy/primitives/identity.py`
+  - `src/excelalchemy/primitives/payloads.py`
 
-## Compatibility Layer
+## Removed 2.x Compatibility Layer
 
-- `src/excelalchemy/types/`
-  - Deprecated compatibility namespace retained in the 2.x line.
-- `src/excelalchemy/exc.py`
-  - Compatibility shim for `excelalchemy.exceptions`.
-- `src/excelalchemy/identity.py`
-  - Compatibility shim for root-level identity exports.
-- `src/excelalchemy/header_models.py`
-  - Compatibility shim for internal header models.
-- `src/excelalchemy/const.py`
-  - Compatibility/low-level constants surface.
-- `src/excelalchemy/util/convertor.py`
-  - Deprecated compatibility shim for `excelalchemy.util.converter`.
+The 3.0 codebase no longer contains the old compatibility modules
+`excelalchemy.types`, `excelalchemy.exc`, `excelalchemy.identity`,
+`excelalchemy.header_models`, `excelalchemy.const`, or
+`excelalchemy.util.convertor`. It also no longer contains the transitional
+bridge packages `excelalchemy.core`, `excelalchemy.helper`, `excelalchemy.i18n`,
+or `excelalchemy._primitives`.
 
-These compatibility paths remain in the 2.x line, but they are not the preferred starting points for new code.
+These compatibility paths are removed in 3.0.
 
 ## Documentation: `docs/`
 
@@ -219,7 +214,7 @@ These compatibility paths remain in the 2.x line, but they are not the preferred
 - `examples/README.md`
   - Recommended reading order for examples.
 - `examples/annotated_schema.py`
-  - Modern `Annotated[..., ExcelMeta(...)]` declaration style.
+  - Current `Annotated[..., ExcelColumn(...)]` declaration style.
 - `examples/employee_import_workflow.py`
   - Core import workflow.
 - `examples/create_or_update_import.py`
@@ -228,10 +223,9 @@ These compatibility paths remain in the 2.x line, but they are not the preferred
   - Export flow and artifact upload behavior.
 - `examples/custom_storage.py`
   - Minimal custom `ExcelStorage` example.
-  - Also shows the current 2.x storage seam where readers return `WorksheetTable` from `src/excelalchemy/core/table.py`.
+  - Shows the storage seam where readers return `WorksheetTable`.
 - `examples/minio_storage.py`
-  - Built-in Minio path example for the current 2.x line.
-  - Uses internal storage modules to demonstrate the built-in Minio compatibility path, not the preferred new-code API shape.
+  - Built-in Minio-compatible storage example.
 - `examples/fastapi_upload.py`
   - Single-file FastAPI integration sketch.
 - `examples/fastapi_reference/`
@@ -293,12 +287,12 @@ These compatibility paths remain in the 2.x line, but they are not the preferred
   - `src/excelalchemy/exceptions.py`
   - `src/excelalchemy/codecs/`
 - Internal implementation starting points:
-  - `src/excelalchemy/core/alchemy.py`
-  - `src/excelalchemy/core/import_session.py`
-  - `src/excelalchemy/core/schema.py`
-  - `src/excelalchemy/core/headers.py`
-  - `src/excelalchemy/core/rows.py`
-  - `src/excelalchemy/core/executor.py`
+  - `src/excelalchemy/runtime/facade.py`
+  - `src/excelalchemy/runtime/import_session.py`
+  - `src/excelalchemy/schema/layout.py`
+  - `src/excelalchemy/workbook/headers.py`
+  - `src/excelalchemy/runtime/rows.py`
+  - `src/excelalchemy/runtime/executor.py`
 
 ## Most Important Code Paths
 
@@ -308,23 +302,23 @@ These compatibility paths remain in the 2.x line, but they are not the preferred
   - `src/excelalchemy/metadata.py`
   - `src/excelalchemy/results.py`
 - Import flow:
-  - `src/excelalchemy/core/alchemy.py`
-  - `src/excelalchemy/core/import_session.py`
-  - `src/excelalchemy/core/headers.py`
-  - `src/excelalchemy/core/rows.py`
-  - `src/excelalchemy/core/executor.py`
-  - `src/excelalchemy/helper/pydantic.py`
+  - `src/excelalchemy/runtime/facade.py`
+  - `src/excelalchemy/runtime/import_session.py`
+  - `src/excelalchemy/workbook/headers.py`
+  - `src/excelalchemy/runtime/rows.py`
+  - `src/excelalchemy/runtime/executor.py`
+  - `src/excelalchemy/adapters/pydantic.py`
 - Export and template generation:
-  - `src/excelalchemy/core/alchemy.py`
-  - `src/excelalchemy/core/schema.py`
-  - `src/excelalchemy/core/rendering.py`
-  - `src/excelalchemy/core/writer.py`
+  - `src/excelalchemy/runtime/facade.py`
+  - `src/excelalchemy/schema/layout.py`
+  - `src/excelalchemy/rendering/renderer.py`
+  - `src/excelalchemy/rendering/writer.py`
   - `src/excelalchemy/codecs/`
 - Storage integration:
-  - `src/excelalchemy/core/storage_protocol.py`
-  - `src/excelalchemy/core/storage.py`
-  - `src/excelalchemy/core/storage_minio.py`
-  - `src/excelalchemy/core/table.py`
+  - `src/excelalchemy/storage.py`
+  - `src/excelalchemy/storage_gateway.py`
+  - `src/excelalchemy/storage_minio.py`
+  - `src/excelalchemy/workbook/table.py`
   - `examples/custom_storage.py`
 - Result payloads and API responses:
   - `src/excelalchemy/results.py`
@@ -345,28 +339,28 @@ These compatibility paths remain in the 2.x line, but they are not the preferred
 - Understanding import flow:
   - `docs/platform-code-mapping.md`
   - `examples/employee_import_workflow.py`
-  - `src/excelalchemy/core/alchemy.py`
-  - `src/excelalchemy/core/import_session.py`
-  - `src/excelalchemy/core/headers.py`
-  - `src/excelalchemy/core/rows.py`
-  - `src/excelalchemy/core/executor.py`
+  - `src/excelalchemy/runtime/facade.py`
+  - `src/excelalchemy/runtime/import_session.py`
+  - `src/excelalchemy/workbook/headers.py`
+  - `src/excelalchemy/runtime/rows.py`
+  - `src/excelalchemy/runtime/executor.py`
   - `tests/contracts/test_import_contract.py`
 
 - Understanding export and template generation:
   - `examples/export_workflow.py`
-  - `src/excelalchemy/core/alchemy.py`
-  - `src/excelalchemy/core/schema.py`
-  - `src/excelalchemy/core/rendering.py`
-  - `src/excelalchemy/core/writer.py`
+  - `src/excelalchemy/runtime/facade.py`
+  - `src/excelalchemy/schema/layout.py`
+  - `src/excelalchemy/rendering/renderer.py`
+  - `src/excelalchemy/rendering/writer.py`
   - `tests/contracts/test_template_contract.py`
   - `tests/contracts/test_export_contract.py`
 
 - Understanding storage integration:
   - `docs/public-api.md`
-  - `src/excelalchemy/core/storage_protocol.py`
-  - `src/excelalchemy/core/storage.py`
-  - `src/excelalchemy/core/storage_minio.py`
-  - `src/excelalchemy/core/table.py`
+  - `src/excelalchemy/storage.py`
+  - `src/excelalchemy/storage_gateway.py`
+  - `src/excelalchemy/storage_minio.py`
+  - `src/excelalchemy/workbook/table.py`
   - `examples/custom_storage.py`
   - `tests/contracts/test_storage_contract.py`
 

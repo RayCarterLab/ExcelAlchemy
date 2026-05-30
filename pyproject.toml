@@ -10,7 +10,7 @@ readme = { file = 'README-pypi.md', content-type = 'text/markdown' }
 license = { file = 'LICENSE' }
 keywords = ['excel', 'openpyxl', 'pydantic', 'minio', 'schema']
 classifiers = [
-    'Development Status :: 5 - Production/Stable',
+    'Development Status :: 3 - Alpha',
     'Intended Audience :: Developers',
     'License :: OSI Approved :: MIT License',
     'Operating System :: OS Independent',
@@ -63,7 +63,6 @@ exclude = [
     '**/.mypy_cache',
     '**/__pycache__',
     '**/.pytest_cache',
-    'src/excelalchemy/types/field.py',
 ]
 enableTypeIgnoreComments = false
 reportAbstractUsage = false
@@ -72,11 +71,7 @@ reportCallIssue = false
 reportPrivateImportUsage = false
 reportRedeclaration = false
 strict = [
-    'src/excelalchemy/_primitives/constants.py',
-    'src/excelalchemy/_primitives/deprecation.py',
-    'src/excelalchemy/_primitives/header_models.py',
-    'src/excelalchemy/_primitives/identity.py',
-    'src/excelalchemy/_primitives/payloads.py',
+    'src/excelalchemy/adapters/pydantic.py',
     'src/excelalchemy/artifacts.py',
     'src/excelalchemy/codecs/base.py',
     'src/excelalchemy/codecs/boolean.py',
@@ -94,26 +89,34 @@ strict = [
     'src/excelalchemy/codecs/string.py',
     'src/excelalchemy/codecs/tree.py',
     'src/excelalchemy/codecs/url.py',
+    'src/excelalchemy/columns.py',
     'src/excelalchemy/config.py',
-    'src/excelalchemy/core/alchemy.py',
-    'src/excelalchemy/core/abstract.py',
-    'src/excelalchemy/core/executor.py',
-    'src/excelalchemy/core/rendering.py',
-    'src/excelalchemy/core/schema.py',
-    'src/excelalchemy/core/storage.py',
-    'src/excelalchemy/core/storage_minio.py',
-    'src/excelalchemy/core/storage_protocol.py',
-    'src/excelalchemy/core/table.py',
-    'src/excelalchemy/core/writer.py',
+    'src/excelalchemy/diagnostics.py',
+    'src/excelalchemy/errors.py',
     'src/excelalchemy/exceptions.py',
-    'src/excelalchemy/core/headers.py',
-    'src/excelalchemy/core/rows.py',
-    'src/excelalchemy/helper/pydantic.py',
-    'src/excelalchemy/i18n/messages.py',
+    'src/excelalchemy/messages.py',
     'src/excelalchemy/metadata.py',
+    'src/excelalchemy/policies.py',
+    'src/excelalchemy/primitives/constants.py',
+    'src/excelalchemy/primitives/identity.py',
+    'src/excelalchemy/primitives/payloads.py',
+    'src/excelalchemy/rendering/renderer.py',
+    'src/excelalchemy/rendering/writer.py',
     'src/excelalchemy/results.py',
-    'src/excelalchemy/util/convertor.py',
+    'src/excelalchemy/runtime/executor.py',
+    'src/excelalchemy/runtime/facade.py',
+    'src/excelalchemy/runtime/facade_protocol.py',
+    'src/excelalchemy/runtime/import_session.py',
+    'src/excelalchemy/runtime/preflight.py',
+    'src/excelalchemy/runtime/rows.py',
+    'src/excelalchemy/schema/layout.py',
+    'src/excelalchemy/storage.py',
+    'src/excelalchemy/storage_gateway.py',
+    'src/excelalchemy/storage_minio.py',
     'src/excelalchemy/util/file.py',
+    'src/excelalchemy/workbook/header_models.py',
+    'src/excelalchemy/workbook/headers.py',
+    'src/excelalchemy/workbook/table.py',
 ]
 typeCheckingMode = 'basic'
 
@@ -129,12 +132,6 @@ ignore = ['E501', 'RUF001', 'RUF002', 'RUF003']
 
 [tool.ruff.lint.per-file-ignores]
 '**/__init__.py' = ['F401']
-'src/excelalchemy/const.py' = ['RUF100']
-'src/excelalchemy/exc.py' = ['E402', 'RUF100']
-'src/excelalchemy/header_models.py' = ['E402', 'RUF100']
-'src/excelalchemy/identity.py' = ['E402', 'RUF100']
-'src/excelalchemy/types/*.py' = ['E402', 'RUF100']
-'src/excelalchemy/types/**/*.py' = ['E402', 'RUF100']
 
 [tool.ruff.format]
 quote-style = 'preserve'

@@ -1,24 +1,22 @@
 import io
-from typing import cast
 
-from minio import Minio
 from openpyxl import Workbook
 
 from excelalchemy import ConfigError, ExcelAlchemy, ExporterConfig, ImporterConfig, ValidateResult
-from excelalchemy.core.storage import MissingStorageGateway, build_storage_gateway
-from excelalchemy.core.storage_minio import MinioStorageGateway
-from excelalchemy.core.storage_protocol import ExcelStorage
-from excelalchemy.core.table import WorksheetTable
+from excelalchemy.storage import ExcelStorage
+from excelalchemy.storage_gateway import MissingStorageGateway, build_storage_gateway
+from excelalchemy.storage_minio import MinioStorageGateway
+from excelalchemy.workbook.table import WorksheetTable
 from tests.support import BaseTestCase, FileRegistry, InMemoryExcelStorage
 from tests.support.contract_models import SimpleContractImporter, creator, sample_simple_export_row
 
 
 class TestStorageContracts(BaseTestCase):
     def _build_storage_gateway(self) -> ExcelStorage:
-        config = ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio))
+        config = ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway)
         return build_storage_gateway(config)
 
-    async def test_default_storage_gateway_conforms_to_excel_storage_protocol(self):
+    async def test_explicit_minio_storage_gateway_conforms_to_excel_storage_protocol(self):
         gateway = self._build_storage_gateway()
 
         assert isinstance(gateway, ExcelStorage)
@@ -48,7 +46,7 @@ class TestStorageContracts(BaseTestCase):
             'No storage backend is configured; pass storage=... or install and configure ExcelAlchemy[minio]',
         )
 
-    async def test_explicit_storage_is_preferred_over_legacy_minio_settings(self):
+    async def test_build_storage_gateway_returns_explicit_custom_storage(self):
         input_name = FileRegistry.TEST_SIMPLE_IMPORT
         input_bytes = self.minio.storage[input_name]['data'].getvalue()
         storage = InMemoryExcelStorage({input_name: input_bytes})
@@ -56,7 +54,6 @@ class TestStorageContracts(BaseTestCase):
             SimpleContractImporter,
             creator=creator,
             storage=storage,
-            minio=cast(Minio, self.minio),
         )
         gateway = build_storage_gateway(config)
 
@@ -99,7 +96,7 @@ class TestStorageContracts(BaseTestCase):
     async def test_export_upload_stores_generated_workbook_in_minio(self):
         output_name = 'contract-export-upload.xlsx'
         self.minio.storage.pop(output_name, None)
-        alchemy = ExcelAlchemy(ExporterConfig(SimpleContractImporter, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ExporterConfig(SimpleContractImporter, storage=self.storage_gateway))
 
         url = alchemy.export_upload(output_name, [sample_simple_export_row()])
 
@@ -111,7 +108,7 @@ class TestStorageContracts(BaseTestCase):
     async def test_import_failure_upload_uses_requested_output_excel_name(self):
         output_name = 'contract-import-upload.xlsx'
         self.minio.storage.pop(output_name, None)
-        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway))
 
         await alchemy.import_data(
             input_excel_name=FileRegistry.TEST_SIMPLE_IMPORT_WITH_ERROR,
@@ -124,7 +121,7 @@ class TestStorageContracts(BaseTestCase):
     async def test_uploaded_payload_remains_binary_excel_content_without_prefix(self):
         output_name = 'contract-upload-bytes.xlsx'
         self.minio.storage.pop(output_name, None)
-        alchemy = ExcelAlchemy(ExporterConfig(SimpleContractImporter, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ExporterConfig(SimpleContractImporter, storage=self.storage_gateway))
 
         alchemy.export_upload(output_name, [sample_simple_export_row()])
         payload = self.minio.storage[output_name]['data'].getvalue()

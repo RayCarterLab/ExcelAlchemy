@@ -1,7 +1,13 @@
+from typing import Annotated
+
 from pydantic import BaseModel
 
-from excelalchemy import Date, DateFormat, FieldMeta
-from excelalchemy.i18n.messages import (
+from excelalchemy import (
+    DateCodec,
+    DateFormat,
+    ExcelColumn,
+)
+from excelalchemy.messages import (
     DISPLAY_DEFAULT_LOCALE,
     SUPPORTED_DISPLAY_LOCALES,
     SUPPORTED_RUNTIME_LOCALES,
@@ -39,7 +45,9 @@ class TestI18nMessages:
 
     def test_comment_strings_switch_with_display_locale(self):
         class Importer(BaseModel):
-            birth_date: Date = FieldMeta(label='Birth date', order=1, date_format=DateFormat.DAY)
+            birth_date: Annotated[
+                int, ExcelColumn(codec=DateCodec.day(), label='Birth date', order=1, date_format=DateFormat.DAY)
+            ]
 
         field = extract_declared_field_metadata(Importer.model_fields['birth_date'])
         field.required = True

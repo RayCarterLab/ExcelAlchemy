@@ -1,9 +1,9 @@
 import re
 
-from excelalchemy.codecs.base import WorkbookInputValue
+from excelalchemy.codecs.base import ExcelCodecConfig, WorkbookInputValue
 from excelalchemy.codecs.string import String
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import message as msg
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import message as msg
 from excelalchemy.metadata import FieldMetaInfo
 
 PHONE_NUMBER_PATTERN = re.compile(r'^((0\d{2,3}-\d{7,8})|(1[3456789]\d{9}))$')
@@ -24,4 +24,8 @@ class PhoneNumber(String):
         return parsed
 
 
-PhoneNumberCodec = PhoneNumber
+class PhoneNumberCodec:
+    """Factory for explicit phone-number codec configuration."""
+
+    def __new__(cls) -> ExcelCodecConfig:
+        return ExcelCodecConfig.create(PhoneNumber)

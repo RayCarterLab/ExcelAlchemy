@@ -1,7 +1,7 @@
 from dataclasses import replace
 from typing import ClassVar
 
-from excelalchemy.codecs.base import NormalizedImportValue, WorkbookDisplayValue, WorkbookInputValue
+from excelalchemy.codecs.base import ExcelCodecConfig, NormalizedImportValue, WorkbookDisplayValue, WorkbookInputValue
 from excelalchemy.codecs.number import Number
 from excelalchemy.metadata import FieldMetaInfo
 
@@ -39,4 +39,8 @@ class Money(Number):
         return super().normalize_import_value(value, cls._money_field_meta(field_meta))
 
 
-MoneyCodec = Money
+class MoneyCodec:
+    """Factory for explicit money codec configuration."""
+
+    def __new__(cls) -> ExcelCodecConfig:
+        return ExcelCodecConfig.create(Money)

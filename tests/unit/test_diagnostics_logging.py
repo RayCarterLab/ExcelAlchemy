@@ -1,11 +1,12 @@
 import logging
+from typing import Annotated
 
 import pytest
 from pydantic import BaseModel
 
-from excelalchemy import ExcelAlchemy, ExporterConfig, FieldMeta, Option, OptionId, String
-from excelalchemy._primitives.diagnostics import METADATA_LOGGER_NAME, RUNTIME_LOGGER_NAME
+from excelalchemy import ExcelAlchemy, ExcelColumn, ExporterConfig, Option, OptionId
 from excelalchemy.config import ImporterConfig
+from excelalchemy.diagnostics import METADATA_LOGGER_NAME, RUNTIME_LOGGER_NAME
 
 
 def _build_field(model: type[BaseModel], field_index: int = 0):
@@ -15,11 +16,14 @@ def _build_field(model: type[BaseModel], field_index: int = 0):
 
 def test_metadata_option_warning_uses_named_logger(caplog: pytest.LogCaptureFixture) -> None:
     class Importer(BaseModel):
-        status: String = FieldMeta(
-            label='Status',
-            order=1,
-            options=[Option(id=OptionId(index), name=f'Option {index}') for index in range(1, 102)],
-        )
+        status: Annotated[
+            str,
+            ExcelColumn(
+                label='Status',
+                order=1,
+                options=[Option(id=OptionId(index), name=f'Option {index}') for index in range(1, 102)],
+            ),
+        ]
 
     field = _build_field(Importer)
 
@@ -35,7 +39,7 @@ def test_metadata_option_warning_uses_named_logger(caplog: pytest.LogCaptureFixt
 
 def test_runtime_context_warning_uses_named_logger(caplog: pytest.LogCaptureFixture) -> None:
     class Importer(BaseModel):
-        name: String = FieldMeta(label='Name', order=1)
+        name: Annotated[str, ExcelColumn(label='Name', order=1)]
 
     alchemy = ExcelAlchemy(ImporterConfig(Importer, locale='en'))
 
@@ -51,7 +55,7 @@ def test_runtime_context_warning_uses_named_logger(caplog: pytest.LogCaptureFixt
 
 def test_runtime_exporter_inference_logs_use_named_logger(caplog: pytest.LogCaptureFixture) -> None:
     class Importer(BaseModel):
-        name: String = FieldMeta(label='Name', order=1)
+        name: Annotated[str, ExcelColumn(label='Name', order=1)]
 
     async def _creator(data: dict[str, object], context: object | None) -> dict[str, object]:
         return data
@@ -69,7 +73,7 @@ def test_runtime_exporter_inference_logs_use_named_logger(caplog: pytest.LogCapt
 
 def test_runtime_unrecognized_export_keys_warning_uses_named_logger(caplog: pytest.LogCaptureFixture) -> None:
     class Exporter(BaseModel):
-        name: String = FieldMeta(label='Name', order=1)
+        name: Annotated[str, ExcelColumn(label='Name', order=1)]
 
     alchemy = ExcelAlchemy(ExporterConfig.for_model(Exporter, locale='en'))
 

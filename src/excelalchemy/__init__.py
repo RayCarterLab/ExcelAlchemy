@@ -1,10 +1,41 @@
 """A Python Library for Reading and Writing Excel Files"""
 
-__version__ = '2.4.0'
-from excelalchemy._primitives.constants import CharacterSet, DataRangeOption, DateFormat, Option
-from excelalchemy._primitives.deprecation import ExcelAlchemyDeprecationWarning
-from excelalchemy._primitives.identity import (
-    Base64Str,
+__version__ = '3.0.0a0'
+from excelalchemy.adapters.pydantic import extract_pydantic_model
+from excelalchemy.artifacts import ExcelArtifact
+from excelalchemy.codecs.base import CompositeExcelFieldCodec, ExcelFieldCodec
+from excelalchemy.codecs.boolean import BooleanCodec
+from excelalchemy.codecs.date import DateCodec
+from excelalchemy.codecs.date_range import DateRangeCodec
+from excelalchemy.codecs.email import EmailCodec
+from excelalchemy.codecs.money import MoneyCodec
+from excelalchemy.codecs.multi_checkbox import MultiChoiceCodec
+from excelalchemy.codecs.number import NumberCodec
+from excelalchemy.codecs.number_range import NumberRangeCodec
+from excelalchemy.codecs.organization import (
+    MultiOrganizationCodec,
+    SingleOrganizationCodec,
+)
+from excelalchemy.codecs.phone_number import PhoneNumberCodec
+from excelalchemy.codecs.radio import SingleChoiceCodec
+from excelalchemy.codecs.staff import MultiStaffCodec, SingleStaffCodec
+from excelalchemy.codecs.string import StringCodec
+from excelalchemy.codecs.tree import (
+    MultiTreeNodeCodec,
+    SingleTreeNodeCodec,
+)
+from excelalchemy.codecs.url import UrlCodec
+from excelalchemy.columns import ExcelColumn
+from excelalchemy.config import ExportConfig, ExporterConfig, ImportConfig, ImporterConfig, ImportMode
+from excelalchemy.exceptions import (
+    ConfigError,
+    ExcelCellError,
+    ExcelRowError,
+    ProgrammaticError,
+    WorksheetNotFoundError,
+)
+from excelalchemy.primitives.constants import CharacterSet, DataRangeOption, DateFormat, Option
+from excelalchemy.primitives.identity import (
     ColumnIndex,
     DataUrlStr,
     Key,
@@ -15,45 +46,6 @@ from excelalchemy._primitives.identity import (
     UniqueLabel,
     UrlStr,
 )
-from excelalchemy.artifacts import ExcelArtifact
-from excelalchemy.codecs.base import CompositeExcelFieldCodec, ExcelFieldCodec
-from excelalchemy.codecs.boolean import Boolean, BooleanCodec
-from excelalchemy.codecs.date import Date, DateCodec
-from excelalchemy.codecs.date_range import DateRange, DateRangeCodec
-from excelalchemy.codecs.email import Email, EmailCodec
-from excelalchemy.codecs.money import Money, MoneyCodec
-from excelalchemy.codecs.multi_checkbox import MultiCheckbox, MultiChoiceCodec
-from excelalchemy.codecs.number import Number, NumberCodec
-from excelalchemy.codecs.number_range import NumberRange, NumberRangeCodec
-from excelalchemy.codecs.organization import (
-    MultiOrganization,
-    MultiOrganizationCodec,
-    SingleOrganization,
-    SingleOrganizationCodec,
-)
-from excelalchemy.codecs.phone_number import PhoneNumber, PhoneNumberCodec
-from excelalchemy.codecs.radio import Radio, SingleChoiceCodec
-from excelalchemy.codecs.staff import MultiStaff, MultiStaffCodec, SingleStaff, SingleStaffCodec
-from excelalchemy.codecs.string import String, StringCodec
-from excelalchemy.codecs.tree import (
-    MultiTreeNode,
-    MultiTreeNodeCodec,
-    SingleTreeNode,
-    SingleTreeNodeCodec,
-)
-from excelalchemy.codecs.url import Url, UrlCodec
-from excelalchemy.config import ExporterConfig, ImporterConfig, ImportMode
-from excelalchemy.core.alchemy import ExcelAlchemy
-from excelalchemy.core.storage_protocol import ExcelStorage
-from excelalchemy.exceptions import (
-    ConfigError,
-    ExcelCellError,
-    ExcelRowError,
-    ProgrammaticError,
-    WorksheetNotFoundError,
-)
-from excelalchemy.helper.pydantic import extract_pydantic_model
-from excelalchemy.metadata import ExcelMeta, FieldMeta, PatchFieldMeta
 from excelalchemy.results import (
     CellErrorMap,
     CellIssueRecord,
@@ -69,11 +61,11 @@ from excelalchemy.results import (
     ValidateResult,
     ValidateRowResult,
 )
+from excelalchemy.runtime.facade import ExcelAlchemy
+from excelalchemy.storage import ExcelStorage
 from excelalchemy.util.file import flatten
 
 __all__ = [
-    'Base64Str',
-    'Boolean',
     'BooleanCodec',
     'CellErrorMap',
     'CellIssueRecord',
@@ -83,24 +75,21 @@ __all__ = [
     'ConfigError',
     'DataRangeOption',
     'DataUrlStr',
-    'Date',
     'DateCodec',
     'DateFormat',
-    'DateRange',
     'DateRangeCodec',
-    'Email',
     'EmailCodec',
     'ExcelAlchemy',
-    'ExcelAlchemyDeprecationWarning',
     'ExcelArtifact',
     'ExcelCellError',
+    'ExcelColumn',
     'ExcelFieldCodec',
-    'ExcelMeta',
     'ExcelRowError',
     'ExcelStorage',
+    'ExportConfig',
     'ExporterConfig',
     'FieldIssueSummary',
-    'FieldMeta',
+    'ImportConfig',
     'ImportMode',
     'ImportPreflightResult',
     'ImportPreflightStatus',
@@ -108,43 +97,28 @@ __all__ = [
     'ImporterConfig',
     'Key',
     'Label',
-    'Money',
     'MoneyCodec',
-    'MultiCheckbox',
     'MultiChoiceCodec',
-    'MultiOrganization',
     'MultiOrganizationCodec',
-    'MultiStaff',
     'MultiStaffCodec',
-    'MultiTreeNode',
     'MultiTreeNodeCodec',
-    'Number',
     'NumberCodec',
-    'NumberRange',
     'NumberRangeCodec',
     'Option',
     'OptionId',
-    'PatchFieldMeta',
-    'PhoneNumber',
     'PhoneNumberCodec',
     'ProgrammaticError',
-    'Radio',
     'RowIndex',
     'RowIssueMap',
     'RowIssueRecord',
     'RowIssueSummary',
     'SingleChoiceCodec',
-    'SingleOrganization',
     'SingleOrganizationCodec',
-    'SingleStaff',
     'SingleStaffCodec',
-    'SingleTreeNode',
     'SingleTreeNodeCodec',
-    'String',
     'StringCodec',
     'UniqueKey',
     'UniqueLabel',
-    'Url',
     'UrlCodec',
     'UrlStr',
     'ValidateHeaderResult',

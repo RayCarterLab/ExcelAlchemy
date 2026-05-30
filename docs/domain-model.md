@@ -1,282 +1,99 @@
 # Domain Model
 
-This document names the core concepts used by `ExcelAlchemy` and shows how they relate to each other.
-It is based on the repository as it exists today.
+This document names the current ExcelAlchemy 3.0 concepts. Historical 2.x
+compatibility surfaces are not current domain concepts.
 
-For directory-level navigation, see [`docs/repo-map.md`](repo-map.md).
-For component ownership, see [`docs/platform-code-mapping.md`](platform-code-mapping.md).
-For the higher-level import platform model, see
-[`docs/platform-architecture.md`](platform-architecture.md)
-and
-[`docs/runtime-model.md`](runtime-model.md).
-
-## Related docs
-
-- [repo-map.md](repo-map.md) for where these concepts live in the repository.
-- [agent/invariants.md](agent/invariants.md) for the constraints that govern these concepts.
-- [../src/excelalchemy/README.md](../src/excelalchemy/README.md) for the package-level implementation view.
-- [../tests/README.md](../tests/README.md) for where the model is protected by tests.
-
-## 1. Core concepts and entities
-
-The repository now documents two complementary concept views:
-
-- platform concepts such as `Template Authoring`, `Preflight Gate`,
-  `Import Runtime`, `Result Intelligence`, and `Artifact / Delivery`
-- code and domain concepts such as `ImportSession`, `ExcelSchemaLayout`,
-  `ImportResult`, and `ExcelStorage`
-
-This page focuses on the second view and maps the concepts that actually appear
-in code and public API surfaces.
+## Core Concepts
 
 | Concept | Primary files | Responsibility | Visibility |
 | --- | --- | --- | --- |
-| `ExcelAlchemy` facade | `src/excelalchemy/__init__.py`, `src/excelalchemy/core/alchemy.py` | Main workflow entry point for template generation, import, export, and upload. | Public |
-| Schema/model contract | User Pydantic models referenced by `ImporterConfig` and `ExporterConfig` | Defines the workbook-facing data shape. Fields carry Excel-specific codec types and metadata. | Public concept |
-| `ImporterConfig` | `src/excelalchemy/config.py` | Configures import models, callbacks, import mode, locale, and storage. | Public |
-| `ExporterConfig` | `src/excelalchemy/config.py` | Configures export model, locale, storage, and export conversion behavior. | Public |
-| `ImportMode` | `src/excelalchemy/config.py` | Selects `CREATE`, `UPDATE`, or `CREATE_OR_UPDATE` import behavior. | Public |
-| `FieldMeta(...)` / `ExcelMeta(...)` | `src/excelalchemy/metadata.py` | Declare workbook labels, ordering, hints, options, required-ness, formatting hints, and import constraints. | Public |
-| `FieldMetaInfo` and layered metadata | `src/excelalchemy/metadata.py` | Hold resolved field metadata during execution. `FieldMetaInfo` is the compatibility facade over the layered metadata objects. | Internal runtime concept with compatibility role |
-| Field codec | `src/excelalchemy/codecs/base.py`, `src/excelalchemy/codecs/*.py` | Owns Excel-facing parsing, display formatting, normalization, and header-comment behavior for a field type. | Public extension surface |
-| Composite field codec | `src/excelalchemy/codecs/base.py`, `src/excelalchemy/codecs/date_range.py`, `src/excelalchemy/codecs/number_range.py`, `src/excelalchemy/codecs/organization.py`, `src/excelalchemy/codecs/staff.py`, `src/excelalchemy/codecs/tree.py` | Expands one logical field into multiple worksheet columns. | Public extension surface |
-| Schema layout | `src/excelalchemy/core/schema.py` | Flattens model fields into an Excel-facing ordered layout with unique labels and keys. | Internal |
-| Header model | `src/excelalchemy/_primitives/header_models.py` | Represents one parsed workbook header, including parent/child label relationships for merged headers. | Internal |
-| Header parser | `src/excelalchemy/core/headers.py` | Detects simple vs merged headers and turns header rows into normalized header objects. | Internal |
-| Header validator | `src/excelalchemy/core/headers.py` | Compares workbook headers to schema layout and produces `ValidateHeaderResult`. | Internal |
-| Worksheet table | `src/excelalchemy/core/table.py` | Lightweight internal 2D table abstraction used for workbook import/export flow instead of pandas. | Internal, but important to understand |
-| Import session | `src/excelalchemy/core/import_session.py` | Owns one import run’s lifecycle, state, counts, header table, worksheet table, and result rendering decisions. | Internal |
-| Import session snapshot | `src/excelalchemy/core/import_session.py` | Immutable summary of the current import session phase and counts. | Internal |
-| Import lifecycle event callback | `src/excelalchemy/core/alchemy.py`, `src/excelalchemy/core/import_session.py` | Optional per-run callback passed to `ExcelAlchemy.import_data(...)` for synchronous lifecycle events. | Public concept |
-| Row aggregator | `src/excelalchemy/core/rows.py` | Reconstructs flattened worksheet rows back into model-shaped payloads. | Internal |
-| Import issue tracker | `src/excelalchemy/core/rows.py` | Maps cell and row issues back into workbook coordinates and result columns. | Internal |
-| Import executor | `src/excelalchemy/core/executor.py` | Validates row payloads and dispatches configured create/update/upsert callbacks. | Internal |
-| Pydantic adapter | `src/excelalchemy/helper/pydantic.py` | Extracts metadata from Pydantic models and converts Pydantic validation output into ExcelAlchemy row/cell issues. | Internal boundary |
-| Renderer | `src/excelalchemy/core/rendering.py` | Converts worksheet tables and metadata into workbook outputs for templates, exports, and import results. | Internal |
-| Writer | `src/excelalchemy/core/writer.py` | Applies workbook-level formatting, comments, colors, and result columns. | Internal |
-| `ExcelStorage` | `src/excelalchemy/core/storage_protocol.py` | Defines the storage protocol for reading workbook tables and uploading rendered workbooks. | Public extension surface |
-| Storage gateway resolution | `src/excelalchemy/core/storage.py` | Chooses the storage implementation for a config, including missing-storage fallback. | Internal |
-| `MinioStorageGateway` | `src/excelalchemy/core/storage_minio.py` | Built-in `ExcelStorage` implementation for Minio-compatible object storage. | Concrete implementation |
-| `ExcelArtifact` | `src/excelalchemy/artifacts.py` | Wraps a rendered workbook as bytes, base64, or data URL. | Public |
-| `ValidateHeaderResult` | `src/excelalchemy/results.py` | Represents header-only validation outcome. | Public result type |
-| `ImportResult` | `src/excelalchemy/results.py` | Represents the top-level outcome of an import run. | Public result type |
-| `CellErrorMap` | `src/excelalchemy/results.py` | Structured cell-level issue map with workbook coordinates and API helpers. | Public result type |
-| `RowIssueMap` | `src/excelalchemy/results.py` | Structured row-level issue map with summaries and API helpers. | Public result type |
+| `ExcelAlchemy` facade | `src/excelalchemy/runtime/facade.py` | Coordinates template generation, preflight, import, export, rendering, and storage. | Public |
+| Pydantic schema model | user code | Defines the Python data contract with ordinary type annotations. | Public |
+| `ExcelColumn(...)` | `src/excelalchemy/columns.py` | Attaches workbook labels, ordering, hints, options, requiredness override, and explicit codec configuration through `Annotated`. | Public |
+| Codec helpers | `src/excelalchemy/codecs/*.py` | Build immutable codec configuration objects such as `DateCodec.day()` and `EmailCodec()`. | Public |
+| `FieldMetaInfo` | `src/excelalchemy/metadata.py` | Resolved runtime metadata produced from `ExcelColumn(...)`; not a declaration API. | Internal runtime concept |
+| `ImporterConfig` / `ExporterConfig` | `src/excelalchemy/config.py` | Configure models, callbacks, locale, conversion, import mode, and explicit storage. | Public |
+| `ExcelStorage` | `src/excelalchemy/storage.py` | Protocol for reading workbook tables and uploading rendered workbook bytes. | Public extension surface |
+| `ExcelSchemaLayout` | `src/excelalchemy/schema/layout.py` | Flattens model fields into ordered workbook columns and expands composite codecs. | Internal |
+| Header parser and validator | `src/excelalchemy/workbook/headers.py` | Parse simple and merged headers and compare uploads with schema layout. | Internal |
+| Row aggregator | `src/excelalchemy/runtime/rows.py` | Reconstructs flattened worksheet rows into model-shaped payloads and maps issues to coordinates. | Internal |
+| Import executor | `src/excelalchemy/runtime/executor.py` | Validates row payloads and dispatches create, update, or create-or-update callbacks. | Internal |
+| Import session | `src/excelalchemy/runtime/import_session.py` | Owns one import run, lifecycle events, counts, tables, and result rendering decisions. | Internal |
+| Renderer and writer | `src/excelalchemy/rendering/` | Produce templates, exports, result workbooks, comments, colors, and result columns. | Internal |
+| Result objects | `src/excelalchemy/results.py` | Expose import outcomes, issue maps, preflight results, lifecycle events, and API payload helpers. | Public |
 
-## 2. Responsibilities
+## Declaration Model
 
-### Declaration responsibilities
+3.0 declarations use ordinary Python types:
 
-- Pydantic models define the logical data contract for import and export.
-- `FieldMeta(...)` and `ExcelMeta(...)` define the workbook-facing contract:
-  - label
-  - order
-  - comments and hints
-  - options
-  - formatting hints
-  - import-side constraints
-- Field codecs define how a field behaves in a workbook:
-  - how it is described in header comments
-  - how workbook input is parsed
-  - how values are normalized for validation
-  - how values are rendered back for display
+```python
+from typing import Annotated
 
-### Execution responsibilities
+from pydantic import BaseModel, Field
 
-- `ExcelAlchemy` turns a config and schema into a usable workflow object.
-- `ExcelAlchemy.import_data(..., on_event=...)` can report lifecycle progress
-  to a job or service layer while keeping the import itself synchronous.
-  Platform docs describe this stage as `Import Runtime`; the concrete repeated
-  event emitted during row execution is still `row_processed`.
-- `ExcelSchemaLayout` turns schema declarations into a flattened Excel layout.
-- `ExcelHeaderParser` and `ExcelHeaderValidator` decide whether an uploaded workbook matches that layout.
-- `RowAggregator` reconstructs model-shaped data from worksheet rows.
-- `ImportExecutor` validates and dispatches row payloads through configured callbacks.
-- `ImportIssueTracker` preserves workbook-coordinate visibility for failures.
+from excelalchemy import DateCodec, EmailCodec, ExcelColumn, NumberCodec
 
-### Output responsibilities
 
-- `ExcelRenderer` and `writer.py` produce:
-  - templates
-  - exports
-  - import result workbooks
-- `ImportResult`, `CellErrorMap`, and `RowIssueMap` expose structured programmatic results.
-- `ExcelArtifact` exposes workbook output in transport-friendly forms.
+class EmployeeImport(BaseModel):
+    name: Annotated[str, ExcelColumn(label='Name', order=1)]
+    email: Annotated[str, ExcelColumn(label='Email', codec=EmailCodec(), order=2)]
+    joined_at: Annotated[int | None, ExcelColumn(label='Joined At', codec=DateCodec.day(), order=3)]
+    salary: Annotated[
+        float | None,
+        Field(ge=0),
+        ExcelColumn(label='Salary', codec=NumberCodec(fraction_digits=2), order=4),
+    ]
+```
 
-### Integration responsibilities
+Rules:
 
-- `ExcelStorage` is the boundary for reading and uploading workbooks.
-- `MinioStorageGateway` is the built-in concrete backend.
-- `helper/pydantic.py` is the boundary between Pydantic and ExcelAlchemy-specific metadata/error handling.
+- Python annotations define the data shape.
+- `ExcelColumn(...)` defines workbook-facing metadata.
+- Pydantic `Field(...)` defines Pydantic validation metadata.
+- `ExcelColumn(codec=...)` selects non-default workbook parsing, formatting,
+  and comment behavior.
 
-## 3. Relationships between concepts
+## Execution Flow
 
-- `ImporterConfig` or `ExporterConfig` is passed into `ExcelAlchemy`.
-- The config points to one or more schema models.
-- Schema model fields are declared with Excel-specific codec types and metadata.
-- `helper/pydantic.py` extracts those declarations into runtime field metadata.
-- `ExcelSchemaLayout` organizes that metadata into an ordered Excel-facing layout.
-- The layout drives:
-  - template generation
-  - header validation
-  - row aggregation
-  - error ordering
-  - export column selection
-- `ExcelStorage` provides workbook input as `WorksheetTable` and accepts rendered workbook output for upload.
-- During import:
-  - `ImportSession` coordinates the lifecycle
-  - an optional `on_event` callback can observe lifecycle milestones inline
-  - `ExcelHeaderParser` parses header rows
-  - `ExcelHeaderValidator` validates them against `ExcelSchemaLayout`
-  - `RowAggregator` reconstructs row payloads
-  - `ImportExecutor` validates and dispatches rows
-  - `ImportIssueTracker` accumulates row and cell issues
-  - `ExcelRenderer` writes a result workbook when needed
-- `ImportIssueTracker` feeds the public `CellErrorMap` and `RowIssueMap`.
-- `ImportResult` summarizes the overall import status and any result workbook URL.
-- For template and export paths, `ExcelRenderer` produces workbook output that can be returned directly as a data URL, wrapped as `ExcelArtifact`, or uploaded through storage.
+1. `ImporterConfig` or `ExporterConfig` points `ExcelAlchemy` to one or more
+   Pydantic models.
+2. The Pydantic adapter resolves `Annotated[..., ExcelColumn(...)]` fields into
+   `FieldMetaInfo` runtime metadata.
+3. `ExcelSchemaLayout` orders fields and expands composite codecs into workbook
+   columns.
+4. Template/export paths render workbook output through `ExcelRenderer` and
+   `ExcelWriter`.
+5. Import paths parse headers, aggregate rows, validate model payloads, execute
+   callbacks, collect issue maps, and render result workbooks when needed.
+6. `ExcelStorage` is used only when an explicit storage backend is configured.
 
-## 4. Public-facing vs internal concepts
-
-### Public-facing concepts
+## Public Concepts
 
 - `ExcelAlchemy`
-- `ImporterConfig`
-- `ExporterConfig`
-- `ImportMode`
-- schema models declared with Pydantic
-- `FieldMeta(...)`
-- `ExcelMeta(...)`
-- built-in codecs under `src/excelalchemy/codecs/`
-- codec extension base classes:
-  - `ExcelFieldCodec`
-  - `CompositeExcelFieldCodec`
+- `ImporterConfig`, `ExporterConfig`, `ImportMode`
+- `ExcelColumn(...)`
+- codec helpers and `ExcelFieldCodec` / `CompositeExcelFieldCodec`
 - `ExcelStorage`
 - `ExcelArtifact`
-- `ValidateHeaderResult`
-- `ImportResult`
-- `CellErrorMap`
-- `RowIssueMap`
-- `ExcelAlchemy.import_data(..., on_event=...)`
+- `ImportResult`, `ImportPreflightResult`, `ValidateHeaderResult`
+- `CellErrorMap`, `RowIssueMap`
+- lifecycle event models emitted by `ExcelAlchemy.import_data(..., on_event=...)`
 
-### Internal concepts
+## Removed 2.x Concepts
 
-- `ExcelSchemaLayout`
-- `ExcelHeader`
-- `ExcelHeaderParser`
-- `ExcelHeaderValidator`
-- `WorksheetTable`
-- `WorksheetRow`
-- `ImportSession`
-- `ImportSessionSnapshot`
-- `ImportSessionPhase`
-- `RowAggregator`
-- `ImportIssueTracker`
-- `ImportExecutor`
-- `ExcelRenderer`
-- `writer.py`
-- storage gateway resolution in `src/excelalchemy/core/storage.py`
-- Pydantic adaptation in `src/excelalchemy/helper/pydantic.py`
-- primitives under `src/excelalchemy/_primitives/`
+Do not restore these as current domain concepts:
 
-### Bridge or compatibility concepts
-
-- `FieldMetaInfo`
-  - Important runtime object in the implementation.
-  - Not the main declaration entry point for new code.
-- Compatibility modules kept for the 2.x line:
-  - `src/excelalchemy/types/`
-  - `src/excelalchemy/exc.py`
-  - `src/excelalchemy/identity.py`
-  - `src/excelalchemy/header_models.py`
-  - `src/excelalchemy/util/convertor.py`
-
-## 5. Important lifecycle and flow concepts
-
-### Import flow
-
-The import flow is the richest lifecycle in the repository.
-
-- Start point:
-  - `ExcelAlchemy.import_data(...)`
-  - implemented in `src/excelalchemy/core/alchemy.py`
-- Optional public progress hook:
-  - `ExcelAlchemy.import_data(..., on_event=...)`
-  - emits simple event dictionaries during the same synchronous import run
-- Runtime owner:
-  - `ImportSession`
-  - `src/excelalchemy/core/import_session.py`
-- Main lifecycle phases:
-  - `INITIALIZED`
-  - `WORKBOOK_LOADED`
-  - `HEADERS_VALIDATED`
-  - `ROWS_PREPARED`
-  - `ROWS_EXECUTED`
-  - `RESULT_RENDERED`
-  - `COMPLETED`
-- Decision points:
-  - header valid or not via `ValidateHeaderResult`
-  - row valid or not through `ImportExecutor`
-  - overall result via `ValidateResult`:
-    - `HEADER_INVALID`
-    - `DATA_INVALID`
-    - `SUCCESS`
-- Event vocabulary:
-  - `started`
-  - `header_validated`
-  - `row_processed`
-  - `completed`
-  - `failed`
-- Workbook-facing row result concept:
-  - `ValidateRowResult`
-  - values:
-    - `SUCCESS`
-    - `FAIL`
-
-### Template generation flow
-
-- Start points:
-  - `ExcelAlchemy.download_template(...)`
-  - `ExcelAlchemy.download_template_artifact(...)`
-- Core idea:
-  - schema contract -> field metadata -> schema layout -> worksheet table -> renderer -> workbook output
-- Main components:
-  - `src/excelalchemy/core/alchemy.py`
-  - `src/excelalchemy/core/schema.py`
-  - `src/excelalchemy/core/rendering.py`
-  - `src/excelalchemy/core/writer.py`
-
-### Export flow
-
-- Start points:
-  - `ExcelAlchemy.export(...)`
-  - `ExcelAlchemy.export_artifact(...)`
-  - `ExcelAlchemy.export_upload(...)`
-- Core idea:
-  - export model + export rows -> selected output keys -> worksheet table -> renderer -> artifact or uploaded workbook
-- Main components:
-  - `src/excelalchemy/core/alchemy.py`
-  - `src/excelalchemy/core/schema.py`
-  - `src/excelalchemy/core/rendering.py`
-  - `src/excelalchemy/core/writer.py`
-  - `src/excelalchemy/core/storage_protocol.py`
-  - `src/excelalchemy/core/storage.py`
-
-### Storage integration flow
-
-- Start point:
-  - `storage=...` on `ImporterConfig` or `ExporterConfig`
-- Core idea:
-  - input workbooks are read as `WorksheetTable`
-  - rendered workbooks are uploaded and returned as URLs
-  - custom storage readers currently use `src/excelalchemy/core/table.py` for that table shape
-- Main components:
-  - `src/excelalchemy/core/storage_protocol.py`
-  - `src/excelalchemy/core/storage.py`
-  - `src/excelalchemy/core/storage_minio.py`
-  - `src/excelalchemy/core/table.py`
-  - `examples/custom_storage.py`
-
-## Mental model in one sentence
-
-- `ExcelAlchemy` treats an Excel workbook as a typed contract derived from Pydantic models, then routes that contract through layout, parsing, validation, execution, rendering, and storage boundaries.
+- `FieldMeta(...)`
+- `ExcelMeta(...)`
+- `excelalchemy.types.*`
+- `excelalchemy.exc`
+- `excelalchemy.identity`
+- `excelalchemy.header_models`
+- `excelalchemy.const`
+- `excelalchemy.util.convertor`
+- `excelalchemy.core.*`
+- `excelalchemy.helper.*`
+- `excelalchemy.i18n.*`
+- `excelalchemy._primitives.*`
+- facade aliases `df`, `header_df`, `cell_errors`, `row_errors`
+- legacy config fields `minio`, `bucket_name`, `url_expires`

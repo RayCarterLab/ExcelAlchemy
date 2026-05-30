@@ -44,9 +44,11 @@ class ContextBundle:
             'instructions': {
                 'root_agents_loaded': bool(self.instructions.get('root_agents')),
                 'context_agents_loaded': bool(self.instructions.get('context_agents')),
+                'v3_prd_loaded': bool(self.instructions.get('v3_prd')),
             },
             'invariants': {
                 'agent_operating_invariants': _invariant_summaries(self.invariants.get('agent_operating_invariants')),
+                'version_scoped_invariants': _invariant_summaries(self.invariants.get('version_scoped_invariants')),
                 'architecture_invariants': _invariant_summaries(self.invariants.get('architecture_invariants')),
                 'domain_invariants': _invariant_summaries(self.invariants.get('domain_invariants')),
                 'result_and_payload_invariants': _invariant_summaries(
@@ -77,6 +79,7 @@ class ContextLoader:
             instructions={
                 'root_agents': self._read_text(self.repo_root / 'AGENTS.md'),
                 'context_agents': self._read_text(context_dir / 'instructions' / 'AGENTS.md'),
+                'v3_prd': self._read_text(self.repo_root / 'docs' / 'agent' / 'v3-prd.md'),
                 'invariants': invariants,
             },
             architecture={
@@ -203,6 +206,7 @@ def _context_source_specs() -> tuple[tuple[str, str, str], ...]:
     return (
         ('instructions.root_agents', 'AGENTS.md', 'instructions'),
         ('instructions.context_agents', 'context/instructions/AGENTS.md', 'instructions'),
+        ('instructions.v3_prd', 'docs/agent/v3-prd.md', 'instructions'),
         ('instructions.invariants', 'context/instructions/invariants.json', 'instructions'),
         ('architecture.repo_map', 'context/architecture/repo_map.json', 'architecture'),
         ('architecture.module_index', 'context/architecture/module_index.json', 'architecture'),
@@ -221,6 +225,11 @@ def _context_sections(step: str, bundle: ContextBundle) -> list[dict[str, object
             'id': 'instructions.context_agents',
             'category': 'instructions',
             'content': str(bundle.instructions.get('context_agents', '')),
+        },
+        {
+            'id': 'instructions.v3_prd',
+            'category': 'instructions',
+            'content': str(bundle.instructions.get('v3_prd', '')),
         },
         {
             'id': 'instructions.invariants',

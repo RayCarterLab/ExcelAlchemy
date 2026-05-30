@@ -1,15 +1,16 @@
+from typing import Annotated
 from unittest import IsolatedAsyncioTestCase
 
 from pydantic import BaseModel
 
-from excelalchemy import ExcelAlchemy, FieldMeta, ImporterConfig, String, extract_pydantic_model
+from excelalchemy import ExcelAlchemy, ExcelColumn, ImporterConfig, extract_pydantic_model
 from excelalchemy.util.converter import export_data_converter, import_data_converter
 
 
 class TestConvertersAndSchemaExtraction(IsolatedAsyncioTestCase):
     class Importer(BaseModel):
-        name: String = FieldMeta(label='名称', order=1)
-        address: String | None = FieldMeta(label='地址', order=3)
+        name: Annotated[str, ExcelColumn(label='名称', order=1)]
+        address: Annotated[str | None, ExcelColumn(label='地址', order=3)]
 
     def test_download_template_returns_excel_payload(self):
         alchemy = ExcelAlchemy(ImporterConfig(self.Importer))

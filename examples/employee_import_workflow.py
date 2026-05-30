@@ -3,29 +3,37 @@
 import asyncio
 import io
 from base64 import b64decode
+from typing import Annotated
 
 from openpyxl import load_workbook
 from pydantic import BaseModel
 
 from excelalchemy import (
-    Email,
+    EmailCodec,
     ExcelAlchemy,
+    ExcelColumn,
     ExcelStorage,
-    FieldMeta,
     ImporterConfig,
     ImportPreflightResult,
     ImportResult,
-    Number,
-    String,
     UrlStr,
 )
-from excelalchemy.core.table import WorksheetTable
+from excelalchemy.results import (
+    ImportCompletedEvent,
+    ImportFailedEvent,
+    ImportLifecycleEvent,
+    ImportLifecycleEventName,
+    ImportRowProcessedEvent,
+)
+from excelalchemy.workbook.table import WorksheetTable
 
 
 class EmployeeImporter(BaseModel):
-    full_name: String = FieldMeta(label='Full name', order=1, hint='Use the legal name')
-    age: Number = FieldMeta(label='Age', order=2)
-    work_email: Email = FieldMeta(label='Work email', order=3, hint='Use the company mailbox')
+    full_name: Annotated[str, ExcelColumn(label='Full name', order=1, hint='Use the legal name')]
+    age: Annotated[float, ExcelColumn(label='Age', order=2)]
+    work_email: Annotated[
+        str, ExcelColumn(codec=EmailCodec(), label='Work email', order=3, hint='Use the company mailbox')
+    ]
 
 
 class InMemoryImportStorage(ExcelStorage):
@@ -99,7 +107,7 @@ async def run_workflow() -> tuple[
             'total_rows': 0,
         },
     }
-    events: list[dict[str, object]] = []
+    events: list[ImportLifecycleEvent] = []
 
     alchemy = ExcelAlchemy(
         ImporterConfig.for_create(
@@ -116,24 +124,27 @@ async def run_workflow() -> tuple[
     preflight = alchemy.preflight_import('employee-import.xlsx')
     assert preflight.is_valid
 
-    def handle_import_event(event: dict[str, object]) -> None:
+    def handle_import_event(event: ImportLifecycleEvent) -> None:
         events.append(event)
         job_progress = context['job_progress']
         assert isinstance(job_progress, dict)
 
-        match event['event']:
-            case 'started':
+        match event.event:
+            case ImportLifecycleEventName.STARTED:
                 job_progress['status'] = 'running'
-            case 'row_processed':
-                job_progress['processed_rows'] = event['processed_row_count']
-                job_progress['total_rows'] = event['total_row_count']
-            case 'completed':
+            case ImportLifecycleEventName.ROW_PROCESSED:
+                assert isinstance(event, ImportRowProcessedEvent)
+                job_progress['processed_rows'] = event.processed_row_count
+                job_progress['total_rows'] = event.total_row_count
+            case ImportLifecycleEventName.COMPLETED:
+                assert isinstance(event, ImportCompletedEvent)
                 job_progress['status'] = 'completed'
-                job_progress['result'] = event['result']
-                job_progress['result_workbook_url'] = event['url']
-            case 'failed':
+                job_progress['result'] = event.result.value
+                job_progress['result_workbook_url'] = event.url
+            case ImportLifecycleEventName.FAILED:
+                assert isinstance(event, ImportFailedEvent)
                 job_progress['status'] = 'failed'
-                job_progress['error'] = event['error_message']
+                job_progress['error'] = event.error_message
 
     result = await alchemy.import_data(
         'employee-import.xlsx',
@@ -158,7 +169,7 @@ def main() -> None:
     print(f'Result workbook URL: {result.url}')
     print(f'Created rows: {len(created_rows)}')
     print(f'Uploaded artifacts: {sorted(storage.uploaded)}')
-    print(f'Observed events: {[event["event"] for event in events]}')
+    print(f'Observed events: {[event.event.value for event in events]}')
     print(f'Job progress: {job_progress}')
 
 

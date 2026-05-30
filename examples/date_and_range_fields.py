@@ -1,46 +1,54 @@
 """Example schema that focuses on date, range, and money workbook fields."""
 
+from typing import Annotated
+
 from pydantic import BaseModel
 
 from excelalchemy import (
     DataRangeOption,
-    Date,
+    DateCodec,
     DateFormat,
-    DateRange,
+    DateRangeCodec,
     ExcelAlchemy,
-    FieldMeta,
+    ExcelColumn,
     ImporterConfig,
-    Money,
-    NumberRange,
+    MoneyCodec,
+    NumberRangeCodec,
 )
 
 
 class CompensationImporter(BaseModel):
-    start_date: Date = FieldMeta(
-        label='Start date',
-        order=1,
-        date_format=DateFormat.DAY,
-        hint='Expected format: yyyy/mm/dd',
-    )
-    probation_window: DateRange = FieldMeta(
-        label='Probation window',
-        order=2,
-        date_format=DateFormat.DAY,
-        date_range_option=DataRangeOption.NONE,
-        hint='Enter the probation start and end dates',
-    )
-    salary_band: NumberRange = FieldMeta(
-        label='Salary band',
-        order=3,
-        fraction_digits=2,
-        unit='USD',
-    )
-    signing_bonus: Money = FieldMeta(
-        label='Signing bonus',
-        order=4,
-        unit='USD',
-        hint='Use plain numbers without separators',
-    )
+    start_date: Annotated[
+        int,
+        ExcelColumn(
+            codec=DateCodec.day(),
+            label='Start date',
+            order=1,
+            date_format=DateFormat.DAY,
+            hint='Expected format: yyyy/mm/dd',
+        ),
+    ]
+    probation_window: Annotated[
+        dict[str, object],
+        ExcelColumn(
+            codec=DateRangeCodec.day(),
+            label='Probation window',
+            order=2,
+            date_format=DateFormat.DAY,
+            date_range_option=DataRangeOption.NONE,
+            hint='Enter the probation start and end dates',
+        ),
+    ]
+    salary_band: Annotated[
+        dict[str, object],
+        ExcelColumn(codec=NumberRangeCodec(), label='Salary band', order=3, fraction_digits=2, unit='USD'),
+    ]
+    signing_bonus: Annotated[
+        float,
+        ExcelColumn(
+            codec=MoneyCodec(), label='Signing bonus', order=4, unit='USD', hint='Use plain numbers without separators'
+        ),
+    ]
 
 
 def main() -> None:

@@ -1,7 +1,17 @@
 # Architecture Boundaries
 
-This file defines the public, internal, and compatibility boundaries agents must
-respect in `ExcelAlchemy`.
+This file defines the public and implementation boundaries agents must respect
+in `ExcelAlchemy`.
+
+## Version Scope
+
+For tasks explicitly scoped to ExcelAlchemy 3.0, follow
+[`docs/agent/v3-prd.md`](v3-prd.md). In that scope, compatibility imports,
+deprecated paths, warning behavior, and legacy configuration fields are not
+protected unless a 3.0 task reintroduces them as current API.
+
+The 3.0 module layout must use concrete responsibility names. Do not introduce
+generic package names such as `_internal`.
 
 ## Public Surface
 
@@ -9,10 +19,15 @@ Prefer these stable public modules in new code and docs:
 
 - `excelalchemy`
 - `excelalchemy.config`
+- `excelalchemy.columns`
 - `excelalchemy.metadata`
 - `excelalchemy.results`
+- `excelalchemy.errors`
 - `excelalchemy.exceptions`
+- `excelalchemy.storage`
 - `excelalchemy.codecs`
+- `excelalchemy.policies`
+- `excelalchemy.messages`
 
 Primary public entry points:
 
@@ -20,78 +35,92 @@ Primary public entry points:
 - `excelalchemy.ImporterConfig`
 - `excelalchemy.ExporterConfig`
 - `excelalchemy.ImportMode`
-- `excelalchemy.FieldMeta(...)`
-- `excelalchemy.ExcelMeta(...)`
+- `excelalchemy.ExcelColumn(...)`
+- codec helpers such as `excelalchemy.DateCodec`, `excelalchemy.EmailCodec`,
+  `excelalchemy.NumberCodec`, and `excelalchemy.StringCodec`
 - `excelalchemy.ImportResult`
 - `excelalchemy.CellErrorMap`
 - `excelalchemy.RowIssueMap`
 - `excelalchemy.ExcelStorage`
 
-## Internal Surface
+## Implementation Surface
 
-Treat these as internal implementation details unless the task explicitly
-targets internals:
+Prefer concrete responsibility modules when editing implementation code:
 
+- `excelalchemy.adapters.*`
+- `excelalchemy.schema.*`
+- `excelalchemy.workbook.*`
+- `excelalchemy.runtime.*`
+- `excelalchemy.rendering.*`
+- `excelalchemy.primitives.*`
+
+The old `excelalchemy.core.*`, `excelalchemy.helper.*`,
+`excelalchemy.i18n.*`, and `excelalchemy._primitives.*` packages are removed.
+Do not recreate them as compatibility bridges.
+
+## Removed Compatibility Surface
+
+These 2.x compatibility imports are removed in 3.0 and must not be restored as
+shims:
+
+- `excelalchemy.exc`
+- `excelalchemy.identity`
+- `excelalchemy.header_models`
+- `excelalchemy.const`
+- `excelalchemy.types.*`
+- `excelalchemy.util.convertor`
 - `excelalchemy.core.*`
 - `excelalchemy.helper.*`
 - `excelalchemy.i18n.*`
 - `excelalchemy._primitives.*`
 
-Do not present internal modules as stable application-facing API in docs or
-examples.
-
-## Compatibility Surface
-
-Treat these as 2.x compatibility-only imports:
-
-- `excelalchemy.exc`
-- `excelalchemy.identity`
-- `excelalchemy.header_models`
-- `excelalchemy.types.*`
-- `excelalchemy.util.convertor`
-
-Backward compatibility is active in the 2.x line. Do not remove compatibility
-imports, deprecated paths, aliases, or warning behavior casually.
+The facade aliases `df`, `header_df`, `cell_errors`, and `row_errors` are also
+removed. Config fields `minio`, `bucket_name`, and `url_expires` are not valid
+3.0 config fields; construct an `ExcelStorage` implementation and pass it as
+`storage=...`.
 
 ## Naming Preferences
 
-Use current 2.x terminology in new code and docs:
+Use current 3.0 terminology in new code and docs:
 
-- `storage=...` over `minio=...`, `bucket_name=...`, `url_expires=...`
+- `storage=...` with an explicit `ExcelStorage` implementation
 - `worksheet_table` over `df`
 - `header_table` over `header_df`
 - `cell_error_map` over `cell_errors`
 - `row_error_map` over `row_errors`
+- `excel_codec` over `value_type`
+- `Annotated[T, ExcelColumn(...)]` over wrapper field factories
+- codec methods `build_comment`, `parse_input`, `format_display_value`,
+  `normalize_import_value`, and `column_items`
 
 ## Component Ownership
 
 Use these ownership boundaries when deciding where a change belongs:
 
-- Facade: `src/excelalchemy/core/alchemy.py` owns the user-facing workflow and
+- Facade: `src/excelalchemy/runtime/facade.py` owns the user-facing workflow and
   coordinates template generation, import, export, and upload.
-- Schema: `src/excelalchemy/core/schema.py` extracts Excel-facing layout from
+- Schema: `src/excelalchemy/schema/layout.py` extracts Excel-facing layout from
   Pydantic models, expands composite fields, and validates ordering.
-- Headers: `src/excelalchemy/core/headers.py` parses simple and merged headers
+- Headers: `src/excelalchemy/workbook/headers.py` parses simple and merged headers
   and validates workbook header rows against schema layout.
-- Rows: `src/excelalchemy/core/rows.py` aggregates flattened worksheet rows
+- Rows: `src/excelalchemy/runtime/rows.py` aggregates flattened worksheet rows
   back into model-shaped payloads and maps row/cell issues to workbook
   coordinates.
-- Executor: `src/excelalchemy/core/executor.py` validates row payloads and
+- Executor: `src/excelalchemy/runtime/executor.py` validates row payloads and
   dispatches create, update, and create-or-update callbacks.
-- Import session: `src/excelalchemy/core/import_session.py` owns one import
+- Import session: `src/excelalchemy/runtime/import_session.py` owns one import
   run's lifecycle, mutable runtime state, and structured lifecycle events.
-- Rendering and writer: `src/excelalchemy/core/rendering.py` and
-  `src/excelalchemy/core/writer.py` turn worksheet tables into workbook
+- Rendering and writer: `src/excelalchemy/rendering/renderer.py` and
+  `src/excelalchemy/rendering/writer.py` turn worksheet tables into workbook
   payloads, comments, colors, result columns, and hint text.
-- Storage: `src/excelalchemy/core/storage_protocol.py`,
-  `src/excelalchemy/core/storage.py`, and
-  `src/excelalchemy/core/storage_minio.py` define and resolve storage behavior.
-- Metadata: `src/excelalchemy/metadata.py` owns `FieldMeta(...)`,
-  `ExcelMeta(...)`, compatibility metadata facades, and Excel-facing field
-  presentation state.
-- Pydantic integration: `src/excelalchemy/helper/pydantic.py` shields the rest
+- Storage: `src/excelalchemy/storage.py`, `src/excelalchemy/storage_gateway.py`,
+  and `src/excelalchemy/storage_minio.py` define and resolve storage behavior.
+- Columns: `src/excelalchemy/columns.py` owns `ExcelColumn(...)` declarations.
+- Metadata: `src/excelalchemy/metadata.py` owns resolved Excel-facing field
+  presentation and runtime state.
+- Pydantic integration: `src/excelalchemy/adapters/pydantic.py` shields the rest
   of the codebase from Pydantic-version details.
-- Internationalization: `src/excelalchemy/i18n/messages.py` separates runtime
+- Messages: `src/excelalchemy/messages.py` separates runtime
   messages from workbook display text.
 
 ## Extension Points
@@ -99,8 +128,9 @@ Use these ownership boundaries when deciding where a change belongs:
 - Custom storage: implement `ExcelStorage` for non-Minio backends.
 - Custom field codecs: implement `ExcelFieldCodec` or
   `CompositeExcelFieldCodec` for custom workbook semantics.
-- Field declaration styles: both `FieldMeta(...)` and
-  `Annotated[T, Field(...), ExcelMeta(...)]` are supported.
+- Field declaration style: use ordinary Python types with
+  `Annotated[T, ExcelColumn(...)]`. Put workbook-specific parsing behavior in
+  `ExcelColumn(codec=...)`, not in the Python type annotation.
 - Data conversion: use `data_converter` when workbook schema and backend
   payload shape differ.
 - Locale: use `locale='zh-CN' | 'en'` for workbook-facing display text.
@@ -123,21 +153,18 @@ Before changing these files, inspect related tests and docs:
 - `src/excelalchemy/metadata.py`
 - `src/excelalchemy/results.py`
 - `src/excelalchemy/exceptions.py`
-- `src/excelalchemy/core/alchemy.py`
-- `src/excelalchemy/core/import_session.py`
-- `src/excelalchemy/core/schema.py`
-- `src/excelalchemy/core/headers.py`
-- `src/excelalchemy/core/rows.py`
-- `src/excelalchemy/core/executor.py`
-- `src/excelalchemy/core/storage.py`
-- `src/excelalchemy/core/storage_protocol.py`
-- `src/excelalchemy/core/storage_minio.py`
-- `src/excelalchemy/i18n/messages.py`
-- `src/excelalchemy/types/`
-- `src/excelalchemy/exc.py`
-- `src/excelalchemy/identity.py`
-- `src/excelalchemy/header_models.py`
-- `src/excelalchemy/util/convertor.py`
+- `src/excelalchemy/runtime/facade.py`
+- `src/excelalchemy/runtime/import_session.py`
+- `src/excelalchemy/schema/layout.py`
+- `src/excelalchemy/workbook/headers.py`
+- `src/excelalchemy/runtime/rows.py`
+- `src/excelalchemy/runtime/executor.py`
+- `src/excelalchemy/rendering/renderer.py`
+- `src/excelalchemy/rendering/writer.py`
+- `src/excelalchemy/storage.py`
+- `src/excelalchemy/storage_gateway.py`
+- `src/excelalchemy/storage_minio.py`
+- `src/excelalchemy/messages.py`
 
 ## Documentation Updates
 

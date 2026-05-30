@@ -25,9 +25,9 @@ REQUIRED_DOC_CHECKS: dict[Path, tuple[str, ...]] = {
         'alice@company.com',
     ),
     DOCS_DIR / 'public-api.md': (
-        'FieldMeta(...)',
-        'ExcelMeta(...)',
-        'example_value=',
+        'ExcelColumn(...)',
+        'codec=',
+        'Removed 2.x Surface',
     ),
     DOCS_DIR / 'result-objects.md': (
         'ImportResult',

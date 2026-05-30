@@ -9,7 +9,7 @@ If you want the platform-layer architecture of the import workflow, see
 [`docs/runtime-model.md`](runtime-model.md),
 and
 [`docs/integration-blueprints.md`](integration-blueprints.md).
-If you want the full public surface and compatibility boundaries, see
+If you want the full public surface and removed 2.x boundaries, see
 [`docs/public-api.md`](public-api.md).
 If you want to understand the result objects and how to surface them through an
 API, see
@@ -42,42 +42,35 @@ pip install "ExcelAlchemy[minio]"
 Prefer the stable public entry points:
 
 ```python
-from excelalchemy import ExcelAlchemy, FieldMeta, ImporterConfig, Number, String
+from excelalchemy import ExcelAlchemy, ExcelColumn, ImporterConfig, NumberCodec
 from excelalchemy.config import ExporterConfig, ImportMode
 from excelalchemy.exceptions import ConfigError, ExcelCellError, ExcelRowError
 ```
 
-Avoid importing from internal modules such as `excelalchemy.core.*`,
-`excelalchemy.helper.*`, or `excelalchemy._primitives.*` in application code.
+Avoid importing implementation modules such as `excelalchemy.runtime.*`,
+`excelalchemy.schema.*`, `excelalchemy.workbook.*`,
+`excelalchemy.rendering.*`, or `excelalchemy.primitives.*` in application code.
+The old `excelalchemy.core.*`, `excelalchemy.helper.*`,
+`excelalchemy.i18n.*`, and `excelalchemy._primitives.*` paths are removed in
+3.0.
 
 ## 3. Define A Schema
-
-Classic style:
-
-```python
-from pydantic import BaseModel
-
-from excelalchemy import FieldMeta, Number, String
-
-
-class EmployeeImporter(BaseModel):
-    full_name: String = FieldMeta(label='Full name', order=1)
-    age: Number = FieldMeta(label='Age', order=2)
-```
-
-Modern annotated style:
 
 ```python
 from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from excelalchemy import ExcelMeta, Number, String
+from excelalchemy import EmailCodec, ExcelColumn, NumberCodec
 
 
 class EmployeeImporter(BaseModel):
-    full_name: Annotated[String, ExcelMeta(label='Full name', order=1)]
-    age: Annotated[Number, Field(ge=18), ExcelMeta(label='Age', order=2)]
+    full_name: Annotated[str, ExcelColumn(label='Full name', order=1)]
+    age: Annotated[
+        int,
+        Field(ge=18),
+        ExcelColumn(label='Age', codec=NumberCodec(), order=2),
+    ]
 ```
 
 If you want generated templates to give users a more concrete example before
@@ -86,10 +79,11 @@ upload, you can add template UX metadata such as `hint` and `example_value`:
 ```python
 class EmployeeImporter(BaseModel):
     work_email: Annotated[
-        String,
+        str,
         Field(min_length=8),
-        ExcelMeta(
+        ExcelColumn(
             label='Work email',
+            codec=EmailCodec(),
             order=3,
             hint='Use your company email address',
             example_value='alice@company.com',
@@ -144,7 +138,7 @@ alchemy = ExcelAlchemy(config)
 
 ## 5. Prefer `storage=...`
 
-In the 2.x line, the recommended backend integration path is always:
+In 3.0, the backend integration path is always:
 
 ```python
 storage=...
@@ -161,19 +155,8 @@ Examples:
 - import workflow:
   [`examples/employee_import_workflow.py`](../examples/employee_import_workflow.py)
 
-### Legacy Minio Fields
-
-The older:
-
-- `minio=...`
-- `bucket_name=...`
-- `url_expires=...`
-
-fields are still accepted in 2.x, but they are compatibility paths only. They
-emit deprecation warnings and should not be used in new application code.
-
-If you need Minio in 2.x, prefer constructing a storage object explicitly and
-passing it via `storage=...`.
+For Minio-compatible object storage, construct `MinioStorageGateway(...)` and
+pass it through `storage=...`.
 
 ## 6. Learn By Example
 

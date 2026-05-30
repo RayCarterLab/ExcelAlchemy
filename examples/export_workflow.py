@@ -1,11 +1,12 @@
 """End-to-end export example with artifact generation and upload."""
 
 from base64 import b64decode
+from typing import Annotated
 
 from pydantic import BaseModel
 
-from excelalchemy import ExcelAlchemy, ExcelStorage, ExporterConfig, FieldMeta, Number, String, UrlStr
-from excelalchemy.core.table import WorksheetTable
+from excelalchemy import ExcelAlchemy, ExcelColumn, ExcelStorage, ExporterConfig, UrlStr
+from excelalchemy.workbook.table import WorksheetTable
 
 
 class InMemoryExportStorage(ExcelStorage):
@@ -22,9 +23,9 @@ class InMemoryExportStorage(ExcelStorage):
 
 
 class EmployeeExporter(BaseModel):
-    full_name: String = FieldMeta(label='Full name', order=1)
-    team: String = FieldMeta(label='Team', order=2)
-    age: Number = FieldMeta(label='Age', order=3)
+    full_name: Annotated[str, ExcelColumn(label='Full name', order=1)]
+    team: Annotated[str, ExcelColumn(label='Team', order=2)]
+    age: Annotated[float, ExcelColumn(label='Age', order=3)]
 
 
 def main() -> None:

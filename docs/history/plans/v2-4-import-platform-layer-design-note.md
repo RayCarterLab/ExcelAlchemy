@@ -153,7 +153,7 @@ Internal alignment:
 - `src/excelalchemy/core/rendering.py`
 - `src/excelalchemy/core/writer.py`
 - `src/excelalchemy/core/storage_protocol.py`
-- `src/excelalchemy/core/storage.py`
+- `src/excelalchemy/storage.py`
 
 #### Cross-cutting seams
 

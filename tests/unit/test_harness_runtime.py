@@ -44,6 +44,8 @@ def test_context_loader_loads_instruction_architecture_and_validation_patterns(t
     )
     _write_json(tmp_path / 'context' / 'patterns' / 'validation.json', {'focused': ['uv run pytest']})
     (tmp_path / 'AGENTS.md').write_text('# Root rules', encoding='utf-8')
+    (tmp_path / 'docs' / 'agent').mkdir(parents=True)
+    (tmp_path / 'docs' / 'agent' / 'v3-prd.md').write_text('# V3 PRD', encoding='utf-8')
     (tmp_path / 'context' / 'instructions' / 'AGENTS.md').write_text('# Context rules', encoding='utf-8')
 
     loader = ContextLoader(repo_root=tmp_path)
@@ -52,9 +54,10 @@ def test_context_loader_loads_instruction_architecture_and_validation_patterns(t
     sections = cast(list[dict[str, object]], context['sections'])
     instructions = cast(dict[str, dict[str, object]], context['instructions'])
 
-    assert references['source_count'] == 6
+    assert references['source_count'] == 7
     assert references['digest']
     assert instructions['instructions.root_agents']['included_chars'] != 0
+    assert instructions['instructions.v3_prd']['included_chars'] != 0
     assert sum(cast(int, section.get('included_chars', 0)) for section in sections) <= 80
     assert any(section['truncated'] for section in sections)
     assert cast(dict[str, object], context['validation'])['recommended_commands'] == ['uv run pytest']

@@ -1,19 +1,30 @@
 from collections.abc import Mapping
 from datetime import datetime
+from datetime import timezone as DateTimeZone
 from typing import cast
 
 import pendulum
 from pendulum import DateTime
 from pydantic import BaseModel
 
-from excelalchemy._primitives.constants import DATE_FORMAT_TO_PYTHON_MAPPING, MILLISECOND_TO_SECOND, DataRangeOption
-from excelalchemy._primitives.identity import Key
-from excelalchemy.codecs.base import CompositeExcelFieldCodec, log_codec_parse_fallback, log_codec_render_fallback
+from excelalchemy.codecs.base import (
+    CompositeExcelFieldCodec,
+    ExcelCodecConfig,
+    log_codec_parse_fallback,
+    log_codec_render_fallback,
+)
 from excelalchemy.exceptions import ConfigError
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import display_message as dmsg
-from excelalchemy.i18n.messages import message as msg
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import display_message as dmsg
+from excelalchemy.messages import message as msg
 from excelalchemy.metadata import FieldMetaInfo
+from excelalchemy.primitives.constants import (
+    DATE_FORMAT_TO_PYTHON_MAPPING,
+    MILLISECOND_TO_SECOND,
+    DataRangeOption,
+    DateFormat,
+)
+from excelalchemy.primitives.identity import Key
 
 
 class _DateRangeImpl(BaseModel):
@@ -34,12 +45,21 @@ class DateRange(CompositeExcelFieldCodec):
         return self
 
     def __init__(self, start: datetime | None, end: datetime | None):
-        # Pydantic model dumps intentionally store timestamps rather than datetime objects here.
-        _start = int(start.timestamp() * MILLISECOND_TO_SECOND) if start else None
-        _end = int(end.timestamp() * MILLISECOND_TO_SECOND) if end else None
-        super().__init__(start=_start, end=_end)
         self.start = start
         self.end = end
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, DateRange):
+            return self.to_dict() == other.to_dict()
+        if isinstance(other, Mapping):
+            return self.to_dict() == dict(cast(Mapping[str, object], other))
+        return False
+
+    def to_dict(self) -> dict[str, int | None]:
+        return {
+            'start': int(self.start.timestamp() * MILLISECOND_TO_SECOND) if self.start else None,
+            'end': int(self.end.timestamp() * MILLISECOND_TO_SECOND) if self.end else None,
+        }
 
     @classmethod
     def column_items(cls) -> list[tuple[Key, FieldMetaInfo]]:
@@ -101,10 +121,10 @@ class DateRange(CompositeExcelFieldCodec):
         cls,
         value: object,
         field_meta: FieldMetaInfo,
-    ) -> 'DateRange':
+    ) -> dict[str, int | None]:
         presentation = field_meta.presentation
         try:
-            parsed = DateRange.model_validate(value)
+            parsed = value if isinstance(value, DateRange) else DateRange.model_validate(value)
             parsed.start = pendulum.instance(parsed.start, tz=presentation.timezone) if parsed.start else None
             parsed.end = pendulum.instance(parsed.end, tz=presentation.timezone) if parsed.end else None
         except Exception as exc:
@@ -129,7 +149,7 @@ class DateRange(CompositeExcelFieldCodec):
         if errors:
             raise ValueError(*errors)
         else:
-            return parsed
+            return parsed.to_dict()
 
     @classmethod
     def format_display_value(cls, value: object | None, field_meta: FieldMetaInfo) -> str:
@@ -204,4 +224,51 @@ class DateRange(CompositeExcelFieldCodec):
         raise ValueError(msg(MessageKey.INVALID_INPUT))
 
 
-DateRangeCodec = DateRange
+class DateRangeCodec:
+    """Factory for explicit date-range codec configuration."""
+
+    @staticmethod
+    def day(
+        *,
+        timezone: DateTimeZone | None = None,
+        date_range_option: DataRangeOption | None = None,
+    ) -> ExcelCodecConfig:
+        return DateRangeCodec.format(DateFormat.DAY, timezone=timezone, date_range_option=date_range_option)
+
+    @staticmethod
+    def month(
+        *,
+        timezone: DateTimeZone | None = None,
+        date_range_option: DataRangeOption | None = None,
+    ) -> ExcelCodecConfig:
+        return DateRangeCodec.format(DateFormat.MONTH, timezone=timezone, date_range_option=date_range_option)
+
+    @staticmethod
+    def year(
+        *,
+        timezone: DateTimeZone | None = None,
+        date_range_option: DataRangeOption | None = None,
+    ) -> ExcelCodecConfig:
+        return DateRangeCodec.format(DateFormat.YEAR, timezone=timezone, date_range_option=date_range_option)
+
+    @staticmethod
+    def minute(
+        *,
+        timezone: DateTimeZone | None = None,
+        date_range_option: DataRangeOption | None = None,
+    ) -> ExcelCodecConfig:
+        return DateRangeCodec.format(DateFormat.MINUTE, timezone=timezone, date_range_option=date_range_option)
+
+    @staticmethod
+    def format(
+        date_format: DateFormat,
+        *,
+        timezone: DateTimeZone | None = None,
+        date_range_option: DataRangeOption | None = None,
+    ) -> ExcelCodecConfig:
+        return ExcelCodecConfig.create(
+            DateRange,
+            date_format=date_format,
+            timezone=timezone,
+            date_range_option=date_range_option,
+        )

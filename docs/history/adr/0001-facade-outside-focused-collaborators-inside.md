@@ -42,7 +42,7 @@
 - `src/excelalchemy/core/rows.py`
 - `src/excelalchemy/core/executor.py`
 - `src/excelalchemy/core/rendering.py`
-- `src/excelalchemy/core/storage.py`
+- `src/excelalchemy/storage.py`
 
 ## Uncertainty
 
@@ -59,5 +59,5 @@
 - `src/excelalchemy/core/rows.py`
 - `src/excelalchemy/core/executor.py`
 - `src/excelalchemy/core/rendering.py`
-- `src/excelalchemy/core/storage.py`
+- `src/excelalchemy/storage.py`
 

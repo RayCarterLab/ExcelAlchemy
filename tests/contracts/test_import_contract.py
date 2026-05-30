@@ -1,23 +1,22 @@
 import io
-from typing import cast
+from typing import Annotated
 
-from minio import Minio
 from openpyxl import Workbook, load_workbook
 from pydantic import BaseModel
 
 from excelalchemy import (
     ExcelAlchemy,
-    FieldMeta,
+    ExcelColumn,
     ImporterConfig,
     ImportPreflightStatus,
-    String,
     ValidateResult,
     WorksheetNotFoundError,
 )
-from excelalchemy.const import BACKGROUND_ERROR_COLOR, REASON_COLUMN_LABEL, RESULT_COLUMN_LABEL
-from excelalchemy.core.import_session import ImportSessionPhase
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import message as msg
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import message as msg
+from excelalchemy.primitives.constants import BACKGROUND_ERROR_COLOR, REASON_COLUMN_LABEL, RESULT_COLUMN_LABEL
+from excelalchemy.results import ImportLifecycleEvent
+from excelalchemy.runtime.import_session import ImportSessionPhase
 from tests.support import (
     BaseTestCase,
     FileRegistry,
@@ -26,6 +25,10 @@ from tests.support import (
     load_binary_excel_to_workbook,
 )
 from tests.support.contract_models import MergedContractImporter, SimpleContractImporter, creator, failing_creator
+
+
+def _event_payloads(events: list[ImportLifecycleEvent]) -> list[dict[str, object]]:
+    return [event.model_dump(mode='json', exclude_none=True) for event in events]
 
 
 class TestImportContracts(BaseTestCase):
@@ -46,7 +49,7 @@ class TestImportContracts(BaseTestCase):
         return buffer.getvalue()
 
     async def test_preflight_import_returns_valid_result_for_valid_workbook(self):
-        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway))
 
         result = alchemy.preflight_import(FileRegistry.TEST_SIMPLE_IMPORT)
 
@@ -58,7 +61,7 @@ class TestImportContracts(BaseTestCase):
         assert result.structural_issue_codes == []
 
     async def test_preflight_import_returns_header_invalid_for_invalid_header(self):
-        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway))
 
         result = alchemy.preflight_import(FileRegistry.TEST_HEADER_INVALID_INPUT)
 
@@ -71,8 +74,8 @@ class TestImportContracts(BaseTestCase):
 
     async def test_preflight_import_reports_missing_primary_fields_in_update_mode(self):
         class UpdatePrimaryKeyImporter(BaseModel):
-            employee_id: String = FieldMeta(label='员工编号', order=1, is_primary_key=True)
-            name: String = FieldMeta(label='姓名', order=2)
+            employee_id: Annotated[str, ExcelColumn(label='员工编号', order=1, is_primary_key=True)]
+            name: Annotated[str, ExcelColumn(label='姓名', order=2)]
 
         workbook_bytes = self._build_workbook_bytes(
             rows=[
@@ -170,7 +173,7 @@ class TestImportContracts(BaseTestCase):
         buffer.seek(0)
         self.minio.put_object(self.minio.bucket_name, input_name, buffer, len(buffer.getvalue()))
 
-        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway))
 
         result = alchemy.preflight_import(input_name)
 
@@ -233,7 +236,7 @@ class TestImportContracts(BaseTestCase):
             alchemy.preflight_import('ignored.xlsx')
 
     async def test_preflight_import_estimates_rows_for_merged_header_workbook(self):
-        alchemy = ExcelAlchemy(ImporterConfig(MergedContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(MergedContractImporter, creator=creator, storage=self.storage_gateway))
 
         result = alchemy.preflight_import(FileRegistry.TEST_IMPORT_WITH_MERGE_HEADER)
 
@@ -328,7 +331,7 @@ class TestImportContracts(BaseTestCase):
             return data
 
         alchemy = ExcelAlchemy(
-            ImporterConfig.for_create(SimpleContractImporter, creator=tracking_creator, minio=cast(Minio, self.minio))
+            ImporterConfig.for_create(SimpleContractImporter, creator=tracking_creator, storage=self.storage_gateway)
         )
         alchemy.add_context(context)
 
@@ -394,43 +397,43 @@ class TestImportContracts(BaseTestCase):
         assert alchemy.row_error_map == {}
 
     async def test_import_data_emits_expected_success_events(self):
-        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
-        events: list[dict[str, object]] = []
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway))
+        events: list[ImportLifecycleEvent] = []
 
         result = await alchemy.import_data(
             input_excel_name=FileRegistry.TEST_SIMPLE_IMPORT,
             output_excel_name='contract-success-events.xlsx',
             on_event=events.append,
         )
+        payloads = _event_payloads(events)
 
         assert result.result == ValidateResult.SUCCESS
-        assert [event['event'] for event in events] == [
+        assert [event['event'] for event in payloads] == [
             'started',
             'header_validated',
             'row_processed',
             'completed',
         ]
-        assert events[1] == {
+        assert payloads[1] == {
             'event': 'header_validated',
             'is_valid': True,
         }
-        assert events[2] == {
+        assert payloads[2] == {
             'event': 'row_processed',
             'processed_row_count': 1,
             'total_row_count': 1,
             'success_count': 1,
             'fail_count': 0,
         }
-        assert events[3] == {
+        assert payloads[3] == {
             'event': 'completed',
             'result': 'SUCCESS',
             'success_count': 1,
             'fail_count': 0,
-            'url': None,
         }
 
     async def test_import_data_returns_success_result_for_valid_workbook(self):
-        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway))
 
         result = await alchemy.import_data(
             input_excel_name=FileRegistry.TEST_SIMPLE_IMPORT,
@@ -445,7 +448,7 @@ class TestImportContracts(BaseTestCase):
     async def test_import_data_returns_header_invalid_result_for_invalid_header(self):
         output_name = 'contract-header-invalid.xlsx'
         self.minio.storage.pop(output_name, None)
-        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway))
 
         result = await alchemy.import_data(
             input_excel_name=FileRegistry.TEST_HEADER_INVALID_INPUT,
@@ -458,27 +461,28 @@ class TestImportContracts(BaseTestCase):
         assert output_name not in self.minio.storage
 
     async def test_import_data_emits_expected_header_invalid_events(self):
-        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
-        events: list[dict[str, object]] = []
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway))
+        events: list[ImportLifecycleEvent] = []
 
         result = await alchemy.import_data(
             input_excel_name=FileRegistry.TEST_HEADER_INVALID_INPUT,
             output_excel_name='contract-header-invalid-events.xlsx',
             on_event=events.append,
         )
+        payloads = _event_payloads(events)
 
         assert result.result == ValidateResult.HEADER_INVALID
-        assert [event['event'] for event in events] == [
+        assert [event['event'] for event in payloads] == [
             'started',
             'header_validated',
             'completed',
         ]
-        assert events[1]['event'] == 'header_validated'
-        assert events[1]['is_valid'] is False
-        missing_required = events[1]['missing_required']
-        missing_primary = events[1]['missing_primary']
-        unrecognized = events[1]['unrecognized']
-        duplicated = events[1]['duplicated']
+        assert payloads[1]['event'] == 'header_validated'
+        assert payloads[1]['is_valid'] is False
+        missing_required = payloads[1]['missing_required']
+        missing_primary = payloads[1]['missing_primary']
+        unrecognized = payloads[1]['unrecognized']
+        duplicated = payloads[1]['duplicated']
         assert isinstance(missing_required, list)
         assert isinstance(missing_primary, list)
         assert isinstance(unrecognized, list)
@@ -487,16 +491,15 @@ class TestImportContracts(BaseTestCase):
         assert missing_primary == []
         assert unrecognized == ['不存在的表头']
         assert duplicated == []
-        assert events[2] == {
+        assert payloads[2] == {
             'event': 'completed',
             'result': 'HEADER_INVALID',
             'success_count': 0,
             'fail_count': 0,
-            'url': None,
         }
 
     async def test_import_data_reloads_workbook_state_on_each_run(self):
-        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway))
 
         first_result = await alchemy.import_data(
             input_excel_name=FileRegistry.TEST_HEADER_INVALID_INPUT,
@@ -515,7 +518,7 @@ class TestImportContracts(BaseTestCase):
 
     async def test_import_session_snapshot_tracks_completed_successful_run(self):
         alchemy = ExcelAlchemy(
-            ImporterConfig.for_create(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio))
+            ImporterConfig.for_create(SimpleContractImporter, creator=creator, storage=self.storage_gateway)
         )
 
         result = await alchemy.import_data(
@@ -538,7 +541,7 @@ class TestImportContracts(BaseTestCase):
     async def test_import_data_uploads_result_workbook_for_invalid_rows(self):
         output_name = 'contract-data-invalid.xlsx'
         self.minio.storage.pop(output_name, None)
-        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway))
 
         result = await alchemy.import_data(
             input_excel_name=FileRegistry.TEST_SIMPLE_IMPORT_WITH_ERROR,
@@ -554,30 +557,31 @@ class TestImportContracts(BaseTestCase):
     async def test_import_data_emits_expected_data_invalid_events(self):
         output_name = 'contract-data-invalid-events.xlsx'
         self.minio.storage.pop(output_name, None)
-        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
-        events: list[dict[str, object]] = []
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway))
+        events: list[ImportLifecycleEvent] = []
 
         result = await alchemy.import_data(
             input_excel_name=FileRegistry.TEST_SIMPLE_IMPORT_WITH_ERROR,
             output_excel_name=output_name,
             on_event=events.append,
         )
+        payloads = _event_payloads(events)
 
         assert result.result == ValidateResult.DATA_INVALID
-        assert [event['event'] for event in events] == [
+        assert [event['event'] for event in payloads] == [
             'started',
             'header_validated',
             'row_processed',
             'completed',
         ]
-        assert events[2] == {
+        assert payloads[2] == {
             'event': 'row_processed',
             'processed_row_count': 1,
             'total_row_count': 1,
             'success_count': 0,
             'fail_count': 1,
         }
-        assert events[3] == {
+        assert payloads[3] == {
             'event': 'completed',
             'result': 'DATA_INVALID',
             'success_count': 0,
@@ -593,7 +597,7 @@ class TestImportContracts(BaseTestCase):
         source_bytes = self.minio.storage[FileRegistry.TEST_SIMPLE_IMPORT]['data'].getvalue()
         storage = ExplodingReadStorage(fixtures={FileRegistry.TEST_SIMPLE_IMPORT: source_bytes})
         alchemy = ExcelAlchemy(ImporterConfig.for_create(SimpleContractImporter, creator=creator, storage=storage))
-        events: list[dict[str, object]] = []
+        events: list[ImportLifecycleEvent] = []
 
         with self.assertRaisesRegex(RuntimeError, 'boom'):
             await alchemy.import_data(
@@ -601,12 +605,13 @@ class TestImportContracts(BaseTestCase):
                 output_excel_name='contract-failed-events.xlsx',
                 on_event=events.append,
             )
+        payloads = _event_payloads(events)
 
-        assert [event['event'] for event in events] == [
+        assert [event['event'] for event in payloads] == [
             'started',
             'failed',
         ]
-        assert events[1] == {
+        assert payloads[1] == {
             'event': 'failed',
             'error_type': 'RuntimeError',
             'error_message': 'boom',
@@ -615,7 +620,7 @@ class TestImportContracts(BaseTestCase):
     async def test_import_result_workbook_returns_result_and_reason_columns(self):
         output_name = 'contract-data-invalid-columns.xlsx'
         self.minio.storage.pop(output_name, None)
-        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway))
 
         await alchemy.import_data(
             input_excel_name=FileRegistry.TEST_SIMPLE_IMPORT_WITH_ERROR,
@@ -634,7 +639,7 @@ class TestImportContracts(BaseTestCase):
     async def test_import_result_workbook_marks_failed_cells_in_red(self):
         output_name = 'contract-data-invalid-colors.xlsx'
         self.minio.storage.pop(output_name, None)
-        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway))
 
         await alchemy.import_data(
             input_excel_name=FileRegistry.TEST_SIMPLE_IMPORT_WITH_ERROR,
@@ -650,7 +655,7 @@ class TestImportContracts(BaseTestCase):
         output_name = 'contract-data-invalid-business-cell.xlsx'
         self.minio.storage.pop(output_name, None)
         alchemy = ExcelAlchemy(
-            ImporterConfig(SimpleContractImporter, creator=failing_creator, minio=cast(Minio, self.minio))
+            ImporterConfig(SimpleContractImporter, creator=failing_creator, storage=self.storage_gateway)
         )
 
         await alchemy.import_data(
@@ -667,7 +672,7 @@ class TestImportContracts(BaseTestCase):
         output_name = 'contract-data-invalid-english.xlsx'
         self.minio.storage.pop(output_name, None)
         alchemy = ExcelAlchemy(
-            ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio), locale='en')
+            ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway, locale='en')
         )
 
         await alchemy.import_data(
@@ -697,7 +702,7 @@ class TestImportContracts(BaseTestCase):
         buffer.seek(0)
         self.minio.put_object(self.minio.bucket_name, input_name, buffer, len(buffer.getvalue()))
 
-        alchemy = ExcelAlchemy(ImporterConfig(MergedContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(MergedContractImporter, creator=creator, storage=self.storage_gateway))
 
         result = await alchemy.import_data(
             input_excel_name=input_name,

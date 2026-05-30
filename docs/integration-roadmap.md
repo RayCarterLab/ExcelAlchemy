@@ -129,5 +129,5 @@ Read:
 This is the best route when you need to answer:
 
 - which imports are stable
-- which imports are compatibility-only
-- how the 2.x line treats legacy Minio configuration
+- which 2.x imports were removed
+- how 3.0 treats explicit storage configuration

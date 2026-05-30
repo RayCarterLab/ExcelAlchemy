@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
 
-from excelalchemy._primitives.identity import Key
+from excelalchemy.primitives.identity import Key
 
 if TYPE_CHECKING:
     from excelalchemy.metadata import FieldMetaInfo
@@ -146,26 +147,6 @@ class ExcelFieldCodec(ABC):
         return None
 
     @classmethod
-    def comment(cls, field_meta: FieldMetaInfo) -> str:
-        """Backward-compatible alias for build_comment()."""
-        return cls.build_comment(field_meta)
-
-    @classmethod
-    def serialize(cls, value: WorkbookInputValue, field_meta: FieldMetaInfo) -> WorkbookInputValue:
-        """Backward-compatible alias for parse_input()."""
-        return cls.parse_input(value, field_meta)
-
-    @classmethod
-    def deserialize(cls, value: WorkbookDisplayValue, field_meta: FieldMetaInfo) -> WorkbookDisplayValue:
-        """Backward-compatible alias for format_display_value()."""
-        return cls.format_display_value(value, field_meta)
-
-    @classmethod
-    def __validate__(cls, value: WorkbookInputValue, field_meta: FieldMetaInfo) -> NormalizedImportValue:
-        """Backward-compatible alias for normalize_import_value()."""
-        return cls.normalize_import_value(value, field_meta)
-
-    @classmethod
     def __get_pydantic_core_schema__(
         cls,
         source_type: object,
@@ -176,18 +157,31 @@ class ExcelFieldCodec(ABC):
         return core_schema.any_schema()
 
 
-class CompositeExcelFieldCodec(ExcelFieldCodec, dict[str, object]):
+@dataclass(frozen=True, slots=True)
+class ExcelCodecConfig:
+    """Immutable codec helper configuration attached through ExcelColumn."""
+
+    codec_type: type[ExcelFieldCodec]
+    column_options: tuple[tuple[str, object], ...] = ()
+
+    @classmethod
+    def create(cls, codec_type: type[ExcelFieldCodec], **column_options: object) -> ExcelCodecConfig:
+        return cls(
+            codec_type=codec_type,
+            column_options=tuple((key, value) for key, value in column_options.items() if value is not None),
+        )
+
+    def as_column_options(self) -> dict[str, object]:
+        return dict(self.column_options)
+
+
+class CompositeExcelFieldCodec(ExcelFieldCodec):
     """Excel codec for fields that expand into multiple worksheet columns."""
 
     @classmethod
     @abstractmethod
     def column_items(cls) -> list[tuple[Key, FieldMetaInfo]]:
         """Return the schema keys and metadata for each expanded worksheet column."""
-
-    @classmethod
-    def model_items(cls) -> list[tuple[Key, FieldMetaInfo]]:
-        """Backward-compatible alias for column_items()."""
-        return cls.column_items()
 
 
 class SystemReserved(ExcelFieldCodec):

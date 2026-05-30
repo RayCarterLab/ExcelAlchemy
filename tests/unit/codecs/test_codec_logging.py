@@ -1,11 +1,18 @@
 import logging
+from typing import Annotated
 
 import pytest
 from pydantic import BaseModel
 
-from excelalchemy import Boolean, ExcelAlchemy, FieldMeta, Option, OptionId, Radio
+from excelalchemy import (
+    ExcelAlchemy,
+    ExcelColumn,
+    MultiChoiceCodec,
+    Option,
+    OptionId,
+    SingleChoiceCodec,
+)
 from excelalchemy.codecs.base import CODEC_LOGGER_NAME
-from excelalchemy.codecs.multi_checkbox import MultiCheckbox
 from excelalchemy.config import ImporterConfig
 
 
@@ -16,19 +23,23 @@ def _build_field(model: type[BaseModel], field_index: int = 0):
 
 def test_radio_option_resolution_warning_uses_codec_logger(caplog: pytest.LogCaptureFixture) -> None:
     class Importer(BaseModel):
-        radio: Radio = FieldMeta(
-            label='Status',
-            order=1,
-            options=[
-                Option(id=OptionId(1), name='Open'),
-                Option(id=OptionId(2), name='Closed'),
-            ],
-        )
+        radio: Annotated[
+            str,
+            ExcelColumn(
+                codec=SingleChoiceCodec(),
+                label='Status',
+                order=1,
+                options=[
+                    Option(id=OptionId(1), name='Open'),
+                    Option(id=OptionId(2), name='Closed'),
+                ],
+            ),
+        ]
 
     field = _build_field(Importer)
 
     with caplog.at_level(logging.WARNING, logger=CODEC_LOGGER_NAME):
-        assert field.value_type.deserialize('3', field) == '3'
+        assert field.excel_codec.format_display_value('3', field) == '3'
 
     assert caplog.records
     record = caplog.records[-1]
@@ -39,12 +50,12 @@ def test_radio_option_resolution_warning_uses_codec_logger(caplog: pytest.LogCap
 
 def test_boolean_render_warning_uses_codec_logger(caplog: pytest.LogCaptureFixture) -> None:
     class Importer(BaseModel):
-        is_active: Boolean = FieldMeta(label='Is active', order=1)
+        is_active: Annotated[bool, ExcelColumn(label='Is active', order=1)]
 
     field = _build_field(Importer)
 
     with caplog.at_level(logging.WARNING, logger=CODEC_LOGGER_NAME):
-        assert field.value_type.deserialize('maybe', field) == 'maybe'
+        assert field.excel_codec.format_display_value('maybe', field) == 'maybe'
 
     assert caplog.records
     record = caplog.records[-1]
@@ -55,12 +66,12 @@ def test_boolean_render_warning_uses_codec_logger(caplog: pytest.LogCaptureFixtu
 
 def test_multi_checkbox_parse_warning_uses_codec_logger(caplog: pytest.LogCaptureFixture) -> None:
     class Importer(BaseModel):
-        hobbies: MultiCheckbox = FieldMeta(label='Hobbies', order=1)
+        hobbies: Annotated[list[str], ExcelColumn(codec=MultiChoiceCodec(), label='Hobbies', order=1)]
 
     field = _build_field(Importer)
 
     with caplog.at_level(logging.WARNING, logger=CODEC_LOGGER_NAME):
-        assert field.value_type.serialize(123, field) == 123
+        assert field.excel_codec.parse_input(123, field) == 123
 
     assert caplog.records
     record = caplog.records[-1]

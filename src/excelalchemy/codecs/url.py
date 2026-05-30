@@ -1,9 +1,9 @@
 from pydantic import HttpUrl, TypeAdapter
 
-from excelalchemy.codecs.base import WorkbookInputValue
+from excelalchemy.codecs.base import ExcelCodecConfig, WorkbookInputValue
 from excelalchemy.codecs.string import String
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import message as msg
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import message as msg
 from excelalchemy.metadata import FieldMetaInfo
 
 
@@ -30,4 +30,8 @@ class Url(String):
             return parsed
 
 
-UrlCodec = Url
+class UrlCodec:
+    """Factory for explicit URL codec configuration."""
+
+    def __new__(cls) -> ExcelCodecConfig:
+        return ExcelCodecConfig.create(Url)

@@ -1,6 +1,5 @@
-from excelalchemy._primitives.constants import MULTI_CHECKBOX_SEPARATOR
-from excelalchemy._primitives.identity import OptionId
 from excelalchemy.codecs.base import (
+    ExcelCodecConfig,
     ExcelFieldCodec,
     WorkbookDisplayValue,
     WorkbookInputValue,
@@ -8,13 +7,15 @@ from excelalchemy.codecs.base import (
     log_codec_option_resolution_fallback,
 )
 from excelalchemy.exceptions import ProgrammaticError
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import display_message as dmsg
-from excelalchemy.i18n.messages import message as msg
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import display_message as dmsg
+from excelalchemy.messages import message as msg
 from excelalchemy.metadata import FieldMetaInfo
+from excelalchemy.primitives.constants import MULTI_CHECKBOX_SEPARATOR
+from excelalchemy.primitives.identity import OptionId
 
 
-class Radio(ExcelFieldCodec, str):
+class Radio(ExcelFieldCodec):
     __name__ = 'SingleChoice'
 
     @classmethod
@@ -109,4 +110,8 @@ class Radio(ExcelFieldCodec, str):
         return options_name_map[parsed].id
 
 
-SingleChoiceCodec = Radio
+class SingleChoiceCodec:
+    """Factory for explicit single-choice codec configuration."""
+
+    def __new__(cls) -> ExcelCodecConfig:
+        return ExcelCodecConfig.create(Radio)

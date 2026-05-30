@@ -1,9 +1,9 @@
-from excelalchemy._primitives.constants import CharacterSet
-from excelalchemy.codecs.base import ExcelFieldCodec, WorkbookDisplayValue, WorkbookInputValue
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import display_message as dmsg
-from excelalchemy.i18n.messages import message as msg
+from excelalchemy.codecs.base import ExcelCodecConfig, ExcelFieldCodec, WorkbookDisplayValue, WorkbookInputValue
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import display_message as dmsg
+from excelalchemy.messages import message as msg
 from excelalchemy.metadata import FieldMetaInfo
+from excelalchemy.primitives.constants import CharacterSet
 
 SPECIAL_SYMBOLS = set(
     '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~"。？！，、；：‘’“”（）《》〈〉【】〔〕｛｝｟｠〖〗〘〙〚〛〜〝〞〟〰–—‘‛“”„‟…‧﹏.'
@@ -80,7 +80,7 @@ def _format_character_set_names(cs: set[CharacterSet]) -> str:
     return ', '.join(msg(_CHARACTER_SET_TO_MESSAGE_KEY[c]) for c in ordered)
 
 
-class String(str, ExcelFieldCodec):
+class String(ExcelFieldCodec):
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
         declared = field_meta.declared
@@ -140,4 +140,8 @@ class String(str, ExcelFieldCodec):
         return errors
 
 
-StringCodec = String
+class StringCodec:
+    """Factory for explicit string codec configuration."""
+
+    def __new__(cls) -> ExcelCodecConfig:
+        return ExcelCodecConfig.create(String)

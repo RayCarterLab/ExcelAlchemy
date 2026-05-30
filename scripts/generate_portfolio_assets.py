@@ -12,25 +12,21 @@ from openpyxl import load_workbook
 from pydantic import BaseModel, Field
 
 from excelalchemy import (
-    Boolean,
-    Date,
-    DateFormat,
-    Email,
+    BooleanCodec,
+    DateCodec,
+    EmailCodec,
     ExcelAlchemy,
-    ExcelMeta,
-    FieldMeta,
+    ExcelColumn,
+    ExcelStorage,
     ImporterConfig,
-    Number,
-    NumberRange,
+    NumberRangeCodec,
     Option,
     OptionId,
-    Radio,
-    String,
+    SingleChoiceCodec,
 )
-from excelalchemy._primitives.identity import UrlStr
-from excelalchemy.core.storage_protocol import ExcelStorage
-from excelalchemy.core.table import WorksheetTable
+from excelalchemy.primitives.identity import UrlStr
 from excelalchemy.util.file import remove_excel_prefix
+from excelalchemy.workbook.table import WorksheetTable
 
 ROOT = Path(__file__).resolve().parents[1]
 FILES_DIR = ROOT / 'files'
@@ -85,13 +81,22 @@ TEAM_OPTIONS = [
 
 
 class TemplateScreenshotImporter(BaseModel):
-    full_name: String = FieldMeta(label='Full name', order=1, hint='Use the employee full name')
-    age: Annotated[Number, Field(ge=18, le=65), ExcelMeta(label='Age', order=2, unit='years')]
-    work_email: Email = FieldMeta(label='Work email', order=3, hint='Use a company email address')
-    start_date: Date = FieldMeta(label='Start date', order=4, date_format=DateFormat.DAY)
-    is_active: Boolean = FieldMeta(label='Status', order=5, hint='Yes for active employees, No otherwise')
-    team: Radio = FieldMeta(label='Team', order=6, options=TEAM_OPTIONS)
-    salary_band: NumberRange = FieldMeta(label='Salary band', order=7, unit='USD')
+    full_name: Annotated[str, ExcelColumn(label='Full name', order=1, hint='Use the employee full name')]
+    age: Annotated[float, Field(ge=18, le=65), ExcelColumn(label='Age', order=2, unit='years')]
+    work_email: Annotated[
+        str,
+        ExcelColumn(label='Work email', codec=EmailCodec(), order=3, hint='Use a company email address'),
+    ]
+    start_date: Annotated[int, ExcelColumn(label='Start date', codec=DateCodec.day(), order=4)]
+    is_active: Annotated[
+        bool,
+        ExcelColumn(label='Status', codec=BooleanCodec(), order=5, hint='Yes for active employees, No otherwise'),
+    ]
+    team: Annotated[str, ExcelColumn(label='Team', codec=SingleChoiceCodec(), order=6, options=TEAM_OPTIONS)]
+    salary_band: Annotated[
+        dict[str, object],
+        ExcelColumn(label='Salary band', codec=NumberRangeCodec(), order=7, unit='USD'),
+    ]
 
 
 async def _creator(data: dict[str, object], context: None) -> dict[str, object]:

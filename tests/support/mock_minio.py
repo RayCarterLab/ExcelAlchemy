@@ -1,6 +1,7 @@
 import io
 import os
 from copy import copy
+from datetime import timedelta
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any, ClassVar
@@ -8,7 +9,7 @@ from typing import Any, ClassVar
 from openpyxl import Workbook, load_workbook
 from openpyxl.worksheet.cell_range import CellRange
 
-from excelalchemy.const import HEADER_HINT
+from excelalchemy.primitives.constants import HEADER_HINT
 from tests.support.registry import FileRegistry
 
 
@@ -194,7 +195,7 @@ class LocalMockMinio:
         }
 
     @classmethod
-    def presigned_get_object(cls, bucket_name: str, filename: str, expires: int) -> str:
+    def presigned_get_object(cls, bucket_name: str, filename: str, *, expires: timedelta) -> str:
         return f'{bucket_name}/{filename}'
 
     def get_object(self, bucket_name: str, filename: str) -> io.BytesIO:

@@ -1,16 +1,21 @@
 from typing import cast
 
-from excelalchemy._primitives.constants import MULTI_CHECKBOX_SEPARATOR
-from excelalchemy._primitives.identity import OptionId
-from excelalchemy.codecs.base import ExcelFieldCodec, log_codec_missing_options, log_codec_parse_fallback
+from excelalchemy.codecs.base import (
+    ExcelCodecConfig,
+    ExcelFieldCodec,
+    log_codec_missing_options,
+    log_codec_parse_fallback,
+)
 from excelalchemy.exceptions import ProgrammaticError
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import display_message as dmsg
-from excelalchemy.i18n.messages import message as msg
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import display_message as dmsg
+from excelalchemy.messages import message as msg
 from excelalchemy.metadata import FieldMetaInfo
+from excelalchemy.primitives.constants import MULTI_CHECKBOX_SEPARATOR
+from excelalchemy.primitives.identity import OptionId
 
 
-class MultiCheckbox(ExcelFieldCodec, list[str]):
+class MultiCheckbox(ExcelFieldCodec):
     __name__ = 'MultiChoice'
 
     @classmethod
@@ -123,4 +128,8 @@ class MultiCheckbox(ExcelFieldCodec, list[str]):
                 return f'{MULTI_CHECKBOX_SEPARATOR}'.join(option_names)
 
 
-MultiChoiceCodec = MultiCheckbox
+class MultiChoiceCodec:
+    """Factory for explicit multi-choice codec configuration."""
+
+    def __new__(cls) -> ExcelCodecConfig:
+        return ExcelCodecConfig.create(MultiCheckbox)

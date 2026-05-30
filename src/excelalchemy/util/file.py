@@ -2,7 +2,7 @@ import math
 from collections.abc import Mapping, Sequence
 from typing import cast
 
-from excelalchemy._primitives.constants import UNIQUE_HEADER_CONNECTOR
+from excelalchemy.policies import PAYLOAD_PATH_SEPARATOR
 
 EXCEL_MEDIA_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 EXCEL_PREFIX = f'data:{EXCEL_MEDIA_TYPE};base64'
@@ -23,8 +23,8 @@ def remove_excel_prefix(content: str) -> str:
 def flatten(data: Mapping[str, object], level: list[str] | None = None) -> dict[str, object]:
     """Flatten a nested mapping into unique-header paths.
 
-    >>> flatten( {'a': {'b': {'c': 12}}})  # dotted path expansion
-    {'a.b.c': 12}
+    >>> flatten({'a': {'b': {'c': 12}}})
+    {'a·b·c': 12}
     """
     tmp_dict: dict[str, object] = {}
     level = level or []
@@ -33,7 +33,7 @@ def flatten(data: Mapping[str, object], level: list[str] | None = None) -> dict[
         if nested_mapping is not None:
             tmp_dict.update(flatten(nested_mapping, [*level, key]))
         else:
-            tmp_dict[f'{UNIQUE_HEADER_CONNECTOR}'.join([*level, key])] = val
+            tmp_dict[PAYLOAD_PATH_SEPARATOR.join([*level, key])] = val
     return tmp_dict
 
 

@@ -123,7 +123,7 @@ If you want to see how ExcelAlchemy fits into backend systems:
 - custom storage protocol:
   - [`examples/custom_storage.py`](../examples/custom_storage.py)
   - [`files/example-outputs/custom-storage.txt`](../files/example-outputs/custom-storage.txt)
-- built-in Minio path for the current 2.x line:
+- built-in Minio-compatible storage path:
   - [`examples/minio_storage.py`](../examples/minio_storage.py)
 - FastAPI integration:
   - [`examples/fastapi_upload.py`](../examples/fastapi_upload.py)

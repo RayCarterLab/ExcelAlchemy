@@ -32,9 +32,9 @@ questions:
 - how do you expose failure detail to APIs, admin tools, or frontends
 - how do you return or upload the generated workbook artifacts
 
-ExcelAlchemy already provides these capabilities in the 2.x line.
+ExcelAlchemy provides these capabilities through the current runtime.
 The `Import Platform Layer` is a high-level view that organizes them into one
-coherent flow without changing the underlying architecture or public API.
+coherent flow.
 
 At this level, the platform is:
 
@@ -113,12 +113,13 @@ Responsibility:
 Typical inputs:
 
 - Pydantic schema models
-- `FieldMeta(...)` or `ExcelMeta(...)`
+- ordinary Python annotations with `Annotated[..., ExcelColumn(...)]`
 - workbook-facing metadata such as:
   - `label`
   - `order`
   - `hint`
-  - `example_value`
+- `example_value`
+- explicit codec helpers such as `EmailCodec()` or `DateCodec.day()`
 
 Typical outputs:
 
@@ -128,8 +129,8 @@ Typical outputs:
 
 Primary public surfaces:
 
-- `FieldMeta(...)`
-- `ExcelMeta(...)`
+- `ExcelColumn(...)`
+- codec helpers under `excelalchemy.codecs`
 - `ExcelAlchemy.download_template(...)`
 - `ExcelAlchemy.download_template_artifact(...)`
 

@@ -1,12 +1,13 @@
 from excelalchemy.codecs.base import (
+    ExcelCodecConfig,
     WorkbookDisplayValue,
     WorkbookInputValue,
     log_codec_option_resolution_fallback,
 )
 from excelalchemy.codecs.multi_checkbox import MultiCheckbox
 from excelalchemy.codecs.radio import Radio
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import display_message as dmsg
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import display_message as dmsg
 from excelalchemy.metadata import FieldMetaInfo
 
 
@@ -85,5 +86,15 @@ class MultiTreeNode(MultiCheckbox):
         return super().normalize_import_value(value, field_meta)
 
 
-SingleTreeNodeCodec = SingleTreeNode
-MultiTreeNodeCodec = MultiTreeNode
+class SingleTreeNodeCodec:
+    """Factory for explicit single-tree-node codec configuration."""
+
+    def __new__(cls) -> ExcelCodecConfig:
+        return ExcelCodecConfig.create(SingleTreeNode)
+
+
+class MultiTreeNodeCodec:
+    """Factory for explicit multi-tree-node codec configuration."""
+
+    def __new__(cls) -> ExcelCodecConfig:
+        return ExcelCodecConfig.create(MultiTreeNode)

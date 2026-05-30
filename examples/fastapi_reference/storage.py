@@ -6,7 +6,7 @@ from base64 import b64decode
 from openpyxl import load_workbook
 
 from excelalchemy import ExcelStorage, UrlStr
-from excelalchemy.core.table import WorksheetTable
+from excelalchemy.workbook.table import WorksheetTable
 
 
 class RequestScopedStorage(ExcelStorage):

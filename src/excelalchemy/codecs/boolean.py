@@ -1,13 +1,14 @@
 from excelalchemy.codecs import excel_choice_codec
 from excelalchemy.codecs.base import (
+    ExcelCodecConfig,
     ExcelFieldCodec,
     WorkbookDisplayValue,
     WorkbookInputValue,
     log_codec_render_fallback,
 )
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import display_message as dmsg
-from excelalchemy.i18n.messages import message as msg
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import display_message as dmsg
+from excelalchemy.messages import message as msg
 from excelalchemy.metadata import FieldMetaInfo
 
 
@@ -105,4 +106,8 @@ class Boolean(ExcelFieldCodec):
         )
 
 
-BooleanCodec = Boolean
+class BooleanCodec:
+    """Factory for explicit boolean codec configuration."""
+
+    def __new__(cls) -> ExcelCodecConfig:
+        return ExcelCodecConfig.create(Boolean)

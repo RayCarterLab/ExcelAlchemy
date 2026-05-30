@@ -5,18 +5,19 @@ from __future__ import annotations
 import asyncio
 import io
 from base64 import b64decode
+from typing import Annotated
 
 from openpyxl import load_workbook
 from pydantic import BaseModel
 
-from excelalchemy import ExcelAlchemy, ExcelStorage, ExporterConfig, FieldMeta, ImporterConfig, Number, String, UrlStr
-from excelalchemy.core.table import WorksheetTable
+from excelalchemy import ExcelAlchemy, ExcelColumn, ExcelStorage, ExporterConfig, ImporterConfig, UrlStr
 from excelalchemy.results import build_frontend_remediation_payload
+from excelalchemy.workbook.table import WorksheetTable
 
 
 class SmokeImporter(BaseModel):
-    full_name: String = FieldMeta(label='Full name', order=1)
-    age: Number = FieldMeta(label='Age', order=2)
+    full_name: Annotated[str, ExcelColumn(label='Full name', order=1)]
+    age: Annotated[int, ExcelColumn(label='Age', order=2)]
 
 
 class InMemorySmokeStorage(ExcelStorage):

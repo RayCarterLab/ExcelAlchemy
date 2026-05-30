@@ -2,13 +2,13 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import cast
 
-from excelalchemy._primitives.identity import Key
-from excelalchemy.codecs.base import CompositeExcelFieldCodec, log_codec_parse_fallback
+from excelalchemy.codecs.base import CompositeExcelFieldCodec, ExcelCodecConfig, log_codec_parse_fallback
 from excelalchemy.codecs.number import Number, canonicalize_decimal, transform_decimal
-from excelalchemy.i18n.messages import MessageKey
-from excelalchemy.i18n.messages import display_message as dmsg
-from excelalchemy.i18n.messages import message as msg
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import display_message as dmsg
+from excelalchemy.messages import message as msg
 from excelalchemy.metadata import FieldMetaInfo
+from excelalchemy.primitives.identity import Key
 
 
 class NumberRange(CompositeExcelFieldCodec):
@@ -18,10 +18,18 @@ class NumberRange(CompositeExcelFieldCodec):
     __name__ = 'NumberRange'
 
     def __init__(self, start: Decimal | int | float | None, end: Decimal | int | float | None):
-        # Keep dict-like behavior while preserving normalized start/end attributes.
-        super().__init__(start=transform_decimal(start), end=transform_decimal(end))
         self.start = transform_decimal(start)
         self.end = transform_decimal(end)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, NumberRange):
+            return self.to_dict() == other.to_dict()
+        if isinstance(other, Mapping):
+            return self.to_dict() == dict(cast(Mapping[str, object], other))
+        return False
+
+    def to_dict(self) -> dict[str, float | int | None]:
+        return {'start': self.start, 'end': self.end}
 
     @classmethod
     def column_items(cls) -> list[tuple[Key, FieldMetaInfo]]:
@@ -45,7 +53,7 @@ class NumberRange(CompositeExcelFieldCodec):
             value = value.strip()
 
         if isinstance(value, NumberRange):
-            return value
+            return value.to_dict()
 
         mapping = cls._coerce_mapping(value)
         if mapping is not None:
@@ -61,6 +69,8 @@ class NumberRange(CompositeExcelFieldCodec):
     def format_display_value(cls, value: object | None, field_meta: FieldMetaInfo) -> str:
         if value is None or value == '':
             return ''
+        if isinstance(value, NumberRange):
+            value = value.to_dict()
         try:
             presentation = field_meta.presentation
             parsed = cls._parse_decimal_boundary(value)
@@ -71,7 +81,7 @@ class NumberRange(CompositeExcelFieldCodec):
             return str(value)
 
     @classmethod
-    def normalize_import_value(cls, value: object, field_meta: FieldMetaInfo) -> 'NumberRange':
+    def normalize_import_value(cls, value: object, field_meta: FieldMetaInfo) -> dict[str, float | int | None]:
         parsed = cls.__maybe_number_range__(value, field_meta)
         errors: list[str] = []
         if parsed.start is not None and parsed.end is not None and parsed.start > parsed.end:
@@ -85,7 +95,7 @@ class NumberRange(CompositeExcelFieldCodec):
         if errors:
             raise ValueError(*errors)
         else:
-            return parsed
+            return parsed.to_dict()
 
     @staticmethod
     def __maybe_number_range__(value: object, field_meta: FieldMetaInfo) -> 'NumberRange':
@@ -133,4 +143,13 @@ class NumberRange(CompositeExcelFieldCodec):
         return canonicalize_decimal(parsed, presentation.fraction_digits)
 
 
-NumberRangeCodec = NumberRange
+class NumberRangeCodec:
+    """Factory for explicit number-range codec configuration."""
+
+    def __new__(
+        cls,
+        *,
+        fraction_digits: int | None = None,
+        unit: str | None = None,
+    ) -> ExcelCodecConfig:
+        return ExcelCodecConfig.create(NumberRange, fraction_digits=fraction_digits, unit=unit)

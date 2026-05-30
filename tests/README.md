@@ -30,7 +30,7 @@ It is organized around stable public behavior first, then workflow integration, 
   - `tests/contracts/test_result_contract.py`
     - `ImportResult`, `ValidateHeaderResult`, status helpers, API payload shape
   - `tests/contracts/test_pydantic_contract.py`
-    - metadata extraction, Pydantic validation mapping, custom codec extension surface, `Annotated[..., ExcelMeta(...)]` declarations
+    - metadata extraction, Pydantic validation mapping, custom codec extension surface, `Annotated[..., ExcelColumn(...)]` declarations
   - `tests/contracts/test_core_components_contract.py`
     - schema layout, header parsing/validation, row aggregation, issue tracking column offsets
 
@@ -52,11 +52,9 @@ It is organized around stable public behavior first, then workflow integration, 
   - keep regressions close to the code that changed
 - Main files:
   - `tests/unit/test_config_options.py`
-    - config normalization, helper constructors, storage option behavior, legacy Minio warnings
+    - config normalization, helper constructors, and storage option behavior
   - `tests/unit/test_converters_and_schema_extraction.py`
     - converter utilities and schema extraction details
-  - `tests/unit/test_deprecation_policy.py`
-    - compatibility import warnings and replacement guidance
   - `tests/unit/test_diagnostics_logging.py`
     - named logger behavior and developer-facing diagnostics
   - `tests/unit/test_excel_exceptions.py`
@@ -106,8 +104,8 @@ It is organized around stable public behavior first, then workflow integration, 
   - result object payloads
   - public exception behavior
 - Schema and metadata behavior:
-  - `FieldMeta(...)`
-  - `ExcelMeta(...)`
+  - `ExcelColumn(...)`
+  - explicit codec helpers
   - flattened layout ordering
   - composite field expansion
   - constraint overlay
@@ -127,16 +125,16 @@ It is organized around stable public behavior first, then workflow integration, 
   - storage gateway selection
   - `WorksheetTable` reader shape
   - missing-storage failure mode
-  - Minio compatibility behavior
+  - explicit Minio storage behavior
   - custom storage behavior
 - Localization behavior:
   - template locale
   - result-workbook locale
   - message lookup and fallback behavior
-- Compatibility behavior:
-  - deprecated import paths
-  - legacy naming aliases
-  - deprecation warnings
+- 3.0 removed-surface behavior:
+  - removed compatibility import paths
+  - removed legacy naming aliases
+  - removed legacy storage config fields
 - Developer-facing diagnostics:
   - named logger usage
   - warning/info message consistency
@@ -190,13 +188,13 @@ It is organized around stable public behavior first, then workflow integration, 
   - `tests/contracts/test_export_contract.py`
   - `tests/contracts/test_import_contract.py`
   - `tests/unit/test_config_options.py`
-  - `tests/unit/test_deprecation_policy.py`
+  - `tests/contracts/test_v3_public_api_contract.py`
 - Use this area for:
   - facade method behavior
   - result payload shape
   - config constructor behavior
   - public naming changes
-  - compatibility-path changes
+  - removed-surface changes
 
 ### Schema and layout behavior
 
@@ -309,7 +307,6 @@ It is organized around stable public behavior first, then workflow integration, 
   - `tests/contracts/test_storage_contract.py`
   - `tests/unit/test_config_options.py`
   - `examples/custom_storage.py`
-- If compatibility behavior changed, check:
-  - `tests/unit/test_deprecation_policy.py`
-  - `MIGRATIONS.md`
-  - `docs/public-api.md`
+- If removed-surface behavior changed, check:
+  - `tests/contracts/test_v3_public_api_contract.py`
+  - `docs/agent/v3-prd.md`

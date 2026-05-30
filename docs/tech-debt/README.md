@@ -12,7 +12,8 @@ Use it to capture implementation compromises that should be visible and actionab
 
 ## What qualifies as technical debt here
 
-- Compatibility code that is necessary in 2.x but adds maintenance cost.
+- Compatibility or transitional code that is intentionally still present but
+  adds maintenance cost.
 - Temporary duplication or awkward layering in:
   - `src/excelalchemy/`
   - `docs/`
@@ -53,10 +54,11 @@ Each entry should include:
 
 - Be concrete and repository-local.
 - Prefer debt entries that point to specific files and seams such as:
-  - `src/excelalchemy/types/`
-  - `src/excelalchemy/core/storage_minio.py`
+  - `src/excelalchemy/runtime/`
+  - `src/excelalchemy/schema/`
+  - `src/excelalchemy/rendering/`
+  - `src/excelalchemy/storage_minio.py`
   - `docs/public-api.md`
-  - `tests/unit/test_deprecation_policy.py`
 - If the debt is tightly coupled to a planned piece of work, link the relevant plan under `plans/`.
 - If the debt exists because of a deliberate architecture choice, link the relevant historical ADR under `docs/history/adr/`.
 
@@ -64,9 +66,8 @@ Each entry should include:
 
 Common debt categories in this repository are likely to involve:
 
-- 2.x compatibility shims and deprecation paths
-- duplicated public vs compatibility naming
+- duplicated public vs implementation naming
 - result payload evolution and smoke snapshots
 - example and docs synchronization cost
-- storage abstraction vs legacy Minio behavior
+- storage abstraction vs concrete backend behavior
 - metadata layering and Pydantic boundary complexity

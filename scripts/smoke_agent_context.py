@@ -15,6 +15,7 @@ from harness.context import ContextLoadError, ContextLoader
 
 REQUIRED_AGENT_DOCS = (
     'AGENTS.md',
+    'docs/agent/v3-prd.md',
     'docs/agent/workflow.md',
     'docs/agent/architecture-boundaries.md',
     'docs/agent/invariants.md',
@@ -92,6 +93,22 @@ def validate_agent_context(repo_root: Path) -> list[str]:
         errors.append('root AGENTS.md was not loaded into context summary')
     if not isinstance(instructions, dict) or not instructions.get('context_agents_loaded'):
         errors.append('context/instructions/AGENTS.md was not loaded into context summary')
+    if not isinstance(instructions, dict) or not instructions.get('v3_prd_loaded'):
+        errors.append('docs/agent/v3-prd.md was not loaded into context summary')
+
+    source_ids = {source.get('id') for source in sources if isinstance(source, dict)}
+    if 'instructions.v3_prd' not in source_ids:
+        errors.append('context references did not include docs/agent/v3-prd.md')
+
+    invariants = summary.get('invariants')
+    if not isinstance(invariants, dict):
+        errors.append('loaded context summary did not include invariants')
+    else:
+        version_invariants = invariants.get('version_scoped_invariants')
+        if not isinstance(version_invariants, list):
+            errors.append('loaded context summary did not include version-scoped invariants')
+        elif not any(isinstance(item, dict) and item.get('id') == 'v3-prd-authority' for item in version_invariants):
+            errors.append('version-scoped invariants did not include v3-prd-authority')
 
     validation = context.get('validation')
     if not isinstance(validation, dict) or not validation.get('recommended_commands'):

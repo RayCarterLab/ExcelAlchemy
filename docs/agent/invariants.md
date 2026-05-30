@@ -3,6 +3,17 @@
 This file records ExcelAlchemy-specific invariants and code modification rules
 for AI agents.
 
+## Version Scope
+
+For tasks explicitly scoped to ExcelAlchemy 3.0, follow
+[`docs/agent/v3-prd.md`](v3-prd.md). In that scope, removing 2.x compatibility
+imports, aliases, deprecation warnings, and legacy configuration paths is
+intentional when it is part of the PRD task graph.
+
+3.0 work must make hidden rules explicit as named policies, models, or tests.
+Do not add broad catch-all package names such as `_internal`; use concrete
+responsibility names instead.
+
 ## Codec Abstraction
 
 - Field behavior belongs in codecs under `src/excelalchemy/codecs/`.
@@ -26,7 +37,7 @@ for AI agents.
 ## Type Safety
 
 - Prefer explicit types over untyped dictionaries and implicit conventions.
-- Preserve Pydantic boundary behavior in `src/excelalchemy/helper/pydantic.py`.
+- Preserve Pydantic boundary behavior in `src/excelalchemy/adapters/pydantic.py`.
 - Public result objects and config objects must remain typed and stable.
 - Do not silence type errors without a narrow documented reason.
 
@@ -49,8 +60,7 @@ for AI agents.
 - Template generation does not require a configured storage backend.
 - Header-invalid imports end without uploading a result workbook.
 - Data-invalid imports upload a result workbook and report a download URL.
-- Explicit `storage` takes precedence over legacy Minio settings when both are
-  supplied.
+- Config objects expose a single storage backend path: `storage=...`.
 - Storage readers are expected to return `WorksheetTable` and preserve
   merged-header gaps as empty cells.
 - Generated templates do not rely on native Excel data-validation rules; user
@@ -58,13 +68,13 @@ for AI agents.
 
 ## Result and Locale Contracts
 
-- Result payloads and API-facing shapes are stable 2.x surfaces.
+- Result payloads and API-facing shapes are stable 3.0 surfaces.
 - Preserve `ImportResult`, `CellErrorMap`, and `RowIssueMap` behavior unless the
   task explicitly changes it.
 - `ImportResult` has exactly three top-level result states: `SUCCESS`,
   `HEADER_INVALID`, and `DATA_INVALID`.
 - Workbook-facing display locale supports `zh-CN` and `en`.
-- Runtime exceptions and diagnostics are English-first in 2.x.
+- Runtime exceptions and diagnostics are English-first.
 - Do not change message wording casually when tests or docs treat it as contract.
 - `ImportResult.from_validate_header_result(...)` is only valid for failed
   header validation.
@@ -76,8 +86,8 @@ for AI agents.
   visually.
 - Required template headers are visually distinguished and annotated with
   comments.
-- `excelalchemy.const` compatibility constants represent stable `zh-CN`
-  defaults, not the full locale policy.
+- Workbook labels and colors come from explicit message and policy modules, not
+  a public compatibility constants module.
 
 ## Schema and Validation Contracts
 
@@ -93,20 +103,15 @@ for AI agents.
 - Missing-field and field-format validation messages are normalized into
   workbook-facing ExcelAlchemy errors.
 
-## Public Behavior and Compatibility
+## Public Behavior
 
 - Stable public behavior is protected primarily by `tests/contracts/` and
   `tests/integration/`.
 - Examples are part of the user-facing contract.
-- Deprecated modules and aliases still exist in 2.x and must continue to emit
-  explicit deprecation warnings.
-- Legacy Minio config still works but emits deprecation warnings.
-- `excelalchemy.types.*` is preserved for 2.x migrations and scheduled for
-  removal in 3.0.
-- Older import-inspection aliases remain available in 2.x, even though
-  `worksheet_table`, `header_table`, `cell_error_map`, and `row_error_map` are
-  preferred.
-- Compatibility warnings must point to replacement import paths.
+- 2.x compatibility imports, alias properties, deprecation warnings, and legacy
+  storage config fields are not part of the 3.0 public contract.
+- Deleted 2.x paths must stay deleted unless a new 3.0 PRD explicitly
+  reintroduces them as current API.
 
 ## Code Modification Rules
 
@@ -115,7 +120,7 @@ Agents must follow minimal-diff engineering.
 Required rules:
 
 - Make the smallest change that satisfies the task.
-- Preserve existing public interfaces by default.
+- Preserve existing 3.0 public interfaces by default.
 - Preserve deterministic behavior.
 - Add or update tests for all new logic.
 - Prefer established local patterns over new abstractions.
@@ -124,8 +129,8 @@ Required rules:
 
 Prohibited changes without explicit task scope:
 
-- Deleting core modules.
-- Removing compatibility shims.
+- Deleting current source modules.
+- Reintroducing compatibility shims.
 - Replacing `WorksheetTable` with pandas-first internals.
 - Reframing storage as Minio-only.
 - Presenting internal modules as stable application-facing API.
@@ -136,9 +141,9 @@ Prohibited changes without explicit task scope:
 
 Never do the following without explicit user instruction:
 
-- Delete or replace `src/excelalchemy/` core modules.
+- Delete or replace current `src/excelalchemy/` modules.
 - Remove public exports from `src/excelalchemy/__init__.py`.
-- Remove compatibility modules or deprecation warnings.
+- Reintroduce removed compatibility modules or deprecation warnings.
 - Modify unrelated files.
 - Rewrite repository history.
 - Change generated output snapshots without running their generator or smoke

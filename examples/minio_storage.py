@@ -1,16 +1,18 @@
-"""Built-in Minio storage example for the current 2.x line."""
+"""Explicit Minio storage example."""
+
+from typing import Annotated
 
 from minio import Minio
 from pydantic import BaseModel
 
-from excelalchemy import ExcelAlchemy, FieldMeta, ImporterConfig, Number, String
-from excelalchemy.core.storage import build_storage_gateway
-from excelalchemy.core.storage_minio import MinioStorageGateway
+from excelalchemy import ExcelAlchemy, ExcelColumn, ImporterConfig
+from excelalchemy.storage_gateway import build_storage_gateway
+from excelalchemy.storage_minio import MinioStorageGateway
 
 
 class EmployeeImporter(BaseModel):
-    full_name: String = FieldMeta(label='Full name', order=1)
-    age: Number = FieldMeta(label='Age', order=2)
+    full_name: Annotated[str, ExcelColumn(label='Full name', order=1)]
+    age: Annotated[float, ExcelColumn(label='Age', order=2)]
 
 
 def main() -> None:
@@ -23,8 +25,7 @@ def main() -> None:
     config = ImporterConfig.for_create(
         EmployeeImporter,
         creator=lambda row, context: row,
-        minio=minio_client,
-        bucket_name='excel-files',
+        storage=MinioStorageGateway(minio_client, bucket_name='excel-files'),
         locale='en',
     )
 
@@ -33,7 +34,7 @@ def main() -> None:
     template = alchemy.download_template_artifact(filename='employee-template.xlsx')
 
     print(f'Built gateway: {type(gateway).__name__}')
-    print(f'Uses built-in Minio path: {config.storage_options.uses_legacy_minio_path}')
+    print(f'Uses explicit storage path: {config.storage_options.has_storage}')
     print(f'Template bytes: {len(template.as_bytes())}')
     print(f'Gateway type check: {isinstance(gateway, MinioStorageGateway)}')
 

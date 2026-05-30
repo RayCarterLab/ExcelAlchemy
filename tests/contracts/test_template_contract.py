@@ -1,10 +1,9 @@
-from typing import Annotated, cast
+from typing import Annotated
 
-from minio import Minio
 from pydantic import BaseModel, Field
 
-from excelalchemy import ExcelAlchemy, ExcelMeta, FieldMeta, ImporterConfig, String
-from excelalchemy.const import BACKGROUND_REQUIRED_COLOR, HEADER_HINT
+from excelalchemy import ExcelAlchemy, ExcelColumn, ImporterConfig
+from excelalchemy.primitives.constants import BACKGROUND_REQUIRED_COLOR, HEADER_HINT
 from tests.support import (
     BaseTestCase,
     decode_prefixed_excel_to_workbook,
@@ -18,14 +17,14 @@ from tests.support.contract_models import MergedContractImporter, SimpleContract
 
 class TestTemplateContracts(BaseTestCase):
     async def test_download_template_returns_prefixed_base64_payload(self):
-        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway))
 
         content = alchemy.download_template()
 
         assert content.startswith('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,')
 
     async def test_download_template_artifact_returns_binary_excel_payload(self):
-        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway))
 
         artifact = alchemy.download_template_artifact(filename='people-template.xlsx')
         workbook = load_binary_excel_to_workbook(artifact.as_bytes())
@@ -40,7 +39,7 @@ class TestTemplateContracts(BaseTestCase):
         assert worksheet['A2'].value == '年龄'
 
     async def test_download_template_returns_sample_rows_with_user_visible_values(self):
-        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway))
 
         workbook = decode_prefixed_excel_to_workbook(
             alchemy.download_template([{'age': 18, 'name': '张三', 'radio': '选项1'}])
@@ -53,7 +52,7 @@ class TestTemplateContracts(BaseTestCase):
         assert worksheet['O3'].value == '选项1'
 
     async def test_download_template_returns_simple_header_with_required_fill_and_comment(self):
-        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway))
 
         workbook = decode_prefixed_excel_to_workbook(alchemy.download_template())
         worksheet = workbook['Sheet1']
@@ -65,10 +64,10 @@ class TestTemplateContracts(BaseTestCase):
 
     async def test_download_template_renders_example_value_in_header_comment_only_when_declared(self):
         class Importer(BaseModel):
-            full_name: String = FieldMeta(label='姓名', order=1, hint='填写法定姓名', example_value='张三')
-            nickname: String = FieldMeta(label='昵称', order=2)
+            full_name: Annotated[str, ExcelColumn(label='姓名', order=1, hint='填写法定姓名', example_value='张三')]
+            nickname: Annotated[str, ExcelColumn(label='昵称', order=2)]
 
-        alchemy = ExcelAlchemy(ImporterConfig(Importer, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(Importer, creator=creator, storage=self.storage_gateway))
 
         workbook = decode_prefixed_excel_to_workbook(alchemy.download_template())
         worksheet = workbook['Sheet1']
@@ -80,7 +79,7 @@ class TestTemplateContracts(BaseTestCase):
         assert '示例：' not in worksheet['B2'].comment.text
 
     async def test_download_template_returns_merged_header_with_expected_merge_ranges(self):
-        alchemy = ExcelAlchemy(ImporterConfig(MergedContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(MergedContractImporter, creator=creator, storage=self.storage_gateway))
 
         workbook = decode_prefixed_excel_to_workbook(alchemy.download_template())
         worksheet = workbook['Sheet1']
@@ -100,7 +99,7 @@ class TestTemplateContracts(BaseTestCase):
         assert 'T2:U2' in merge_ranges
 
     async def test_download_template_returns_workbook_without_excel_data_validation(self):
-        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio)))
+        alchemy = ExcelAlchemy(ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway))
 
         workbook = decode_prefixed_excel_to_workbook(alchemy.download_template())
         worksheet = workbook['Sheet1']
@@ -110,7 +109,7 @@ class TestTemplateContracts(BaseTestCase):
 
     async def test_download_template_supports_english_display_locale(self):
         alchemy = ExcelAlchemy(
-            ImporterConfig(SimpleContractImporter, creator=creator, minio=cast(Minio, self.minio), locale='en')
+            ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway, locale='en')
         )
 
         workbook = decode_prefixed_excel_to_workbook(alchemy.download_template())
@@ -123,12 +122,12 @@ class TestTemplateContracts(BaseTestCase):
     async def test_download_template_supports_english_example_value_comment(self):
         class Importer(BaseModel):
             full_name: Annotated[
-                String,
+                str,
                 Field(min_length=2),
-                ExcelMeta(label='Full name', order=1, hint='Use the legal name', example_value='Alice Chen'),
+                ExcelColumn(label='Full name', order=1, hint='Use the legal name', example_value='Alice Chen'),
             ]
 
-        alchemy = ExcelAlchemy(ImporterConfig(Importer, creator=creator, minio=cast(Minio, self.minio), locale='en'))
+        alchemy = ExcelAlchemy(ImporterConfig(Importer, creator=creator, storage=self.storage_gateway, locale='en'))
 
         workbook = decode_prefixed_excel_to_workbook(alchemy.download_template())
         worksheet = workbook['Sheet1']

@@ -16,8 +16,7 @@ These layers do not currently share the same locale policy.
   - `excelalchemy.codecs`
   - `excelalchemy.runtime`
   - `excelalchemy.metadata`
-- Stability policy: diagnostics are intentionally standardized in English for the
-  2.x line
+- Stability policy: diagnostics are intentionally standardized in English
 - Intended audience: backend developers, operators, and maintainers
 
 Developer diagnostics are not the same surface as API payloads or workbook-facing
@@ -28,7 +27,7 @@ end-user rendering.
 
 - Supported runtime locale set: `('en',)`
 - Default runtime locale: `en`
-- Stability policy: runtime exceptions are intentionally standardized in English for the 2.x line
+- Stability policy: runtime exceptions are intentionally standardized in English
 
 This means error messages raised in Python code are expected to stay English unless the
 project explicitly announces broader runtime i18n support in a future release.
@@ -37,7 +36,7 @@ project explicitly announces broader runtime i18n support in a future release.
 
 - Supported workbook display locales: `('zh-CN', 'en')`
 - Default workbook display locale: `zh-CN`
-- Stability policy: the default workbook locale is considered stable for the 2.x line
+- Stability policy: the default workbook locale is stable for 3.0
 
 Workbook display locale affects user-facing spreadsheet text such as:
 
@@ -72,12 +71,12 @@ alchemy_zh = ExcelAlchemy(ImporterConfig(ImporterModel, creator=create_func, loc
 alchemy_en = ExcelAlchemy(ImporterConfig(ImporterModel, creator=create_func, locale='en'))
 ```
 
-## Compatibility Notes
+## Constants And Policies
 
-- Constants in `excelalchemy.const` such as `HEADER_HINT`, `RESULT_COLUMN_LABEL`, and `REASON_COLUMN_LABEL`
-  remain available as compatibility helpers and represent the stable `zh-CN` defaults.
 - Locale-aware behavior should be driven through `ImporterConfig(..., locale=...)` and
-  `ExporterConfig(..., locale=...)`, not by reading those constants directly.
+  `ExporterConfig(..., locale=...)`.
+- Shared layout and label behavior belongs in `excelalchemy.policies` and
+  `excelalchemy.messages`, not in a public compatibility constants module.
 
 ## Future Direction
 

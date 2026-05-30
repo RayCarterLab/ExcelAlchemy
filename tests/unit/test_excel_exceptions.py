@@ -9,7 +9,7 @@ from excelalchemy import (
     RowIssueMap,
     ValidateResult,
 )
-from excelalchemy.i18n.messages import MessageKey
+from excelalchemy.messages import MessageKey
 from excelalchemy.results import build_frontend_remediation_payload
 from tests.support import BaseTestCase
 

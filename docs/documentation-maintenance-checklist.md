@@ -30,10 +30,13 @@ It is intentionally lightweight and specific to the current `ExcelAlchemy` repos
   - `src/excelalchemy/exceptions.py`
 - the repo’s main entry points, safe edit zones, or caution areas change
 - the preferred workflow, validation commands, or documentation update expectations change
-- the current 2.x guidance changes for:
-  - `storage=...` vs legacy Minio fields
-  - compatibility imports under `src/excelalchemy/types/`, `src/excelalchemy/exc.py`, `src/excelalchemy/identity.py`, `src/excelalchemy/header_models.py`, `src/excelalchemy/util/convertor.py`
-  - the `WorksheetTable` storage seam in `src/excelalchemy/core/table.py`
+- the current 3.0 guidance changes for:
+  - `storage=...` and explicit `ExcelStorage` backends
+  - removed compatibility imports such as `excelalchemy.types`,
+    `excelalchemy.exc`, `excelalchemy.identity`, `excelalchemy.header_models`,
+    `excelalchemy.util.convertor`, `excelalchemy.core`, `excelalchemy.helper`,
+    `excelalchemy.i18n`, and `excelalchemy._primitives`
+  - the `WorksheetTable` storage seam in `src/excelalchemy/workbook/table.py`
 
 ## Update `docs/repo-map.md` when
 
@@ -54,13 +57,13 @@ It is intentionally lightweight and specific to the current `ExcelAlchemy` repos
 - a new core concept becomes part of the library vocabulary
 - an existing concept is renamed, split, merged, or removed
 - responsibilities move between major collaborators such as:
-  - `src/excelalchemy/core/schema.py`
-  - `src/excelalchemy/core/headers.py`
-  - `src/excelalchemy/core/rows.py`
-  - `src/excelalchemy/core/executor.py`
-  - `src/excelalchemy/core/rendering.py`
-  - `src/excelalchemy/core/storage_protocol.py`
-  - `src/excelalchemy/helper/pydantic.py`
+  - `src/excelalchemy/schema/layout.py`
+  - `src/excelalchemy/workbook/headers.py`
+  - `src/excelalchemy/runtime/rows.py`
+  - `src/excelalchemy/runtime/executor.py`
+  - `src/excelalchemy/rendering/renderer.py`
+  - `src/excelalchemy/storage.py`
+  - `src/excelalchemy/adapters/pydantic.py`
 - the public vs internal distinction changes for a concept
 - import, template, export, or storage lifecycle steps change in a way users or maintainers need to reason about
 
@@ -72,7 +75,7 @@ It is intentionally lightweight and specific to the current `ExcelAlchemy` repos
 - locale behavior changes for:
   - runtime messages
   - workbook display text
-  - compatibility constants in `src/excelalchemy/const.py`
+  - message keys in `src/excelalchemy/messages.py`
 - storage contract expectations change, especially around:
   - `ExcelStorage`
   - `WorksheetTable`
