@@ -8,7 +8,7 @@ from pathlib import Path
 
 from harness.state import RunState
 
-PLANS_ROOT = Path('plans')
+PLANS_ROOT = Path('harness') / 'plans'
 ACTIVE_DIR = PLANS_ROOT / 'active'
 ARCHIVE_DIR = PLANS_ROOT / 'archive'
 TEMPLATE_PATH = PLANS_ROOT / 'template.md'

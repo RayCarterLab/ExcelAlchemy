@@ -167,12 +167,12 @@ config = ImporterConfig.for_create_or_update(
 
 ### Examples and docs
 
-If you want concrete examples of the recommended 2.x API shape, see:
+For current 3.0 examples, see:
 
-- [`docs/getting-started.md`](docs/getting-started.md)
-- [`docs/public-api.md`](docs/public-api.md)
-- [`examples/README.md`](examples/README.md)
-- [`docs/examples-showcase.md`](docs/examples-showcase.md)
+- [`docs/getting-started.md`](getting-started.md)
+- [`docs/public-api.md`](public-api.md)
+- [`examples/README.md`](../examples/README.md)
+- [`docs/examples-showcase.md`](examples-showcase.md)
 
 ## pandas
 
@@ -212,7 +212,7 @@ Additional top-level module guidance:
 - `excelalchemy.exceptions` is the stable replacement for `excelalchemy.exc`
 - `excelalchemy.identity` is now a compatibility import; prefer `from excelalchemy import Label, Key, UrlStr, ...`
 - `excelalchemy.header_models` is internal and should not be imported in application code
-- `docs/public-api.md` summarizes stable public modules, compatibility modules, and internal modules
+- `docs/public-api.md` summarizes the current 3.0 public surface and removed 2.x paths
 
 ## Import Inspection Names
 

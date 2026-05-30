@@ -25,25 +25,11 @@ It is meant to help both humans and coding agents find the right files before ma
   - These are part of the user-facing contract, not throwaway demos.
 - `docs/`
   - Human documentation, agent rules, history, release notes, and technical debt records.
-- `context/`
-  - Machine-readable runtime context loaded by the harness and agents.
-  - Current v1 layout groups instruction, architecture, and pattern context.
-- `tools/`
-  - Harness-facing deterministic local tool definitions and adapters.
-- `plans/`
-  - Harness task-plan template plus active/archive runtime plan artifacts.
 - `harness/`
-  - Deterministic runtime for driving non-deterministic AI agent work.
-- `eval/`
-  - Local evaluation adapters used by the harness.
-- `runs/`
-  - Ignored harness run-state artifacts.
+  - Agent-facing deterministic runtime, machine-readable context, local tools,
+    evaluators, task plans, and ignored run artifacts.
 - `scripts/`
   - Smoke checks and asset-generation helpers used to validate docs, examples, and package behavior.
-- `files/`
-  - Example workbooks and generated example outputs used by docs and smoke scripts.
-- `images/`
-  - Screenshots used by `README.md` and `README-pypi.md`.
 - `.github/`
   - CI, publish workflows, and issue/PR templates.
 
@@ -55,10 +41,6 @@ It is meant to help both humans and coding agents find the right files before ma
   - PyPI-facing summary; should stay aligned with the main onboarding story.
 - `README_cn.md`
   - Chinese-language README.
-- `ABOUT.md`
-  - Design rationale, architectural intent, and evolution notes.
-- `MIGRATIONS.md`
-  - Compatibility and upgrade guidance.
 - `CHANGELOG.md`
   - Release history and notable behavior/documentation changes.
 - `AGENTS.md`
@@ -176,8 +158,12 @@ These compatibility paths are removed in 3.0.
 
 - `docs/getting-started.md`
   - Fastest path for new users.
+- `docs/about.md`
+  - Design rationale, architectural intent, and evolution notes.
+- `docs/migrations.md`
+  - Compatibility and upgrade guidance.
 - `docs/public-api.md`
-  - Stable public modules vs compatibility vs internal modules.
+  - Stable public modules and removed 2.x paths.
 - `docs/platform-code-mapping.md`
   - Human platform-to-code ownership map.
 - `docs/result-objects.md`
@@ -266,12 +252,35 @@ These compatibility paths are removed in 3.0.
 
 ## Supporting Assets
 
-- `files/example-outputs/`
+- `docs/assets/images/`
+  - Screenshots used by `README.md`, `README-pypi.md`, and `docs/examples-showcase.md`.
+- `docs/assets/example-outputs/`
   - Generated text and JSON outputs referenced by docs and smoke scripts.
-- `files/*.xlsx`
-  - Example workbook assets.
-- `images/`
-  - Screenshots shown in README files.
+- `docs/assets/workbooks/portfolio/`
+  - Generated portfolio/demo workbook assets used by documentation screenshots.
+- `docs/assets/workbooks/legacy/`
+  - Legacy workbook samples kept as documentation assets.
+
+## Agent Harness: `harness/`
+
+- `harness/loop.py`
+  - Deterministic workflow controller and structured agent output schemas.
+- `harness/state.py`
+  - Serializable run state, step records, retry state, and fix-context aggregation.
+- `harness/runner.py`
+  - Public entry point for running one harness task.
+- `harness/context.py`
+  - Loader for machine-readable context under `harness/context_data/`.
+- `harness/context_data/`
+  - Runtime instruction, architecture, and validation context loaded by the harness.
+- `harness/evaluators/`
+  - Local evaluation adapters used by the deterministic harness.
+- `harness/tools/`
+  - Harness-facing deterministic local tool definitions and adapters.
+- `harness/plans/`
+  - Harness task-plan template plus active/archive runtime plan artifacts.
+- `harness/runs/`
+  - Ignored harness run-state artifacts.
 
 ## Public API vs Internal Implementation
 

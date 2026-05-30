@@ -22,17 +22,17 @@ At the top level, that import workflow is:
 - result intelligence
 - artifact and delivery
 
-[GitHub Repository](https://github.com/RayCarterLab/ExcelAlchemy) · [Full README](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README.md) · [Getting Started](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md) · [Integration Roadmap](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-roadmap.md) · [Platform Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/platform-architecture.md) · [Runtime Model](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/runtime-model.md) · [Integration Blueprints](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-blueprints.md) · [Result Objects](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md) · [API Response Cookbook](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md) · [Examples Showcase](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md) · [Code Mapping](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/platform-code-mapping.md) · [Migration Notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/MIGRATIONS.md)
+[GitHub Repository](https://github.com/RayCarterLab/ExcelAlchemy) · [Full README](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README.md) · [Getting Started](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md) · [Integration Roadmap](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-roadmap.md) · [Platform Architecture](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/platform-architecture.md) · [Runtime Model](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/runtime-model.md) · [Integration Blueprints](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-blueprints.md) · [Result Objects](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/result-objects.md) · [API Response Cookbook](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/api-response-cookbook.md) · [Examples Showcase](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/examples-showcase.md) · [Code Mapping](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/platform-code-mapping.md) · [Migration Notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/migrations.md)
 
 ## Screenshots
 
 ### Template
 
-![Excel template screenshot](https://raw.githubusercontent.com/RayCarterLab/ExcelAlchemy/main/images/portfolio-template-en.png)
+![Excel template screenshot](https://raw.githubusercontent.com/RayCarterLab/ExcelAlchemy/main/docs/assets/images/portfolio-template-en.png)
 
 ### Import Result
 
-![Excel import result screenshot](https://raw.githubusercontent.com/RayCarterLab/ExcelAlchemy/main/images/portfolio-import-result-en.png)
+![Excel import result screenshot](https://raw.githubusercontent.com/RayCarterLab/ExcelAlchemy/main/docs/assets/images/portfolio-import-result-en.png)
 
 ## Install
 
@@ -142,10 +142,11 @@ See also:
 These fixed outputs are generated from the repository examples by
 [`scripts/generate_example_output_assets.py`](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/scripts/generate_example_output_assets.py).
 
-Import workflow:
+Import workflow excerpt:
 
 ```text
 Employee import workflow completed
+Preflight: VALID
 Result: SUCCESS
 Success rows: 1
 Failed rows: 0
@@ -166,12 +167,12 @@ Uploaded objects: ['employees-export-upload.xlsx']
 
 Full captured outputs:
 
-- [employee-import-workflow.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/employee-import-workflow.txt)
-- [create-or-update-import.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/create-or-update-import.txt)
-- [export-workflow.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/export-workflow.txt)
-- [date-and-range-fields.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/date-and-range-fields.txt)
-- [selection-fields.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/selection-fields.txt)
-- [fastapi-reference.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/files/example-outputs/fastapi-reference.txt)
+- [employee-import-workflow.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/assets/example-outputs/employee-import-workflow.txt)
+- [create-or-update-import.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/assets/example-outputs/create-or-update-import.txt)
+- [export-workflow.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/assets/example-outputs/export-workflow.txt)
+- [date-and-range-fields.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/assets/example-outputs/date-and-range-fields.txt)
+- [selection-fields.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/assets/example-outputs/selection-fields.txt)
+- [fastapi-reference.txt](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/assets/example-outputs/fastapi-reference.txt)
 
 For a single GitHub page that combines screenshots, representative workflows,
 and captured outputs, see the
@@ -186,13 +187,13 @@ example script, see the
 ExcelAlchemy keeps workbook-facing validation feedback readable while also
 supporting API-friendly inspection in application code.
 
-The stable 2.x result surface includes:
+The current result inspection surface includes:
 
 - `alchemy.cell_error_map`
 - `alchemy.row_error_map`
 
-These objects remain dict-like for compatibility, but also expose helpers such
-as:
+These objects remain mapping-like for direct inspection, and also expose helpers
+such as:
 
 - `messages_at(...)`
 - `messages_for_row(...)`
@@ -219,4 +220,4 @@ for configured selection fields.
 - [Integration blueprints](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/integration-blueprints.md)
 - [Code mapping](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/platform-code-mapping.md)
 - [Locale policy](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/locale.md)
-- [Migration notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/MIGRATIONS.md)
+- [Migration notes](https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/migrations.md)

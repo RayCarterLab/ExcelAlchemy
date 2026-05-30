@@ -63,7 +63,7 @@ Report:
 
 ## Generated Outputs
 
-Regenerate `files/example-outputs/` with
+Regenerate `docs/assets/example-outputs/` with
 `scripts/generate_example_output_assets.py` when captured example output changes
 intentionally.
 

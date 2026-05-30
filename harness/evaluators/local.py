@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Literal
 
 from harness.state import RunState
-from tools.executor import execute_tool
-from tools.repo_tools import get_repo_tools
+from harness.tools.executor import execute_tool
+from harness.tools.repo_tools import get_repo_tools
 
 
 @dataclass(frozen=True, slots=True)

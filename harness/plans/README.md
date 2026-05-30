@@ -5,11 +5,11 @@ Historical hand-written plans live in `docs/history/plans/`.
 
 ## Related docs
 
-- [../AGENTS.md](../AGENTS.md) for repository-local change guidance.
-- [../docs/repo-map.md](../docs/repo-map.md) for the main directories plans usually touch.
-- [../docs/tech-debt/README.md](../docs/tech-debt/README.md) for recording maintenance burdens discovered while planning.
-- [../docs/history/adr/README.md](../docs/history/adr/README.md) for historical architecture decision records.
-- [../docs/history/plans/README.md](../docs/history/plans/README.md) for archived plans.
+- [../../AGENTS.md](../../AGENTS.md) for repository-local change guidance.
+- [../../docs/repo-map.md](../../docs/repo-map.md) for the main directories plans usually touch.
+- [../../docs/tech-debt/README.md](../../docs/tech-debt/README.md) for recording maintenance burdens discovered while planning.
+- [../../docs/history/adr/README.md](../../docs/history/adr/README.md) for historical architecture decision records.
+- [../../docs/history/plans/README.md](../../docs/history/plans/README.md) for archived plans.
 
 ## What belongs in a plan
 
@@ -91,4 +91,4 @@ For this repository, plans should usually mention affected items from:
 - `examples/`
 - `docs/`
 - `scripts/`
-- `files/example-outputs/`
+- `docs/assets/example-outputs/`

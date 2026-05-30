@@ -1,7 +1,7 @@
 # Runtime Model
 
-This page explains the real runtime model of ExcelAlchemy imports in the 2.x
-line.
+This page explains the real runtime model of ExcelAlchemy imports in the current
+3.0 line.
 It is not a list of APIs.
 It is a guide to what happens during an import run, why the stages are
 separated, and how a backend engineer should reason about runtime behavior

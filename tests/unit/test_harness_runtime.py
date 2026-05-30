@@ -33,20 +33,28 @@ def test_context_loader_loads_instruction_architecture_and_validation_patterns(t
     _prepend_repo_root()
     from harness.context import ContextLoader
 
-    _write_json(tmp_path / 'context' / 'architecture' / 'repo_map.json', {'project': {'name': 'X' * 100}})
     _write_json(
-        tmp_path / 'context' / 'architecture' / 'module_index.json',
+        tmp_path / 'harness' / 'context_data' / 'architecture' / 'repo_map.json',
+        {'project': {'name': 'X' * 100}},
+    )
+    _write_json(
+        tmp_path / 'harness' / 'context_data' / 'architecture' / 'module_index.json',
         {'harness_modules': [{'module': 'harness.loop'}]},
     )
     _write_json(
-        tmp_path / 'context' / 'instructions' / 'invariants.json',
+        tmp_path / 'harness' / 'context_data' / 'instructions' / 'invariants.json',
         {'agent_operating_invariants': [{'id': 'deterministic', 'statement': 'fixed loop'}]},
     )
-    _write_json(tmp_path / 'context' / 'patterns' / 'validation.json', {'focused': ['uv run pytest']})
+    _write_json(
+        tmp_path / 'harness' / 'context_data' / 'patterns' / 'validation.json',
+        {'focused': ['uv run pytest']},
+    )
     (tmp_path / 'AGENTS.md').write_text('# Root rules', encoding='utf-8')
     (tmp_path / 'docs' / 'agent').mkdir(parents=True)
     (tmp_path / 'docs' / 'agent' / 'v3-prd.md').write_text('# V3 PRD', encoding='utf-8')
-    (tmp_path / 'context' / 'instructions' / 'AGENTS.md').write_text('# Context rules', encoding='utf-8')
+    (tmp_path / 'harness' / 'context_data' / 'instructions' / 'AGENTS.md').write_text(
+        '# Context rules', encoding='utf-8'
+    )
 
     loader = ContextLoader(repo_root=tmp_path)
     context = loader.get_context('plan', 'task', char_budget=80)
@@ -86,7 +94,7 @@ def test_plan_artifact_create_and_append_use_active_plans_dir(tmp_path: Path, mo
     plan_artifact.append_plan_event(path, 'validate: success')
 
     text = path.read_text(encoding='utf-8')
-    assert path == Path('plans') / 'active' / 'run-2.md'
+    assert path == Path('harness') / 'plans' / 'active' / 'run-2.md'
     assert 'Run ID: `run-2`' in text
     assert 'write artifact' in text
     assert 'Context sources are stored by reference' in text
@@ -97,7 +105,7 @@ def test_plan_artifact_create_and_append_use_active_plans_dir(tmp_path: Path, mo
 
 def test_local_evaluator_checks_state_contracts_without_external_services(tmp_path: Path) -> None:
     _prepend_repo_root()
-    from eval.local import Evaluator
+    from harness.evaluators.local import Evaluator
     from harness.state import RunState
 
     state = RunState(task='state contract')
@@ -131,8 +139,8 @@ def test_runner_writes_run_state_and_plan_artifact(tmp_path: Path, monkeypatch) 
     report = run_task('local harness smoke')
     run_id = report.splitlines()[0].removeprefix('Run ID: ')
 
-    run_state = tmp_path / 'runs' / f'{run_id}.json'
-    plan = tmp_path / 'plans' / 'active' / f'{run_id}.md'
+    run_state = tmp_path / 'harness' / 'runs' / f'{run_id}.json'
+    plan = tmp_path / 'harness' / 'plans' / 'active' / f'{run_id}.md'
     payload = json.loads(run_state.read_text(encoding='utf-8'))
     plan_text = plan.read_text(encoding='utf-8')
     state_text = run_state.read_text(encoding='utf-8')
@@ -151,12 +159,12 @@ def test_runner_writes_run_state_and_plan_artifact(tmp_path: Path, monkeypatch) 
 
 
 def _write_minimal_context(root: Path) -> None:
-    _write_json(root / 'context' / 'architecture' / 'repo_map.json', {})
-    _write_json(root / 'context' / 'architecture' / 'module_index.json', {})
-    _write_json(root / 'context' / 'instructions' / 'invariants.json', {})
-    _write_json(root / 'context' / 'patterns' / 'validation.json', {})
+    _write_json(root / 'harness' / 'context_data' / 'architecture' / 'repo_map.json', {})
+    _write_json(root / 'harness' / 'context_data' / 'architecture' / 'module_index.json', {})
+    _write_json(root / 'harness' / 'context_data' / 'instructions' / 'invariants.json', {})
+    _write_json(root / 'harness' / 'context_data' / 'patterns' / 'validation.json', {})
     (root / 'AGENTS.md').write_text('# Rules', encoding='utf-8')
-    (root / 'context' / 'instructions' / 'AGENTS.md').write_text('# Context', encoding='utf-8')
+    (root / 'harness' / 'context_data' / 'instructions' / 'AGENTS.md').write_text('# Context', encoding='utf-8')
 
 
 def _write_json(path: Path, payload: dict[str, object]) -> None:

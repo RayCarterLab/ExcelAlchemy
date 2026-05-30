@@ -335,4 +335,4 @@ The demo entry point prints:
 
 For a captured output artifact, see:
 
-- [`files/example-outputs/fastapi-reference.txt`](../../files/example-outputs/fastapi-reference.txt)
+- [`docs/assets/example-outputs/fastapi-reference.txt`](../../docs/assets/example-outputs/fastapi-reference.txt)

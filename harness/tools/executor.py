@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from tools.repo_tools import RepoTool, get_repo_tools
+from harness.tools.repo_tools import RepoTool, get_repo_tools
 
 ToolResult = dict[str, bool | str]
 

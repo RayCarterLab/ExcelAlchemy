@@ -9,7 +9,7 @@ from typing import Any, cast
 
 def test_execute_tool_reads_only_inside_repo(tmp_path: Path) -> None:
     _prepend_repo_root()
-    from tools.executor import execute_tool
+    from harness.tools.executor import execute_tool
 
     target = tmp_path / 'sample.txt'
     target.write_text('hello harness', encoding='utf-8')
@@ -39,7 +39,7 @@ def test_context_loader_injects_step_scoped_validation_context() -> None:
 
 def test_evaluator_runs_configured_test_tools_through_executor(tmp_path: Path) -> None:
     _prepend_repo_root()
-    from eval.local import Evaluator
+    from harness.evaluators.local import Evaluator
 
     result = Evaluator(repo_root=tmp_path, test_tools=('missing_tool',)).check_tests_passed()
 
@@ -51,7 +51,7 @@ def test_evaluator_runs_configured_test_tools_through_executor(tmp_path: Path) -
 
 def test_evaluator_rejects_unregistered_test_commands(tmp_path: Path) -> None:
     _prepend_repo_root()
-    from eval.local import Evaluator
+    from harness.evaluators.local import Evaluator
 
     result = Evaluator(repo_root=tmp_path, test_commands=(('python', '-m', 'pytest'),)).check_tests_passed()
 
@@ -71,7 +71,7 @@ def test_agent_context_smoke_reports_missing_and_invalid_context(tmp_path: Path)
     from scripts.smoke_agent_context import validate_agent_context
 
     _write_minimal_context(tmp_path)
-    (tmp_path / 'context' / 'architecture' / 'repo_map.json').write_text('{', encoding='utf-8')
+    (tmp_path / 'harness' / 'context_data' / 'architecture' / 'repo_map.json').write_text('{', encoding='utf-8')
 
     errors = validate_agent_context(tmp_path)
 
@@ -81,9 +81,9 @@ def test_agent_context_smoke_reports_missing_and_invalid_context(tmp_path: Path)
 
 def test_loop_injects_context_parses_adapter_json_and_executes_tools() -> None:
     _prepend_repo_root()
-    from eval.local import Evaluator
     from harness.adapters.codex import CodexAdapter
     from harness.context import ContextLoader
+    from harness.evaluators.local import Evaluator
     from harness.loop import HarnessLoop
 
     seen_context_steps: list[str] = []
@@ -233,14 +233,14 @@ print(json.dumps(output))
 
     assert 'Run ID:' in report
     assert '- report: success' in report
-    assert list((tmp_path / 'runs').glob('*.json'))
-    assert list((tmp_path / 'plans' / 'active').glob('*.md'))
+    assert list((tmp_path / 'harness' / 'runs').glob('*.json'))
+    assert list((tmp_path / 'harness' / 'plans' / 'active').glob('*.md'))
 
 
 def test_loop_runs_plan_validation_commands_through_evaluator(monkeypatch) -> None:
     _prepend_repo_root()
-    import eval.local
-    from eval.local import Evaluator
+    import harness.evaluators.local
+    from harness.evaluators.local import Evaluator
     from harness.loop import HarnessLoop
 
     calls: list[tuple[str, dict[str, object]]] = []
@@ -249,7 +249,7 @@ def test_loop_runs_plan_validation_commands_through_evaluator(monkeypatch) -> No
         calls.append((name, args or {}))
         return {'success': True, 'output': 'pytest ok', 'error': ''}
 
-    monkeypatch.setattr(eval.local, 'execute_tool', fake_execute_tool)
+    monkeypatch.setattr(harness.evaluators.local, 'execute_tool', fake_execute_tool)
 
     def agent(step: str, _state) -> dict[str, object]:
         if step == 'understand':
@@ -320,12 +320,12 @@ def test_loop_runs_plan_validation_commands_through_evaluator(monkeypatch) -> No
 
 
 def _write_minimal_context(root: Path) -> None:
-    _write_json(root / 'context' / 'architecture' / 'repo_map.json', {})
-    _write_json(root / 'context' / 'architecture' / 'module_index.json', {})
-    _write_json(root / 'context' / 'instructions' / 'invariants.json', {})
-    _write_json(root / 'context' / 'patterns' / 'validation.json', {})
+    _write_json(root / 'harness' / 'context_data' / 'architecture' / 'repo_map.json', {})
+    _write_json(root / 'harness' / 'context_data' / 'architecture' / 'module_index.json', {})
+    _write_json(root / 'harness' / 'context_data' / 'instructions' / 'invariants.json', {})
+    _write_json(root / 'harness' / 'context_data' / 'patterns' / 'validation.json', {})
     (root / 'AGENTS.md').write_text('# Rules', encoding='utf-8')
-    (root / 'context' / 'instructions' / 'AGENTS.md').write_text('# Context', encoding='utf-8')
+    (root / 'harness' / 'context_data' / 'instructions' / 'AGENTS.md').write_text('# Context', encoding='utf-8')
 
 
 def _write_json(path: Path, payload: dict[str, object]) -> None:

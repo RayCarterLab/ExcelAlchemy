@@ -13,7 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 EXAMPLES_DIR = ROOT / 'examples'
-OUTPUT_DIR = ROOT / 'files' / 'example-outputs'
+OUTPUT_DIR = ROOT / 'docs' / 'assets' / 'example-outputs'
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))

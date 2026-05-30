@@ -179,8 +179,8 @@ cython_debug/
 
 # Agent harness runtime artifacts
 .harness-runs/
-runs/*
-!runs/README.md
-!runs/.gitkeep
-plans/active/*.md
-plans/archive/*.md
+harness/runs/*
+!harness/runs/README.md
+!harness/runs/.gitkeep
+harness/plans/active/*.md
+harness/plans/archive/*.md

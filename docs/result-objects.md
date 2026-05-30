@@ -16,7 +16,7 @@ and
 
 ## Core Result Objects
 
-In the v2.4 platform docs, these surfaces sit in the `Result Intelligence`
+In the current platform docs, these surfaces sit in the `Result Intelligence`
 layer.
 That platform label is an umbrella term, not a new subsystem or replacement
 for the concrete result objects documented here.

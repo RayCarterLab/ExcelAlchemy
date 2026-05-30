@@ -6,9 +6,9 @@ import os
 import shlex
 from pathlib import Path
 
-from eval.local import Evaluator
 from harness.adapters.codex import CommandAgentAdapter
 from harness.context import ContextLoader
+from harness.evaluators.local import Evaluator
 from harness.loop import HarnessLoop, build_report
 
 
@@ -20,7 +20,7 @@ def run_task(task: str, *, agent_command: str | None = None) -> str:
         agent=None,
         agent_adapter=CommandAgentAdapter(command=command) if command is not None else None,
         evaluator=Evaluator(repo_root=Path.cwd()),
-        state_dir=Path('runs'),
+        state_dir=Path('harness') / 'runs',
         context_loader=ContextLoader(repo_root=Path.cwd()),
         plan_artifacts_enabled=True,
     )

@@ -6,15 +6,15 @@
 
 ## Scope Authority
 
-This document applies only to tasks explicitly scoped to ExcelAlchemy 3.0.
-For those tasks, it is the agent-facing product and execution source of truth.
+The current mainline is ExcelAlchemy 3.0. This document is the agent-facing
+product and execution source of truth for current mainline work.
 
 ExcelAlchemy 3.0 is allowed to break compatibility. Do not preserve 2.x
 compatibility imports, aliases, deprecation warnings, or legacy configuration
 paths unless a 3.0 task explicitly reintroduces them as current API.
 
-For non-3.0 tasks, continue to follow the 2.x compatibility rules in the other
-agent documents.
+Only follow 2.x compatibility rules when a task explicitly targets a 2.x
+maintenance line.
 
 ## Product Goal
 
@@ -55,6 +55,8 @@ The 3.0 public surface should be intentionally small:
 - `excelalchemy.storage`
 - `excelalchemy.results`
 - `excelalchemy.errors`
+- `excelalchemy.exceptions`
+- `excelalchemy.artifacts`
 
 Preferred field declaration:
 
@@ -200,15 +202,18 @@ policies, or tests:
 
 ## Documentation Policy For 3.0
 
-Current docs are 2.x-biased. A 3.0 task must not leave stale docs as current
-guidance.
+Current docs must describe the 3.0 line unless they are clearly marked as
+history, release notes, or migration material. A 3.0 task must not leave stale
+2.x guidance in current docs.
 
 Docs to rewrite or replace:
 
 - `README.md`
 - `README-pypi.md`
 - `README_cn.md`
+- `docs/about.md`
 - `docs/getting-started.md`
+- `docs/migrations.md`
 - `docs/public-api.md`
 - `docs/domain-model.md`
 - `docs/runtime-model.md`
@@ -273,7 +278,7 @@ Scope:
 
 - `AGENTS.md`
 - `docs/agent/*`
-- `context/instructions/*`
+- `harness/context_data/instructions/*`
 
 Actions:
 
@@ -481,7 +486,7 @@ Validation:
 Scope:
 
 - `examples/`
-- `files/example-outputs/`
+- `docs/assets/example-outputs/`
 - `scripts/generate_example_output_assets.py`
 - `scripts/smoke_examples.py`
 

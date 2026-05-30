@@ -123,7 +123,7 @@ Use them to understand how the library is intended to be used from application c
   - `README-pypi.md`
 
 - If printed example output changes intentionally, also update:
-  - `files/example-outputs/`
+  - `docs/assets/example-outputs/`
   - `scripts/generate_example_output_assets.py`
   - `scripts/smoke_docs_assets.py`
 
@@ -152,4 +152,4 @@ uv run python -m examples.fastapi_reference.app
 If you want the visual showcase and captured outputs that correspond to these examples, see:
 
 - `docs/examples-showcase.md`
-- `files/example-outputs/`
+- `docs/assets/example-outputs/`

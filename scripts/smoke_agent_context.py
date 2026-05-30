@@ -21,11 +21,11 @@ REQUIRED_AGENT_DOCS = (
     'docs/agent/invariants.md',
     'docs/agent/testing.md',
     'docs/agent/review.md',
-    'context/instructions/AGENTS.md',
-    'context/instructions/invariants.json',
-    'context/architecture/repo_map.json',
-    'context/architecture/module_index.json',
-    'context/patterns/validation.json',
+    'harness/context_data/instructions/AGENTS.md',
+    'harness/context_data/instructions/invariants.json',
+    'harness/context_data/architecture/repo_map.json',
+    'harness/context_data/architecture/module_index.json',
+    'harness/context_data/patterns/validation.json',
 )
 
 
@@ -92,7 +92,7 @@ def validate_agent_context(repo_root: Path) -> list[str]:
     if not isinstance(instructions, dict) or not instructions.get('root_agents_loaded'):
         errors.append('root AGENTS.md was not loaded into context summary')
     if not isinstance(instructions, dict) or not instructions.get('context_agents_loaded'):
-        errors.append('context/instructions/AGENTS.md was not loaded into context summary')
+        errors.append('harness/context_data/instructions/AGENTS.md was not loaded into context summary')
     if not isinstance(instructions, dict) or not instructions.get('v3_prd_loaded'):
         errors.append('docs/agent/v3-prd.md was not loaded into context summary')
 

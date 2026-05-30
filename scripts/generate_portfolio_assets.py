@@ -29,7 +29,7 @@ from excelalchemy.util.file import remove_excel_prefix
 from excelalchemy.workbook.table import WorksheetTable
 
 ROOT = Path(__file__).resolve().parents[1]
-FILES_DIR = ROOT / 'files'
+FILES_DIR = ROOT / 'docs' / 'assets' / 'workbooks' / 'portfolio'
 FILES_DIR.mkdir(exist_ok=True)
 SHEET_NAME = 'Sheet1'
 

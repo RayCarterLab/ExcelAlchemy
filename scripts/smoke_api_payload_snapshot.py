@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SNAPSHOT_PATH = ROOT / 'files' / 'example-outputs' / 'import-failure-api-payload.json'
+SNAPSHOT_PATH = ROOT / 'docs' / 'assets' / 'example-outputs' / 'import-failure-api-payload.json'
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 

@@ -17,11 +17,11 @@ see
 
 ### Template
 
-![Excel template screenshot](../images/portfolio-template-en.png)
+![Excel template screenshot](assets/images/portfolio-template-en.png)
 
 ### Import Result
 
-![Excel import result screenshot](../images/portfolio-import-result-en.png)
+![Excel import result screenshot](assets/images/portfolio-import-result-en.png)
 
 ## Representative Workflows
 
@@ -51,11 +51,13 @@ Failed rows: 0
 Result workbook URL: None
 Created rows: 1
 Uploaded artifacts: []
+Observed events: ['started', 'header_validated', 'row_processed', 'completed']
+Job progress: {'status': 'completed', 'processed_rows': 1, 'total_rows': 1, 'result': 'SUCCESS', 'result_workbook_url': None}
 ```
 
 Full captured output:
 
-- [`files/example-outputs/employee-import-workflow.txt`](../files/example-outputs/employee-import-workflow.txt)
+- [`docs/assets/example-outputs/employee-import-workflow.txt`](assets/example-outputs/employee-import-workflow.txt)
 
 ### 2. Create-Or-Update Import
 
@@ -80,7 +82,7 @@ Uploaded artifacts: []
 
 Full captured output:
 
-- [`files/example-outputs/create-or-update-import.txt`](../files/example-outputs/create-or-update-import.txt)
+- [`docs/assets/example-outputs/create-or-update-import.txt`](assets/example-outputs/create-or-update-import.txt)
 
 ### 3. Export Workflow
 
@@ -96,14 +98,14 @@ Fixed output:
 ```text
 Export workflow completed
 Artifact filename: employees-export.xlsx
-Artifact bytes: 6892
+Artifact bytes: 6893
 Upload URL: memory://employees-export-upload.xlsx
 Uploaded objects: ['employees-export-upload.xlsx']
 ```
 
 Full captured output:
 
-- [`files/example-outputs/export-workflow.txt`](../files/example-outputs/export-workflow.txt)
+- [`docs/assets/example-outputs/export-workflow.txt`](assets/example-outputs/export-workflow.txt)
 
 ### 4. Field Families
 
@@ -111,10 +113,10 @@ If you want to see how workbook-oriented field types read in real schemas:
 
 - date and range fields:
   - [`examples/date_and_range_fields.py`](../examples/date_and_range_fields.py)
-  - [`files/example-outputs/date-and-range-fields.txt`](../files/example-outputs/date-and-range-fields.txt)
+  - [`docs/assets/example-outputs/date-and-range-fields.txt`](assets/example-outputs/date-and-range-fields.txt)
 - selection-heavy forms:
   - [`examples/selection_fields.py`](../examples/selection_fields.py)
-  - [`files/example-outputs/selection-fields.txt`](../files/example-outputs/selection-fields.txt)
+  - [`docs/assets/example-outputs/selection-fields.txt`](assets/example-outputs/selection-fields.txt)
 
 ### 5. Integration Boundaries
 
@@ -122,13 +124,13 @@ If you want to see how ExcelAlchemy fits into backend systems:
 
 - custom storage protocol:
   - [`examples/custom_storage.py`](../examples/custom_storage.py)
-  - [`files/example-outputs/custom-storage.txt`](../files/example-outputs/custom-storage.txt)
+  - [`docs/assets/example-outputs/custom-storage.txt`](assets/example-outputs/custom-storage.txt)
 - built-in Minio-compatible storage path:
   - [`examples/minio_storage.py`](../examples/minio_storage.py)
 - FastAPI integration:
   - [`examples/fastapi_upload.py`](../examples/fastapi_upload.py)
   - [`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md)
-  - [`files/example-outputs/fastapi-reference.txt`](../files/example-outputs/fastapi-reference.txt)
+  - [`docs/assets/example-outputs/fastapi-reference.txt`](assets/example-outputs/fastapi-reference.txt)
 
 ## Recommended Reading Order
 

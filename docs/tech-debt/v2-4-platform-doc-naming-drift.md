@@ -41,8 +41,8 @@ The canonical platform doc set is now:
 
 ## Relevant paths
 
-- `plans/v2-4-import-platform-layer-design.md`
-- `plans/v2-4-import-platform-layer-design-note.md`
+- `docs/history/plans/v2-4-import-platform-layer-design.md`
+- `docs/history/plans/v2-4-import-platform-layer-design-note.md`
 - `docs/platform-architecture.md`
 - `docs/runtime-model.md`
 - `docs/integration-blueprints.md`

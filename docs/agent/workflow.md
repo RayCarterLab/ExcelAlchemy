@@ -202,7 +202,7 @@ Recommended search targets:
 - Integration tests: `tests/integration/`
 - Unit tests: `tests/unit/`
 - Examples: `examples/`
-- Docs: `README.md`, `README-pypi.md`, `docs/`, `MIGRATIONS.md`
+- Docs: `README.md`, `README-pypi.md`, `docs/`, `docs/migrations.md`
 - Scripts: `scripts/`
 
 ## Failure and Retry Policy

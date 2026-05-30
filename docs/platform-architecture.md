@@ -1,6 +1,6 @@
 # Platform Architecture
 
-This page describes the `Import Platform Layer` in ExcelAlchemy 2.x.
+This page describes the current `Import Platform Layer` in ExcelAlchemy 3.0.
 It does not introduce a new subsystem.
 It explains how the library’s existing import-related capabilities fit together
 as one practical backend integration model.
@@ -343,26 +343,26 @@ flowchart TD
     P --> E[Artifact / Delivery Layer]
 
     A --> A1[metadata.py]
-    A --> A2[schema.py]
+    A --> A2[schema/layout.py]
     A --> A3[codecs/]
-    A --> A4[rendering.py / writer.py]
+    A --> A4[rendering/renderer.py / writer.py]
 
-    B --> B1[preflight.py]
-    B --> B2[headers.py]
-    B --> B3[storage_protocol.py]
+    B --> B1[runtime/preflight.py]
+    B --> B2[workbook/headers.py]
+    B --> B3[storage.py]
 
-    C --> C1[alchemy.py]
-    C --> C2[import_session.py]
-    C --> C3[rows.py]
-    C --> C4[executor.py]
-    C --> C5[helper/pydantic.py]
+    C --> C1[runtime/facade.py]
+    C --> C2[runtime/import_session.py]
+    C --> C3[runtime/rows.py]
+    C --> C4[runtime/executor.py]
+    C --> C5[adapters/pydantic.py]
 
     D --> D1[results.py]
     D --> D2[rows.py]
     D --> D3[executor.py]
 
     E --> E1[artifacts.py]
-    E --> E2[rendering.py / writer.py]
+    E --> E2[rendering/renderer.py / writer.py]
     E --> E3[storage.py]
 ```
 
@@ -427,11 +427,10 @@ Each layer answers a different integration question:
 
 ### Stable public surfaces over internal coupling
 
-The platform view should be built from the stable public API:
+The platform view should be built from stable user-facing and extension APIs:
 
 - `excelalchemy`
 - `excelalchemy.config`
-- `excelalchemy.metadata`
 - `excelalchemy.results`
 - `ExcelStorage`
 

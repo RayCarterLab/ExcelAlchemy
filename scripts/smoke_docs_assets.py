@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS_DIR = ROOT / 'docs'
-ASSET_DIR = ROOT / 'files' / 'example-outputs'
+ASSET_DIR = ROOT / 'docs' / 'assets' / 'example-outputs'
 BRANCH_PINNED_LINK_PATTERN = re.compile(
     r'https://github\.com/RayCarterLab/ExcelAlchemy/blob/main/'
     r'|https://raw\.githubusercontent\.com/RayCarterLab/ExcelAlchemy/main/'
@@ -19,10 +19,20 @@ REQUIRED_DOC_CHECKS: dict[Path, tuple[str, ...]] = {
         'docs/tool-comparison.md',
         'example_value',
     ),
+    DOCS_DIR / 'about.md': (
+        'How To Read This Repository',
+        'src/excelalchemy/README.md',
+        'runtime/',
+    ),
     DOCS_DIR / 'getting-started.md': (
         'example_value',
         'header comment',
         'alice@company.com',
+    ),
+    DOCS_DIR / 'migrations.md': (
+        'Upgrading To 3.0',
+        'Upgrading To 2.0',
+        'storage=...',
     ),
     DOCS_DIR / 'public-api.md': (
         'ExcelColumn(...)',
@@ -61,10 +71,10 @@ REQUIRED_DOC_CHECKS: dict[Path, tuple[str, ...]] = {
         'Generic Dataframe / Schema Validation Approaches',
     ),
     DOCS_DIR / 'examples-showcase.md': (
-        'files/example-outputs/employee-import-workflow.txt',
-        'files/example-outputs/create-or-update-import.txt',
-        'files/example-outputs/export-workflow.txt',
-        'files/example-outputs/fastapi-reference.txt',
+        'assets/example-outputs/employee-import-workflow.txt',
+        'assets/example-outputs/create-or-update-import.txt',
+        'assets/example-outputs/export-workflow.txt',
+        'assets/example-outputs/fastapi-reference.txt',
     ),
 }
 
@@ -78,6 +88,19 @@ REQUIRED_ASSETS = (
     'export-workflow.txt',
     'fastapi-reference.txt',
     'import-failure-api-payload.json',
+)
+
+FORBIDDEN_CURRENT_DOC_FRAGMENTS = (
+    'current ExcelAlchemy 2.x',
+    'stable 2.x result surface',
+    'v2.4 platform model',
+    'v2.4 platform docs',
+    'clearer 2.2 names',
+    'files/example-outputs',
+    '(images/portfolio-',
+    './images/portfolio-',
+    'main/images/portfolio-',
+    '../plans/README.md',
 )
 
 
@@ -100,7 +123,6 @@ def _assert_repo_markdown_links_are_branch_agnostic() -> None:
     markdown_files = [
         ROOT / 'README.md',
         ROOT / 'README_cn.md',
-        ROOT / 'MIGRATIONS.md',
         *DOCS_DIR.rglob('*.md'),
         *(ROOT / 'examples').rglob('*.md'),
     ]
@@ -118,11 +140,30 @@ def _assert_pypi_readme_links_target_main() -> None:
     required_fragments = (
         'https://github.com/RayCarterLab/ExcelAlchemy/blob/main/README.md',
         'https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/getting-started.md',
-        'https://raw.githubusercontent.com/RayCarterLab/ExcelAlchemy/main/images/portfolio-template-en.png',
+        'https://github.com/RayCarterLab/ExcelAlchemy/blob/main/docs/migrations.md',
+        'https://raw.githubusercontent.com/RayCarterLab/ExcelAlchemy/main/docs/assets/images/portfolio-template-en.png',
     )
     missing = [fragment for fragment in required_fragments if fragment not in content]
     if missing:
         raise AssertionError(f'README-pypi.md is missing expected main-branch links: {missing}')
+
+
+def _assert_current_docs_do_not_claim_2x_current_line() -> None:
+    active_docs = [
+        ROOT / 'README.md',
+        ROOT / 'README_cn.md',
+        ROOT / 'README-pypi.md',
+        *(path for path in DOCS_DIR.glob('*.md') if path.name != 'migrations.md'),
+        ROOT / 'AGENTS.md',
+        ROOT / 'src' / 'excelalchemy' / 'README.md',
+        ROOT / 'tests' / 'README.md',
+        ROOT / 'examples' / 'README.md',
+    ]
+    for path in active_docs:
+        content = path.read_text(encoding='utf-8')
+        found = [fragment for fragment in FORBIDDEN_CURRENT_DOC_FRAGMENTS if fragment in content]
+        if found:
+            raise AssertionError(f'{path.relative_to(ROOT)} contains stale current-line wording: {found}')
 
 
 def main() -> None:
@@ -136,9 +177,12 @@ def main() -> None:
     _assert_pypi_readme_links_target_main()
     print('Documentation smoke passed: README-pypi links target main')
 
+    _assert_current_docs_do_not_claim_2x_current_line()
+    print('Documentation smoke passed: current docs do not claim 2.x as current')
+
     for filename in REQUIRED_ASSETS:
         _assert_asset_exists(filename)
-        print(f'Asset smoke passed: files/example-outputs/{filename}')
+        print(f'Asset smoke passed: docs/assets/example-outputs/{filename}')
 
 
 if __name__ == '__main__':

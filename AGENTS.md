@@ -20,18 +20,18 @@ Use this order when documents conflict:
 
 1. `AGENTS.md`
 2. `docs/agent/*`
-3. `context/*`
+3. `harness/context_data/*`
 4. `docs/*`
 5. `docs/history/*`
 
 `docs/agent/*` is the authoritative rule source for agents and the repository's
-agent-facing SSOT. `context/*` is machine-readable runtime context for the
-harness and agents, not ordinary prose documentation. `docs/*` is supplementary
-human documentation, including `docs/tech-debt/` maintenance debt records.
-`docs/history/*` contains archived plans and historical ADRs only; it does not
-override current rules and should be used only to debug past design decisions.
-`plans/` is the harness runtime task-plan artifact directory, not a historical
-documentation directory.
+agent-facing SSOT. `harness/context_data/*` is machine-readable runtime context
+for the harness and agents, not ordinary prose documentation. `docs/*` is
+supplementary human documentation, including `docs/tech-debt/` maintenance debt
+records. `docs/history/*` contains archived plans and historical ADRs only; it
+does not override current rules and should be used only to debug past design
+decisions. `harness/plans/` is the harness runtime task-plan artifact directory,
+not a historical documentation directory.
 
 ## High-Priority Rules
 
@@ -48,9 +48,10 @@ documentation directory.
 - Do not hide failed or unrun validation.
 - Do not remove public exports, compatibility shims, or deprecation warnings
   casually.
-- For tasks explicitly scoped to ExcelAlchemy 3.0, follow
-  [`docs/agent/v3-prd.md`](docs/agent/v3-prd.md); 3.0 compatibility removal is
-  intentional when it is part of that plan.
+- The current mainline is ExcelAlchemy 3.0. Follow
+  [`docs/agent/v3-prd.md`](docs/agent/v3-prd.md) for 3.0 work; compatibility
+  removal is intentional when it is part of that plan. Only preserve 2.x
+  compatibility behavior when a task explicitly targets a 2.x maintenance line.
 - Do not move or rewrite `src/`, `tests/`, `examples/`, or existing non-agent
   docs as part of agent-structure work.
 - Stop and report blockers when the task cannot be completed safely.
@@ -119,6 +120,8 @@ Core rules:
 - [docs/repo-map.md](docs/repo-map.md): repository navigation.
 - [docs/domain-model.md](docs/domain-model.md): core concepts.
 - [docs/public-api.md](docs/public-api.md): public API boundaries.
+- [docs/about.md](docs/about.md): design rationale and evolution notes.
+- [docs/migrations.md](docs/migrations.md): migration and upgrade guidance.
 - [docs/platform-architecture.md](docs/platform-architecture.md): human
   platform architecture view.
 - [docs/platform-code-mapping.md](docs/platform-code-mapping.md): human code
@@ -143,15 +146,16 @@ Harness runtime source belongs in:
 
 Local evaluation adapters belong in:
 
-- `eval/local.py`
+- `harness/evaluators/local.py`
 
 Harness-facing tool adapters belong in:
 
-- `tools/repo_tools.py`
+- `harness/tools/repo_tools.py`
 
-Harness run artifacts belong in `runs/` and are ignored by Git except for
-tracked placeholders. Legacy `.harness-runs/` artifacts are also ignored.
-Plan run artifacts belong in `plans/active/` or `plans/archive/`.
+Harness run artifacts belong in `harness/runs/` and are ignored by Git except
+for tracked placeholders. Legacy `.harness-runs/` artifacts are also ignored.
+Plan run artifacts belong in `harness/plans/active/` or
+`harness/plans/archive/`.
 
 ## Definition of Done
 

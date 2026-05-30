@@ -70,7 +70,7 @@ class ContextLoader:
     repo_root: Path
 
     def load(self) -> ContextBundle:
-        context_dir = self.repo_root / 'context'
+        context_dir = self.repo_root / 'harness' / 'context_data'
         repo_map = self._read_json(context_dir / 'architecture' / 'repo_map.json')
         module_index = self._read_json(context_dir / 'architecture' / 'module_index.json')
         invariants = self._read_json(context_dir / 'instructions' / 'invariants.json')
@@ -205,12 +205,12 @@ def _invariant_summaries(value: object) -> list[dict[str, object]]:
 def _context_source_specs() -> tuple[tuple[str, str, str], ...]:
     return (
         ('instructions.root_agents', 'AGENTS.md', 'instructions'),
-        ('instructions.context_agents', 'context/instructions/AGENTS.md', 'instructions'),
+        ('instructions.context_agents', 'harness/context_data/instructions/AGENTS.md', 'instructions'),
         ('instructions.v3_prd', 'docs/agent/v3-prd.md', 'instructions'),
-        ('instructions.invariants', 'context/instructions/invariants.json', 'instructions'),
-        ('architecture.repo_map', 'context/architecture/repo_map.json', 'architecture'),
-        ('architecture.module_index', 'context/architecture/module_index.json', 'architecture'),
-        ('patterns.validation', 'context/patterns/validation.json', 'patterns'),
+        ('instructions.invariants', 'harness/context_data/instructions/invariants.json', 'instructions'),
+        ('architecture.repo_map', 'harness/context_data/architecture/repo_map.json', 'architecture'),
+        ('architecture.module_index', 'harness/context_data/architecture/module_index.json', 'architecture'),
+        ('patterns.validation', 'harness/context_data/patterns/validation.json', 'patterns'),
     )
 
 

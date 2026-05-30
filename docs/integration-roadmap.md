@@ -123,7 +123,7 @@ Start here:
 
 Read:
 
-1. [`MIGRATIONS.md`](../MIGRATIONS.md)
+1. [`docs/migrations.md`](migrations.md)
 2. [`docs/public-api.md`](public-api.md)
 
 This is the best route when you need to answer:

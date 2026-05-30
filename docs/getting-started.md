@@ -176,12 +176,12 @@ If you want the shorter visual summary, see
 Before you wire ExcelAlchemy into a larger project, review:
 
 - [`docs/public-api.md`](public-api.md)
-- [`MIGRATIONS.md`](../MIGRATIONS.md)
+- [`docs/migrations.md`](migrations.md)
 
 These two documents explain:
 
 - which modules are stable public entry points
-- which import paths are compatibility-only in 2.x
+- which old import paths were removed from the current 3.0 API
 - how storage and Minio should be configured going forward
 
 ## 8. Surface Results In Your Own API

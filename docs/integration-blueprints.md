@@ -1,6 +1,6 @@
 # Integration Blueprints
 
-This page shows practical ways to compose the current ExcelAlchemy 2.x import
+This page shows practical ways to compose the current ExcelAlchemy 3.0 import
 capabilities into backend and frontend integration flows.
 It is not an API reference.
 It is a set of blueprint-style patterns that backend engineers can adapt to

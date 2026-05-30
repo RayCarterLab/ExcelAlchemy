@@ -42,36 +42,16 @@
       "responsibility": "Maintenance debt records for known repository-local tradeoffs and follow-up work."
     },
     {
-      "path": "context/",
-      "responsibility": "Machine-readable runtime context loaded by the deterministic harness and AI agents."
-    },
-    {
-      "path": "tools/",
-      "responsibility": "Harness-facing deterministic local tool definitions and adapters."
-    },
-    {
-      "path": "plans/",
-      "responsibility": "Harness runtime task-plan templates and active/archive plan artifacts."
-    },
-    {
       "path": "harness/",
-      "responsibility": "Deterministic harness runtime for driving non-deterministic AI agent work."
-    },
-    {
-      "path": "eval/",
-      "responsibility": "Local evaluation adapters used by the deterministic harness."
-    },
-    {
-      "path": "runs/",
-      "responsibility": "Ignored harness run-state artifacts."
+      "responsibility": "Agent-facing deterministic runtime, machine-readable context, local tools, evaluators, task plans, and ignored run artifacts."
     },
     {
       "path": "scripts/",
       "responsibility": "Smoke checks and asset generation helpers."
     },
     {
-      "path": "files/",
-      "responsibility": "Example workbooks and generated example outputs used by docs and smoke scripts."
+      "path": "docs/assets/",
+      "responsibility": "Documentation screenshots, generated example outputs, and workbook assets used by docs and smoke scripts."
     }
   ],
   "main_modules": [
@@ -184,7 +164,7 @@
       "responsibility": "Serializable run state, step records, retry state, and fix-context aggregation."
     },
     {
-      "path": "eval/local.py",
+      "path": "harness/evaluators/local.py",
       "responsibility": "Local evaluator for test status, diff size, and unrelated-file checks."
     },
     {

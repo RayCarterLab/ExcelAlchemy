@@ -7,7 +7,7 @@ Use it to capture implementation compromises that should be visible and actionab
 
 - [../../AGENTS.md](../../AGENTS.md) for repository-local change guidance.
 - [../repo-map.md](../repo-map.md) for locating the affected files.
-- [../../plans/README.md](../../plans/README.md) for execution plans tied to debt repayment work.
+- [../../harness/plans/README.md](../../harness/plans/README.md) for execution plans tied to debt repayment work.
 - [../history/adr/README.md](../history/adr/README.md) for historical architecture decisions that may explain or constrain a debt item.
 
 ## What qualifies as technical debt here
@@ -59,7 +59,7 @@ Each entry should include:
   - `src/excelalchemy/rendering/`
   - `src/excelalchemy/storage_minio.py`
   - `docs/public-api.md`
-- If the debt is tightly coupled to a planned piece of work, link the relevant plan under `plans/`.
+- If the debt is tightly coupled to a planned piece of work, link the relevant plan under `harness/plans/`.
 - If the debt exists because of a deliberate architecture choice, link the relevant historical ADR under `docs/history/adr/`.
 
 ## Repository alignment

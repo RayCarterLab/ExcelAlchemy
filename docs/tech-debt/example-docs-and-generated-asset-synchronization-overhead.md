@@ -18,7 +18,7 @@ Repository examples are treated as part of the public contract, and their behavi
 ## Current workaround
 
 - Examples are smoke-tested directly.
-- Captured outputs live under `files/example-outputs/`.
+- Captured outputs live under `docs/assets/example-outputs/`.
 - Generation and validation scripts enforce consistency:
   - `scripts/generate_example_output_assets.py`
   - `scripts/smoke_examples.py`
@@ -46,11 +46,11 @@ Repository examples are treated as part of the public contract, and their behavi
 - `docs/examples-showcase.md`
   - embeds fixed outputs and links to generated assets
 - `examples/README.md`
-  - describes examples as smoke-tested and points readers to `files/example-outputs/`
+  - describes examples as smoke-tested and points readers to `docs/assets/example-outputs/`
 - `README.md`
 - `README-pypi.md`
   - both surface example-driven onboarding and fixed outputs
-- `files/example-outputs/`
+- `docs/assets/example-outputs/`
   - stores generated example output artifacts that docs and smoke scripts depend on
 
 ## Uncertainty
@@ -65,7 +65,7 @@ Repository examples are treated as part of the public contract, and their behavi
 - `docs/examples-showcase.md`
 - `README.md`
 - `README-pypi.md`
-- `files/example-outputs/`
+- `docs/assets/example-outputs/`
 - `tests/integration/test_examples_smoke.py`
 - `scripts/generate_example_output_assets.py`
 - `scripts/smoke_examples.py`

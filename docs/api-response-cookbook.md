@@ -14,7 +14,7 @@ and
 If you want a copyable FastAPI-oriented example, see
 [`examples/fastapi_reference/README.md`](../examples/fastapi_reference/README.md).
 
-In the v2.4 platform model, these payloads sit mostly in the `Result
+In the current platform model, these payloads sit mostly in the `Result
 Intelligence` stage, with the remediation payload acting as an additive
 frontend-oriented projection.
 

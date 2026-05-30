@@ -263,7 +263,7 @@ It is organized around stable public behavior first, then workflow integration, 
   - `ExcelStorage` contract behavior
   - upload payload expectations
   - missing-storage errors
-  - legacy Minio compatibility
+  - explicit Minio storage behavior
 
 ## Useful shared helpers
 

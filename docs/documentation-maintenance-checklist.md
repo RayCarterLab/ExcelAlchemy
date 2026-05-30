@@ -11,7 +11,7 @@ It is intentionally lightweight and specific to the current `ExcelAlchemy` repos
 - [agent/invariants.md](agent/invariants.md) for behavior that should not drift accidentally.
 - [../src/excelalchemy/README.md](../src/excelalchemy/README.md) for the main package implementation guide.
 - [../tests/README.md](../tests/README.md) and [../examples/README.md](../examples/README.md) for executable contract surfaces.
-- [../plans/README.md](../plans/README.md), [tech-debt/README.md](tech-debt/README.md), and [history/adr/README.md](history/adr/README.md) for planning, debt tracking, and historical architecture records.
+- [../harness/plans/README.md](../harness/plans/README.md), [tech-debt/README.md](tech-debt/README.md), and [history/adr/README.md](history/adr/README.md) for planning, debt tracking, and historical architecture records.
 
 ## Use this checklist when
 
@@ -95,7 +95,7 @@ It is intentionally lightweight and specific to the current `ExcelAlchemy` repos
 - update `examples/README.md` when:
   - examples are added, removed, regrouped, or reclassified
   - an example becomes a compatibility example instead of a recommended example
-  - example changes imply updates to `files/example-outputs/` or smoke scripts
+  - example changes imply updates to `docs/assets/example-outputs/` or smoke scripts
 
 ## Create a new ADR when
 
@@ -120,11 +120,11 @@ Use `docs/history/adr/README.md` for the expected structure.
   - `docs/`
   - `examples/`
   - `scripts/`
-  - `files/example-outputs/`
+  - `docs/assets/example-outputs/`
 - the work needs explicit sequencing, checkpoints, or risk tracking
 - the change is large enough that a PR description is not sufficient
 
-Use `plans/README.md` for status conventions and logging format.
+Use `harness/plans/README.md` for status conventions and logging format.
 
 ## Record technical debt when
 
@@ -146,10 +146,10 @@ Use `docs/tech-debt/README.md` and include:
 - `AGENTS.md`, `docs/repo-map.md`, `docs/domain-model.md`, and `docs/agent/invariants.md` still match the changed code paths.
 - `src/excelalchemy/README.md`, `tests/README.md`, and `examples/README.md` still describe the current implementation and workflow shape.
 - `docs/public-api.md` is updated if public-vs-internal or compatibility guidance changed.
-- `MIGRATIONS.md` is updated if deprecation or migration guidance changed.
+- `docs/migrations.md` is updated if deprecation or migration guidance changed.
 - `docs/result-objects.md` and `docs/api-response-cookbook.md` are updated if result payloads changed.
 - `docs/locale.md` is updated if locale-visible behavior changed.
-- `examples/` and `files/example-outputs/` are updated if examples or captured outputs changed.
+- `examples/` and `docs/assets/example-outputs/` are updated if examples or captured outputs changed.
 - Run the repo’s normal verification commands for the affected area:
   - `uv run ruff format --check .`
   - `uv run ruff check .`

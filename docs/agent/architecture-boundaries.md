@@ -13,9 +13,11 @@ protected unless a 3.0 task reintroduces them as current API.
 The 3.0 module layout must use concrete responsibility names. Do not introduce
 generic package names such as `_internal`.
 
-## Public Surface
+## Public And Agent-Stable Surfaces
 
-Prefer these stable public modules in new code and docs:
+For application-facing public API guidance, use
+[`docs/public-api.md`](../public-api.md). For agent work, prefer these stable
+modules and ownership surfaces when editing current code and docs:
 
 - `excelalchemy`
 - `excelalchemy.config`
@@ -28,6 +30,11 @@ Prefer these stable public modules in new code and docs:
 - `excelalchemy.codecs`
 - `excelalchemy.policies`
 - `excelalchemy.messages`
+
+Some modules in this list, such as `excelalchemy.metadata`,
+`excelalchemy.messages`, and `excelalchemy.policies`, are stable ownership
+surfaces for agents and maintainers but are not ordinary application-facing
+entry points.
 
 Primary public entry points:
 
@@ -179,7 +186,7 @@ Required updates by change type:
 
 - Onboarding or recommended API shape: `README.md`, `README-pypi.md`.
 - Public vs internal boundaries: `docs/public-api.md`.
-- Migration guidance or deprecated paths: `MIGRATIONS.md`.
+- Migration guidance or deprecated paths: `docs/migrations.md`.
 - Component responsibilities and agent rules:
   `docs/agent/architecture-boundaries.md`.
 - Human platform/code mapping: `docs/platform-architecture.md` and

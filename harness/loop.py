@@ -9,14 +9,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
-from eval.local import EvaluationResult, Evaluator
 from harness.adapters.codex import AgentAdapter
 from harness.context import ContextLoader
+from harness.evaluators.local import EvaluationResult, Evaluator
 from harness.plan_artifact import append_plan_event, create_plan_artifact
 from harness.state import RunState, StepRecord
+from harness.tools.executor import execute_tool
 from pydantic import BaseModel, ConfigDict, ValidationError
 from pydantic import Field as PydanticField
-from tools.executor import execute_tool
 
 StepName = Literal[
     'understand',

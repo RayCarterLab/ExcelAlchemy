@@ -129,11 +129,11 @@ This is a small but meaningful design distinction.
 
 The project now documents its locale behavior explicitly instead of leaving it as an implementation detail.
 
-- runtime messages are English-first and stable for the 2.x line
+- runtime messages are English-first and stable for the current 3.0 line
 - workbook display text supports `zh-CN` and `en`
 - workbook display defaults to `zh-CN`
 
-That policy is written down in [docs/locale.md](./docs/locale.md), so users do not have to infer it from scattered examples.
+That policy is written down in [docs/locale.md](locale.md), so users do not have to infer it from scattered examples.
 
 ## Major Evolution Steps
 
@@ -249,9 +249,9 @@ Some deliberate tradeoffs:
 
 If you want the shortest path:
 
-1. Start with [README.md](./README.md)
-2. Read [docs/platform-code-mapping.md](./docs/platform-code-mapping.md)
-3. Look at `src/excelalchemy/core/`
+1. Start with [README.md](../README.md)
+2. Read [docs/platform-code-mapping.md](platform-code-mapping.md)
+3. Look at [src/excelalchemy/README.md](../src/excelalchemy/README.md) and the concrete `runtime/`, `schema/`, `workbook/`, and `rendering/` packages.
 4. Then inspect tests under `tests/contracts/`
 
 That path shows both the architecture and the behavioral safety net.

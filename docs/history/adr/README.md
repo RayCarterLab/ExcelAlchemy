@@ -9,7 +9,7 @@ agent rules and do not override `AGENTS.md` or `docs/agent/*`.
 - [../../../AGENTS.md](../../../AGENTS.md) for current repository-local change guidance.
 - [../../domain-model.md](../../domain-model.md) for the concepts ADRs usually shape.
 - [../../agent/invariants.md](../../agent/invariants.md) for current constraints.
-- [../../../plans/README.md](../../../plans/README.md) for active harness plan artifacts.
+- [../../../harness/plans/README.md](../../../harness/plans/README.md) for active harness plan artifacts.
 - [../../tech-debt/README.md](../../tech-debt/README.md) for debt items that may motivate or result from an architectural decision.
 
 ## When to create an ADR
@@ -74,4 +74,3 @@ In this repository, likely ADR-worthy topics include:
 - why compatibility shims remain in 2.x
 - why result payloads or naming conventions changed
 - why a workflow moved between `core/`, `helper/`, or public modules
-

@@ -1,6 +1,6 @@
 # ExcelAlchemy
 
-[English README](./README.md) · [项目说明](./ABOUT.md) · [快速开始](./docs/getting-started.md) · [接入路线图](./docs/integration-roadmap.md) · [平台架构](./docs/platform-architecture.md) · [运行时模型](./docs/runtime-model.md) · [集成蓝图](./docs/integration-blueprints.md) · [结果对象](./docs/result-objects.md) · [代码映射](./docs/platform-code-mapping.md) · [Locale Policy](./docs/locale.md) · [Changelog](./CHANGELOG.md) · [迁移说明](./MIGRATIONS.md)
+[English README](./README.md) · [项目说明](./docs/about.md) · [快速开始](./docs/getting-started.md) · [接入路线图](./docs/integration-roadmap.md) · [平台架构](./docs/platform-architecture.md) · [运行时模型](./docs/runtime-model.md) · [集成蓝图](./docs/integration-blueprints.md) · [结果对象](./docs/result-objects.md) · [代码映射](./docs/platform-code-mapping.md) · [Locale Policy](./docs/locale.md) · [Changelog](./CHANGELOG.md) · [迁移说明](./docs/migrations.md)
 
 ExcelAlchemy 是一个面向 Excel 导入导出的 schema-first Python 库。
 它的核心思路不是“读写表格文件”，而是“把 Excel 当成一种带约束的业务契约”。
@@ -31,7 +31,7 @@ ExcelAlchemy 是一个面向 Excel 导入导出的 schema-first Python 库。
 
 | 模板 | 导入结果 |
 | --- | --- |
-| ![Excel 模板截图](./images/portfolio-template-en.png) | ![Excel 导入结果截图](./images/portfolio-import-result-en.png) |
+| ![Excel 模板截图](./docs/assets/images/portfolio-template-en.png) | ![Excel 导入结果截图](./docs/assets/images/portfolio-import-result-en.png) |
 
 ## 这个项目适合什么
 
@@ -66,7 +66,7 @@ ExcelAlchemy 是一个面向 Excel 导入导出的 schema-first Python 库。
 - 为什么 facade 外面要简洁，里面要分层
 - 为什么国际化先从消息层和 workbook display text 开始
 
-详细设计思路见 [ABOUT.md](./ABOUT.md)。
+详细设计思路见 [docs/about.md](./docs/about.md)。
 
 ## 架构概览
 
@@ -196,10 +196,11 @@ pip install "ExcelAlchemy[minio]"
 
 ### 示例输出
 
-导入工作流输出：
+导入工作流输出节选：
 
 ```text
 Employee import workflow completed
+Preflight: VALID
 Result: SUCCESS
 Success rows: 1
 Failed rows: 0
@@ -220,14 +221,14 @@ Uploaded objects: ['employees-export-upload.xlsx']
 
 完整输出：
 
-- [`files/example-outputs/employee-import-workflow.txt`](files/example-outputs/employee-import-workflow.txt)
-- [`files/example-outputs/create-or-update-import.txt`](files/example-outputs/create-or-update-import.txt)
-- [`files/example-outputs/export-workflow.txt`](files/example-outputs/export-workflow.txt)
-- [`files/example-outputs/date-and-range-fields.txt`](files/example-outputs/date-and-range-fields.txt)
-- [`files/example-outputs/selection-fields.txt`](files/example-outputs/selection-fields.txt)
-- [`files/example-outputs/custom-storage.txt`](files/example-outputs/custom-storage.txt)
-- [`files/example-outputs/annotated-schema.txt`](files/example-outputs/annotated-schema.txt)
-- [`files/example-outputs/fastapi-reference.txt`](files/example-outputs/fastapi-reference.txt)
+- [`docs/assets/example-outputs/employee-import-workflow.txt`](docs/assets/example-outputs/employee-import-workflow.txt)
+- [`docs/assets/example-outputs/create-or-update-import.txt`](docs/assets/example-outputs/create-or-update-import.txt)
+- [`docs/assets/example-outputs/export-workflow.txt`](docs/assets/example-outputs/export-workflow.txt)
+- [`docs/assets/example-outputs/date-and-range-fields.txt`](docs/assets/example-outputs/date-and-range-fields.txt)
+- [`docs/assets/example-outputs/selection-fields.txt`](docs/assets/example-outputs/selection-fields.txt)
+- [`docs/assets/example-outputs/custom-storage.txt`](docs/assets/example-outputs/custom-storage.txt)
+- [`docs/assets/example-outputs/annotated-schema.txt`](docs/assets/example-outputs/annotated-schema.txt)
+- [`docs/assets/example-outputs/fastapi-reference.txt`](docs/assets/example-outputs/fastapi-reference.txt)
 
 ## 快速开始
 
@@ -326,7 +327,7 @@ alchemy = ExcelAlchemy(ExporterConfig(Importer, storage=InMemoryExcelStorage()))
 
 ## 导入结果状态查看命名
 
-如果你需要从 facade 上查看一次导入后的中间状态，推荐使用 2.2 这套更清晰的命名：
+如果你需要从 facade 上查看一次导入后的中间状态，请使用 3.0 的显式命名：
 
 - `alchemy.worksheet_table`
 - `alchemy.header_table`
@@ -340,7 +341,7 @@ alchemy = ExcelAlchemy(ExporterConfig(Importer, storage=InMemoryExcelStorage()))
 - `alchemy.cell_errors`
 - `alchemy.row_errors`
 
-在 2.x 里仍然可用，用于兼容旧代码；但新代码建议统一使用前面这组更明确的名字。
+这些旧别名已经不属于当前 3.0 API。应用代码应统一使用前面这组更明确的名字。
 
 ## 结构化错误读取
 
@@ -349,7 +350,7 @@ alchemy = ExcelAlchemy(ExporterConfig(Importer, storage=InMemoryExcelStorage()))
 - `alchemy.cell_error_map`
 - `alchemy.row_error_map`
 
-这两个对象在 2.x 中仍然保持 dict 兼容，但同时提供了更适合业务代码使用的辅助方法：
+这两个对象仍然保持 mapping 风格的直接读取能力，同时提供了更适合业务代码使用的辅助方法：
 
 - `at(...)`
 - `messages_at(...)`
@@ -428,7 +429,7 @@ Minio 只是一个默认实现，真正稳定的接口应该是 `ExcelStorage`�
 
 - [README.md](./README.md): 英文首页，偏作品集表达
 - [README_cn.md](./README_cn.md): 中文说明页，偏使用和理解
-- [ABOUT.md](./ABOUT.md): 设计原则、迁移记录、架构取舍
+- [docs/about.md](./docs/about.md): 设计原则、迁移记录、架构取舍
 - [docs/platform-architecture.md](./docs/platform-architecture.md): 导入平台层能力模型
 - [docs/runtime-model.md](./docs/runtime-model.md): 导入工作流的运行时顺序
 - [docs/integration-blueprints.md](./docs/integration-blueprints.md): 后端 / 前端接入蓝图

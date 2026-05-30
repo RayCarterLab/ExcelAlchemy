@@ -165,8 +165,8 @@
       "role": "RunState, StepRecord, JSON serialization, retry state, and fix context."
     },
     {
-      "module": "eval.local",
-      "path": "eval/local.py",
+      "module": "harness.evaluators.local",
+      "path": "harness/evaluators/local.py",
       "role": "Local validation checks for tests, diff size, and unrelated file changes."
     },
     {
