@@ -16,7 +16,7 @@ from excelalchemy import (
     ImporterConfig,
     ValidateResult,
 )
-from excelalchemy.codecs.date import Date
+from excelalchemy.codecs.date import DateFieldCodec
 from tests.support import BaseTestCase, FileRegistry
 
 
@@ -25,7 +25,7 @@ class TestDateValueType(BaseTestCase):
         """测试导入时，日期格式未指定"""
 
         class Importer(BaseModel):
-            birth_date: Annotated[int, ExcelColumn(codec=Date, label='出生日期', order=6)]
+            birth_date: Annotated[int, ExcelColumn(codec=DateFieldCodec, label='出生日期', order=6)]
 
         config = ImporterConfig(Importer, storage=self.storage_gateway)
         alchemy = ExcelAlchemy(config)
@@ -109,7 +109,7 @@ class TestDateValueType(BaseTestCase):
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
 
-        field.excel_codec = cast(Date, field.excel_codec)
+        field.excel_codec = cast(DateFieldCodec, field.excel_codec)
         assert field.excel_codec.format_display_value('', field) == ''
         assert field.excel_codec.format_display_value('2022-02-02', field) == '2022-02-02'
         assert field.excel_codec.format_display_value('2022-02-02 12:12:12', field) == '2022-02-02 12:12:12'
@@ -130,7 +130,7 @@ class TestDateValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(Date, field.excel_codec)
+        field.excel_codec = cast(DateFieldCodec, field.excel_codec)
 
         self.assertRaises(ValueError, field.excel_codec.normalize_import_value, '2022-02-02', field)
         assert (
@@ -148,7 +148,7 @@ class TestDateValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(Date, field.excel_codec)
+        field.excel_codec = cast(DateFieldCodec, field.excel_codec)
 
         self.assertRaises(ValueError, field.excel_codec.normalize_import_value, '2022-02-02', field)
         assert (
@@ -166,7 +166,7 @@ class TestDateValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(Date, field.excel_codec)
+        field.excel_codec = cast(DateFieldCodec, field.excel_codec)
 
         self.assertRaises(ValueError, field.excel_codec.normalize_import_value, '2022-02-02', field)
         assert (
@@ -186,7 +186,7 @@ class TestDateValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(Date, field.excel_codec)
+        field.excel_codec = cast(DateFieldCodec, field.excel_codec)
 
         self.assertRaises(ValueError, field.excel_codec.normalize_import_value, '2022-02-02', field)
         assert (

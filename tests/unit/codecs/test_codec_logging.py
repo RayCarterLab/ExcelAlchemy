@@ -12,7 +12,7 @@ from excelalchemy import (
     OptionId,
     SingleChoiceCodec,
 )
-from excelalchemy.codecs.base import CODEC_LOGGER_NAME
+from excelalchemy.codecs.field_codec import CODEC_LOGGER_NAME
 from excelalchemy.config import ImporterConfig
 
 
@@ -44,7 +44,7 @@ def test_radio_option_resolution_warning_uses_codec_logger(caplog: pytest.LogCap
     assert caplog.records
     record = caplog.records[-1]
     assert record.name == CODEC_LOGGER_NAME
-    assert 'Codec Radio could not resolve a configured option for field "Status"' in record.message
+    assert 'Codec SingleChoiceFieldCodec could not resolve a configured option for field "Status"' in record.message
     assert "returning '3' as-is" in record.message
 
 
@@ -60,7 +60,7 @@ def test_boolean_render_warning_uses_codec_logger(caplog: pytest.LogCaptureFixtu
     assert caplog.records
     record = caplog.records[-1]
     assert record.name == CODEC_LOGGER_NAME
-    assert 'Codec Boolean could not format workbook value for field "Is active"' in record.message
+    assert 'Codec BooleanFieldCodec could not format workbook value for field "Is active"' in record.message
     assert "Expected '是' or '否'" in record.message
 
 
@@ -76,5 +76,5 @@ def test_multi_checkbox_parse_warning_uses_codec_logger(caplog: pytest.LogCaptur
     assert caplog.records
     record = caplog.records[-1]
     assert record.name == CODEC_LOGGER_NAME
-    assert 'Codec MultiCheckbox could not parse workbook input for field "Hobbies"' in record.message
+    assert 'Codec MultiChoiceFieldCodec could not parse workbook input for field "Hobbies"' in record.message
     assert 'Expected a delimited string or a list of selected values' in record.message

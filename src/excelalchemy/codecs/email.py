@@ -2,14 +2,14 @@ from typing import ClassVar
 
 from pydantic import EmailStr, TypeAdapter
 
-from excelalchemy.codecs.base import ExcelCodecConfig
-from excelalchemy.codecs.string import String
+from excelalchemy.codecs.field_codec import ExcelFieldCodecSpec
+from excelalchemy.codecs.text import TextFieldCodec
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
 from excelalchemy.metadata import FieldMetaInfo
 
 
-class Email(String):
+class EmailFieldCodec(TextFieldCodec):
     _validator: ClassVar[TypeAdapter[EmailStr]] = TypeAdapter(EmailStr)
 
     @classmethod
@@ -37,5 +37,5 @@ class Email(String):
 class EmailCodec:
     """Factory for explicit email codec configuration."""
 
-    def __new__(cls) -> ExcelCodecConfig:
-        return ExcelCodecConfig.create(Email)
+    def __new__(cls) -> ExcelFieldCodecSpec:
+        return ExcelFieldCodecSpec.create(EmailFieldCodec)

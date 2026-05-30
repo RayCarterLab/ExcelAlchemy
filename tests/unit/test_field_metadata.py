@@ -14,8 +14,8 @@ from excelalchemy import (
     OptionId,
     SingleChoiceCodec,
 )
-from excelalchemy.codecs.date import Date
-from excelalchemy.codecs.email import Email
+from excelalchemy.codecs.date import DateFieldCodec
+from excelalchemy.codecs.email import EmailFieldCodec
 from tests.support import BaseTestCase
 
 
@@ -176,9 +176,15 @@ class TestExcelColumndata(BaseTestCase):
 
     async def test_comment_date_range_option_reflects_range_constraint(self):
         class Importer(BaseModel):
-            ne: Annotated[int, ExcelColumn(codec=Date, label='日期', order=1, date_range_option=DataRangeOption.NEXT)]
-            no: Annotated[int, ExcelColumn(codec=Date, label='日期', order=2, date_range_option=DataRangeOption.NONE)]
-            pre: Annotated[int, ExcelColumn(codec=Date, label='日期', order=3, date_range_option=DataRangeOption.PRE)]
+            ne: Annotated[
+                int, ExcelColumn(codec=DateFieldCodec, label='日期', order=1, date_range_option=DataRangeOption.NEXT)
+            ]
+            no: Annotated[
+                int, ExcelColumn(codec=DateFieldCodec, label='日期', order=2, date_range_option=DataRangeOption.NONE)
+            ]
+            pre: Annotated[
+                int, ExcelColumn(codec=DateFieldCodec, label='日期', order=3, date_range_option=DataRangeOption.PRE)
+            ]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].comment_date_range_option == '范围：晚于当前时间'
@@ -254,7 +260,7 @@ class TestExcelColumndata(BaseTestCase):
     async def test_must_date_format_returns_configured_format_or_raises(self):
         class Importer(BaseModel):
             date: Annotated[int, ExcelColumn(codec=DateCodec.day(), label='日期', order=1, date_format=DateFormat.DAY)]
-            date2: Annotated[int, ExcelColumn(codec=Date, label='日期', order=2)]
+            date2: Annotated[int, ExcelColumn(codec=DateFieldCodec, label='日期', order=2)]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].must_date_format == DateFormat.DAY
@@ -265,7 +271,7 @@ class TestExcelColumndata(BaseTestCase):
     async def test_python_date_format_maps_enum_to_strftime_pattern(self):
         class Importer(BaseModel):
             date: Annotated[int, ExcelColumn(codec=DateCodec.day(), label='日期', order=1, date_format=DateFormat.DAY)]
-            date2: Annotated[int, ExcelColumn(codec=Date, label='日期', order=2)]
+            date2: Annotated[int, ExcelColumn(codec=DateFieldCodec, label='日期', order=2)]
 
         alchemy = self.build_alchemy(Importer)
         assert alchemy.ordered_field_meta[0].python_date_format == '%Y-%m-%d'
@@ -278,10 +284,10 @@ class TestExcelColumndata(BaseTestCase):
             email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', order=1, unique=True)]
 
         alchemy = self.build_alchemy(Importer)
-        assert alchemy.ordered_field_meta[0].excel_codec is Email
-        assert alchemy.ordered_field_meta[0].excel_codec is Email
+        assert alchemy.ordered_field_meta[0].excel_codec is EmailFieldCodec
+        assert alchemy.ordered_field_meta[0].excel_codec is EmailFieldCodec
         assert repr(alchemy.ordered_field_meta[0]) == (
-            "ExcelColumn(label='邮箱', order=1, excel_codec='Email', required=True, "
+            "ExcelColumn(label='邮箱', order=1, excel_codec='EmailFieldCodec', required=True, "
             "unique=True, comment_required='必填性：必填', comment_unique='唯一性：唯一')"
         )
 
@@ -293,7 +299,7 @@ class TestExcelColumndata(BaseTestCase):
         field_meta = alchemy.ordered_field_meta[0]
 
         assert field_meta.label == '邮箱'
-        assert field_meta.excel_codec is Email
+        assert field_meta.excel_codec is EmailFieldCodec
         assert field_meta.comment_max_length == '最大长度：10'
 
     async def test_excelmeta_supports_example_value_in_annotated_field_declarations(self):

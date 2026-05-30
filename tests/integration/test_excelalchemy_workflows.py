@@ -18,24 +18,59 @@ from excelalchemy import (
     ImporterConfig,
     ImportMode,
     Label,
-    MoneyCodec,
     MultiChoiceCodec,
-    MultiOrganizationCodec,
-    MultiStaffCodec,
-    MultiTreeNodeCodec,
+    NumberCodec,
     NumberRangeCodec,
     Option,
     OptionId,
     PhoneNumberCodec,
     ProgrammaticError,
     SingleChoiceCodec,
-    SingleOrganizationCodec,
-    SingleStaffCodec,
-    SingleTreeNodeCodec,
     UrlCodec,
     ValidateResult,
 )
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import display_message as dmsg
 from tests.support import BaseTestCase, FileRegistry
+
+MULTI_ORGANIZATION_CODEC = MultiChoiceCodec(
+    entity_name_plural='organizations',
+    hint=dmsg(MessageKey.MULTI_ORGANIZATION_HINT),
+    include_options_in_comment=False,
+    include_mode_in_comment=False,
+    separator='、',
+)
+MULTI_STAFF_CODEC = MultiChoiceCodec(
+    entity_name_plural='staff members',
+    hint=dmsg(MessageKey.MULTI_STAFF_HINT),
+    include_options_in_comment=False,
+    include_mode_in_comment=False,
+    separator='、',
+)
+MULTI_TREE_NODE_CODEC = MultiChoiceCodec(
+    entity_name_plural='tree nodes',
+    hint=dmsg(MessageKey.MULTI_TREE_HINT),
+    include_options_in_comment=False,
+    include_mode_in_comment=False,
+)
+SINGLE_TREE_NODE_CODEC = SingleChoiceCodec(
+    entity_name='tree node',
+    hint=dmsg(MessageKey.SINGLE_TREE_HINT),
+    include_options_in_comment=False,
+    include_mode_in_comment=False,
+)
+SINGLE_ORGANIZATION_CODEC = SingleChoiceCodec(
+    entity_name='organization',
+    hint=dmsg(MessageKey.SINGLE_ORGANIZATION_HINT),
+    include_options_in_comment=False,
+    include_mode_in_comment=False,
+)
+SINGLE_STAFF_CODEC = SingleChoiceCodec(
+    entity_name='staff member',
+    hint=dmsg(MessageKey.SINGLE_STAFF_HINT),
+    include_options_in_comment=False,
+    include_mode_in_comment=False,
+)
 
 
 class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
@@ -48,7 +83,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
             int, ExcelColumn(codec=DateCodec.year(), label='出生日期', order=6, date_format=DateFormat.YEAR)
         ]
         email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', order=7)]
-        price: Annotated[float, ExcelColumn(codec=MoneyCodec(), label='价格', order=8)]
+        price: Annotated[float, ExcelColumn(codec=NumberCodec(fraction_digits=2), label='价格', order=8)]
         web: Annotated[str, ExcelColumn(codec=UrlCodec(), label='网址', order=9)]
         hobby: Annotated[
             list[str],
@@ -75,7 +110,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         company: Annotated[
             list[str],
             ExcelColumn(
-                codec=MultiOrganizationCodec(),
+                codec=MULTI_ORGANIZATION_CODEC,
                 label='公司',
                 order=11,
                 options=[
@@ -97,7 +132,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         manager: Annotated[
             list[str],
             ExcelColumn(
-                codec=MultiStaffCodec(),
+                codec=MULTI_STAFF_CODEC,
                 label='经理',
                 order=12,
                 options=[
@@ -119,7 +154,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         department: Annotated[
             list[str],
             ExcelColumn(
-                codec=MultiTreeNodeCodec(),
+                codec=MULTI_TREE_NODE_CODEC,
                 label='部门',
                 order=13,
                 options=[
@@ -141,7 +176,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         team: Annotated[
             str,
             ExcelColumn(
-                codec=SingleTreeNodeCodec(),
+                codec=SINGLE_TREE_NODE_CODEC,
                 label='团队',
                 order=14,
                 options=[
@@ -186,7 +221,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         boss: Annotated[
             str,
             ExcelColumn(
-                codec=SingleOrganizationCodec(),
+                codec=SINGLE_ORGANIZATION_CODEC,
                 label='老板',
                 order=17,
                 options=[
@@ -208,7 +243,7 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
         leader: Annotated[
             str,
             ExcelColumn(
-                codec=SingleStaffCodec(),
+                codec=SINGLE_STAFF_CODEC,
                 label='领导',
                 order=18,
                 options=[
@@ -356,13 +391,13 @@ class TestExcelAlchemyIntegrationWorkflows(BaseTestCase):
                 10: [
                     ExcelCellError(
                         label=Label('公司'),
-                        message='Select organizations from the configured options. Valid values include: 腾讯，阿里巴巴，百度',
+                        message='Select organizations from the configured options. Valid values include: 腾讯、阿里巴巴、百度',
                     )
                 ],
                 11: [
                     ExcelCellError(
                         label=Label('经理'),
-                        message='Select staff members from the configured options. Valid values include: 张三，李四，王五',
+                        message='Select staff members from the configured options. Valid values include: 张三、李四、王五',
                     )
                 ],
                 12: [

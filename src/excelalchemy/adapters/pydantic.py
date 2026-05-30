@@ -9,7 +9,7 @@ from pydantic import BaseModel, ValidationError
 from pydantic.fields import FieldInfo
 from pydantic_core import PydanticUndefined
 
-from excelalchemy.codecs.base import CompositeExcelFieldCodec, ExcelFieldCodec, UndefinedFieldCodec
+from excelalchemy.codecs.field_codec import CompositeExcelFieldCodec, ExcelFieldCodec, UnspecifiedFieldCodec
 from excelalchemy.exceptions import ExcelCellError, ExcelRowError, ProgrammaticError
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
@@ -186,17 +186,17 @@ def _resolve_excel_codec_type(annotation: object) -> type[ExcelFieldCodec]:
 
 def _default_excel_codec_for_python_type(annotation: object) -> type[ExcelFieldCodec] | None:
     if annotation is str:
-        from excelalchemy.codecs.string import String
+        from excelalchemy.codecs.text import TextFieldCodec
 
-        return String
+        return TextFieldCodec
     if annotation is int or annotation is float or annotation is Decimal:
-        from excelalchemy.codecs.number import Number
+        from excelalchemy.codecs.number import NumberFieldCodec
 
-        return Number
+        return NumberFieldCodec
     if annotation is bool:
-        from excelalchemy.codecs.boolean import Boolean
+        from excelalchemy.codecs.boolean import BooleanFieldCodec
 
-        return Boolean
+        return BooleanFieldCodec
     return None
 
 
@@ -214,7 +214,7 @@ class PydanticFieldAdapter:
     @property
     def excel_codec(self) -> type[ExcelFieldCodec]:
         declared_codec = self.declared_metadata.excel_codec
-        if declared_codec is not UndefinedFieldCodec:
+        if declared_codec is not UnspecifiedFieldCodec:
             return declared_codec
 
         annotation = self.annotation

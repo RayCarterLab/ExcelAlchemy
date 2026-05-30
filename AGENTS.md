@@ -42,6 +42,9 @@ documentation directory.
 - Do not modify unrelated files.
 - Preserve public API behavior unless the task explicitly changes it.
 - Keep behavior deterministic and testable.
+- Keep codebase shape agent-friendly: deep responsibility modules, narrow
+  public interfaces, and nearby validation. Follow
+  [`docs/agent/codebase-rules.md`](docs/agent/codebase-rules.md).
 - Do not hide failed or unrun validation.
 - Do not remove public exports, compatibility shims, or deprecation warnings
   casually.
@@ -102,6 +105,8 @@ Core rules:
   public/internal/compatibility boundaries and docs update rules.
 - [docs/agent/invariants.md](docs/agent/invariants.md): ExcelAlchemy invariants
   and safety boundaries.
+- [docs/agent/codebase-rules.md](docs/agent/codebase-rules.md): codebase shape,
+  deep module, public interface, and validation rules for agent-safe changes.
 - [docs/agent/testing.md](docs/agent/testing.md): focused and full validation.
 - [docs/agent/review.md](docs/agent/review.md): review mode, final response,
   and Definition of Done.

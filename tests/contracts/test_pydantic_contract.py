@@ -15,7 +15,7 @@ from excelalchemy import (
     ProgrammaticError,
 )
 from excelalchemy.adapters.pydantic import extract_pydantic_model, instantiate_pydantic_model
-from excelalchemy.codecs.date_range import DateRange
+from excelalchemy.codecs.date_range import DateRangeValue
 from excelalchemy.metadata import FieldMetaInfo, extract_declared_field_metadata
 
 
@@ -107,7 +107,7 @@ class TestPydanticContracts:
         result = instantiate_pydantic_model(
             {
                 'email': 'noreply@example.com',
-                'stay_range': DateRange.model_validate({'start': '2024-01-01', 'end': '2024-01-02'}),
+                'stay_range': DateRangeValue.model_validate({'start': '2024-01-01', 'end': '2024-01-02'}),
             },
             ModelValidatedContract,
         )

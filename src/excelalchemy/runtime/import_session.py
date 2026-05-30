@@ -9,7 +9,7 @@ from functools import cached_property
 
 from pydantic import BaseModel
 
-from excelalchemy.codecs.base import SystemReserved
+from excelalchemy.codecs.field_codec import SystemReservedFieldCodec
 from excelalchemy.config import ImporterConfig
 from excelalchemy.diagnostics import runtime_logger
 from excelalchemy.exceptions import ConfigError
@@ -355,6 +355,6 @@ def build_import_result_field_meta(*, locale: str) -> list[FieldMetaInfo]:
         field_meta = FieldMetaInfo(label=dmsg(column.label_message_key, locale=locale))
         field_meta.parent_label = field_meta.label
         field_meta.key = field_meta.parent_key = column.key
-        field_meta.excel_codec = SystemReserved
+        field_meta.excel_codec = SystemReservedFieldCodec
         field_metas.append(field_meta)
     return field_metas

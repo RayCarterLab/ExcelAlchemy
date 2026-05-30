@@ -5,9 +5,9 @@ from typing import cast
 import pendulum
 from pendulum import DateTime
 
-from excelalchemy.codecs.base import (
-    ExcelCodecConfig,
+from excelalchemy.codecs.field_codec import (
     ExcelFieldCodec,
+    ExcelFieldCodecSpec,
     NormalizedImportValue,
     WorkbookDisplayValue,
     WorkbookInputValue,
@@ -26,9 +26,7 @@ from excelalchemy.primitives.constants import (
 )
 
 
-class Date(ExcelFieldCodec):
-    __name__ = 'Date'
-
+class DateFieldCodec(ExcelFieldCodec):
     @classmethod
     def expected_input_message(cls, field_meta: FieldMetaInfo) -> str | None:
         presentation = field_meta.presentation
@@ -154,7 +152,7 @@ class DateCodec:
         *,
         timezone: DateTimeZone | None = None,
         date_range_option: DataRangeOption | None = None,
-    ) -> ExcelCodecConfig:
+    ) -> ExcelFieldCodecSpec:
         return DateCodec.format(DateFormat.DAY, timezone=timezone, date_range_option=date_range_option)
 
     @staticmethod
@@ -162,7 +160,7 @@ class DateCodec:
         *,
         timezone: DateTimeZone | None = None,
         date_range_option: DataRangeOption | None = None,
-    ) -> ExcelCodecConfig:
+    ) -> ExcelFieldCodecSpec:
         return DateCodec.format(DateFormat.MONTH, timezone=timezone, date_range_option=date_range_option)
 
     @staticmethod
@@ -170,7 +168,7 @@ class DateCodec:
         *,
         timezone: DateTimeZone | None = None,
         date_range_option: DataRangeOption | None = None,
-    ) -> ExcelCodecConfig:
+    ) -> ExcelFieldCodecSpec:
         return DateCodec.format(DateFormat.YEAR, timezone=timezone, date_range_option=date_range_option)
 
     @staticmethod
@@ -178,7 +176,7 @@ class DateCodec:
         *,
         timezone: DateTimeZone | None = None,
         date_range_option: DataRangeOption | None = None,
-    ) -> ExcelCodecConfig:
+    ) -> ExcelFieldCodecSpec:
         return DateCodec.format(DateFormat.MINUTE, timezone=timezone, date_range_option=date_range_option)
 
     @staticmethod
@@ -187,9 +185,9 @@ class DateCodec:
         *,
         timezone: DateTimeZone | None = None,
         date_range_option: DataRangeOption | None = None,
-    ) -> ExcelCodecConfig:
-        return ExcelCodecConfig.create(
-            Date,
+    ) -> ExcelFieldCodecSpec:
+        return ExcelFieldCodecSpec.create(
+            DateFieldCodec,
             date_format=date_format,
             timezone=timezone,
             date_range_option=date_range_option,

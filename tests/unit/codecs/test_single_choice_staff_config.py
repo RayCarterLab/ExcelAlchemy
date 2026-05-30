@@ -6,29 +6,38 @@ from excelalchemy import (
     ExcelColumn,
     Option,
     OptionId,
-    SingleStaffCodec,
+    SingleChoiceCodec,
 )
-from excelalchemy.codecs.staff import SingleStaff
+from excelalchemy.codecs.choice import SingleChoiceFieldCodec
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import display_message as dmsg
 from tests.support import BaseTestCase
 
+SINGLE_STAFF_CODEC = SingleChoiceCodec(
+    entity_name='staff member',
+    hint=dmsg(MessageKey.SINGLE_STAFF_HINT),
+    include_options_in_comment=False,
+    include_mode_in_comment=False,
+)
 
-class TestSingleStaffValueType(BaseTestCase):
+
+class TestSingleChoiceStaffConfig(BaseTestCase):
     async def test_comment_describes_single_staff_input(self):
         class Importer(BaseModel):
-            staff: Annotated[str, ExcelColumn(codec=SingleStaffCodec(), label='员工')]
+            staff: Annotated[str, ExcelColumn(codec=SINGLE_STAFF_CODEC, label='员工')]
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(SingleStaff, field.excel_codec)
+        field.excel_codec = cast(SingleChoiceFieldCodec, field.excel_codec)
 
-        assert field.excel_codec.build_comment(field) == '必填性：必填 \n提示：请输入人员姓名和工号，如“张三/001”'
+        assert field.excel_codec.build_comment(field) == '必填性：必填\n提示：请输入人员姓名和工号，如“张三/001”'
 
     async def test_serialize_strips_single_staff_input(self):
         class Importer(BaseModel):
             staff: Annotated[
                 str,
                 ExcelColumn(
-                    codec=SingleStaffCodec(),
+                    codec=SINGLE_STAFF_CODEC,
                     label='员工',
                     options=[
                         Option(id=OptionId(1), name='张三/001'),
@@ -38,7 +47,7 @@ class TestSingleStaffValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(SingleStaff, field.excel_codec)
+        field.excel_codec = cast(SingleChoiceFieldCodec, field.excel_codec)
 
         assert field.excel_codec.parse_input('张三/001', field) == '张三/001'
         assert field.excel_codec.parse_input(OptionId(1), field) == '1'
@@ -48,7 +57,7 @@ class TestSingleStaffValueType(BaseTestCase):
             staff: Annotated[
                 str,
                 ExcelColumn(
-                    codec=SingleStaffCodec(),
+                    codec=SINGLE_STAFF_CODEC,
                     label='员工',
                     options=[
                         Option(id=OptionId(1), name='张三/001'),
@@ -58,7 +67,7 @@ class TestSingleStaffValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(SingleStaff, field.excel_codec)
+        field.excel_codec = cast(SingleChoiceFieldCodec, field.excel_codec)
 
         assert field.excel_codec.format_display_value('张三/001', field) == '张三/001'
         assert field.excel_codec.format_display_value('1', field) == '张三/001'
@@ -68,7 +77,7 @@ class TestSingleStaffValueType(BaseTestCase):
             staff: Annotated[
                 str,
                 ExcelColumn(
-                    codec=SingleStaffCodec(),
+                    codec=SINGLE_STAFF_CODEC,
                     label='员工',
                     options=[
                         Option(id=OptionId(1), name='张三/001'),
@@ -78,7 +87,7 @@ class TestSingleStaffValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(SingleStaff, field.excel_codec)
+        field.excel_codec = cast(SingleChoiceFieldCodec, field.excel_codec)
 
         assert field.excel_codec.normalize_import_value('张三/001', field) == '1'
         assert field.excel_codec.normalize_import_value('1', field) == '1'

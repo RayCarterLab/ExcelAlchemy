@@ -8,7 +8,7 @@ from typing import Self
 
 from pydantic.fields import FieldInfo
 
-from excelalchemy.codecs.base import ExcelFieldCodec, UndefinedFieldCodec
+from excelalchemy.codecs.field_codec import ExcelFieldCodec, UnspecifiedFieldCodec
 from excelalchemy.diagnostics import (
     log_metadata_large_option_set,
     log_metadata_missing_option_id,
@@ -84,7 +84,7 @@ class RuntimeFieldBinding:
     key: Key | None = None
     parent_key: Key | None = None
     offset: int = DEFAULT_FIELD_META_ORDER
-    excel_codec: type[ExcelFieldCodec] = UndefinedFieldCodec
+    excel_codec: type[ExcelFieldCodec] = UnspecifiedFieldCodec
 
     def make_unique_label(self, *, label: Label) -> UniqueLabel:
         if self.parent_label is None:
@@ -122,6 +122,11 @@ class WorkbookPresentationMeta:
     unit: str | None = None
     hint: str | None = None
     example_value: str | None = None
+    choice_entity_name: str | None = None
+    choice_entity_name_plural: str | None = None
+    choice_include_options_in_comment: bool = True
+    choice_include_mode_in_comment: bool = True
+    choice_separator: str = MULTI_CHECKBOX_SEPARATOR
 
     @property
     def comment_date_format(self) -> str:
@@ -285,6 +290,11 @@ class FieldMetaInfo:
         unit: str | None = None,
         hint: str | None = None,
         example_value: str | None = None,
+        choice_entity_name: str | None = None,
+        choice_entity_name_plural: str | None = None,
+        choice_include_options_in_comment: bool | None = None,
+        choice_include_mode_in_comment: bool | None = None,
+        choice_separator: str | None = None,
         ge: float | None = None,
         le: float | None = None,
         max_digits: int | None = None,
@@ -314,6 +324,15 @@ class FieldMetaInfo:
             unit=unit,
             hint=hint,
             example_value=example_value,
+            choice_entity_name=choice_entity_name,
+            choice_entity_name_plural=choice_entity_name_plural,
+            choice_include_options_in_comment=(
+                True if choice_include_options_in_comment is None else choice_include_options_in_comment
+            ),
+            choice_include_mode_in_comment=(
+                True if choice_include_mode_in_comment is None else choice_include_mode_in_comment
+            ),
+            choice_separator=choice_separator or MULTI_CHECKBOX_SEPARATOR,
         )
         self.import_constraints = ImportConstraints(
             ge=ge,

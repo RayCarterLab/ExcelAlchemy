@@ -6,20 +6,29 @@ from excelalchemy import (
     ExcelColumn,
     Option,
     OptionId,
-    SingleOrganizationCodec,
+    SingleChoiceCodec,
 )
-from excelalchemy.codecs.organization import SingleOrganization
+from excelalchemy.codecs.choice import SingleChoiceFieldCodec
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import display_message as dmsg
 from tests.support import BaseTestCase
 
+SINGLE_ORGANIZATION_CODEC = SingleChoiceCodec(
+    entity_name='organization',
+    hint=dmsg(MessageKey.SINGLE_ORGANIZATION_HINT),
+    include_options_in_comment=False,
+    include_mode_in_comment=False,
+)
 
-class TestSingleOrganizationValueType(BaseTestCase):
+
+class TestSingleChoiceOrganizationConfig(BaseTestCase):
     async def test_comment_describes_single_organization_input(self):
         class Importer(BaseModel):
-            single_organization: Annotated[str, ExcelColumn(codec=SingleOrganizationCodec(), label='单选组织', order=1)]
+            single_organization: Annotated[str, ExcelColumn(codec=SINGLE_ORGANIZATION_CODEC, label='单选组织', order=1)]
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(SingleOrganization, field.excel_codec)
+        field.excel_codec = cast(SingleChoiceFieldCodec, field.excel_codec)
 
         assert (
             field.excel_codec.build_comment(field)
@@ -28,11 +37,11 @@ class TestSingleOrganizationValueType(BaseTestCase):
 
     async def test_serialize_strips_single_organization_input(self):
         class Importer(BaseModel):
-            single_organization: Annotated[str, ExcelColumn(codec=SingleOrganizationCodec(), label='单选组织', order=1)]
+            single_organization: Annotated[str, ExcelColumn(codec=SINGLE_ORGANIZATION_CODEC, label='单选组织', order=1)]
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(SingleOrganization, field.excel_codec)
+        field.excel_codec = cast(SingleChoiceFieldCodec, field.excel_codec)
 
         assert field.excel_codec.parse_input('XX公司/一级部门/二级部门', field) == 'XX公司/一级部门/二级部门'
 
@@ -41,7 +50,7 @@ class TestSingleOrganizationValueType(BaseTestCase):
             single_organization: Annotated[
                 str,
                 ExcelColumn(
-                    codec=SingleOrganizationCodec(),
+                    codec=SINGLE_ORGANIZATION_CODEC,
                     label='单选组织',
                     order=1,
                     options=[
@@ -52,7 +61,7 @@ class TestSingleOrganizationValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(SingleOrganization, field.excel_codec)
+        field.excel_codec = cast(SingleChoiceFieldCodec, field.excel_codec)
 
         assert field.excel_codec.format_display_value('XX公司/一级部门/二级部门', field) == 'XX公司/一级部门/二级部门'
         assert field.excel_codec.format_display_value('1', field) == 'XX公司/一级部门/二级部门'
@@ -62,7 +71,7 @@ class TestSingleOrganizationValueType(BaseTestCase):
             single_organization: Annotated[
                 str,
                 ExcelColumn(
-                    codec=SingleOrganizationCodec(),
+                    codec=SINGLE_ORGANIZATION_CODEC,
                     label='单选组织',
                     order=1,
                     options=[
@@ -73,7 +82,7 @@ class TestSingleOrganizationValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(SingleOrganization, field.excel_codec)
+        field.excel_codec = cast(SingleChoiceFieldCodec, field.excel_codec)
 
         with self.assertRaises(ValueError) as context:
             field.excel_codec.normalize_import_value('未知组织', field)

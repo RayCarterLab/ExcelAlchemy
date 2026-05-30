@@ -11,21 +11,17 @@ from excelalchemy import (
     ExcelCellError,
     ExcelColumn,
     Label,
-    MoneyCodec,
     MultiChoiceCodec,
-    MultiOrganizationCodec,
-    MultiStaffCodec,
-    MultiTreeNodeCodec,
+    NumberCodec,
     NumberRangeCodec,
     Option,
     OptionId,
     PhoneNumberCodec,
     SingleChoiceCodec,
-    SingleOrganizationCodec,
-    SingleStaffCodec,
-    SingleTreeNodeCodec,
     UrlCodec,
 )
+from excelalchemy.messages import MessageKey
+from excelalchemy.messages import display_message as dmsg
 
 COMMON_OPTIONS = [
     Option(id=OptionId('1'), name='选项1'),
@@ -57,6 +53,45 @@ BOSS_OPTIONS = [
     Option(id=OptionId('3'), name='李彦宏'),
 ]
 
+MULTI_ORGANIZATION_CODEC = MultiChoiceCodec(
+    entity_name_plural='organizations',
+    hint=dmsg(MessageKey.MULTI_ORGANIZATION_HINT),
+    include_options_in_comment=False,
+    include_mode_in_comment=False,
+    separator='、',
+)
+MULTI_STAFF_CODEC = MultiChoiceCodec(
+    entity_name_plural='staff members',
+    hint=dmsg(MessageKey.MULTI_STAFF_HINT),
+    include_options_in_comment=False,
+    include_mode_in_comment=False,
+    separator='、',
+)
+MULTI_TREE_NODE_CODEC = MultiChoiceCodec(
+    entity_name_plural='tree nodes',
+    hint=dmsg(MessageKey.MULTI_TREE_HINT),
+    include_options_in_comment=False,
+    include_mode_in_comment=False,
+)
+SINGLE_TREE_NODE_CODEC = SingleChoiceCodec(
+    entity_name='tree node',
+    hint=dmsg(MessageKey.SINGLE_TREE_HINT),
+    include_options_in_comment=False,
+    include_mode_in_comment=False,
+)
+SINGLE_ORGANIZATION_CODEC = SingleChoiceCodec(
+    entity_name='organization',
+    hint=dmsg(MessageKey.SINGLE_ORGANIZATION_HINT),
+    include_options_in_comment=False,
+    include_mode_in_comment=False,
+)
+SINGLE_STAFF_CODEC = SingleChoiceCodec(
+    entity_name='staff member',
+    hint=dmsg(MessageKey.SINGLE_STAFF_HINT),
+    include_options_in_comment=False,
+    include_mode_in_comment=False,
+)
+
 
 class SimpleContractImporter(BaseModel):
     age: Annotated[float, ExcelColumn(label='年龄', order=1)]
@@ -67,7 +102,7 @@ class SimpleContractImporter(BaseModel):
         int, ExcelColumn(codec=DateCodec.year(), label='出生日期', order=6, date_format=DateFormat.YEAR)
     ]
     email: Annotated[str, ExcelColumn(codec=EmailCodec(), label='邮箱', order=7)]
-    price: Annotated[float, ExcelColumn(codec=MoneyCodec(), label='价格', order=8)]
+    price: Annotated[float, ExcelColumn(codec=NumberCodec(fraction_digits=2), label='价格', order=8)]
     web: Annotated[str, ExcelColumn(codec=UrlCodec(), label='网址', order=9)]
     hobby: Annotated[
         list[str],
@@ -83,17 +118,17 @@ class SimpleContractImporter(BaseModel):
         ),
     ]
     company: Annotated[
-        list[str], ExcelColumn(codec=MultiOrganizationCodec(), label='公司', order=11, options=ORGANIZATION_OPTIONS)
+        list[str], ExcelColumn(codec=MULTI_ORGANIZATION_CODEC, label='公司', order=11, options=ORGANIZATION_OPTIONS)
     ]
-    manager: Annotated[list[str], ExcelColumn(codec=MultiStaffCodec(), label='经理', order=12, options=STAFF_OPTIONS)]
+    manager: Annotated[list[str], ExcelColumn(codec=MULTI_STAFF_CODEC, label='经理', order=12, options=STAFF_OPTIONS)]
     department: Annotated[
-        list[str], ExcelColumn(codec=MultiTreeNodeCodec(), label='部门', order=13, options=TREE_OPTIONS)
+        list[str], ExcelColumn(codec=MULTI_TREE_NODE_CODEC, label='部门', order=13, options=TREE_OPTIONS)
     ]
-    team: Annotated[str, ExcelColumn(codec=SingleTreeNodeCodec(), label='团队', order=14, options=TREE_OPTIONS)]
+    team: Annotated[str, ExcelColumn(codec=SINGLE_TREE_NODE_CODEC, label='团队', order=14, options=TREE_OPTIONS)]
     phone: Annotated[str, ExcelColumn(codec=PhoneNumberCodec(), label='电话', order=15)]
     radio: Annotated[str, ExcelColumn(codec=SingleChoiceCodec(), label='单选', order=16, options=COMMON_OPTIONS)]
-    boss: Annotated[str, ExcelColumn(codec=SingleOrganizationCodec(), label='老板', order=17, options=BOSS_OPTIONS)]
-    leader: Annotated[str, ExcelColumn(codec=SingleStaffCodec(), label='领导', order=18, options=STAFF_OPTIONS)]
+    boss: Annotated[str, ExcelColumn(codec=SINGLE_ORGANIZATION_CODEC, label='老板', order=17, options=BOSS_OPTIONS)]
+    leader: Annotated[str, ExcelColumn(codec=SINGLE_STAFF_CODEC, label='领导', order=18, options=STAFF_OPTIONS)]
 
 
 class MergedContractImporter(SimpleContractImporter):

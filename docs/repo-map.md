@@ -127,28 +127,24 @@ It is meant to help both humans and coding agents find the right files before ma
 
 ## Field Codecs: `src/excelalchemy/codecs/`
 
-- `src/excelalchemy/codecs/base.py`
-  - Base codec abstractions:
+- `src/excelalchemy/codecs/field_codec.py`
+  - Base codec abstractions and immutable helper specs:
   - `ExcelFieldCodec`
   - `CompositeExcelFieldCodec`
+  - `ExcelFieldCodecSpec`
 - `src/excelalchemy/codecs/*.py`
-  - Built-in codec implementations and public helper factories such as
-    `EmailCodec()`, `DateCodec.day()`, and `NumberRangeCodec()`:
-  - `string.py`
+  - Built-in codec implementations and public helper factories. Internal
+    implementations use `*FieldCodec`; public helpers use `*Codec`.
+  - `text.py`
   - `number.py`
   - `date.py`
   - `date_range.py`
-  - `money.py`
   - `email.py`
   - `phone_number.py`
   - `url.py`
-  - `radio.py`
-  - `multi_checkbox.py`
-  - `organization.py`
-  - `staff.py`
-  - `tree.py`
+  - `choice.py`
 - `src/excelalchemy/codecs/__init__.py`
-  - Small registry helpers for choice-oriented codecs.
+  - Public built-in codec helper exports.
 
 ## Internal Support Modules
 

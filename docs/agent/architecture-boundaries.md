@@ -37,7 +37,7 @@ Primary public entry points:
 - `excelalchemy.ImportMode`
 - `excelalchemy.ExcelColumn(...)`
 - codec helpers such as `excelalchemy.DateCodec`, `excelalchemy.EmailCodec`,
-  `excelalchemy.NumberCodec`, and `excelalchemy.StringCodec`
+  `excelalchemy.NumberCodec`, and `excelalchemy.TextCodec`
 - `excelalchemy.ImportResult`
 - `excelalchemy.CellErrorMap`
 - `excelalchemy.RowIssueMap`
@@ -90,6 +90,10 @@ Use current 3.0 terminology in new code and docs:
 - `row_error_map` over `row_errors`
 - `excel_codec` over `value_type`
 - `Annotated[T, ExcelColumn(...)]` over wrapper field factories
+- `TextCodec` over `StringCodec`
+- `SingleChoiceCodec` / `MultiChoiceCodec` over frontend-control names such as
+  radio or checkbox
+- explicit choice helper parameters over organization/staff/tree wrapper codecs
 - codec methods `build_comment`, `parse_input`, `format_display_value`,
   `normalize_import_value`, and `column_items`
 

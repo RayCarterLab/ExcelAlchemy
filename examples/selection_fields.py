@@ -9,13 +9,9 @@ from excelalchemy import (
     ExcelColumn,
     ImporterConfig,
     MultiChoiceCodec,
-    MultiOrganizationCodec,
-    MultiStaffCodec,
     Option,
     OptionId,
     SingleChoiceCodec,
-    SingleOrganizationCodec,
-    SingleStaffCodec,
 )
 
 DEPARTMENT_OPTIONS = [
@@ -44,17 +40,61 @@ class ApprovalFormImporter(BaseModel):
     ]
     owner_org: Annotated[
         str,
-        ExcelColumn(codec=SingleOrganizationCodec(), label='Owner organization', order=3, options=ORGANIZATION_OPTIONS),
+        ExcelColumn(
+            codec=SingleChoiceCodec(
+                entity_name='organization',
+                hint="Enter the full organization path, for example 'Acme/Finance'.",
+                include_options_in_comment=False,
+                include_mode_in_comment=False,
+            ),
+            label='Owner organization',
+            order=3,
+            options=ORGANIZATION_OPTIONS,
+        ),
     ]
     partner_orgs: Annotated[
         list[str],
         ExcelColumn(
-            codec=MultiOrganizationCodec(), label='Partner organizations', order=4, options=ORGANIZATION_OPTIONS
+            codec=MultiChoiceCodec(
+                entity_name_plural='organizations',
+                hint="Enter full organization paths. Use ',' to separate multiple selections.",
+                include_options_in_comment=False,
+                include_mode_in_comment=False,
+                separator=',',
+            ),
+            label='Partner organizations',
+            order=4,
+            options=ORGANIZATION_OPTIONS,
         ),
     ]
-    owner: Annotated[str, ExcelColumn(codec=SingleStaffCodec(), label='Owner', order=5, options=STAFF_OPTIONS)]
+    owner: Annotated[
+        str,
+        ExcelColumn(
+            codec=SingleChoiceCodec(
+                entity_name='staff member',
+                hint='Enter the staff display name and identifier.',
+                include_options_in_comment=False,
+                include_mode_in_comment=False,
+            ),
+            label='Owner',
+            order=5,
+            options=STAFF_OPTIONS,
+        ),
+    ]
     reviewers: Annotated[
-        list[str], ExcelColumn(codec=MultiStaffCodec(), label='Reviewers', order=6, options=STAFF_OPTIONS)
+        list[str],
+        ExcelColumn(
+            codec=MultiChoiceCodec(
+                entity_name_plural='staff members',
+                hint="Enter staff display names and identifiers. Use ',' to separate multiple selections.",
+                include_options_in_comment=False,
+                include_mode_in_comment=False,
+                separator=',',
+            ),
+            label='Reviewers',
+            order=6,
+            options=STAFF_OPTIONS,
+        ),
     ]
 
 

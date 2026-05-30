@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from excelalchemy.adapters.pydantic import get_model_field_names
 from excelalchemy.artifacts import ExcelArtifact
-from excelalchemy.codecs.base import SystemReserved
+from excelalchemy.codecs.field_codec import SystemReservedFieldCodec
 from excelalchemy.config import ExcelMode, ExporterConfig, ImporterConfig, ImportMode
 from excelalchemy.diagnostics import (
     log_runtime_context_replacement,
@@ -37,12 +37,12 @@ from excelalchemy.workbook.table import WorksheetTable
 RESULT_COLUMN = FieldMetaInfo(label=dmsg(RESULT_WORKBOOK_POLICY.result_column.label_message_key, locale='zh-CN'))
 RESULT_COLUMN.parent_label = RESULT_COLUMN.label
 RESULT_COLUMN.key = RESULT_COLUMN.parent_key = RESULT_WORKBOOK_POLICY.result_column.key
-RESULT_COLUMN.excel_codec = SystemReserved
+RESULT_COLUMN.excel_codec = SystemReservedFieldCodec
 
 REASON_COLUMN = FieldMetaInfo(label=dmsg(RESULT_WORKBOOK_POLICY.reason_column.label_message_key, locale='zh-CN'))
 REASON_COLUMN.parent_label = REASON_COLUMN.label
 REASON_COLUMN.key = REASON_COLUMN.parent_key = RESULT_WORKBOOK_POLICY.reason_column.key
-REASON_COLUMN.excel_codec = SystemReserved
+REASON_COLUMN.excel_codec = SystemReservedFieldCodec
 
 
 class ExcelAlchemy[

@@ -1,8 +1,8 @@
 from decimal import ROUND_DOWN, Context, Decimal, InvalidOperation
 
-from excelalchemy.codecs.base import (
-    ExcelCodecConfig,
+from excelalchemy.codecs.field_codec import (
     ExcelFieldCodec,
+    ExcelFieldCodecSpec,
     NormalizedImportValue,
     WorkbookDisplayValue,
     WorkbookInputValue,
@@ -25,7 +25,9 @@ def canonicalize_decimal(value: Decimal, digits_limit: int | None) -> Decimal:
                 context=Context(rounding=ROUND_DOWN),
             )
         except InvalidOperation as e:
-            codec_logger.warning('Codec Number detected precision loss while quantizing fraction_digits: %s', e)
+            codec_logger.warning(
+                'Codec NumberFieldCodec detected precision loss while quantizing fraction_digits: %s', e
+            )
     return value
 
 
@@ -43,9 +45,7 @@ def transform_decimal(value: Decimal | int | float | None) -> float | int | None
         return float(value)
 
 
-class Number(ExcelFieldCodec):
-    __name__ = 'Number'
-
+class NumberFieldCodec(ExcelFieldCodec):
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
         declared = field_meta.declared
@@ -174,5 +174,5 @@ class NumberCodec:
         *,
         fraction_digits: int | None = None,
         unit: str | None = None,
-    ) -> ExcelCodecConfig:
-        return ExcelCodecConfig.create(Number, fraction_digits=fraction_digits, unit=unit)
+    ) -> ExcelFieldCodecSpec:
+        return ExcelFieldCodecSpec.create(NumberFieldCodec, fraction_digits=fraction_digits, unit=unit)

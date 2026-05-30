@@ -1,4 +1,9 @@
-from excelalchemy.codecs.base import ExcelCodecConfig, ExcelFieldCodec, WorkbookDisplayValue, WorkbookInputValue
+from excelalchemy.codecs.field_codec import (
+    ExcelFieldCodec,
+    ExcelFieldCodecSpec,
+    WorkbookDisplayValue,
+    WorkbookInputValue,
+)
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
@@ -80,7 +85,7 @@ def _format_character_set_names(cs: set[CharacterSet]) -> str:
     return ', '.join(msg(_CHARACTER_SET_TO_MESSAGE_KEY[c]) for c in ordered)
 
 
-class String(ExcelFieldCodec):
+class TextFieldCodec(ExcelFieldCodec):
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
         declared = field_meta.declared
@@ -140,8 +145,8 @@ class String(ExcelFieldCodec):
         return errors
 
 
-class StringCodec:
+class TextCodec:
     """Factory for explicit string codec configuration."""
 
-    def __new__(cls) -> ExcelCodecConfig:
-        return ExcelCodecConfig.create(String)
+    def __new__(cls) -> ExcelFieldCodecSpec:
+        return ExcelFieldCodecSpec.create(TextFieldCodec)

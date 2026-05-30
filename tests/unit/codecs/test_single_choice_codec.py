@@ -9,12 +9,12 @@ from excelalchemy import (
     ProgrammaticError,
     SingleChoiceCodec,
 )
-from excelalchemy.codecs.radio import Radio
+from excelalchemy.codecs.choice import SingleChoiceFieldCodec
 from excelalchemy.primitives.constants import MULTI_CHECKBOX_SEPARATOR
 from tests.support import BaseTestCase
 
 
-class TestRadioValueType(BaseTestCase):
+class TestSingleChoiceFieldCodec(BaseTestCase):
     async def test_comment_describes_single_select_behavior(self):
         class Importer(BaseModel):
             radio: Annotated[
@@ -32,7 +32,7 @@ class TestRadioValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(Radio, field.excel_codec)
+        field.excel_codec = cast(SingleChoiceFieldCodec, field.excel_codec)
 
         assert field.excel_codec.build_comment(field) == '必填性：必填\n选项：选项1，选项2\n单/多选：单选\n'
 
@@ -56,7 +56,7 @@ class TestRadioValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(Radio, field.excel_codec)
+        field.excel_codec = cast(SingleChoiceFieldCodec, field.excel_codec)
 
         assert field.excel_codec.parse_input(1, field) == '1'
         assert field.excel_codec.parse_input(2, field) == '2'
@@ -78,7 +78,7 @@ class TestRadioValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(Radio, field.excel_codec)
+        field.excel_codec = cast(SingleChoiceFieldCodec, field.excel_codec)
 
         assert field.excel_codec.format_display_value('1', field) == '选项1'
         assert field.excel_codec.format_display_value('2', field) == '选项2'
@@ -105,7 +105,7 @@ class TestRadioValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(Radio, field.excel_codec)
+        field.excel_codec = cast(SingleChoiceFieldCodec, field.excel_codec)
 
         self.assertRaises(ValueError, field.excel_codec.normalize_import_value, 'ddd', field)
         self.assertRaises(ValueError, field.excel_codec.normalize_import_value, '3', field)

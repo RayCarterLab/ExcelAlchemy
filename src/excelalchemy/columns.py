@@ -6,7 +6,7 @@ import datetime
 from dataclasses import dataclass
 from typing import cast
 
-from excelalchemy.codecs.base import ExcelCodecConfig, ExcelFieldCodec
+from excelalchemy.codecs.field_codec import ExcelFieldCodec, ExcelFieldCodecSpec
 from excelalchemy.metadata import FieldMetaInfo
 from excelalchemy.primitives.constants import (
     DEFAULT_FIELD_META_ORDER,
@@ -16,7 +16,7 @@ from excelalchemy.primitives.constants import (
     Option,
 )
 
-type ExcelColumnCodec = type[ExcelFieldCodec] | ExcelCodecConfig
+type ExcelColumnCodec = type[ExcelFieldCodec] | ExcelFieldCodecSpec
 
 _CODEC_COLUMN_OPTION_NAMES = frozenset(
     {
@@ -25,6 +25,12 @@ _CODEC_COLUMN_OPTION_NAMES = frozenset(
         'date_format',
         'date_range_option',
         'unit',
+        'hint',
+        'choice_entity_name',
+        'choice_entity_name_plural',
+        'choice_include_options_in_comment',
+        'choice_include_mode_in_comment',
+        'choice_separator',
     }
 )
 
@@ -66,8 +72,13 @@ class ExcelColumnSpec:
             date_range_option=_merged_option('date_range_option', self.date_range_option, codec_options),
             options=list(self.options) if self.options is not None else None,
             unit=_merged_option('unit', self.unit, codec_options),
-            hint=self.hint,
+            hint=_merged_option('hint', self.hint, codec_options),
             example_value=self.example_value,
+            choice_entity_name=_merged_option('choice_entity_name', None, codec_options),
+            choice_entity_name_plural=_merged_option('choice_entity_name_plural', None, codec_options),
+            choice_include_options_in_comment=_merged_option('choice_include_options_in_comment', None, codec_options),
+            choice_include_mode_in_comment=_merged_option('choice_include_mode_in_comment', None, codec_options),
+            choice_separator=_merged_option('choice_separator', None, codec_options),
         )
         if codec_type is not None:
             metadata.excel_codec = codec_type
@@ -122,7 +133,7 @@ def ExcelColumn(
 def _resolve_codec(codec: ExcelColumnCodec | None) -> tuple[type[ExcelFieldCodec] | None, dict[str, object]]:
     if codec is None:
         return None, {}
-    if isinstance(codec, ExcelCodecConfig):
+    if isinstance(codec, ExcelFieldCodecSpec):
         options = codec.as_column_options()
         unknown_options = sorted(set(options) - _CODEC_COLUMN_OPTION_NAMES)
         if unknown_options:

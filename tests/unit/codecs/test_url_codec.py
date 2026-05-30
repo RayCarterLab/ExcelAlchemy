@@ -6,7 +6,7 @@ from excelalchemy import (
     ExcelColumn,
     UrlCodec,
 )
-from excelalchemy.codecs.url import Url
+from excelalchemy.codecs.url import UrlFieldCodec
 from tests.support import BaseTestCase
 
 
@@ -17,7 +17,7 @@ class TestUrlValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(Url, field.excel_codec)
+        field.excel_codec = cast(UrlFieldCodec, field.excel_codec)
 
         assert (
             field.excel_codec.build_comment(field)
@@ -30,7 +30,7 @@ class TestUrlValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(Url, field.excel_codec)
+        field.excel_codec = cast(UrlFieldCodec, field.excel_codec)
 
         assert field.excel_codec.parse_input('http://www.baidu.com', field) == 'http://www.baidu.com'
 
@@ -40,7 +40,7 @@ class TestUrlValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(Url, field.excel_codec)
+        field.excel_codec = cast(UrlFieldCodec, field.excel_codec)
 
         assert field.excel_codec.format_display_value('http://www.baidu.com', field) == 'http://www.baidu.com'
         assert field.excel_codec.format_display_value('1', field) == '1'
@@ -51,7 +51,7 @@ class TestUrlValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(Url, field.excel_codec)
+        field.excel_codec = cast(UrlFieldCodec, field.excel_codec)
 
         assert field.excel_codec.normalize_import_value('http://www.baidu.com', field) == 'http://www.baidu.com'
         with self.assertRaises(ValueError) as context:

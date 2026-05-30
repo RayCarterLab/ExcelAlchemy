@@ -21,13 +21,13 @@ from excelalchemy import (
     NumberCodec,
     NumberRangeCodec,
     SingleChoiceCodec,
-    StringCodec,
+    TextCodec,
 )
 from excelalchemy.adapters.pydantic import extract_pydantic_model, instantiate_pydantic_model
 from excelalchemy.codecs import DateCodec as ModuleDateCodec
 from excelalchemy.codecs import EmailCodec as ModuleEmailCodec
 from excelalchemy.codecs import NumberCodec as ModuleNumberCodec
-from excelalchemy.codecs import StringCodec as ModuleStringCodec
+from excelalchemy.codecs import TextCodec as ModuleTextCodec
 from excelalchemy.columns import ExcelColumn as ModuleExcelColumn
 from excelalchemy.columns import ExcelColumnSpec
 from excelalchemy.config import ExporterConfig, ImporterConfig
@@ -54,7 +54,7 @@ def test_v3_public_root_exports_target_entry_points() -> None:
     assert ExcelColumn is ModuleExcelColumn
     assert DateCodec is ModuleDateCodec
     assert NumberCodec is ModuleNumberCodec
-    assert StringCodec is ModuleStringCodec
+    assert TextCodec is ModuleTextCodec
     assert EmailCodec is ModuleEmailCodec
     assert ImportConfig is ModuleImportConfig
     assert ExcelAlchemy is RuntimeExcelAlchemy
@@ -121,13 +121,13 @@ def test_excelcolumn_annotated_declaration_keeps_python_type_visible() -> None:
     assert name_column.order == 1
     assert joined_at_column.label == 'Joined At'
     assert joined_at_column.date_format is DateFormat.DAY
-    assert joined_at_column.excel_codec.__name__ == 'Date'
+    assert joined_at_column.excel_codec.__name__ == 'DateFieldCodec'
     assert salary_column.label == 'Salary'
-    assert salary_column.excel_codec.__name__ == 'Number'
+    assert salary_column.excel_codec.__name__ == 'NumberFieldCodec'
     assert salary_column.fraction_digits == 2
     assert salary_column.importer_ge == 0
     assert email_column.label == 'Email'
-    assert email_column.excel_codec.__name__ == 'Email'
+    assert email_column.excel_codec.__name__ == 'EmailFieldCodec'
 
 
 def test_excelcolumn_returns_immutable_column_spec() -> None:
@@ -147,7 +147,7 @@ def test_excelcolumn_returns_immutable_column_spec() -> None:
 def test_codec_helpers_return_immutable_runtime_configuration() -> None:
     number_codec = NumberCodec(fraction_digits=2)
     date_codec = DateCodec.day()
-    string_codec = StringCodec()
+    string_codec = TextCodec()
     email_codec = EmailCodec()
     boolean_codec = BooleanCodec()
     date_range_codec = DateRangeCodec.day()
@@ -164,20 +164,20 @@ def test_codec_helpers_return_immutable_runtime_configuration() -> None:
     assert not isinstance(number_range_codec, type)
     assert not isinstance(single_choice_codec, type)
     assert not isinstance(multi_choice_codec, type)
-    assert number_codec.codec_type.__name__ == 'Number'
+    assert number_codec.codec_type.__name__ == 'NumberFieldCodec'
     assert number_codec.as_column_options() == {'fraction_digits': 2}
-    assert date_codec.codec_type.__name__ == 'Date'
+    assert date_codec.codec_type.__name__ == 'DateFieldCodec'
     assert date_codec.as_column_options() == {'date_format': DateFormat.DAY}
-    assert string_codec.codec_type.__name__ == 'String'
+    assert string_codec.codec_type.__name__ == 'TextFieldCodec'
     assert string_codec.as_column_options() == {}
-    assert email_codec.codec_type.__name__ == 'Email'
-    assert boolean_codec.codec_type.__name__ == 'Boolean'
-    assert date_range_codec.codec_type.__name__ == 'DateRange'
+    assert email_codec.codec_type.__name__ == 'EmailFieldCodec'
+    assert boolean_codec.codec_type.__name__ == 'BooleanFieldCodec'
+    assert date_range_codec.codec_type.__name__ == 'DateRangeFieldCodec'
     assert date_range_codec.as_column_options() == {'date_format': DateFormat.DAY}
-    assert number_range_codec.codec_type.__name__ == 'NumberRange'
+    assert number_range_codec.codec_type.__name__ == 'NumberRangeFieldCodec'
     assert number_range_codec.as_column_options() == {'fraction_digits': 2}
-    assert single_choice_codec.codec_type.__name__ == 'Radio'
-    assert multi_choice_codec.codec_type.__name__ == 'MultiCheckbox'
+    assert single_choice_codec.codec_type.__name__ == 'SingleChoiceFieldCodec'
+    assert multi_choice_codec.codec_type.__name__ == 'MultiChoiceFieldCodec'
     with pytest.raises(FrozenInstanceError):
         number_codec.codec_type = object
 
@@ -201,10 +201,10 @@ def test_excelcolumn_drives_schema_extraction_with_plain_python_types() -> None:
 
     assert [meta.label for meta in metas] == ['Name', 'Joined At', 'Salary', 'Email']
     assert [meta.key for meta in metas] == ['name', 'joined_at', 'salary', 'email']
-    assert metas[0].excel_codec.__name__ == 'String'
-    assert metas[1].excel_codec.__name__ == 'Date'
-    assert metas[2].excel_codec.__name__ == 'Number'
-    assert metas[3].excel_codec.__name__ == 'Email'
+    assert metas[0].excel_codec.__name__ == 'TextFieldCodec'
+    assert metas[1].excel_codec.__name__ == 'DateFieldCodec'
+    assert metas[2].excel_codec.__name__ == 'NumberFieldCodec'
+    assert metas[3].excel_codec.__name__ == 'EmailFieldCodec'
     assert isinstance(result, V3AnnotatedImportModel)
     assert result.name == 'Alice'
     assert result.joined_at is None
@@ -224,7 +224,51 @@ def test_v3_removes_2x_compatibility_imports() -> None:
         'excelalchemy.helper',
         'excelalchemy.i18n',
         'excelalchemy._primitives',
+        'excelalchemy.codecs.base',
+        'excelalchemy.codecs.string',
+        'excelalchemy.codecs.radio',
+        'excelalchemy.codecs.multi_checkbox',
+        'excelalchemy.codecs.money',
+        'excelalchemy.codecs.organization',
+        'excelalchemy.codecs.staff',
+        'excelalchemy.codecs.tree',
     )
 
     for module_name in removed_modules:
         assert importlib.util.find_spec(module_name) is None
+
+
+def test_v3_removes_2x_codec_compatibility_aliases() -> None:
+    codec_base = importlib.import_module('excelalchemy.codecs.field_codec')
+
+    removed_aliases = (
+        'ABCValueType',
+        'ComplexABCValueType',
+        'ExcelCodecConfig',
+        'SystemFieldCodec',
+        'UndefinedFieldCodec',
+    )
+
+    for alias in removed_aliases:
+        assert not hasattr(codec_base, alias)
+
+
+def test_v3_removes_replaced_codec_helpers_from_public_exports() -> None:
+    root_module = importlib.import_module('excelalchemy')
+    codecs_module = importlib.import_module('excelalchemy.codecs')
+    removed_helpers = (
+        'EXCEL_CHOICE_CODECS',
+        'MoneyCodec',
+        'MultiOrganizationCodec',
+        'MultiStaffCodec',
+        'MultiTreeNodeCodec',
+        'SingleOrganizationCodec',
+        'SingleStaffCodec',
+        'SingleTreeNodeCodec',
+        'StringCodec',
+        'excel_choice_codec',
+    )
+
+    for helper_name in removed_helpers:
+        assert not hasattr(root_module, helper_name)
+        assert not hasattr(codecs_module, helper_name)

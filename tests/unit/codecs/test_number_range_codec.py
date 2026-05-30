@@ -6,7 +6,7 @@ from excelalchemy import (
     ExcelColumn,
     NumberRangeCodec,
 )
-from excelalchemy.codecs.number_range import NumberRange
+from excelalchemy.codecs.number_range import NumberRangeFieldCodec, NumberRangeValue
 from tests.support import BaseTestCase
 
 
@@ -17,7 +17,7 @@ class TestNumberRangeValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(NumberRange, field.excel_codec)
+        field.excel_codec = cast(NumberRangeFieldCodec, field.excel_codec)
 
         assert (
             field.excel_codec.build_comment(field)
@@ -31,7 +31,7 @@ class TestNumberRangeValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(NumberRange, field.excel_codec)
+        field.excel_codec = cast(NumberRangeFieldCodec, field.excel_codec)
 
         assert field.excel_codec.parse_input(1.23, field) == 1.23
         assert field.excel_codec.parse_input(
@@ -45,7 +45,7 @@ class TestNumberRangeValueType(BaseTestCase):
             'end': 1.23,
         }
         assert field.excel_codec.parse_input(
-            NumberRange(start=1.23, end=1.23),
+            NumberRangeValue(start=1.23, end=1.23),
             field,
         ) == {
             'start': 1.23,
@@ -58,7 +58,7 @@ class TestNumberRangeValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(NumberRange, field.excel_codec)
+        field.excel_codec = cast(NumberRangeFieldCodec, field.excel_codec)
 
         assert field.excel_codec.format_display_value(1.23, field) == '1.23'
 
@@ -71,7 +71,7 @@ class TestNumberRangeValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(NumberRange, field.excel_codec)
+        field.excel_codec = cast(NumberRangeFieldCodec, field.excel_codec)
 
         assert field.excel_codec.normalize_import_value(
             {
@@ -79,7 +79,7 @@ class TestNumberRangeValueType(BaseTestCase):
                 'end': 1.23,
             },
             field,
-        ) == NumberRange(start=1.23, end=1.23)
+        ) == {'start': 1.23, 'end': 1.23}
 
         field.fraction_digits = 2
         assert field.excel_codec.normalize_import_value(
@@ -88,10 +88,10 @@ class TestNumberRangeValueType(BaseTestCase):
                 'end': 1.23456,
             },
             field,
-        ) == NumberRange(start=1.23, end=1.23)
+        ) == {'start': 1.23, 'end': 1.23}
 
         field.fraction_digits = 0
         assert field.excel_codec.normalize_import_value(
-            NumberRange(start=1.23, end=1.23),
+            NumberRangeValue(start=1.23, end=1.23),
             field,
-        ) == NumberRange(start=1, end=1)
+        ) == {'start': 1, 'end': 1}

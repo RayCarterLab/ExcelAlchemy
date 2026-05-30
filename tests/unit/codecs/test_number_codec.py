@@ -4,7 +4,7 @@ from typing import Annotated, cast
 from pydantic import BaseModel
 
 from excelalchemy import ExcelColumn
-from excelalchemy.codecs.number import Number
+from excelalchemy.codecs.number import NumberFieldCodec
 from tests.support import BaseTestCase
 
 
@@ -51,7 +51,7 @@ class TestNumberValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(Number, field.excel_codec)
+        field.excel_codec = cast(NumberFieldCodec, field.excel_codec)
 
         assert field.excel_codec.parse_input(1.23, field) == 1.23
         assert field.excel_codec.parse_input(1.234, field) == 1.234
@@ -68,7 +68,7 @@ class TestNumberValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(Number, field.excel_codec)
+        field.excel_codec = cast(NumberFieldCodec, field.excel_codec)
 
         assert field.excel_codec.format_display_value(1.23, field) == '1.23'
         assert field.excel_codec.format_display_value(1.234, field) == '1.234'
@@ -86,7 +86,7 @@ class TestNumberValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(Number, field.excel_codec)
+        field.excel_codec = cast(NumberFieldCodec, field.excel_codec)
 
         self.assertRaises(ValueError, field.excel_codec.normalize_import_value, 'ddd', field)
         assert field.excel_codec.normalize_import_value(1.23, field) == 1.23

@@ -6,7 +6,7 @@ from excelalchemy import (
     ExcelColumn,
     PhoneNumberCodec,
 )
-from excelalchemy.codecs.phone_number import PhoneNumber
+from excelalchemy.codecs.phone_number import PhoneNumberFieldCodec
 from tests.support import BaseTestCase
 
 
@@ -17,7 +17,7 @@ class TestPhoneNumberValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(PhoneNumber, field.excel_codec)
+        field.excel_codec = cast(PhoneNumberFieldCodec, field.excel_codec)
 
         self.assertRaises(ValueError, field.excel_codec.normalize_import_value, 'ddd', field)
         self.assertRaises(ValueError, field.excel_codec.normalize_import_value, '1234567890', field)

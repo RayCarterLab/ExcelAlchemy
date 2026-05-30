@@ -13,9 +13,9 @@ from excelalchemy.primitives.identity import Key
 if TYPE_CHECKING:
     from excelalchemy.metadata import FieldMetaInfo
 
-# These aliases remain `Any` intentionally because codec subclasses narrow their
-# accepted workbook values heavily. Using `object` here makes every override
-# incompatible under pyright's method override rules.
+# These aliases stay `Any` because codec subclasses accept domain-specific
+# workbook values and some overrides narrow parameter types. Using `object`
+# here would make those narrowed overrides fail pyright's override checks.
 type WorkbookInputValue = Any
 type WorkbookDisplayValue = Any
 type NormalizedImportValue = Any
@@ -158,14 +158,14 @@ class ExcelFieldCodec(ABC):
 
 
 @dataclass(frozen=True, slots=True)
-class ExcelCodecConfig:
+class ExcelFieldCodecSpec:
     """Immutable codec helper configuration attached through ExcelColumn."""
 
     codec_type: type[ExcelFieldCodec]
     column_options: tuple[tuple[str, object], ...] = ()
 
     @classmethod
-    def create(cls, codec_type: type[ExcelFieldCodec], **column_options: object) -> ExcelCodecConfig:
+    def create(cls, codec_type: type[ExcelFieldCodec], **column_options: object) -> ExcelFieldCodecSpec:
         return cls(
             codec_type=codec_type,
             column_options=tuple((key, value) for key, value in column_options.items() if value is not None),
@@ -184,9 +184,7 @@ class CompositeExcelFieldCodec(ExcelFieldCodec):
         """Return the schema keys and metadata for each expanded worksheet column."""
 
 
-class SystemReserved(ExcelFieldCodec):
-    __name__ = 'SystemReserved'
-
+class SystemReservedFieldCodec(ExcelFieldCodec):
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
         return ''
@@ -212,9 +210,7 @@ class SystemReserved(ExcelFieldCodec):
         return value
 
 
-class Undefined(ExcelFieldCodec):
-    __name__ = 'Undefined'
-
+class UnspecifiedFieldCodec(ExcelFieldCodec):
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
         return ''
@@ -238,9 +234,3 @@ class Undefined(ExcelFieldCodec):
         field_meta: FieldMetaInfo,
     ) -> NormalizedImportValue:
         return value
-
-
-ABCValueType = ExcelFieldCodec
-ComplexABCValueType = CompositeExcelFieldCodec
-SystemFieldCodec = SystemReserved
-UndefinedFieldCodec = Undefined

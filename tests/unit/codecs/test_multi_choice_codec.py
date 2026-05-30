@@ -9,19 +9,19 @@ from excelalchemy import (
     OptionId,
     ProgrammaticError,
 )
-from excelalchemy.codecs.multi_checkbox import MultiCheckbox
+from excelalchemy.codecs.choice import MultiChoiceFieldCodec
 from excelalchemy.primitives.constants import MULTI_CHECKBOX_SEPARATOR
 from tests.support import BaseTestCase
 
 
-class TestMultiCheckboxValueType(BaseTestCase):
+class TestMultiChoiceFieldCodec(BaseTestCase):
     async def test_comment_describes_multi_select_behavior(self):
         class Importer(BaseModel):
             multi_checkbox: Annotated[list[str], ExcelColumn(codec=MultiChoiceCodec(), label='多选框', order=1)]
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(MultiCheckbox, field.excel_codec)
+        field.excel_codec = cast(MultiChoiceFieldCodec, field.excel_codec)
 
         assert field.excel_codec.build_comment(field) == '必填性：必填\n\n单/多选：多选\n'
 
@@ -31,7 +31,7 @@ class TestMultiCheckboxValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(MultiCheckbox, field.excel_codec)
+        field.excel_codec = cast(MultiChoiceFieldCodec, field.excel_codec)
 
         assert field.excel_codec.parse_input(['a', 'b'], field) == ['a', 'b']
         assert field.excel_codec.parse_input(f'a{MULTI_CHECKBOX_SEPARATOR}b', field) == ['a', 'b']
@@ -56,7 +56,7 @@ class TestMultiCheckboxValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(MultiCheckbox, field.excel_codec)
+        field.excel_codec = cast(MultiChoiceFieldCodec, field.excel_codec)
 
         self.assertRaises(ValueError, field.excel_codec.normalize_import_value, None, field)
         self.assertRaises(ValueError, field.excel_codec.normalize_import_value, 'ddd', field)
@@ -85,7 +85,7 @@ class TestMultiCheckboxValueType(BaseTestCase):
 
         alchemy = self.build_alchemy(Importer)
         field = alchemy.ordered_field_meta[0]
-        field.excel_codec = cast(MultiCheckbox, field.excel_codec)
+        field.excel_codec = cast(MultiChoiceFieldCodec, field.excel_codec)
 
         assert field.excel_codec.format_display_value([OptionId('age'), OptionId('性别')], field) == '年龄，性别'
         assert field.excel_codec.format_display_value(f'a{MULTI_CHECKBOX_SEPARATOR}b', field) == 'a，b'

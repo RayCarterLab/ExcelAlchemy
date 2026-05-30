@@ -7,9 +7,9 @@ import pendulum
 from pendulum import DateTime
 from pydantic import BaseModel
 
-from excelalchemy.codecs.base import (
+from excelalchemy.codecs.field_codec import (
     CompositeExcelFieldCodec,
-    ExcelCodecConfig,
+    ExcelFieldCodecSpec,
     log_codec_parse_fallback,
     log_codec_render_fallback,
 )
@@ -32,14 +32,12 @@ class _DateRangeImpl(BaseModel):
     end: datetime | None
 
 
-class DateRange(CompositeExcelFieldCodec):
+class DateRangeValue:
     start: datetime | None
     end: datetime | None
 
-    __name__ = 'DateRange'
-
     @classmethod
-    def model_validate(cls, obj: object) -> 'DateRange':
+    def model_validate(cls, obj: object) -> 'DateRangeValue':
         impl = _DateRangeImpl.model_validate(obj)
         self = cls(impl.start, impl.end)
         return self
@@ -49,7 +47,7 @@ class DateRange(CompositeExcelFieldCodec):
         self.end = end
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, DateRange):
+        if isinstance(other, DateRangeValue):
             return self.to_dict() == other.to_dict()
         if isinstance(other, Mapping):
             return self.to_dict() == dict(cast(Mapping[str, object], other))
@@ -61,6 +59,8 @@ class DateRange(CompositeExcelFieldCodec):
             'end': int(self.end.timestamp() * MILLISECOND_TO_SECOND) if self.end else None,
         }
 
+
+class DateRangeFieldCodec(CompositeExcelFieldCodec):
     @classmethod
     def column_items(cls) -> list[tuple[Key, FieldMetaInfo]]:
         return [
@@ -124,7 +124,7 @@ class DateRange(CompositeExcelFieldCodec):
     ) -> dict[str, int | None]:
         presentation = field_meta.presentation
         try:
-            parsed = value if isinstance(value, DateRange) else DateRange.model_validate(value)
+            parsed = value if isinstance(value, DateRangeValue) else DateRangeValue.model_validate(value)
             parsed.start = pendulum.instance(parsed.start, tz=presentation.timezone) if parsed.start else None
             parsed.end = pendulum.instance(parsed.end, tz=presentation.timezone) if parsed.end else None
         except Exception as exc:
@@ -211,7 +211,7 @@ class DateRange(CompositeExcelFieldCodec):
             return None
         if not isinstance(value, str):
             raise TypeError(f'Expected a string date value, got {type(value)}')
-        return DateRange._parse_datetime_text(value, field_meta)
+        return DateRangeFieldCodec._parse_datetime_text(value, field_meta)
 
     @staticmethod
     def _parse_datetime_text(value: str, field_meta: FieldMetaInfo) -> DateTime:
@@ -232,7 +232,7 @@ class DateRangeCodec:
         *,
         timezone: DateTimeZone | None = None,
         date_range_option: DataRangeOption | None = None,
-    ) -> ExcelCodecConfig:
+    ) -> ExcelFieldCodecSpec:
         return DateRangeCodec.format(DateFormat.DAY, timezone=timezone, date_range_option=date_range_option)
 
     @staticmethod
@@ -240,7 +240,7 @@ class DateRangeCodec:
         *,
         timezone: DateTimeZone | None = None,
         date_range_option: DataRangeOption | None = None,
-    ) -> ExcelCodecConfig:
+    ) -> ExcelFieldCodecSpec:
         return DateRangeCodec.format(DateFormat.MONTH, timezone=timezone, date_range_option=date_range_option)
 
     @staticmethod
@@ -248,7 +248,7 @@ class DateRangeCodec:
         *,
         timezone: DateTimeZone | None = None,
         date_range_option: DataRangeOption | None = None,
-    ) -> ExcelCodecConfig:
+    ) -> ExcelFieldCodecSpec:
         return DateRangeCodec.format(DateFormat.YEAR, timezone=timezone, date_range_option=date_range_option)
 
     @staticmethod
@@ -256,7 +256,7 @@ class DateRangeCodec:
         *,
         timezone: DateTimeZone | None = None,
         date_range_option: DataRangeOption | None = None,
-    ) -> ExcelCodecConfig:
+    ) -> ExcelFieldCodecSpec:
         return DateRangeCodec.format(DateFormat.MINUTE, timezone=timezone, date_range_option=date_range_option)
 
     @staticmethod
@@ -265,9 +265,9 @@ class DateRangeCodec:
         *,
         timezone: DateTimeZone | None = None,
         date_range_option: DataRangeOption | None = None,
-    ) -> ExcelCodecConfig:
-        return ExcelCodecConfig.create(
-            DateRange,
+    ) -> ExcelFieldCodecSpec:
+        return ExcelFieldCodecSpec.create(
+            DateRangeFieldCodec,
             date_format=date_format,
             timezone=timezone,
             date_range_option=date_range_option,

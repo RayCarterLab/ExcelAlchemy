@@ -276,7 +276,7 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.MIN_LENGTH_CHARACTERS: 'The minimum length is {min_length} characters',
         MessageKey.MULTIPLE_SELECTIONS_NOT_SUPPORTED: 'Multiple selections are not supported',
         MessageKey.OPTIONS_CANNOT_BE_NONE_FOR_SELECTION_FIELDS: (
-            'options cannot be None when validating RADIO / MULTI_CHECKBOX / SELECT fields'
+            'options cannot be None when validating single-choice or multi-choice fields'
         ),
         MessageKey.OPTIONS_CANNOT_BE_NONE_FOR_VALUE_TYPE: 'options cannot be None when validating codec {value_type}',
         MessageKey.OPTIONS_CONTAIN_DUPLICATES: 'Options contain duplicates',

@@ -12,7 +12,7 @@ from excelalchemy import (
     ExcelAlchemy,
     ExcelColumn,
     ImporterConfig,
-    MoneyCodec,
+    NumberCodec,
     NumberRangeCodec,
 )
 
@@ -46,7 +46,11 @@ class CompensationImporter(BaseModel):
     signing_bonus: Annotated[
         float,
         ExcelColumn(
-            codec=MoneyCodec(), label='Signing bonus', order=4, unit='USD', hint='Use plain numbers without separators'
+            codec=NumberCodec(fraction_digits=2),
+            label='Signing bonus',
+            order=4,
+            unit='USD',
+            hint='Use plain numbers without separators',
         ),
     ]
 

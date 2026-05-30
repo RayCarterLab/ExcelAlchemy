@@ -87,6 +87,34 @@ Rules:
 - Requiredness comes from Pydantic unless `ExcelColumn(required=...)` explicitly
   overrides workbook-facing behavior.
 
+## Codec Naming And Structure
+
+3.0 codec names must describe Excel import/export semantics, not UI widgets or
+legacy value-type shims.
+
+Rules:
+
+- User-facing codec helpers use `*Codec` names and return immutable
+  `ExcelFieldCodecSpec` objects for `ExcelColumn(codec=...)`.
+- Internal codec implementations use `*FieldCodec` names and implement
+  `ExcelFieldCodec`.
+- File names use data semantics. Do not use frontend-control names such as
+  `radio` or `checkbox`.
+- Text fields use `TextCodec`; Python `str` remains the type annotation and is
+  not duplicated in the codec name.
+- Choice fields use `SingleChoiceCodec` and `MultiChoiceCodec`. Entity-specific
+  behavior such as organization, staff, or tree-node hints must be explicit
+  helper parameters, not separate wrapper codec classes.
+- Fixed-parameter wrappers such as a money codec are not separate public codecs.
+  Use `NumberCodec(fraction_digits=2, unit=...)` or another explicit number
+  helper parameter instead.
+- Multi-choice separators must be explicit configuration shared by comments,
+  parsing, and formatting. Do not let workbook comments and parser behavior
+  diverge.
+- Compatibility names such as `ValueType`, `StringCodec`, `ExcelCodecConfig`,
+  `EXCEL_CHOICE_CODECS`, and `excel_choice_codec` are not valid public 3.0 API
+  names.
+
 ## Target Module Map
 
 Do not introduce `_internal`. Name modules by concrete responsibility.
