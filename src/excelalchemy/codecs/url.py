@@ -4,7 +4,7 @@ from excelalchemy.codecs.field_codec import ExcelFieldCodecSpec, WorkbookInputVa
 from excelalchemy.codecs.text import TextFieldCodec
 from excelalchemy.field_metadata import FieldMetaInfo
 from excelalchemy.messages import MessageKey
-from excelalchemy.messages import message as msg
+from excelalchemy.messages import user_message as umsg
 
 
 class UrlFieldCodec(TextFieldCodec):
@@ -12,7 +12,7 @@ class UrlFieldCodec(TextFieldCodec):
 
     @classmethod
     def expected_input_message(cls, field_meta: FieldMetaInfo) -> str | None:
-        return msg(MessageKey.VALID_URL_REQUIRED)
+        return umsg(MessageKey.VALID_URL_REQUIRED)
 
     @classmethod
     def normalize_import_value(cls, value: WorkbookInputValue, field_meta: FieldMetaInfo) -> str:
@@ -22,7 +22,7 @@ class UrlFieldCodec(TextFieldCodec):
         try:
             cls._validator.validate_python(parsed)
         except Exception:
-            errors.append(msg(MessageKey.VALID_URL_REQUIRED))
+            errors.append(umsg(MessageKey.VALID_URL_REQUIRED))
 
         if errors:
             raise ValueError(*errors)

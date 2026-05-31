@@ -6,7 +6,8 @@ ExcelAlchemy currently distinguishes between three kinds of language output:
 
 - developer diagnostics, intended for logs and runtime troubleshooting
 - runtime messages, intended for Python developers and integrators
-- workbook display text, intended for spreadsheet users
+- workbook display text and import validation feedback, intended for
+  spreadsheet users
 
 These layers do not currently share the same locale policy.
 
@@ -29,12 +30,13 @@ end-user rendering.
 - Default runtime locale: `en`
 - Stability policy: runtime exceptions are intentionally standardized in English
 
-This means error messages raised in Python code are expected to stay English unless the
-project explicitly announces broader runtime i18n support in a future release.
+This means error messages raised for Python developers and integrators are expected to
+stay English unless the project explicitly announces broader runtime i18n support in a
+future release.
 
 ## Workbook Display Locale Policy
 
-- Supported workbook display locales: `('zh-CN', 'en')`
+- Supported workbook display locales: `('zh-CN', 'en', 'ja')`
 - Default workbook display locale: `zh-CN`
 - Stability policy: the default workbook locale is stable for 3.0
 
@@ -44,6 +46,8 @@ Workbook display locale affects user-facing spreadsheet text such as:
 - header comments
 - result and reason column labels
 - row validation status text
+- built-in import validation failure reasons shown in result workbooks and API
+  `display_message` fields
 - composite child labels such as start/end date and min/max value
 - workbook-facing boolean values such as `Yes/No` or `是/否`
 
@@ -62,6 +66,8 @@ Use `locale='zh-CN'` when the workbook is meant for Chinese-speaking spreadsheet
 
 Use `locale='en'` when the workbook is meant for English-speaking spreadsheet users.
 
+Use `locale='ja'` when the workbook is meant for Japanese-speaking spreadsheet users.
+
 Examples:
 
 ```python
@@ -69,6 +75,7 @@ from excelalchemy import ExcelAlchemy, ImporterConfig
 
 alchemy_zh = ExcelAlchemy(ImporterConfig(ImporterModel, creator=create_func, locale='zh-CN'))
 alchemy_en = ExcelAlchemy(ImporterConfig(ImporterModel, creator=create_func, locale='en'))
+alchemy_ja = ExcelAlchemy(ImporterConfig(ImporterModel, creator=create_func, locale='ja'))
 ```
 
 ## Constants And Policies

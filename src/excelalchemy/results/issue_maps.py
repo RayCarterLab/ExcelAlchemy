@@ -445,7 +445,7 @@ class RowIssueMap(dict[RowIndex, list[RowIssue]]):
 
     @staticmethod
     def numbered_messages(errors: Iterable[RowIssue]) -> tuple[str, ...]:
-        return tuple(f'{index}、{error!s}' for index, error in enumerate(errors, start=1))
+        return tuple(f'{index}、{error.display_message}' for index, error in enumerate(errors, start=1))
 
     @property
     def has_errors(self) -> bool:

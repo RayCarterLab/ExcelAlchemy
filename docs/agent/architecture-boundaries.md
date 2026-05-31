@@ -146,7 +146,8 @@ Use these ownership boundaries when deciding where a change belongs:
   `ExcelColumn(codec=...)`, not in the Python type annotation.
 - Data conversion: use `data_converter` when workbook schema and backend
   payload shape differ.
-- Locale: use `locale='zh-CN' | 'en'` for workbook-facing display text.
+- Locale: use `locale='zh-CN' | 'en' | 'ja'` for workbook-facing display text
+  and built-in import validation feedback.
 
 ## Architectural Intent
 

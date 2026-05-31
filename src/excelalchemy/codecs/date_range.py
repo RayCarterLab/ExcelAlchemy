@@ -18,6 +18,7 @@ from excelalchemy.field_metadata import FieldMetaInfo
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
+from excelalchemy.messages import user_message as umsg
 from excelalchemy.primitives.constants import (
     DATE_FORMAT_TO_PYTHON_MAPPING,
     MILLISECOND_TO_SECOND,
@@ -88,7 +89,7 @@ class DateRangeFieldCodec(CompositeExcelFieldCodec):
 
     @classmethod
     def expected_input_message(cls, field_meta: FieldMetaInfo) -> str | None:
-        return msg(MessageKey.ENTER_DATE_RANGE_EXPECTED_FORMAT)
+        return umsg(MessageKey.ENTER_DATE_RANGE_EXPECTED_FORMAT)
 
     @classmethod
     def parse_input(cls, value: object, field_meta: FieldMetaInfo) -> object:
@@ -128,21 +129,21 @@ class DateRangeFieldCodec(CompositeExcelFieldCodec):
             parsed.start = pendulum.instance(parsed.start, tz=presentation.timezone) if parsed.start else None
             parsed.end = pendulum.instance(parsed.end, tz=presentation.timezone) if parsed.end else None
         except Exception as exc:
-            raise ValueError(msg(MessageKey.INVALID_INPUT)) from exc
+            raise ValueError(umsg(MessageKey.INVALID_INPUT)) from exc
 
         errors: list[str] = []
         now = datetime.now(tz=presentation.timezone)
 
         if parsed.start and parsed.end and parsed.start > parsed.end:
-            errors.append(msg(MessageKey.DATE_RANGE_START_AFTER_END))
+            errors.append(umsg(MessageKey.DATE_RANGE_START_AFTER_END))
 
         match presentation.date_range_option:
             case DataRangeOption.PRE:
                 if (parsed.start and parsed.start > now) or (parsed.end and parsed.end > now):
-                    errors.append(msg(MessageKey.DATE_MUST_BE_EARLIER_THAN_NOW))
+                    errors.append(umsg(MessageKey.DATE_MUST_BE_EARLIER_THAN_NOW))
             case DataRangeOption.NEXT:
                 if (parsed.start and parsed.start < now) or (parsed.end and parsed.end < now):
-                    errors.append(msg(MessageKey.DATE_MUST_BE_LATER_THAN_NOW))
+                    errors.append(umsg(MessageKey.DATE_MUST_BE_LATER_THAN_NOW))
             case DataRangeOption.NONE | None:
                 ...  # do nothing
 
@@ -221,7 +222,7 @@ class DateRangeFieldCodec(CompositeExcelFieldCodec):
             return parsed.replace(tzinfo=presentation.timezone)
         if isinstance(parsed, datetime):
             return pendulum.instance(parsed).replace(tzinfo=presentation.timezone)
-        raise ValueError(msg(MessageKey.INVALID_INPUT))
+        raise ValueError(umsg(MessageKey.INVALID_INPUT))
 
 
 class DateRangeCodec:

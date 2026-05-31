@@ -130,7 +130,8 @@ This is a small but meaningful design distinction.
 The project now documents its locale behavior explicitly instead of leaving it as an implementation detail.
 
 - runtime messages are English-first and stable for the current 3.0 line
-- workbook display text supports `zh-CN` and `en`
+- workbook display text and built-in import validation feedback support
+  `zh-CN`, `en`, and `ja`
 - workbook display defaults to `zh-CN`
 
 That policy is written down in [docs/locale.md](locale.md), so users do not have to infer it from scattered examples.
@@ -189,6 +190,8 @@ Internationalization was intentionally staged:
 1. unify runtime errors
 2. introduce a message layer
 3. move workbook display text onto locale-aware display messages
+4. keep developer-facing runtime messages English while localizing
+   spreadsheet-user feedback
 
 That sequence avoided premature framework complexity.
 

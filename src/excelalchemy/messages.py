@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Final
+from typing import Any, Final, cast
 
 
 class MessageKey(StrEnum):
@@ -162,7 +162,7 @@ RUNTIME_LOCALE_POLICY: Final = LocaleFallbackPolicy(
 )
 DISPLAY_LOCALE_POLICY: Final = LocaleFallbackPolicy(
     default_locale='zh-CN',
-    supported_locales=('zh-CN', 'en'),
+    supported_locales=('zh-CN', 'en', 'ja'),
     missing_locale_fallback_locale='zh-CN',
     missing_key_fallback_locale='zh-CN',
 )
@@ -361,7 +361,12 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.LABEL_MAXIMUM_VALUE: 'Maximum value',
     },
     'zh-CN': {
+        MessageKey.INVALID_INPUT: '输入无效',
         MessageKey.THIS_FIELD_IS_REQUIRED: '此字段为必填项',
+        MessageKey.ENTER_DATE_FORMAT: '请输入 {date_format} 格式的日期',
+        MessageKey.DATE_MUST_BE_EARLIER_THAN_NOW: '该值必须早于或等于当前时间',
+        MessageKey.DATE_MUST_BE_LATER_THAN_NOW: '该值必须晚于或等于当前时间',
+        MessageKey.DATE_RANGE_START_AFTER_END: '开始日期不能晚于结束日期',
         MessageKey.MIN_LENGTH_CHARACTERS: '最小长度为 {min_length} 个字符',
         MessageKey.MAX_LENGTH_CHARACTERS: '最大长度为 {max_length} 个字符',
         MessageKey.MIN_ITEMS_REQUIRED: '至少选择 {min_items} 项',
@@ -369,15 +374,33 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.ENTER_DATE_RANGE_EXPECTED_FORMAT: '请按照表头批注中的格式同时填写开始日期和结束日期',
         MessageKey.ENTER_NUMBER_RANGE_EXPECTED_FORMAT: '请按照表头批注中的格式同时填写最小值和最大值',
         MessageKey.VALID_EMAIL_REQUIRED: '请输入正确的邮箱地址，例如 name@example.com',
+        MessageKey.INVALID_NUMBER_ENTER_NUMBER: '输入无效；请输入数字。',
+        MessageKey.NUMBER_BETWEEN_MIN_AND_MAX: '请输入 {minimum} 到 {maximum} 之间的数字。',
+        MessageKey.NUMBER_BETWEEN_NEG_INF_AND_MAX: '请输入 -∞ 到 {maximum} 之间的数字。',
+        MessageKey.NUMBER_BETWEEN_MIN_AND_POS_INF: '请输入 {minimum} 到 +∞ 之间的数字。',
+        MessageKey.NUMBER_RANGE_MIN_GREATER_THAN_MAX: '最小值不能大于最大值',
+        MessageKey.ENTER_NUMBER: '请输入数字',
+        MessageKey.ENTER_NUMBER_EXPECTED_FORMAT: '请按照要求的格式输入数字',
         MessageKey.VALID_URL_REQUIRED: '请输入有效的网址，例如 https://example.com',
         MessageKey.VALID_PHONE_NUMBER_REQUIRED: '请输入有效的手机号，例如 13800138000',
+        MessageKey.MULTIPLE_SELECTIONS_NOT_SUPPORTED: '不支持多选',
+        MessageKey.OPTIONS_CONTAIN_DUPLICATES: '选项中包含重复值',
         MessageKey.SELECT_ONE_CONFIGURED_OPTION: '请从配置的选项中选择一项',
         MessageKey.SELECT_ONLY_CONFIGURED_OPTIONS: '请选择配置的选项',
         MessageKey.SELECT_ONE_CONFIGURED_ENTITY: '请从配置的选项中选择一个{entity}',
         MessageKey.SELECT_ONLY_CONFIGURED_ENTITIES: '请选择配置的{entity_plural}',
         MessageKey.VALID_VALUES_INCLUDE: '可选值示例：{options}',
+        MessageKey.ONLY_CHARACTER_SET_ALLOWED: '仅允许输入{character_set_names}',
+        MessageKey.OPTION_NOT_FOUND_HEADER_COMMENT: '未找到选项；请查看表头批注中的有效值',
+        MessageKey.OPTION_NOT_FOUND_FIELD_COMMENT: '未找到选项；请查看字段批注中的有效值',
         MessageKey.ENTER_VALUE_EXPECTED_FORMAT: '请按照表头注释中给出的格式填写',
         MessageKey.IMPORT_RESULT_ONLY_FOR_INVALID_HEADER_VALIDATION: '仅当表头校验不通过时，才能构造 ImportResult',
+        MessageKey.BOOLEAN_ENTER_YES_OR_NO: '请输入“{true_value}”或“{false_value}”',
+        MessageKey.CHARACTER_SET_NAME_CHINESE: '中文',
+        MessageKey.CHARACTER_SET_NAME_NUMBER: '数字',
+        MessageKey.CHARACTER_SET_NAME_LOWERCASE: '小写字母',
+        MessageKey.CHARACTER_SET_NAME_UPPERCASE: '大写字母',
+        MessageKey.CHARACTER_SET_NAME_SPECIAL: '符号',
         MessageKey.HEADER_HINT: (
             '\n导入填写须知：\n'
             '1、填写数据时，请注意查看字段名称上的注释，避免导入失败。\n'
@@ -429,11 +452,108 @@ MESSAGES: Final[dict[str, dict[MessageKey, str]]] = {
         MessageKey.LABEL_MINIMUM_VALUE: '最小值',
         MessageKey.LABEL_MAXIMUM_VALUE: '最大值',
     },
+    'ja': {
+        MessageKey.INVALID_INPUT: '入力が無効です',
+        MessageKey.THIS_FIELD_IS_REQUIRED: 'この項目は必須です',
+        MessageKey.ENTER_DATE_FORMAT: '{date_format} 形式の日付を入力してください',
+        MessageKey.DATE_MUST_BE_EARLIER_THAN_NOW: '値は現在時刻以前である必要があります',
+        MessageKey.DATE_MUST_BE_LATER_THAN_NOW: '値は現在時刻以降である必要があります',
+        MessageKey.DATE_RANGE_START_AFTER_END: '開始日は終了日より後にできません',
+        MessageKey.MIN_LENGTH_CHARACTERS: '最小文字数は {min_length} 文字です',
+        MessageKey.MAX_LENGTH_CHARACTERS: '最大文字数は {max_length} 文字です',
+        MessageKey.MIN_ITEMS_REQUIRED: '{min_items} 件以上選択してください',
+        MessageKey.MAX_ITEMS_ALLOWED: '{max_items} 件以内で選択してください',
+        MessageKey.ENTER_DATE_RANGE_EXPECTED_FORMAT: 'ヘッダーコメントの形式に従って開始日と終了日を入力してください',
+        MessageKey.ENTER_NUMBER_RANGE_EXPECTED_FORMAT: 'ヘッダーコメントの形式に従って最小値と最大値を入力してください',
+        MessageKey.VALID_EMAIL_REQUIRED: '有効なメールアドレスを入力してください。例: name@example.com',
+        MessageKey.INVALID_NUMBER_ENTER_NUMBER: '入力が無効です。数値を入力してください。',
+        MessageKey.NUMBER_BETWEEN_MIN_AND_MAX: '{minimum} から {maximum} までの数値を入力してください。',
+        MessageKey.NUMBER_BETWEEN_NEG_INF_AND_MAX: '-∞ から {maximum} までの数値を入力してください。',
+        MessageKey.NUMBER_BETWEEN_MIN_AND_POS_INF: '{minimum} から +∞ までの数値を入力してください。',
+        MessageKey.NUMBER_RANGE_MIN_GREATER_THAN_MAX: '最小値は最大値より大きくできません',
+        MessageKey.ENTER_NUMBER: '数値を入力してください',
+        MessageKey.ENTER_NUMBER_EXPECTED_FORMAT: '期待される形式で数値を入力してください',
+        MessageKey.VALID_URL_REQUIRED: '有効な URL を入力してください。例: https://example.com',
+        MessageKey.VALID_PHONE_NUMBER_REQUIRED: '有効な電話番号を入力してください。例: 13800138000',
+        MessageKey.MULTIPLE_SELECTIONS_NOT_SUPPORTED: '複数選択はサポートされていません',
+        MessageKey.OPTIONS_CONTAIN_DUPLICATES: '選択肢に重複があります',
+        MessageKey.SELECT_ONE_CONFIGURED_OPTION: '設定済みの選択肢から 1 つ選択してください',
+        MessageKey.SELECT_ONLY_CONFIGURED_OPTIONS: '設定済みの選択肢のみを選択してください',
+        MessageKey.SELECT_ONE_CONFIGURED_ENTITY: '設定済みの選択肢から{entity}を 1 つ選択してください',
+        MessageKey.SELECT_ONLY_CONFIGURED_ENTITIES: '設定済みの{entity_plural}を選択してください',
+        MessageKey.VALID_VALUES_INCLUDE: '有効な値の例: {options}',
+        MessageKey.ONLY_CHARACTER_SET_ALLOWED: '{character_set_names}のみ入力できます',
+        MessageKey.OPTION_NOT_FOUND_HEADER_COMMENT: '選択肢が見つかりません。ヘッダーコメントの有効値を確認してください',
+        MessageKey.OPTION_NOT_FOUND_FIELD_COMMENT: '選択肢が見つかりません。項目コメントの有効値を確認してください',
+        MessageKey.ENTER_VALUE_EXPECTED_FORMAT: 'ヘッダーコメントに示された期待形式で入力してください',
+        MessageKey.IMPORT_RESULT_ONLY_FOR_INVALID_HEADER_VALIDATION: 'ImportResult はヘッダー検証が無効な場合のみ構築できます',
+        MessageKey.BOOLEAN_ENTER_YES_OR_NO: '「{true_value}」または「{false_value}」を入力してください',
+        MessageKey.BOOLEAN_TRUE_DISPLAY: 'はい',
+        MessageKey.BOOLEAN_FALSE_DISPLAY: 'いいえ',
+        MessageKey.CHARACTER_SET_NAME_CHINESE: '中国語文字',
+        MessageKey.CHARACTER_SET_NAME_NUMBER: '数字',
+        MessageKey.CHARACTER_SET_NAME_LOWERCASE: '小文字',
+        MessageKey.CHARACTER_SET_NAME_UPPERCASE: '大文字',
+        MessageKey.CHARACTER_SET_NAME_SPECIAL: '記号',
+        MessageKey.HEADER_HINT: (
+            'インポート入力の注意事項:\n'
+            '1. 入力前にヘッダーコメントを確認し、インポート失敗を防いでください。\n'
+            '2. 一部の列は読み取り専用で、システム規則により生成される場合があります。エクスポート表示専用で、インポート時は無視されます。\n'
+            '3. 赤い背景の列は必須です。ヘッダーコメントに従って入力してください。\n'
+            '4. 検証失敗を防ぐため、列のセル形式を変更しないでください。\n'
+            '5. インポート前にサンプル行を削除してください。'
+        ),
+        MessageKey.RESULT_COLUMN_LABEL: '検証結果\n再アップロード前にこの列を削除してください',
+        MessageKey.REASON_COLUMN_LABEL: '失敗理由\n再アップロード前にこの列を削除してください',
+        MessageKey.VALIDATE_ROW_SUCCESS: '検証に成功しました',
+        MessageKey.VALIDATE_ROW_FAIL: '検証に失敗しました',
+        MessageKey.COMMENT_REQUIRED: '必須: {value}',
+        MessageKey.COMMENT_DATE_FORMAT: '形式: 日付（{value}）',
+        MessageKey.COMMENT_DATE_RANGE_OPTION: '範囲: {value}',
+        MessageKey.COMMENT_HINT: 'ヒント: {value}',
+        MessageKey.COMMENT_EXAMPLE: '例: {value}',
+        MessageKey.COMMENT_OPTIONS: '選択肢: {value}',
+        MessageKey.COMMENT_FRACTION_DIGITS: '小数桁数: {value}',
+        MessageKey.COMMENT_UNIT: '単位: {value}',
+        MessageKey.COMMENT_UNIQUE: '一意性: {value}',
+        MessageKey.COMMENT_MAX_LENGTH: '最大長: {value}',
+        MessageKey.COMMENT_NUMBER_FORMAT: '形式: 数値',
+        MessageKey.COMMENT_NUMBER_INPUT_RANGE: '入力可能範囲: {value}',
+        MessageKey.COMMENT_STRING_ALLOWED_CONTENT: '入力可能文字: 中国語文字、数字、大文字、小文字、記号',
+        MessageKey.COMMENT_SELECTION_MODE: '選択モード: {value}',
+        MessageKey.COMMENT_REQUIRED_VALUE_REQUIRED: '必須',
+        MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL: '任意',
+        MessageKey.COMMENT_UNIQUE_VALUE_UNIQUE: '一意',
+        MessageKey.COMMENT_UNIQUE_VALUE_NON_UNIQUE: '一意でない',
+        MessageKey.COMMENT_SELECTION_VALUE_SINGLE: '単一',
+        MessageKey.COMMENT_SELECTION_VALUE_MULTI: '複数',
+        MessageKey.COMMENT_UNIT_VALUE_NONE: 'なし',
+        MessageKey.COMMENT_MAX_LENGTH_VALUE_UNLIMITED: '無制限',
+        MessageKey.COMMENT_DATE_RANGE_START_NOT_AFTER_END: 'ヒント: 開始日は終了日より後にできません{extra_hint}',
+        MessageKey.DATE_RANGE_OPTION_PRE_DISPLAY: '現在時刻より前',
+        MessageKey.DATE_RANGE_OPTION_NEXT_DISPLAY: '現在時刻より後',
+        MessageKey.DATE_RANGE_OPTION_NONE_DISPLAY: '無制限',
+        MessageKey.SINGLE_ORGANIZATION_HINT: "組織ツリーの完全なパスを入力してください。例: '会社/部門/サブ部門'",
+        MessageKey.MULTI_ORGANIZATION_HINT: "組織ツリーの完全なパスを入力してください。例: '会社/部門/サブ部門'。複数選択は「、」で区切ります。",
+        MessageKey.SINGLE_STAFF_HINT: '氏名と社員番号を入力してください。例: "山田太郎/001"',
+        MessageKey.MULTI_STAFF_HINT: '氏名と社員番号を入力してください。例: "山田太郎/001"。複数選択は「、」で区切ります。',
+        MessageKey.SINGLE_TREE_HINT: "完全なツリーパスを入力してください。例: '会社/部門/サブ部門'",
+        MessageKey.MULTI_TREE_HINT: 'ルートノードを含む完全なパスを入力してください。階層は "/" で区切ります。例: "階層1/階層2/選択肢1"。複数選択は「，」で区切ります。',
+        MessageKey.LABEL_START_DATE: '開始日',
+        MessageKey.LABEL_END_DATE: '終了日',
+        MessageKey.LABEL_MINIMUM_VALUE: '最小値',
+        MessageKey.LABEL_MAXIMUM_VALUE: '最大値',
+    },
 }
 
 
 def message(key: MessageKey, locale: str = DEFAULT_LOCALE, **kwargs: object) -> str:
-    locale_messages = MESSAGES.get(locale, MESSAGES[RUNTIME_LOCALE_POLICY.missing_locale_fallback_locale])
+    effective_locale = (
+        locale
+        if locale in RUNTIME_LOCALE_POLICY.supported_locales
+        else (RUNTIME_LOCALE_POLICY.missing_locale_fallback_locale)
+    )
+    locale_messages = MESSAGES.get(effective_locale, MESSAGES[RUNTIME_LOCALE_POLICY.missing_locale_fallback_locale])
     template = locale_messages.get(key) or MESSAGES[RUNTIME_LOCALE_POLICY.missing_key_fallback_locale][key]
     return template.format(**kwargs)
 
@@ -456,3 +576,40 @@ def display_message(key: MessageKey, locale: str | None = None, **kwargs: object
     locale_messages = MESSAGES.get(effective_locale, MESSAGES[DISPLAY_LOCALE_POLICY.missing_locale_fallback_locale])
     template = locale_messages.get(key) or MESSAGES[DISPLAY_LOCALE_POLICY.missing_key_fallback_locale][key]
     return template.format(**kwargs)
+
+
+class UserMessage(str):
+    """English runtime text with locale-aware display metadata."""
+
+    message_key: MessageKey | None
+    detail: dict[str, object]
+    _display_text: str | None
+
+    def __new__(
+        cls,
+        text: str,
+        *,
+        message_key: MessageKey | None = None,
+        detail: dict[str, object] | None = None,
+        display_text: str | None = None,
+    ) -> 'UserMessage':
+        value = str.__new__(cls, text)
+        value.message_key = message_key
+        value.detail = detail or {}
+        value._display_text = display_text
+        return value
+
+    def display(self) -> str:
+        if self._display_text is not None:
+            return self._display_text
+        if self.message_key is None:
+            return str(self)
+        return display_message(self.message_key, **cast(Any, self.detail))
+
+
+def user_message(key: MessageKey, **kwargs: object) -> UserMessage:
+    return UserMessage(message(key, **cast(Any, kwargs)), message_key=key, detail=dict(kwargs))
+
+
+def user_display_message(text: str, display_text: str) -> UserMessage:
+    return UserMessage(text, display_text=display_text)

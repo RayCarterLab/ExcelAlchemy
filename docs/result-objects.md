@@ -58,7 +58,9 @@ messages.
   Human-readable base message without workbook-coordinate decoration.
 - `display_message`
   Human-readable message ready for UI rendering. For cell-level errors, this may
-  include the workbook field prefix such as `【Email】...`.
+  include the workbook field prefix such as `【Email】...`. Built-in import
+  validation messages follow the workbook display locale; developer/runtime
+  messages remain English.
 
 Recommended usage:
 
@@ -446,6 +448,7 @@ remediation = build_frontend_remediation_payload(
     result=result,
     cell_error_map=alchemy.cell_error_map,
     row_error_map=alchemy.row_error_map,
+    locale='en',
 )
 ```
 
@@ -521,6 +524,8 @@ Important constraints:
 - the remediation payload is additive and opt-in
 - existing payload helpers remain the primary stable result contracts
 - `suggested_action` and `fix_hint` are intentionally conservative
+- pass `locale='zh-CN'`, `locale='en'`, or `locale='ja'` when you want built-in
+  remediation hints to match workbook-user language
 - unknown issue patterns may omit remediation hints entirely
 - v1 uses existing result objects and issue metadata; it does not add automatic
   fixing or change the import pipeline

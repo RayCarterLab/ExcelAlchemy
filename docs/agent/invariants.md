@@ -73,7 +73,7 @@ responsibility names instead.
   task explicitly changes it.
 - `ImportResult` has exactly three top-level result states: `SUCCESS`,
   `HEADER_INVALID`, and `DATA_INVALID`.
-- Workbook-facing display locale supports `zh-CN` and `en`.
+- Workbook-facing display locale supports `zh-CN`, `en`, and `ja`.
 - Runtime exceptions and diagnostics are English-first.
 - Do not change message wording casually when tests or docs treat it as contract.
 - `ImportResult.from_validate_header_result(...)` is only valid for failed

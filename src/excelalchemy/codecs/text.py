@@ -8,6 +8,8 @@ from excelalchemy.field_metadata import FieldMetaInfo
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
+from excelalchemy.messages import user_display_message as udmsg
+from excelalchemy.messages import user_message as umsg
 from excelalchemy.primitives.constants import CharacterSet
 
 SPECIAL_SYMBOLS = set(
@@ -85,6 +87,11 @@ def _format_character_set_names(cs: set[CharacterSet]) -> str:
     return ', '.join(msg(_CHARACTER_SET_TO_MESSAGE_KEY[c]) for c in ordered)
 
 
+def _format_display_character_set_names(cs: set[CharacterSet]) -> str:
+    ordered = sorted(cs, key=lambda item: item.value)
+    return ', '.join(dmsg(_CHARACTER_SET_TO_MESSAGE_KEY[c]) for c in ordered)
+
+
 class TextFieldCodec(ExcelFieldCodec):
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
@@ -118,7 +125,7 @@ class TextFieldCodec(ExcelFieldCodec):
         constraints = field_meta.constraints
 
         if constraints.max_length is not None and len(parsed) > constraints.max_length:
-            errors.append(msg(MessageKey.MAX_LENGTH_CHARACTERS, max_length=constraints.max_length))
+            errors.append(umsg(MessageKey.MAX_LENGTH_CHARACTERS, max_length=constraints.max_length))
 
         errors.extend(cls.__check_character_set__(parsed, field_meta))
 
@@ -135,9 +142,15 @@ class TextFieldCodec(ExcelFieldCodec):
         for single_character in value:
             if not any(_CHARACTER_SET_TO_VALIDATOR[cs](single_character) for cs in character_set):
                 errors.append(
-                    msg(
-                        MessageKey.ONLY_CHARACTER_SET_ALLOWED,
-                        character_set_names=_format_character_set_names(character_set),
+                    udmsg(
+                        msg(
+                            MessageKey.ONLY_CHARACTER_SET_ALLOWED,
+                            character_set_names=_format_character_set_names(character_set),
+                        ),
+                        dmsg(
+                            MessageKey.ONLY_CHARACTER_SET_ALLOWED,
+                            character_set_names=_format_display_character_set_names(character_set),
+                        ),
                     )
                 )
                 break

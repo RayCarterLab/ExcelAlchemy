@@ -43,7 +43,9 @@ Within each error item:
 - use `code` for machine-readable branching
 - use `message_key` when you want to map back to a localized message catalog
 - use `message` for logs or plain-text APIs
-- use `display_message` when you want ready-to-render UI text
+- use `display_message` when you want ready-to-render UI text. Built-in import
+  validation messages follow the workbook display locale; developer/runtime
+  messages remain English.
 
 Developer diagnostics are intentionally separate from these payload fields.
 Application logs use named loggers such as `excelalchemy.codecs`,
@@ -65,6 +67,7 @@ response = {
         result=result,
         cell_error_map=alchemy.cell_error_map,
         row_error_map=alchemy.row_error_map,
+        locale='en',
     ),
 }
 ```

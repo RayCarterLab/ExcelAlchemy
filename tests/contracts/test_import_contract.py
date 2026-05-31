@@ -686,6 +686,26 @@ class TestImportContracts(BaseTestCase):
         assert worksheet['B2'].value == 'Failure reason\nDelete this column before re-uploading'
         assert worksheet['A3'].value == 'Validation failed'
 
+    async def test_import_result_workbook_supports_japanese_display_locale(self):
+        output_name = 'contract-data-invalid-japanese.xlsx'
+        self.minio.storage.pop(output_name, None)
+        alchemy = ExcelAlchemy(
+            ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway, locale='ja')
+        )
+
+        await alchemy.import_data(
+            input_excel_name=FileRegistry.TEST_SIMPLE_IMPORT_WITH_ERROR,
+            output_excel_name=output_name,
+        )
+        workbook = load_binary_excel_to_workbook(self.minio.storage[output_name]['data'].getvalue())
+        worksheet = workbook['Sheet1']
+
+        assert worksheet['A2'].value == '検証結果\n再アップロード前にこの列を削除してください'
+        assert worksheet['B2'].value == '失敗理由\n再アップロード前にこの列を削除してください'
+        assert worksheet['A3'].value == '検証に失敗しました'
+        assert isinstance(worksheet['B3'].value, str)
+        assert '形式の日付を入力してください' in worksheet['B3'].value
+
     async def test_import_result_workbook_marks_merged_header_failures_on_the_correct_data_row(self):
         input_name = 'contract-merged-invalid-input.xlsx'
         output_name = 'contract-merged-invalid-output.xlsx'

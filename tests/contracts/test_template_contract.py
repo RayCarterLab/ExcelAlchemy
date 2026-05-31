@@ -119,6 +119,18 @@ class TestTemplateContracts(BaseTestCase):
         assert worksheet['A2'].comment is not None
         assert 'Required: required' in worksheet['A2'].comment.text
 
+    async def test_download_template_supports_japanese_display_locale(self):
+        alchemy = ExcelAlchemy(
+            ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway, locale='ja')
+        )
+
+        workbook = decode_prefixed_excel_to_workbook(alchemy.download_template())
+        worksheet = workbook['Sheet1']
+
+        assert worksheet['A1'].value.startswith('インポート入力の注意事項:')
+        assert worksheet['A2'].comment is not None
+        assert '必須: 必須' in worksheet['A2'].comment.text
+
     async def test_download_template_supports_english_example_value_comment(self):
         class Importer(BaseModel):
             full_name: Annotated[

@@ -13,18 +13,21 @@ class ExcelAlchemyError(Exception):
     message: str
     message_key: MessageKey | None
     detail: dict[str, object]
+    _display_message: str | None
 
     def __init__(
         self,
         message: str = '',
         *,
         message_key: MessageKey | None = None,
+        display_message: str | None = None,
         **kwargs: object,
     ) -> None:
         resolved_message = message or self.default_message
         super().__init__(resolved_message)
         self.message = resolved_message
         self.message_key = message_key
+        self._display_message = display_message
         self.detail = kwargs or {}
 
     def __str__(self) -> str:
@@ -32,7 +35,7 @@ class ExcelAlchemyError(Exception):
 
     @property
     def display_message(self) -> str:
-        return self.message
+        return self._display_message or self.message
 
     @property
     def code(self) -> str:
@@ -68,9 +71,10 @@ class ExcelCellError(ExcelAlchemyError):
         parent_label: Label | None = None,
         *,
         message_key: MessageKey | None = None,
+        display_message: str | None = None,
         **kwargs: object,
     ) -> None:
-        super().__init__(message, message_key=message_key, **kwargs)
+        super().__init__(message, message_key=message_key, display_message=display_message, **kwargs)
         self.label = label
         self.parent_label = parent_label
         self._validate()
@@ -80,7 +84,7 @@ class ExcelCellError(ExcelAlchemyError):
 
     @property
     def display_message(self) -> str:
-        return str(self)
+        return f'【{self.label}】{self._display_message or self.message}'
 
     def __repr__(self) -> str:
         return (
@@ -135,9 +139,10 @@ class ExcelRowError(ExcelAlchemyError):
         message: str,
         *,
         message_key: MessageKey | None = None,
+        display_message: str | None = None,
         **kwargs: object,
     ) -> None:
-        super().__init__(message, message_key=message_key, **kwargs)
+        super().__init__(message, message_key=message_key, display_message=display_message, **kwargs)
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(message='{self.message}', detail={self.detail!r})"

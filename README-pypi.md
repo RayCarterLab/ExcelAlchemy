@@ -110,7 +110,7 @@ if preflight.is_valid:
 
 - Pydantic v2-based schema extraction and validation
 - `Annotated[..., ExcelColumn(...)]` declaration style
-- workbook comments and result workbooks in `zh-CN` or `en`
+- workbook comments and result workbooks in `zh-CN`, `en`, or `ja`
 - pluggable storage instead of a hard-coded backend
 - `openpyxl`-based runtime path without pandas
 - contract tests, Ruff, and Pyright in the development workflow

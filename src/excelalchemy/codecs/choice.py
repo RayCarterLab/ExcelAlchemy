@@ -14,6 +14,8 @@ from excelalchemy.field_metadata import FieldMetaInfo
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
+from excelalchemy.messages import user_display_message as udmsg
+from excelalchemy.messages import user_message as umsg
 from excelalchemy.primitives.constants import MULTI_CHECKBOX_SEPARATOR
 from excelalchemy.primitives.identity import OptionId
 
@@ -34,13 +36,18 @@ class SingleChoiceFieldCodec(ExcelFieldCodec):
         entity = field_meta.presentation.choice_entity_name
         if entity is None:
             base_message = msg(MessageKey.SELECT_ONE_CONFIGURED_OPTION)
+            base_display_message = dmsg(MessageKey.SELECT_ONE_CONFIGURED_OPTION)
         else:
             base_message = msg(MessageKey.SELECT_ONE_CONFIGURED_ENTITY, entity=entity)
+            base_display_message = dmsg(MessageKey.SELECT_ONE_CONFIGURED_ENTITY, entity=entity)
 
         preview = cls._options_preview(field_meta)
         if preview is None:
-            return base_message
-        return f'{base_message}. {msg(MessageKey.VALID_VALUES_INCLUDE, options=preview)}'
+            return udmsg(base_message, base_display_message)
+        return udmsg(
+            f'{base_message}. {msg(MessageKey.VALID_VALUES_INCLUDE, options=preview)}',
+            f'{base_display_message}. {dmsg(MessageKey.VALID_VALUES_INCLUDE, options=preview)}',
+        )
 
     @classmethod
     def expected_input_message(cls, field_meta: FieldMetaInfo) -> str | None:
@@ -127,13 +134,18 @@ class MultiChoiceFieldCodec(ExcelFieldCodec):
         entity_plural = field_meta.presentation.choice_entity_name_plural
         if entity_plural is None:
             base_message = msg(MessageKey.SELECT_ONLY_CONFIGURED_OPTIONS)
+            base_display_message = dmsg(MessageKey.SELECT_ONLY_CONFIGURED_OPTIONS)
         else:
             base_message = msg(MessageKey.SELECT_ONLY_CONFIGURED_ENTITIES, entity_plural=entity_plural)
+            base_display_message = dmsg(MessageKey.SELECT_ONLY_CONFIGURED_ENTITIES, entity_plural=entity_plural)
 
         preview = cls._options_preview(field_meta)
         if preview is None:
-            return base_message
-        return f'{base_message}. {msg(MessageKey.VALID_VALUES_INCLUDE, options=preview)}'
+            return udmsg(base_message, base_display_message)
+        return udmsg(
+            f'{base_message}. {msg(MessageKey.VALID_VALUES_INCLUDE, options=preview)}',
+            f'{base_display_message}. {dmsg(MessageKey.VALID_VALUES_INCLUDE, options=preview)}',
+        )
 
     @classmethod
     def expected_input_message(cls, field_meta: FieldMetaInfo) -> str | None:
@@ -198,7 +210,7 @@ class MultiChoiceFieldCodec(ExcelFieldCodec):
             return parsed
 
         if len(parsed) != len(set(parsed)):
-            raise ValueError(msg(MessageKey.OPTIONS_CONTAIN_DUPLICATES))
+            raise ValueError(umsg(MessageKey.OPTIONS_CONTAIN_DUPLICATES))
 
         result, errors = presentation.exchange_names_to_option_ids_with_errors(parsed, field_label=declared.label)
 

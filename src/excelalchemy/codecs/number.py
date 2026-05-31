@@ -12,7 +12,7 @@ from excelalchemy.codecs.field_codec import (
 from excelalchemy.field_metadata import FieldMetaInfo
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import display_message as dmsg
-from excelalchemy.messages import message as msg
+from excelalchemy.messages import user_message as umsg
 
 
 def canonicalize_decimal(value: Decimal, digits_limit: int | None) -> Decimal:
@@ -115,7 +115,7 @@ class NumberFieldCodec(ExcelFieldCodec):
         try:
             parsed = Decimal(str(value))
         except Exception as exc:
-            raise ValueError(msg(MessageKey.INVALID_NUMBER_ENTER_NUMBER)) from exc
+            raise ValueError(umsg(MessageKey.INVALID_NUMBER_ENTER_NUMBER)) from exc
 
         return parsed
 
@@ -132,16 +132,16 @@ class NumberFieldCodec(ExcelFieldCodec):
         if not importer_ge <= value <= importer_le:
             if constraints.le and constraints.ge:
                 errors.append(
-                    msg(
+                    umsg(
                         MessageKey.NUMBER_BETWEEN_MIN_AND_MAX,
                         minimum=constraints.ge,
                         maximum=constraints.le,
                     )
                 )
             elif constraints.le:
-                errors.append(msg(MessageKey.NUMBER_BETWEEN_NEG_INF_AND_MAX, maximum=constraints.le))
+                errors.append(umsg(MessageKey.NUMBER_BETWEEN_NEG_INF_AND_MAX, maximum=constraints.le))
             elif constraints.ge:
-                errors.append(msg(MessageKey.NUMBER_BETWEEN_MIN_AND_POS_INF, minimum=constraints.ge))
+                errors.append(umsg(MessageKey.NUMBER_BETWEEN_MIN_AND_POS_INF, minimum=constraints.ge))
 
         return errors
 
@@ -155,14 +155,14 @@ class NumberFieldCodec(ExcelFieldCodec):
         presentation = field_meta.presentation
         parsed = cls.__maybe_decimal__(value)
         if parsed is None:
-            raise ValueError(msg(MessageKey.INVALID_NUMBER_ENTER_NUMBER))
+            raise ValueError(umsg(MessageKey.INVALID_NUMBER_ENTER_NUMBER))
         errors: list[str] = cls.__check_range__(parsed, field_meta)
         if errors:
             raise ValueError(*errors)
         parsed = canonicalize_decimal(parsed, presentation.fraction_digits)
         value = transform_decimal(parsed)
         if value is None:
-            raise ValueError(msg(MessageKey.INVALID_NUMBER_ENTER_NUMBER))
+            raise ValueError(umsg(MessageKey.INVALID_NUMBER_ENTER_NUMBER))
         return value
 
 

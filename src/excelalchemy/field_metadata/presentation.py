@@ -11,6 +11,7 @@ from excelalchemy.errors import ConfigError
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
+from excelalchemy.messages import user_message as umsg
 from excelalchemy.primitives.constants import (
     DATE_FORMAT_TO_HINT_MAPPING,
     DATE_FORMAT_TO_PYTHON_MAPPING,
@@ -143,7 +144,7 @@ class WorkbookPresentationMeta:
         for name in names:
             option = option_name_map.get(name)
             if option is None:
-                errors.append(msg(MessageKey.OPTION_NOT_FOUND_HEADER_COMMENT))
+                errors.append(umsg(MessageKey.OPTION_NOT_FOUND_HEADER_COMMENT))
             else:
                 result.append(option.id)
         return result, errors

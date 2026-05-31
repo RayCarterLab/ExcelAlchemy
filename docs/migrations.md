@@ -201,7 +201,7 @@ install pandas directly.
 
 - Runtime exceptions were standardized in English.
 - Workbook-facing display text became locale-aware.
-- Supported display locales include `zh-CN` and `en`.
+- Supported display locales include `zh-CN`, `en`, and `ja`.
 
 Example:
 
@@ -215,5 +215,6 @@ config = ImporterConfig(ImporterModel, creator=create_func, locale='en')
 2. Upgrade the application to Pydantic v2.
 3. Decide whether to install `ExcelAlchemy[minio]` or provide custom
    `storage=...`.
-4. Set `locale='en'` for English-speaking workbook users.
+4. Set `locale='en'` for English-speaking workbook users, or `locale='ja'`
+   for Japanese-speaking workbook users.
 5. Run import/export flows in staging before production rollout.

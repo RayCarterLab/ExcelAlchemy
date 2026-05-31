@@ -7,7 +7,7 @@ from excelalchemy.codecs.number import NumberFieldCodec, canonicalize_decimal, t
 from excelalchemy.field_metadata import FieldMetaInfo
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import display_message as dmsg
-from excelalchemy.messages import message as msg
+from excelalchemy.messages import user_message as umsg
 from excelalchemy.primitives.identity import Key
 
 
@@ -44,7 +44,7 @@ class NumberRangeFieldCodec(CompositeExcelFieldCodec):
 
     @classmethod
     def expected_input_message(cls, field_meta: FieldMetaInfo) -> str | None:
-        return msg(MessageKey.ENTER_NUMBER_RANGE_EXPECTED_FORMAT)
+        return umsg(MessageKey.ENTER_NUMBER_RANGE_EXPECTED_FORMAT)
 
     @classmethod
     def parse_input(cls, value: object, field_meta: FieldMetaInfo) -> object:
@@ -85,7 +85,7 @@ class NumberRangeFieldCodec(CompositeExcelFieldCodec):
         parsed = cls.__maybe_number_range__(value, field_meta)
         errors: list[str] = []
         if parsed.start is not None and parsed.end is not None and parsed.start > parsed.end:
-            errors.append(msg(MessageKey.NUMBER_RANGE_MIN_GREATER_THAN_MAX))
+            errors.append(umsg(MessageKey.NUMBER_RANGE_MIN_GREATER_THAN_MAX))
 
         if parsed.start is not None:
             errors.extend(NumberFieldCodec.__check_range__(parsed.start, field_meta))
@@ -111,9 +111,9 @@ class NumberRangeFieldCodec(CompositeExcelFieldCodec):
                 end = NumberRangeFieldCodec._canonicalize_boundary(mapping['end'], field_meta)
                 return NumberRangeValue(start, end)
             except Exception as exc:
-                raise ValueError(msg(MessageKey.ENTER_NUMBER)) from exc
+                raise ValueError(umsg(MessageKey.ENTER_NUMBER)) from exc
 
-        raise ValueError(msg(MessageKey.ENTER_NUMBER_EXPECTED_FORMAT))
+        raise ValueError(umsg(MessageKey.ENTER_NUMBER_EXPECTED_FORMAT))
 
     @staticmethod
     def _coerce_mapping(value: object) -> Mapping[str, object] | None:

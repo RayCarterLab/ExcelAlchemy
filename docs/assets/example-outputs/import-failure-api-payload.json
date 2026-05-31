@@ -4,11 +4,12 @@
       "0": {
         "3": [
           {
-            "code": "ExcelCellError",
+            "code": "invalid_number_enter_number",
             "display_message": "\u3010Age\u3011Invalid input; enter a number.",
             "field_label": "Age",
             "label": "Age",
             "message": "Invalid input; enter a number.",
+            "message_key": "invalid_number_enter_number",
             "parent_label": null,
             "type": "ExcelCellError",
             "unique_label": "Age"
@@ -19,7 +20,7 @@
     "error_count": 1,
     "facets": {
       "codes": [
-        "ExcelCellError"
+        "invalid_number_enter_number"
       ],
       "column_numbers_for_humans": [
         4
@@ -37,7 +38,7 @@
     },
     "grouped": {
       "messages_by_code": {
-        "ExcelCellError": [
+        "invalid_number_enter_number": [
           "\u3010Age\u3011Invalid input; enter a number."
         ]
       },
@@ -54,13 +55,14 @@
     },
     "items": [
       {
-        "code": "ExcelCellError",
+        "code": "invalid_number_enter_number",
         "column_index": 3,
         "column_number_for_humans": 4,
         "display_message": "\u3010Age\u3011Invalid input; enter a number.",
         "field_label": "Age",
         "label": "Age",
         "message": "Invalid input; enter a number.",
+        "message_key": "invalid_number_enter_number",
         "parent_label": null,
         "row_index": 0,
         "row_number_for_humans": 1,
@@ -71,7 +73,7 @@
     "summary": {
       "by_code": [
         {
-          "code": "ExcelCellError",
+          "code": "invalid_number_enter_number",
           "error_count": 1,
           "row_indices": [
             0
@@ -87,7 +89,7 @@
       "by_field": [
         {
           "codes": [
-            "ExcelCellError"
+            "invalid_number_enter_number"
           ],
           "error_count": 1,
           "field_label": "Age",
@@ -104,7 +106,7 @@
       "by_row": [
         {
           "codes": [
-            "ExcelCellError"
+            "invalid_number_enter_number"
           ],
           "error_count": 1,
           "field_labels": [
@@ -122,15 +124,16 @@
   "remediation": {
     "by_code": [
       {
-        "code": "ExcelCellError",
+        "code": "invalid_number_enter_number",
         "error_count": 1,
+        "fix_hint": "Use digits only and avoid free-text values in this cell.",
         "row_indices": [
           0
         ],
         "row_numbers_for_humans": [
           1
         ],
-        "suggested_action": "Review the highlighted cells, correct the invalid values, and re-upload the workbook.",
+        "suggested_action": "Replace the invalid value with a numeric value and re-upload the workbook.",
         "unique_labels": [
           "Age"
         ]
@@ -139,10 +142,11 @@
     "by_field": [
       {
         "codes": [
-          "ExcelCellError"
+          "invalid_number_enter_number"
         ],
         "error_count": 1,
         "field_label": "Age",
+        "fix_hint": "Use digits only and avoid free-text values in this cell.",
         "parent_label": null,
         "row_indices": [
           0
@@ -150,23 +154,25 @@
         "row_numbers_for_humans": [
           1
         ],
-        "suggested_action": "Review the highlighted cells, correct the invalid values, and re-upload the workbook.",
+        "suggested_action": "Replace the invalid value with a numeric value and re-upload the workbook.",
         "unique_label": "Age"
       }
     ],
     "items": [
       {
-        "code": "ExcelCellError",
+        "code": "invalid_number_enter_number",
         "column_index": 3,
         "column_number_for_humans": 4,
         "display_message": "\u3010Age\u3011Invalid input; enter a number.",
         "field_label": "Age",
+        "fix_hint": "Use digits only and avoid free-text values in this cell.",
         "message": "Invalid input; enter a number.",
+        "message_key": "invalid_number_enter_number",
         "parent_label": null,
         "row_index": 0,
         "row_number_for_humans": 1,
         "scope": "cell",
-        "suggested_action": "Review the highlighted cells, correct the invalid values, and re-upload the workbook.",
+        "suggested_action": "Replace the invalid value with a numeric value and re-upload the workbook.",
         "unique_label": "Age"
       }
     ],
@@ -221,11 +227,12 @@
     "by_row": {
       "0": [
         {
-          "code": "ExcelCellError",
+          "code": "invalid_number_enter_number",
           "display_message": "\u3010Age\u3011Invalid input; enter a number.",
           "field_label": "Age",
           "label": "Age",
           "message": "Invalid input; enter a number.",
+          "message_key": "invalid_number_enter_number",
           "parent_label": null,
           "type": "ExcelCellError",
           "unique_label": "Age"
@@ -235,7 +242,7 @@
     "error_count": 1,
     "facets": {
       "codes": [
-        "ExcelCellError"
+        "invalid_number_enter_number"
       ],
       "field_labels": [
         "Age"
@@ -250,7 +257,7 @@
     },
     "grouped": {
       "messages_by_code": {
-        "ExcelCellError": [
+        "invalid_number_enter_number": [
           "\u3010Age\u3011Invalid input; enter a number."
         ]
       },
@@ -262,11 +269,12 @@
     },
     "items": [
       {
-        "code": "ExcelCellError",
+        "code": "invalid_number_enter_number",
         "display_message": "\u3010Age\u3011Invalid input; enter a number.",
         "field_label": "Age",
         "label": "Age",
         "message": "Invalid input; enter a number.",
+        "message_key": "invalid_number_enter_number",
         "parent_label": null,
         "row_index": 0,
         "row_number_for_humans": 1,
@@ -277,7 +285,7 @@
     "summary": {
       "by_code": [
         {
-          "code": "ExcelCellError",
+          "code": "invalid_number_enter_number",
           "error_count": 1,
           "row_indices": [
             0
@@ -293,7 +301,7 @@
       "by_row": [
         {
           "codes": [
-            "ExcelCellError"
+            "invalid_number_enter_number"
           ],
           "error_count": 1,
           "field_labels": [

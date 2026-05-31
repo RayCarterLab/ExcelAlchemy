@@ -8,7 +8,7 @@ from excelalchemy.codecs.field_codec import (
 from excelalchemy.field_metadata import FieldMetaInfo
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import display_message as dmsg
-from excelalchemy.messages import message as msg
+from excelalchemy.messages import user_message as umsg
 
 
 class BooleanFieldCodec(ExcelFieldCodec):
@@ -94,7 +94,7 @@ class BooleanFieldCodec(ExcelFieldCodec):
             return False
 
         raise ValueError(
-            msg(
+            umsg(
                 MessageKey.BOOLEAN_ENTER_YES_OR_NO,
                 true_value=cls._true_display(),
                 false_value=cls._false_display(),

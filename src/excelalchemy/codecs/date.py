@@ -18,6 +18,7 @@ from excelalchemy.errors import ConfigError
 from excelalchemy.field_metadata import FieldMetaInfo
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
+from excelalchemy.messages import user_message as umsg
 from excelalchemy.primitives.constants import (
     DATE_FORMAT_TO_HINT_MAPPING,
     MILLISECOND_TO_SECOND,
@@ -32,7 +33,7 @@ class DateFieldCodec(ExcelFieldCodec):
         presentation = field_meta.presentation
         if presentation.date_format is None:
             return None
-        return msg(MessageKey.ENTER_DATE_FORMAT, date_format=DATE_FORMAT_TO_HINT_MAPPING[presentation.date_format])
+        return umsg(MessageKey.ENTER_DATE_FORMAT, date_format=DATE_FORMAT_TO_HINT_MAPPING[presentation.date_format])
 
     @classmethod
     def build_comment(cls, field_meta: FieldMetaInfo) -> str:
@@ -106,7 +107,7 @@ class DateFieldCodec(ExcelFieldCodec):
 
         if not isinstance(value, datetime):
             raise ValueError(
-                msg(MessageKey.ENTER_DATE_FORMAT, date_format=DATE_FORMAT_TO_HINT_MAPPING[presentation.date_format])
+                umsg(MessageKey.ENTER_DATE_FORMAT, date_format=DATE_FORMAT_TO_HINT_MAPPING[presentation.date_format])
             )
 
         parsed = cls._parse_date(value, field_meta)
@@ -134,10 +135,10 @@ class DateFieldCodec(ExcelFieldCodec):
         match presentation.date_range_option:
             case DataRangeOption.PRE:
                 if parsed > now:
-                    errors.append(msg(MessageKey.DATE_MUST_BE_EARLIER_THAN_NOW))
+                    errors.append(umsg(MessageKey.DATE_MUST_BE_EARLIER_THAN_NOW))
             case DataRangeOption.NEXT:
                 if parsed < now:
-                    errors.append(msg(MessageKey.DATE_MUST_BE_LATER_THAN_NOW))
+                    errors.append(umsg(MessageKey.DATE_MUST_BE_LATER_THAN_NOW))
             case DataRangeOption.NONE | None:
                 ...
 

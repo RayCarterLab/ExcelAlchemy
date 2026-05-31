@@ -1,3 +1,5 @@
+from typing import cast
+
 from excelalchemy import (
     CellErrorMap,
     ConfigError,
@@ -445,6 +447,21 @@ class TestExcelExceptions(BaseTestCase):
                 'fix_hint': 'Use a format such as name@example.com.',
             }
         ]
+
+        japanese_payload = build_frontend_remediation_payload(
+            result=result,
+            cell_error_map=cell_error_map,
+            row_error_map=row_error_map,
+            locale='ja',
+        )
+        remediation = cast(dict[str, object], japanese_payload['remediation'])
+        items = cast(list[dict[str, object]], japanese_payload['items'])
+
+        assert remediation['suggested_action'] == '無効な行を修正してワークブックを再アップロードしてください。'
+        assert items[0]['suggested_action'] == (
+            '完全なメールアドレスを入力してワークブックを再アップロードしてください。'
+        )
+        assert items[0]['fix_hint'] == 'name@example.com のような形式を使用してください。'
 
     async def test_frontend_remediation_payload_falls_back_to_code_hint_for_row_errors(self):
         result = ImportResult(result=ValidateResult.DATA_INVALID, fail_count=1)

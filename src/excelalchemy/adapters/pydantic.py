@@ -3,7 +3,7 @@ from collections.abc import Generator, Iterable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from types import UnionType
-from typing import Union, cast, get_args, get_origin
+from typing import Any, Union, cast, get_args, get_origin
 
 from pydantic import BaseModel, ValidationError
 from pydantic.fields import FieldInfo
@@ -13,8 +13,10 @@ from excelalchemy.adapters.pydantic_fields import extract_declared_field_metadat
 from excelalchemy.codecs.field_codec import CompositeExcelFieldCodec, ExcelFieldCodec, UnspecifiedFieldCodec
 from excelalchemy.errors import ExcelCellError, ExcelRowError, ProgrammaticError
 from excelalchemy.field_metadata import FieldMetaInfo
-from excelalchemy.messages import MessageKey
+from excelalchemy.messages import MessageKey, UserMessage
+from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
+from excelalchemy.messages import user_message as umsg
 from excelalchemy.primitives.identity import Key, Label
 
 type ExcelValidationIssue = ExcelCellError | ExcelRowError
@@ -48,6 +50,20 @@ class NormalizedValidationMessage:
     message: str
     message_key: MessageKey | None = None
     detail: Mapping[str, object] | None = None
+    display_message: str | None = None
+
+    @classmethod
+    def from_key(cls, key: MessageKey, **detail: object) -> 'NormalizedValidationMessage':
+        return cls(msg(key, **cast(Any, detail)), key, detail or None, dmsg(key, **cast(Any, detail)))
+
+    @classmethod
+    def from_user_message(cls, message: UserMessage) -> 'NormalizedValidationMessage':
+        return cls(
+            str(message),
+            message.message_key,
+            None,
+            message.display(),
+        )
 
 
 def _build_cell_error(
@@ -61,6 +77,7 @@ def _build_cell_error(
         parent_label=parent_label,
         message=normalized.message,
         message_key=normalized.message_key,
+        display_message=normalized.display_message,
     )
     if normalized.detail:
         error.detail.update(normalized.detail)
@@ -71,6 +88,7 @@ def _build_row_error(normalized: NormalizedValidationMessage) -> ExcelRowError:
     error = ExcelRowError(
         normalized.message,
         message_key=normalized.message_key,
+        display_message=normalized.display_message,
     )
     if normalized.detail:
         error.detail.update(normalized.detail)
@@ -78,14 +96,21 @@ def _build_row_error(normalized: NormalizedValidationMessage) -> ExcelRowError:
 
 
 def _normalize_validation_message(
-    message: str,
+    message: object,
     field_def: FieldMetaInfo | None = None,
     *,
     excel_codec: type[ExcelFieldCodec] | None = None,
 ) -> NormalizedValidationMessage:
-    normalized = message.strip()
+    if isinstance(message, UserMessage):
+        if message.message_key == MessageKey.INVALID_INPUT and field_def is not None and excel_codec is not None:
+            expected = excel_codec.expected_input_message(field_def)
+            if expected is not None:
+                return _normalize_validation_message(expected, field_def, excel_codec=excel_codec)
+        return NormalizedValidationMessage.from_user_message(message)
+
+    normalized = str(message).strip()
     if normalized == VALIDATION_MESSAGE_NORMALIZATION_POLICY.required_message:
-        return NormalizedValidationMessage(msg(MessageKey.THIS_FIELD_IS_REQUIRED), MessageKey.THIS_FIELD_IS_REQUIRED)
+        return NormalizedValidationMessage.from_key(MessageKey.THIS_FIELD_IS_REQUIRED)
 
     for prefix in VALIDATION_MESSAGE_NORMALIZATION_POLICY.stripped_prefixes:
         if normalized.startswith(prefix):
@@ -99,7 +124,7 @@ def _normalize_validation_message(
     if normalized == msg(MessageKey.INVALID_INPUT) and field_def is not None and excel_codec is not None:
         expected = excel_codec.expected_input_message(field_def)
         if expected is not None:
-            return NormalizedValidationMessage(expected)
+            return _normalize_validation_message(expected, field_def, excel_codec=excel_codec)
 
     if VALIDATION_MESSAGE_NORMALIZATION_POLICY.capitalize_unmapped_lowercase and normalized and normalized[0].islower():
         normalized = normalized[0].upper() + normalized[1:]
@@ -120,47 +145,29 @@ def _normalize_constraint_message(
 
     if (match := _MIN_LENGTH_PATTERN.match(message)) is not None:
         min_length = constraints.min_length or int(match.group(1))
-        return NormalizedValidationMessage(
-            msg(MessageKey.MIN_LENGTH_CHARACTERS, min_length=min_length),
-            MessageKey.MIN_LENGTH_CHARACTERS,
-            {'min_length': min_length},
-        )
+        return NormalizedValidationMessage.from_key(MessageKey.MIN_LENGTH_CHARACTERS, min_length=min_length)
 
     if (match := _MAX_LENGTH_PATTERN.match(message)) is not None:
         max_length = constraints.max_length or int(match.group(1))
-        return NormalizedValidationMessage(
-            msg(MessageKey.MAX_LENGTH_CHARACTERS, max_length=max_length),
-            MessageKey.MAX_LENGTH_CHARACTERS,
-            {'max_length': max_length},
-        )
+        return NormalizedValidationMessage.from_key(MessageKey.MAX_LENGTH_CHARACTERS, max_length=max_length)
 
     if (match := _MIN_ITEMS_PATTERN.match(message)) is not None:
         if constraints.min_length is not None:
-            return NormalizedValidationMessage(
-                msg(MessageKey.MIN_LENGTH_CHARACTERS, min_length=constraints.min_length),
+            return NormalizedValidationMessage.from_key(
                 MessageKey.MIN_LENGTH_CHARACTERS,
-                {'min_length': constraints.min_length},
+                min_length=constraints.min_length,
             )
         min_items = int(match.group(1))
-        return NormalizedValidationMessage(
-            msg(MessageKey.MIN_ITEMS_REQUIRED, min_items=min_items),
-            MessageKey.MIN_ITEMS_REQUIRED,
-            {'min_items': min_items},
-        )
+        return NormalizedValidationMessage.from_key(MessageKey.MIN_ITEMS_REQUIRED, min_items=min_items)
 
     if (match := _MAX_ITEMS_PATTERN.match(message)) is not None:
         if constraints.max_length is not None:
-            return NormalizedValidationMessage(
-                msg(MessageKey.MAX_LENGTH_CHARACTERS, max_length=constraints.max_length),
+            return NormalizedValidationMessage.from_key(
                 MessageKey.MAX_LENGTH_CHARACTERS,
-                {'max_length': constraints.max_length},
+                max_length=constraints.max_length,
             )
         max_items = int(match.group(1))
-        return NormalizedValidationMessage(
-            msg(MessageKey.MAX_ITEMS_ALLOWED, max_items=max_items),
-            MessageKey.MAX_ITEMS_ALLOWED,
-            {'max_items': max_items},
-        )
+        return NormalizedValidationMessage.from_key(MessageKey.MAX_ITEMS_ALLOWED, max_items=max_items)
 
     if message == VALIDATION_MESSAGE_NORMALIZATION_POLICY.valid_dictionary_message:
         if (
@@ -168,10 +175,8 @@ def _normalize_constraint_message(
             and issubclass(excel_codec, CompositeExcelFieldCodec)
             and (expected := excel_codec.expected_input_message(field_def)) is not None
         ):
-            return NormalizedValidationMessage(expected)
-        return NormalizedValidationMessage(
-            msg(MessageKey.ENTER_VALUE_EXPECTED_FORMAT), MessageKey.ENTER_VALUE_EXPECTED_FORMAT
-        )
+            return _normalize_validation_message(expected, field_def, excel_codec=excel_codec)
+        return NormalizedValidationMessage.from_key(MessageKey.ENTER_VALUE_EXPECTED_FORMAT)
 
     return None
 
@@ -265,7 +270,7 @@ class PydanticFieldAdapter:
         if raw_value is None:
             if self.allows_none and not self.required:
                 return None
-            raise ValueError(msg(MessageKey.THIS_FIELD_IS_REQUIRED))
+            raise ValueError(umsg(MessageKey.THIS_FIELD_IS_REQUIRED))
 
         return self.excel_codec.normalize_import_value(raw_value, self.declared_metadata)
 
@@ -363,7 +368,7 @@ def _handle_error(
     *,
     excel_codec: type[ExcelFieldCodec] | None = None,
 ) -> None:
-    raw_messages = [str(arg) for arg in exc.args if str(arg)] or [str(exc) or msg(MessageKey.INVALID_INPUT)]
+    raw_messages = [arg for arg in exc.args if str(arg)] or [umsg(MessageKey.INVALID_INPUT)]
     messages = [_normalize_validation_message(message, field_def, excel_codec=excel_codec) for message in raw_messages]
     error_container.extend(_build_cell_error(label=field_def.label, normalized=normalized) for normalized in messages)
 
