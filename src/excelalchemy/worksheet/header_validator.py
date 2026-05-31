@@ -2,7 +2,7 @@
 
 from collections.abc import Container, Sequence
 
-from excelalchemy.config import ImportMode
+from excelalchemy.config.modes import ImportMode
 from excelalchemy.primitives.identity import Label
 from excelalchemy.results import ValidateHeaderResult
 from excelalchemy.schema import ExcelSchemaLayout
