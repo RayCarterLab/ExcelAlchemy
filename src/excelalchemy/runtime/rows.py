@@ -3,10 +3,9 @@
 from collections.abc import Iterator
 
 from excelalchemy.config import ImportMode
-from excelalchemy.exceptions import ConfigError, ExcelCellError, ExcelRowError
+from excelalchemy.errors import ConfigError, ExcelCellError, ExcelRowError
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
-from excelalchemy.metadata import FieldMetaInfo
 from excelalchemy.policies import MISSING_VALUE_IMPORT_POLICY, MissingValueImportAction
 from excelalchemy.primitives.identity import ColumnIndex, Key, RowIndex, UniqueLabel
 from excelalchemy.primitives.payloads import AggregatedRowPayload, ModelRowPayload, RowPayloadLike
@@ -14,6 +13,7 @@ from excelalchemy.results import CellErrorMap, RowIssueMap, ValidateRowResult
 from excelalchemy.schema import ExcelSchemaLayout
 from excelalchemy.util.file import value_is_nan
 from excelalchemy.workbook.table import WorksheetTable
+from excelalchemy.workbook_fields import FieldMetaInfo
 
 
 class RowAggregator:

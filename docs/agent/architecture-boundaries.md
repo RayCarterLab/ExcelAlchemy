@@ -22,16 +22,15 @@ modules and ownership surfaces when editing current code and docs:
 - `excelalchemy`
 - `excelalchemy.config`
 - `excelalchemy.columns`
-- `excelalchemy.metadata`
+- `excelalchemy.workbook_fields`
 - `excelalchemy.results`
 - `excelalchemy.errors`
-- `excelalchemy.exceptions`
 - `excelalchemy.storage`
 - `excelalchemy.codecs`
 - `excelalchemy.policies`
 - `excelalchemy.messages`
 
-Some modules in this list, such as `excelalchemy.metadata`,
+Some modules in this list, such as `excelalchemy.workbook_fields`,
 `excelalchemy.messages`, and `excelalchemy.policies`, are stable ownership
 surfaces for agents and maintainers but are not ordinary application-facing
 entry points.
@@ -75,6 +74,7 @@ shims:
 - `excelalchemy.header_models`
 - `excelalchemy.const`
 - `excelalchemy.types.*`
+- `excelalchemy.metadata` (use `excelalchemy.workbook_fields`)
 - `excelalchemy.util.convertor`
 - `excelalchemy.core.*`
 - `excelalchemy.helper.*`
@@ -124,11 +124,11 @@ Use these ownership boundaries when deciding where a change belongs:
 - Rendering and writer: `src/excelalchemy/rendering/renderer.py` and
   `src/excelalchemy/rendering/writer.py` turn worksheet tables into workbook
   payloads, comments, colors, result columns, and hint text.
-- Storage: `src/excelalchemy/storage.py`, `src/excelalchemy/storage_gateway.py`,
-  and `src/excelalchemy/storage_minio.py` define and resolve storage behavior.
+- Storage: `src/excelalchemy/storage/`, `src/excelalchemy/storage/gateway.py`,
+  and `src/excelalchemy/storage/minio.py` define and resolve storage behavior.
 - Columns: `src/excelalchemy/columns.py` owns `ExcelColumn(...)` declarations.
-- Metadata: `src/excelalchemy/metadata.py` owns resolved Excel-facing field
-  presentation and runtime state.
+- Workbook fields: `src/excelalchemy/workbook_fields/` owns resolved
+  Excel-facing field presentation and runtime state.
 - Pydantic integration: `src/excelalchemy/adapters/pydantic.py` shields the rest
   of the codebase from Pydantic-version details.
 - Messages: `src/excelalchemy/messages.py` separates runtime
@@ -151,7 +151,7 @@ Use these ownership boundaries when deciding where a change belongs:
 Preserve these seams:
 
 - facade vs collaborators
-- metadata vs validation backend
+- workbook field semantics vs validation backend
 - storage protocol vs concrete storage
 - workbook display text vs runtime messages
 
@@ -160,10 +160,10 @@ Preserve these seams:
 Before changing these files, inspect related tests and docs:
 
 - `src/excelalchemy/__init__.py`
-- `src/excelalchemy/config.py`
-- `src/excelalchemy/metadata.py`
-- `src/excelalchemy/results.py`
-- `src/excelalchemy/exceptions.py`
+- `src/excelalchemy/config/`
+- `src/excelalchemy/workbook_fields/`
+- `src/excelalchemy/results/`
+- `src/excelalchemy/errors.py`
 - `src/excelalchemy/runtime/facade.py`
 - `src/excelalchemy/runtime/import_session.py`
 - `src/excelalchemy/schema/layout.py`
@@ -172,9 +172,9 @@ Before changing these files, inspect related tests and docs:
 - `src/excelalchemy/runtime/executor.py`
 - `src/excelalchemy/rendering/renderer.py`
 - `src/excelalchemy/rendering/writer.py`
-- `src/excelalchemy/storage.py`
-- `src/excelalchemy/storage_gateway.py`
-- `src/excelalchemy/storage_minio.py`
+- `src/excelalchemy/storage/`
+- `src/excelalchemy/storage/gateway.py`
+- `src/excelalchemy/storage/minio.py`
 - `src/excelalchemy/messages.py`
 
 ## Documentation Updates

@@ -74,7 +74,7 @@ Use an explicit storage object:
 
 ```python
 from excelalchemy import ExporterConfig
-from excelalchemy.storage_minio import MinioStorageGateway
+from excelalchemy.storage.minio import MinioStorageGateway
 
 config = ExporterConfig.for_storage(
     ExporterModel,
@@ -155,7 +155,7 @@ Recommended 2.x storage construction:
 
 ```python
 from excelalchemy import ExporterConfig
-from excelalchemy.storage_minio import MinioStorageGateway
+from excelalchemy.storage.minio import MinioStorageGateway
 
 config = ExporterConfig.for_storage(
     ExporterModel,

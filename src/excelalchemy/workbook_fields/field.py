@@ -1,28 +1,16 @@
-"""Excel metadata definitions decoupled from Pydantic internals."""
+"""Resolved workbook field metadata used by runtime components."""
 
 import copy
 import datetime
-from dataclasses import dataclass, field, replace
+from dataclasses import replace
 from functools import cached_property
 from typing import Self
 
-from pydantic.fields import FieldInfo
-
-from excelalchemy.codecs.field_codec import ExcelFieldCodec, UnspecifiedFieldCodec
-from excelalchemy.diagnostics import (
-    log_metadata_large_option_set,
-    log_metadata_missing_option_id,
-)
-from excelalchemy.exceptions import ConfigError, ProgrammaticError
+from excelalchemy.codecs.field_codec import ExcelFieldCodec
 from excelalchemy.messages import MessageKey
-from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
-from excelalchemy.policies import WORKBOOK_UNIQUE_KEY_SEPARATOR, WORKBOOK_UNIQUE_LABEL_SEPARATOR
 from excelalchemy.primitives.constants import (
-    DATE_FORMAT_TO_HINT_MAPPING,
-    DATE_FORMAT_TO_PYTHON_MAPPING,
     DEFAULT_FIELD_META_ORDER,
-    MAX_OPTIONS_COUNT,
     MULTI_CHECKBOX_SEPARATOR,
     CharacterSet,
     DataRangeOption,
@@ -30,6 +18,10 @@ from excelalchemy.primitives.constants import (
     Option,
 )
 from excelalchemy.primitives.identity import Key, Label, OptionId, UniqueKey, UniqueLabel
+from excelalchemy.workbook_fields.constraints import ImportConstraints
+from excelalchemy.workbook_fields.declaration import DeclaredFieldMeta
+from excelalchemy.workbook_fields.presentation import WorkbookPresentationMeta
+from excelalchemy.workbook_fields.runtime import RuntimeFieldBinding
 
 
 def _normalize_character_set(character_set: set[CharacterSet] | None) -> frozenset[CharacterSet]:
@@ -40,220 +32,6 @@ def _normalize_options(options: list[Option] | tuple[Option, ...] | None) -> tup
     if options is None:
         return None
     return tuple(options)
-
-
-@dataclass(slots=True, frozen=True)
-class DeclaredFieldMeta:
-    """Static workbook field declaration supplied by user code."""
-
-    label: Label
-    is_primary_key: bool
-    unique: bool
-    ignore_import: bool
-    required: bool | None
-    order: int
-
-    @property
-    def effective_required(self) -> bool | None:
-        if self.is_primary_key or self.unique:
-            return True
-        return self.required
-
-    @property
-    def comment_required(self) -> str:
-        value_key = (
-            MessageKey.COMMENT_REQUIRED_VALUE_REQUIRED
-            if self.effective_required
-            else MessageKey.COMMENT_REQUIRED_VALUE_OPTIONAL
-        )
-        return dmsg(MessageKey.COMMENT_REQUIRED, value=dmsg(value_key))
-
-    @property
-    def comment_unique(self) -> str:
-        value_key = (
-            MessageKey.COMMENT_UNIQUE_VALUE_UNIQUE if self.unique else MessageKey.COMMENT_UNIQUE_VALUE_NON_UNIQUE
-        )
-        return dmsg(MessageKey.COMMENT_UNIQUE, value=dmsg(value_key))
-
-
-@dataclass(slots=True, frozen=True)
-class RuntimeFieldBinding:
-    """Runtime identity assigned after schema extraction flattens the model."""
-
-    parent_label: Label | None = None
-    key: Key | None = None
-    parent_key: Key | None = None
-    offset: int = DEFAULT_FIELD_META_ORDER
-    excel_codec: type[ExcelFieldCodec] = UnspecifiedFieldCodec
-
-    def make_unique_label(self, *, label: Label) -> UniqueLabel:
-        if self.parent_label is None:
-            raise ProgrammaticError(
-                msg(MessageKey.PARENT_LABEL_EMPTY_RUNTIME),
-                message_key=MessageKey.PARENT_LABEL_EMPTY_RUNTIME,
-            )
-        unique_label = (
-            f'{self.parent_label}{WORKBOOK_UNIQUE_LABEL_SEPARATOR}{label}' if self.parent_label != label else label
-        )
-        return UniqueLabel(unique_label)
-
-    def make_unique_key(self, *, key: Key | None) -> UniqueKey:
-        if self.parent_key is None:
-            raise ProgrammaticError(
-                msg(MessageKey.PARENT_KEY_EMPTY_RUNTIME),
-                message_key=MessageKey.PARENT_KEY_EMPTY_RUNTIME,
-            )
-        if key is None:
-            raise ProgrammaticError(msg(MessageKey.KEY_EMPTY_RUNTIME), message_key=MessageKey.KEY_EMPTY_RUNTIME)
-        unique_key = f'{self.parent_key}{WORKBOOK_UNIQUE_KEY_SEPARATOR}{key}' if self.parent_key != key else key
-        return UniqueKey(unique_key)
-
-
-@dataclass(slots=True, frozen=True)
-class WorkbookPresentationMeta:
-    """Workbook-facing comment and formatting metadata."""
-
-    character_set: frozenset[CharacterSet] = field(default_factory=lambda: frozenset(CharacterSet))
-    fraction_digits: int | None = None
-    timezone: datetime.timezone = field(default_factory=lambda: datetime.timezone(datetime.timedelta(hours=8), 'CST'))
-    date_format: DateFormat | None = None
-    date_range_option: DataRangeOption | None = None
-    options: tuple[Option, ...] | None = None
-    unit: str | None = None
-    hint: str | None = None
-    example_value: str | None = None
-    choice_entity_name: str | None = None
-    choice_entity_name_plural: str | None = None
-    choice_include_options_in_comment: bool = True
-    choice_include_mode_in_comment: bool = True
-    choice_separator: str = MULTI_CHECKBOX_SEPARATOR
-
-    @property
-    def comment_date_format(self) -> str:
-        if self.date_format is None:
-            return ''
-        return dmsg(MessageKey.COMMENT_DATE_FORMAT, value=DATE_FORMAT_TO_HINT_MAPPING[self.date_format])
-
-    @property
-    def comment_date_range_option(self) -> str:
-        if self.date_range_option is None:
-            return dmsg(MessageKey.COMMENT_DATE_RANGE_OPTION, value=dmsg(MessageKey.DATE_RANGE_OPTION_NONE_DISPLAY))
-        option_mapping = {
-            DataRangeOption.PRE: MessageKey.DATE_RANGE_OPTION_PRE_DISPLAY,
-            DataRangeOption.NEXT: MessageKey.DATE_RANGE_OPTION_NEXT_DISPLAY,
-            DataRangeOption.NONE: MessageKey.DATE_RANGE_OPTION_NONE_DISPLAY,
-        }
-        return dmsg(MessageKey.COMMENT_DATE_RANGE_OPTION, value=dmsg(option_mapping[self.date_range_option]))
-
-    @property
-    def comment_hint(self) -> str:
-        if self.hint is None:
-            return ''
-        return dmsg(MessageKey.COMMENT_HINT, value=self.hint)
-
-    @property
-    def comment_example(self) -> str:
-        if self.example_value is None or not self.example_value.strip():
-            return ''
-        return dmsg(MessageKey.COMMENT_EXAMPLE, value=self.example_value)
-
-    @property
-    def comment_options(self) -> str:
-        if self.options is None:
-            return ''
-        return dmsg(
-            MessageKey.COMMENT_OPTIONS, value=MULTI_CHECKBOX_SEPARATOR.join(option.name for option in self.options)
-        )
-
-    @property
-    def comment_fraction_digits(self) -> str:
-        return dmsg(MessageKey.COMMENT_FRACTION_DIGITS, value=self.fraction_digits or 0)
-
-    @property
-    def comment_unit(self) -> str:
-        return dmsg(MessageKey.COMMENT_UNIT, value=self.unit or dmsg(MessageKey.COMMENT_UNIT_VALUE_NONE))
-
-    @property
-    def must_date_format(self) -> DateFormat:
-        if self.date_format is None:
-            raise ConfigError(msg(MessageKey.DATE_FORMAT_EMPTY_RUNTIME))
-        return self.date_format
-
-    @property
-    def python_date_format(self) -> str:
-        return DATE_FORMAT_TO_PYTHON_MAPPING[self.must_date_format]
-
-    def options_id_map(self, *, field_label: Label) -> dict[OptionId, Option]:
-        if self.options is None:
-            return {}
-        if len(self.options) > MAX_OPTIONS_COUNT:
-            log_metadata_large_option_set(field_label=str(field_label), option_count=len(self.options))
-        return {option.id: option for option in self.options}
-
-    def options_name_map(self, *, field_label: Label) -> dict[str, Option]:
-        if self.options is None:
-            return {}
-        if len(self.options) > MAX_OPTIONS_COUNT:
-            log_metadata_large_option_set(field_label=str(field_label), option_count=len(self.options))
-        return {option.name: option for option in self.options}
-
-    def exchange_option_ids_to_names(
-        self,
-        option_ids: list[str] | list[OptionId],
-        *,
-        field_label: Label,
-    ) -> list[str]:
-        option_id_map = self.options_id_map(field_label=field_label)
-        option_names: list[str] = []
-
-        for option_id in option_ids:
-            normalized_id = OptionId(option_id)
-            try:
-                option_names.append(option_id_map[normalized_id].name)
-            except KeyError:
-                log_metadata_missing_option_id(option_id=str(normalized_id), field_label=str(field_label))
-                option_names.append(normalized_id)
-
-        return option_names
-
-    def exchange_names_to_option_ids_with_errors(
-        self,
-        names: list[str],
-        *,
-        field_label: Label,
-    ) -> tuple[list[str], list[str]]:
-        option_name_map = self.options_name_map(field_label=field_label)
-        errors: list[str] = []
-        result: list[str] = []
-        for name in names:
-            option = option_name_map.get(name)
-            if option is None:
-                errors.append(msg(MessageKey.OPTION_NOT_FOUND_HEADER_COMMENT))
-            else:
-                result.append(option.id)
-        return result, errors
-
-
-@dataclass(slots=True, frozen=True)
-class ImportConstraints:
-    """Importer-side validation hints mirrored from Pydantic constraints."""
-
-    ge: float | None = None
-    le: float | None = None
-    max_digits: int | None = None
-    decimal_places: int | None = None
-    min_items: int | None = None
-    max_items: int | None = None
-    unique_items: bool | None = None
-    min_length: int | None = None
-    max_length: int | None = None
-
-    @property
-    def comment_max_length(self) -> str:
-        return dmsg(
-            MessageKey.COMMENT_MAX_LENGTH,
-            value=self.max_length or dmsg(MessageKey.COMMENT_MAX_LENGTH_VALUE_UNLIMITED),
-        )
 
 
 class FieldMetaInfo:
@@ -734,60 +512,4 @@ class FieldMetaInfo:
         self.import_constraints = replace(self.import_constraints, unique_items=value)
 
 
-def extract_declared_field_metadata(field_info: FieldInfo) -> FieldMetaInfo:
-    metadata = _resolve_declared_field_metadata(field_info)
-    return _overlay_pydantic_field_constraints(metadata.clone(), field_info)
-
-
-def _resolve_declared_field_metadata(field_info: FieldInfo) -> FieldMetaInfo:
-    from excelalchemy.columns import ExcelColumnSpec
-
-    for item in field_info.metadata:
-        if isinstance(item, ExcelColumnSpec):
-            return item.to_field_metadata()
-
-    if isinstance(field_info.default, (FieldMetaInfo, ExcelColumnSpec)):
-        raise ProgrammaticError(
-            'Annotated fields must place ExcelColumn(...) inside Annotated metadata; '
-            'use `field: Annotated[T, Field(...), ExcelColumn(...)]`'
-        )
-
-    raise ProgrammaticError(msg(MessageKey.FIELD_DEFINITIONS_MUST_USE_EXCELCOLUMN))
-
-
-def _overlay_pydantic_field_constraints(metadata: FieldMetaInfo, field_info: FieldInfo) -> FieldMetaInfo:
-    for item in field_info.metadata:
-        if isinstance(item, FieldMetaInfo):
-            continue
-
-        ge = getattr(item, 'ge', None)
-        if ge is not None:
-            metadata.importer_ge = ge
-
-        le = getattr(item, 'le', None)
-        if le is not None:
-            metadata.importer_le = le
-
-        max_digits = getattr(item, 'max_digits', None)
-        if max_digits is not None:
-            metadata.importer_max_digits = max_digits
-
-        decimal_places = getattr(item, 'decimal_places', None)
-        if decimal_places is not None:
-            metadata.importer_decimal_places = decimal_places
-
-        min_length = getattr(item, 'min_length', None)
-        if min_length is not None:
-            metadata.importer_min_length = min_length
-            metadata.importer_min_items = min_length
-
-        max_length = getattr(item, 'max_length', None)
-        if max_length is not None:
-            metadata.importer_max_length = max_length
-            metadata.importer_max_items = max_length
-
-        unique_items = getattr(item, 'unique_items', None)
-        if unique_items is not None:
-            metadata.importer_unique_items = unique_items
-
-    return metadata
+__all__ = ['FieldMetaInfo']

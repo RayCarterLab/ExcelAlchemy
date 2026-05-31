@@ -58,22 +58,22 @@ It is meant to help both humans and coding agents find the right files before ma
 
 - `src/excelalchemy/__init__.py`
   - Main public package surface.
-  - Re-exports the facade, configs, codecs, result objects, exceptions, and common types.
-- `src/excelalchemy/config.py`
+  - Re-exports the facade, configs, codecs, result objects, errors, and common types.
+- `src/excelalchemy/config/`
   - Public configuration objects:
   - `ImporterConfig`
   - `ExporterConfig`
   - `ImportMode`
 - `src/excelalchemy/columns.py`
   - Public `ExcelColumn(...)` declaration helper and immutable column specs.
-- `src/excelalchemy/metadata.py`
+- `src/excelalchemy/workbook_fields/`
   - Resolved runtime metadata model behind `FieldMetaInfo`.
-- `src/excelalchemy/results.py`
+- `src/excelalchemy/results/`
   - Public import result objects and API-friendly error maps:
   - `ImportResult`
   - `CellErrorMap`
   - `RowIssueMap`
-- `src/excelalchemy/exceptions.py`
+- `src/excelalchemy/errors.py`
   - Public exceptions such as `ConfigError`, `ExcelCellError`, `ExcelRowError`, and `ProgrammaticError`.
 - `src/excelalchemy/artifacts.py`
   - Public `ExcelArtifact` wrapper for bytes, data URLs, and related helpers.
@@ -102,11 +102,11 @@ It is meant to help both humans and coding agents find the right files before ma
   - High-level rendering entry points for templates, exports, and import result workbooks.
 - `src/excelalchemy/rendering/writer.py`
   - Lower-level workbook writing logic used by rendering.
-- `src/excelalchemy/storage.py`
+- `src/excelalchemy/storage/`
   - `ExcelStorage` protocol; the main storage extension point.
-- `src/excelalchemy/storage_gateway.py`
+- `src/excelalchemy/storage/gateway.py`
   - Storage gateway resolution and missing-storage fallback behavior.
-- `src/excelalchemy/storage_minio.py`
+- `src/excelalchemy/storage/minio.py`
   - Built-in Minio-backed storage implementation.
 - `src/excelalchemy/workbook/table.py`
   - Internal `WorksheetTable` abstraction used instead of pandas.
@@ -224,7 +224,7 @@ These compatibility paths are removed in 3.0.
   - `responses.py`
   - `presenters.py`
   - `services.py`
-  - `storage.py`
+  - `storage/`
   - `README.md`
 
 ## Tests: `tests/`
@@ -292,10 +292,10 @@ These compatibility paths are removed in 3.0.
 
 - Public API starting points:
   - `src/excelalchemy/__init__.py`
-  - `src/excelalchemy/config.py`
-  - `src/excelalchemy/metadata.py`
-  - `src/excelalchemy/results.py`
-  - `src/excelalchemy/exceptions.py`
+  - `src/excelalchemy/config/`
+  - `src/excelalchemy/workbook_fields/`
+  - `src/excelalchemy/results/`
+  - `src/excelalchemy/errors.py`
   - `src/excelalchemy/codecs/`
 - Internal implementation starting points:
   - `src/excelalchemy/runtime/facade.py`
@@ -309,9 +309,9 @@ These compatibility paths are removed in 3.0.
 
 - Public facade and configuration:
   - `src/excelalchemy/__init__.py`
-  - `src/excelalchemy/config.py`
-  - `src/excelalchemy/metadata.py`
-  - `src/excelalchemy/results.py`
+  - `src/excelalchemy/config/`
+  - `src/excelalchemy/workbook_fields/`
+  - `src/excelalchemy/results/`
 - Import flow:
   - `src/excelalchemy/runtime/facade.py`
   - `src/excelalchemy/runtime/import_session.py`
@@ -326,13 +326,13 @@ These compatibility paths are removed in 3.0.
   - `src/excelalchemy/rendering/writer.py`
   - `src/excelalchemy/codecs/`
 - Storage integration:
-  - `src/excelalchemy/storage.py`
-  - `src/excelalchemy/storage_gateway.py`
-  - `src/excelalchemy/storage_minio.py`
+  - `src/excelalchemy/storage/`
+  - `src/excelalchemy/storage/gateway.py`
+  - `src/excelalchemy/storage/minio.py`
   - `src/excelalchemy/workbook/table.py`
   - `examples/custom_storage.py`
 - Result payloads and API responses:
-  - `src/excelalchemy/results.py`
+  - `src/excelalchemy/results/`
   - `docs/result-objects.md`
   - `docs/api-response-cookbook.md`
 
@@ -343,9 +343,9 @@ These compatibility paths are removed in 3.0.
   - `docs/getting-started.md`
   - `docs/public-api.md`
   - `src/excelalchemy/__init__.py`
-  - `src/excelalchemy/config.py`
-  - `src/excelalchemy/metadata.py`
-  - `src/excelalchemy/results.py`
+  - `src/excelalchemy/config/`
+  - `src/excelalchemy/workbook_fields/`
+  - `src/excelalchemy/results/`
 
 - Understanding import flow:
   - `docs/platform-code-mapping.md`
@@ -368,9 +368,9 @@ These compatibility paths are removed in 3.0.
 
 - Understanding storage integration:
   - `docs/public-api.md`
-  - `src/excelalchemy/storage.py`
-  - `src/excelalchemy/storage_gateway.py`
-  - `src/excelalchemy/storage_minio.py`
+  - `src/excelalchemy/storage/`
+  - `src/excelalchemy/storage/gateway.py`
+  - `src/excelalchemy/storage/minio.py`
   - `src/excelalchemy/workbook/table.py`
   - `examples/custom_storage.py`
   - `tests/contracts/test_storage_contract.py`

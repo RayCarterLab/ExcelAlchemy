@@ -14,16 +14,16 @@ from excelalchemy.codecs.field_codec import (
     codec_logger,
     log_codec_parse_fallback,
 )
-from excelalchemy.exceptions import ConfigError
+from excelalchemy.errors import ConfigError
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
-from excelalchemy.metadata import FieldMetaInfo
 from excelalchemy.primitives.constants import (
     DATE_FORMAT_TO_HINT_MAPPING,
     MILLISECOND_TO_SECOND,
     DataRangeOption,
     DateFormat,
 )
+from excelalchemy.workbook_fields import FieldMetaInfo
 
 
 class DateFieldCodec(ExcelFieldCodec):

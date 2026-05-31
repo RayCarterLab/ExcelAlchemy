@@ -11,7 +11,7 @@ from pydantic_core import core_schema
 from excelalchemy.primitives.identity import Key
 
 if TYPE_CHECKING:
-    from excelalchemy.metadata import FieldMetaInfo
+    from excelalchemy.workbook_fields import FieldMetaInfo
 
 # These aliases stay `Any` because codec subclasses accept domain-specific
 # workbook values and some overrides narrow parameter types. Using `object`

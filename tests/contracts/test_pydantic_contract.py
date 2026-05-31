@@ -15,8 +15,9 @@ from excelalchemy import (
     ProgrammaticError,
 )
 from excelalchemy.adapters.pydantic import extract_pydantic_model, instantiate_pydantic_model
+from excelalchemy.adapters.pydantic_fields import extract_declared_field_metadata
 from excelalchemy.codecs.date_range import DateRangeValue
-from excelalchemy.metadata import FieldMetaInfo, extract_declared_field_metadata
+from excelalchemy.workbook_fields import FieldMetaInfo
 
 
 class ContractPydanticModel(BaseModel):

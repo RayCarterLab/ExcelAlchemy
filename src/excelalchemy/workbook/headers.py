@@ -3,7 +3,7 @@
 from collections.abc import Container, Sequence
 
 from excelalchemy.config import ImportMode
-from excelalchemy.exceptions import ConfigError
+from excelalchemy.errors import ConfigError
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
 from excelalchemy.primitives.identity import Label, UniqueLabel

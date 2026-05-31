@@ -3,11 +3,11 @@
 from pydantic import BaseModel
 
 from excelalchemy.config import ExporterConfig, ImporterConfig
-from excelalchemy.exceptions import ConfigError
+from excelalchemy.errors import ConfigError
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
 from excelalchemy.primitives.identity import UrlStr
-from excelalchemy.storage import ExcelStorage
+from excelalchemy.storage.base import ExcelStorage
 from excelalchemy.workbook.table import WorksheetTable
 
 

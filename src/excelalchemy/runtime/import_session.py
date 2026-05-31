@@ -12,11 +12,10 @@ from pydantic import BaseModel
 from excelalchemy.codecs.field_codec import SystemReservedFieldCodec
 from excelalchemy.config import ImporterConfig
 from excelalchemy.diagnostics import runtime_logger
-from excelalchemy.exceptions import ConfigError
+from excelalchemy.errors import ConfigError
 from excelalchemy.messages import MessageKey, use_display_locale
 from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
-from excelalchemy.metadata import FieldMetaInfo
 from excelalchemy.policies import EVENT_CALLBACK_FAILURE_POLICY, HEADER_HINT_LINE_COUNT, RESULT_WORKBOOK_POLICY
 from excelalchemy.primitives.identity import DataUrlStr, RowIndex, UniqueLabel, UrlStr
 from excelalchemy.primitives.payloads import FlatRowPayload, ModelRowPayload
@@ -41,6 +40,7 @@ from excelalchemy.storage import ExcelStorage
 from excelalchemy.workbook.header_models import ExcelHeader
 from excelalchemy.workbook.headers import ExcelHeaderParser, ExcelHeaderValidator
 from excelalchemy.workbook.table import WorksheetRow, WorksheetTable
+from excelalchemy.workbook_fields import FieldMetaInfo
 
 
 class ImportSessionPhase(StrEnum):

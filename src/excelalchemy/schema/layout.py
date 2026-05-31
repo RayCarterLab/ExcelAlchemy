@@ -9,12 +9,12 @@ from itertools import chain
 from pydantic import BaseModel
 
 from excelalchemy.adapters.pydantic import extract_pydantic_model
-from excelalchemy.exceptions import ConfigError, ExcelCellError, ExcelRowError
+from excelalchemy.errors import ConfigError, ExcelCellError, ExcelRowError
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
-from excelalchemy.metadata import FieldMetaInfo
 from excelalchemy.primitives.constants import DEFAULT_FIELD_META_ORDER
 from excelalchemy.primitives.identity import Key, Label, UniqueKey, UniqueLabel
+from excelalchemy.workbook_fields import FieldMetaInfo
 
 
 class ExcelSchemaLayout:

@@ -44,7 +44,7 @@ Prefer the stable public entry points:
 ```python
 from excelalchemy import ExcelAlchemy, ExcelColumn, ImporterConfig, NumberCodec
 from excelalchemy.config import ExporterConfig, ImportMode
-from excelalchemy.exceptions import ConfigError, ExcelCellError, ExcelRowError
+from excelalchemy.errors import ConfigError, ExcelCellError, ExcelRowError
 ```
 
 Avoid importing implementation modules such as `excelalchemy.runtime.*`,

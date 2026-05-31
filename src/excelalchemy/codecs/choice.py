@@ -9,13 +9,13 @@ from excelalchemy.codecs.field_codec import (
     log_codec_option_resolution_fallback,
     log_codec_parse_fallback,
 )
-from excelalchemy.exceptions import ProgrammaticError
+from excelalchemy.errors import ProgrammaticError
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
-from excelalchemy.metadata import FieldMetaInfo
 from excelalchemy.primitives.constants import MULTI_CHECKBOX_SEPARATOR
 from excelalchemy.primitives.identity import OptionId
+from excelalchemy.workbook_fields import FieldMetaInfo
 
 
 class SingleChoiceFieldCodec(ExcelFieldCodec):

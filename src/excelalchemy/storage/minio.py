@@ -8,11 +8,11 @@ from typing import IO, BinaryIO, Protocol, cast
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
-from excelalchemy.exceptions import WorksheetNotFoundError
+from excelalchemy.errors import WorksheetNotFoundError
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
 from excelalchemy.primitives.identity import UrlStr
-from excelalchemy.storage import ExcelStorage
+from excelalchemy.storage.base import ExcelStorage
 from excelalchemy.util.file import remove_excel_prefix
 from excelalchemy.workbook.table import WorksheetTable
 

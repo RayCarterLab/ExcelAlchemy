@@ -13,11 +13,10 @@ from openpyxl.styles import Alignment, Font, PatternFill, numbers
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
-from excelalchemy.exceptions import ExcelCellError, ProgrammaticError
+from excelalchemy.errors import ExcelCellError, ProgrammaticError
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
-from excelalchemy.metadata import FieldMetaInfo
 from excelalchemy.policies import (
     HEADER_HINT_COL_INDEX,
     HEADER_HINT_LINE_COUNT,
@@ -36,6 +35,7 @@ from excelalchemy.primitives.identity import ColumnIndex, DataUrlStr, Label, Row
 from excelalchemy.results import ValidateRowResult
 from excelalchemy.util.file import add_excel_prefix, value_is_nan
 from excelalchemy.workbook.table import WorksheetTable, WorksheetValue
+from excelalchemy.workbook_fields import FieldMetaInfo
 
 
 def _get_file(file: BinaryIO | None = None) -> BinaryIO:

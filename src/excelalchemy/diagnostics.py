@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 RUNTIME_LOGGER_NAME = 'excelalchemy.runtime'
-METADATA_LOGGER_NAME = 'excelalchemy.metadata'
+METADATA_LOGGER_NAME = 'excelalchemy.workbook_fields'
 
 runtime_logger = logging.getLogger(RUNTIME_LOGGER_NAME)
 metadata_logger = logging.getLogger(METADATA_LOGGER_NAME)

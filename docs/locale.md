@@ -15,7 +15,7 @@ These layers do not currently share the same locale policy.
 - Developer diagnostics are emitted through named loggers such as:
   - `excelalchemy.codecs`
   - `excelalchemy.runtime`
-  - `excelalchemy.metadata`
+  - `excelalchemy.workbook_fields`
 - Stability policy: diagnostics are intentionally standardized in English
 - Intended audience: backend developers, operators, and maintainers
 

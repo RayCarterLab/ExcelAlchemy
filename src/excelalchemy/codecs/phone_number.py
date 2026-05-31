@@ -4,7 +4,7 @@ from excelalchemy.codecs.field_codec import ExcelFieldCodecSpec, WorkbookInputVa
 from excelalchemy.codecs.text import TextFieldCodec
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
-from excelalchemy.metadata import FieldMetaInfo
+from excelalchemy.workbook_fields import FieldMetaInfo
 
 PHONE_NUMBER_PATTERN = re.compile(r'^((0\d{2,3}-\d{7,8})|(1[3456789]\d{9}))$')
 

@@ -8,12 +8,12 @@ tree. It is a human-readable ownership map; agent-facing rules live in
 
 | Platform area | Primary code owners | Status |
 | --- | --- | --- |
-| Template Authoring Layer | `metadata.py`, `columns.py`, `schema/layout.py`, `rendering/`, `codecs/`, `runtime/facade.py` | current |
-| Preflight Gate Layer | `runtime/preflight.py`, `workbook/headers.py`, `runtime/facade.py`, `results.py`, `storage.py` | current |
+| Template Authoring Layer | `workbook_fields/`, `columns.py`, `schema/layout.py`, `rendering/`, `codecs/`, `runtime/facade.py` | current |
+| Preflight Gate Layer | `runtime/preflight.py`, `workbook/headers.py`, `runtime/facade.py`, `results/`, `storage/` | current |
 | Import Runtime Layer | `runtime/facade.py`, `runtime/import_session.py`, `runtime/rows.py`, `runtime/executor.py`, `adapters/pydantic.py`, `schema/layout.py` | current |
-| Lifecycle Events | `runtime/import_session.py`, public facade entry in `runtime/facade.py`, `results.py` | current |
-| Result Intelligence Layer | `results.py`, `runtime/rows.py`, `runtime/import_session.py`, `runtime/executor.py` | current |
-| Artifact / Delivery Layer | `artifacts.py`, `storage.py`, `storage_gateway.py`, `storage_minio.py`, `rendering/`, `runtime/facade.py` | current |
+| Lifecycle Events | `runtime/import_session.py`, public facade entry in `runtime/facade.py`, `results/` | current |
+| Result Intelligence Layer | `results/`, `runtime/rows.py`, `runtime/import_session.py`, `runtime/executor.py` | current |
+| Artifact / Delivery Layer | `artifacts.py`, `storage/`, `storage/gateway.py`, `storage/minio.py`, `rendering/`, `runtime/facade.py` | current |
 
 ## Layer Ownership
 
@@ -21,7 +21,7 @@ tree. It is a human-readable ownership map; agent-facing rules live in
 
 Primary files:
 
-- `src/excelalchemy/metadata.py`
+- `src/excelalchemy/workbook_fields/`
 - `src/excelalchemy/columns.py`
 - `src/excelalchemy/schema/layout.py`
 - `src/excelalchemy/codecs/`
@@ -43,8 +43,8 @@ Primary files:
 - `src/excelalchemy/runtime/preflight.py`
 - `src/excelalchemy/workbook/headers.py`
 - `src/excelalchemy/runtime/facade.py`
-- `src/excelalchemy/results.py`
-- `src/excelalchemy/storage.py`
+- `src/excelalchemy/results/`
+- `src/excelalchemy/storage/`
 
 Public entry points:
 
@@ -74,7 +74,7 @@ Primary files:
 
 - `src/excelalchemy/runtime/import_session.py`
 - `src/excelalchemy/runtime/facade.py`
-- `src/excelalchemy/results.py`
+- `src/excelalchemy/results/`
 
 Current event vocabulary:
 
@@ -88,7 +88,7 @@ Current event vocabulary:
 
 Primary files:
 
-- `src/excelalchemy/results.py`
+- `src/excelalchemy/results/`
 - `src/excelalchemy/runtime/rows.py`
 - `src/excelalchemy/runtime/import_session.py`
 - `src/excelalchemy/runtime/executor.py`
@@ -98,16 +98,16 @@ Public entry points:
 - `excelalchemy.ImportResult`
 - `excelalchemy.CellErrorMap`
 - `excelalchemy.RowIssueMap`
-- `excelalchemy.build_frontend_remediation_payload`
+- `excelalchemy.results.build_frontend_remediation_payload`
 
 ### Artifact / Delivery Layer
 
 Primary files:
 
 - `src/excelalchemy/artifacts.py`
-- `src/excelalchemy/storage.py`
-- `src/excelalchemy/storage_gateway.py`
-- `src/excelalchemy/storage_minio.py`
+- `src/excelalchemy/storage/`
+- `src/excelalchemy/storage/gateway.py`
+- `src/excelalchemy/storage/minio.py`
 - `src/excelalchemy/rendering/renderer.py`
 - `src/excelalchemy/rendering/writer.py`
 - `src/excelalchemy/runtime/facade.py`

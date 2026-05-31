@@ -7,17 +7,17 @@ restore 2.x compatibility shims.
 ## Public Entry Points
 
 - `excelalchemy`: package root exports the common public API.
-- `config.py`: `ImporterConfig`, `ExporterConfig`, `ImportMode`, and normalized
+- `config/`: `ImporterConfig`, `ExporterConfig`, `ImportMode`, and normalized
   storage options.
 - `columns.py`: `ExcelColumn(...)` and immutable column declarations for
   `typing.Annotated`.
 - `codecs/`: built-in workbook codecs and codec extension base classes.
-- `metadata.py`: resolved Excel metadata used by the runtime.
-- `results.py`: import results, issue maps, preflight results, lifecycle events,
+- `workbook_fields/`: resolved Excel metadata used by the runtime.
+- `results/`: import results, issue maps, preflight results, lifecycle events,
   and API payload helpers.
-- `errors.py` and `exceptions.py`: public exception exports.
-- `storage.py`: `ExcelStorage` protocol.
-- `storage_gateway.py`: configured storage resolver and missing-storage
+- `errors.py`: public exception exports.
+- `storage/`: `ExcelStorage` protocol.
+- `storage/gateway.py`: configured storage resolver and missing-storage
   fallback.
 - `artifacts.py`: binary/data-URL workbook transport wrapper.
 
@@ -46,6 +46,7 @@ These paths and aliases are intentionally absent in 3.0:
 - `excelalchemy.exc`
 - `excelalchemy.identity`
 - `excelalchemy.header_models`
+- `excelalchemy.metadata`
 - `excelalchemy.types.*`
 - `excelalchemy.util.convertor`
 - facade aliases `df`, `header_df`, `cell_errors`, `row_errors`

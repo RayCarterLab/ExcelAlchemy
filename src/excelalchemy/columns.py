@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import cast
 
 from excelalchemy.codecs.field_codec import ExcelFieldCodec, ExcelFieldCodecSpec
-from excelalchemy.metadata import FieldMetaInfo
 from excelalchemy.primitives.constants import (
     DEFAULT_FIELD_META_ORDER,
     CharacterSet,
@@ -15,6 +14,7 @@ from excelalchemy.primitives.constants import (
     DateFormat,
     Option,
 )
+from excelalchemy.workbook_fields import FieldMetaInfo
 
 type ExcelColumnCodec = type[ExcelFieldCodec] | ExcelFieldCodecSpec
 

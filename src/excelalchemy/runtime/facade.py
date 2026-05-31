@@ -13,11 +13,10 @@ from excelalchemy.diagnostics import (
     log_runtime_exporter_inference,
     log_runtime_ignoring_unrecognized_export_keys,
 )
-from excelalchemy.exceptions import ConfigError
+from excelalchemy.errors import ConfigError
 from excelalchemy.messages import MessageKey, use_display_locale
 from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
-from excelalchemy.metadata import FieldMetaInfo
 from excelalchemy.policies import RESULT_WORKBOOK_POLICY
 from excelalchemy.primitives.identity import DataUrlStr, Label, UniqueKey, UniqueLabel, UrlStr
 from excelalchemy.primitives.payloads import DataConverter, ExportRowPayload
@@ -28,11 +27,12 @@ from excelalchemy.runtime.import_session import ImportSession, ImportSessionSnap
 from excelalchemy.runtime.preflight import ImportPreflight
 from excelalchemy.schema import ExcelSchemaLayout
 from excelalchemy.storage import ExcelStorage
-from excelalchemy.storage_gateway import build_storage_gateway
+from excelalchemy.storage.gateway import build_storage_gateway
 from excelalchemy.util.file import flatten
 from excelalchemy.workbook.header_models import ExcelHeader
 from excelalchemy.workbook.headers import ExcelHeaderParser, ExcelHeaderValidator
 from excelalchemy.workbook.table import WorksheetTable
+from excelalchemy.workbook_fields import FieldMetaInfo
 
 RESULT_COLUMN = FieldMetaInfo(label=dmsg(RESULT_WORKBOOK_POLICY.result_column.label_message_key, locale='zh-CN'))
 RESULT_COLUMN.parent_label = RESULT_COLUMN.label

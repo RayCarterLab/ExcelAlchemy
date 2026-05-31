@@ -1,7 +1,6 @@
-"""A Python Library for Reading and Writing Excel Files"""
+"""Public ExcelAlchemy API."""
 
 __version__ = '3.0.0a0'
-from excelalchemy.adapters.pydantic import extract_pydantic_model
 from excelalchemy.artifacts import ExcelArtifact
 from excelalchemy.codecs.boolean import BooleanCodec
 from excelalchemy.codecs.choice import MultiChoiceCodec, SingleChoiceCodec
@@ -16,7 +15,7 @@ from excelalchemy.codecs.text import TextCodec
 from excelalchemy.codecs.url import UrlCodec
 from excelalchemy.columns import ExcelColumn
 from excelalchemy.config import ExportConfig, ExporterConfig, ImportConfig, ImporterConfig, ImportMode
-from excelalchemy.exceptions import (
+from excelalchemy.errors import (
     ConfigError,
     ExcelCellError,
     ExcelRowError,
@@ -37,28 +36,20 @@ from excelalchemy.primitives.identity import (
 )
 from excelalchemy.results import (
     CellErrorMap,
-    CellIssueRecord,
-    CodeIssueSummary,
-    FieldIssueSummary,
     ImportPreflightResult,
     ImportPreflightStatus,
     ImportResult,
     RowIssueMap,
-    RowIssueRecord,
-    RowIssueSummary,
     ValidateHeaderResult,
     ValidateResult,
     ValidateRowResult,
 )
 from excelalchemy.runtime.facade import ExcelAlchemy
 from excelalchemy.storage import ExcelStorage
-from excelalchemy.util.file import flatten
 
 __all__ = [
     'BooleanCodec',
     'CellErrorMap',
-    'CellIssueRecord',
-    'CodeIssueSummary',
     'ColumnIndex',
     'CompositeExcelFieldCodec',
     'ConfigError',
@@ -78,7 +69,6 @@ __all__ = [
     'ExcelStorage',
     'ExportConfig',
     'ExporterConfig',
-    'FieldIssueSummary',
     'ImportConfig',
     'ImportMode',
     'ImportPreflightResult',
@@ -96,8 +86,6 @@ __all__ = [
     'ProgrammaticError',
     'RowIndex',
     'RowIssueMap',
-    'RowIssueRecord',
-    'RowIssueSummary',
     'SingleChoiceCodec',
     'TextCodec',
     'UniqueKey',
@@ -108,6 +96,4 @@ __all__ = [
     'ValidateResult',
     'ValidateRowResult',
     'WorksheetNotFoundError',
-    'extract_pydantic_model',
-    'flatten',
 ]

@@ -24,6 +24,7 @@ from excelalchemy import (
     TextCodec,
 )
 from excelalchemy.adapters.pydantic import extract_pydantic_model, instantiate_pydantic_model
+from excelalchemy.adapters.pydantic_fields import extract_declared_field_metadata
 from excelalchemy.codecs import DateCodec as ModuleDateCodec
 from excelalchemy.codecs import EmailCodec as ModuleEmailCodec
 from excelalchemy.codecs import NumberCodec as ModuleNumberCodec
@@ -32,7 +33,6 @@ from excelalchemy.columns import ExcelColumn as ModuleExcelColumn
 from excelalchemy.columns import ExcelColumnSpec
 from excelalchemy.config import ExporterConfig, ImporterConfig
 from excelalchemy.config import ImportConfig as ModuleImportConfig
-from excelalchemy.metadata import extract_declared_field_metadata
 from excelalchemy.primitives.constants import DEFAULT_FIELD_META_ORDER, CharacterSet, DateFormat, Option
 from excelalchemy.primitives.identity import OptionId
 from excelalchemy.runtime.facade import ExcelAlchemy as RuntimeExcelAlchemy
@@ -68,10 +68,41 @@ def test_v3_target_public_modules_are_importable() -> None:
         'excelalchemy.columns',
         'excelalchemy.codecs',
         'excelalchemy.storage',
+        'excelalchemy.storage.gateway',
+        'excelalchemy.storage.minio',
+        'excelalchemy.workbook_fields',
         'excelalchemy.results',
+        'excelalchemy.results.import_result',
+        'excelalchemy.results.issue_maps',
+        'excelalchemy.results.lifecycle',
+        'excelalchemy.results.preflight',
+        'excelalchemy.results.remediation',
         'excelalchemy.errors',
     ):
         assert importlib.import_module(module_name).__name__ == module_name
+
+
+def test_v3_removed_duplicate_public_modules_are_not_importable() -> None:
+    assert importlib.util.find_spec('excelalchemy.exceptions') is None
+    assert importlib.util.find_spec('excelalchemy.metadata') is None
+    assert importlib.util.find_spec('excelalchemy.storage_gateway') is None
+    assert importlib.util.find_spec('excelalchemy.storage_minio') is None
+
+
+def test_v3_root_exports_do_not_include_secondary_result_records() -> None:
+    import excelalchemy
+
+    secondary_result_exports = {
+        'CellIssueRecord',
+        'CodeIssueSummary',
+        'FieldIssueSummary',
+        'RowIssueRecord',
+        'RowIssueSummary',
+        'extract_pydantic_model',
+        'flatten',
+    }
+
+    assert secondary_result_exports.isdisjoint(set(excelalchemy.__all__))
 
 
 def test_v3_config_removes_legacy_storage_fields() -> None:

@@ -4,8 +4,8 @@ from openpyxl import Workbook
 
 from excelalchemy import ConfigError, ExcelAlchemy, ExporterConfig, ImporterConfig, ValidateResult
 from excelalchemy.storage import ExcelStorage
-from excelalchemy.storage_gateway import MissingStorageGateway, build_storage_gateway
-from excelalchemy.storage_minio import MinioStorageGateway
+from excelalchemy.storage.gateway import MissingStorageGateway, build_storage_gateway
+from excelalchemy.storage.minio import MinioStorageGateway
 from excelalchemy.workbook.table import WorksheetTable
 from tests.support import BaseTestCase, FileRegistry, InMemoryExcelStorage
 from tests.support.contract_models import SimpleContractImporter, creator, sample_simple_export_row

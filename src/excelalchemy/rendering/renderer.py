@@ -1,10 +1,10 @@
 """High-level rendering helpers built on top of the low-level writer module."""
 
-from excelalchemy.exceptions import ExcelCellError
-from excelalchemy.metadata import FieldMetaInfo
+from excelalchemy.errors import ExcelCellError
 from excelalchemy.primitives.identity import ColumnIndex, DataUrlStr, RowIndex, UniqueLabel
 from excelalchemy.rendering.writer import render_data_excel, render_merged_header_excel, render_simple_header_excel
 from excelalchemy.workbook.table import WorksheetTable
+from excelalchemy.workbook_fields import FieldMetaInfo
 
 
 class ExcelRenderer:

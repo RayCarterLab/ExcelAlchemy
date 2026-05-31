@@ -327,7 +327,7 @@ The mapping is intentionally simple:
   - primarily maps to the facade entry point, import session, row preparation,
     executor, and Pydantic adaptation boundary
 - `Result Intelligence Layer`
-  - primarily maps to `results.py` plus the issue collection and result-mapping
+  - primarily maps to `results/` plus the issue collection and result-mapping
     work done by the runtime
 - `Artifact / Delivery Layer`
   - primarily maps to artifact wrappers, workbook rendering, and the storage
@@ -342,14 +342,14 @@ flowchart TD
     P --> D[Result Intelligence Layer]
     P --> E[Artifact / Delivery Layer]
 
-    A --> A1[metadata.py]
+    A --> A1[workbook_fields/]
     A --> A2[schema/layout.py]
     A --> A3[codecs/]
     A --> A4[rendering/renderer.py / writer.py]
 
     B --> B1[runtime/preflight.py]
     B --> B2[workbook/headers.py]
-    B --> B3[storage.py]
+    B --> B3[storage/]
 
     C --> C1[runtime/facade.py]
     C --> C2[runtime/import_session.py]
@@ -357,13 +357,13 @@ flowchart TD
     C --> C4[runtime/executor.py]
     C --> C5[adapters/pydantic.py]
 
-    D --> D1[results.py]
+    D --> D1[results/]
     D --> D2[rows.py]
     D --> D3[executor.py]
 
     E --> E1[artifacts.py]
     E --> E2[rendering/renderer.py / writer.py]
-    E --> E3[storage.py]
+    E --> E3[storage/]
 ```
 
 This is the key distinction:

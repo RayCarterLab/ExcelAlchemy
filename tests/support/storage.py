@@ -4,7 +4,7 @@ from base64 import b64decode
 from openpyxl import load_workbook
 
 from excelalchemy import UrlStr
-from excelalchemy.exceptions import WorksheetNotFoundError
+from excelalchemy.errors import WorksheetNotFoundError
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
 from excelalchemy.storage import ExcelStorage

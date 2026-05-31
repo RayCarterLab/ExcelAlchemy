@@ -24,10 +24,10 @@ It is intentionally lightweight and specific to the current `ExcelAlchemy` repos
 
 - the recommended public import surface changes:
   - `src/excelalchemy/__init__.py`
-  - `src/excelalchemy/config.py`
-  - `src/excelalchemy/metadata.py`
-  - `src/excelalchemy/results.py`
-  - `src/excelalchemy/exceptions.py`
+  - `src/excelalchemy/config/`
+  - `src/excelalchemy/workbook_fields/`
+  - `src/excelalchemy/results/`
+  - `src/excelalchemy/errors.py`
 - the repo’s main entry points, safe edit zones, or caution areas change
 - the preferred workflow, validation commands, or documentation update expectations change
 - the current 3.0 guidance changes for:
@@ -62,7 +62,7 @@ It is intentionally lightweight and specific to the current `ExcelAlchemy` repos
   - `src/excelalchemy/runtime/rows.py`
   - `src/excelalchemy/runtime/executor.py`
   - `src/excelalchemy/rendering/renderer.py`
-  - `src/excelalchemy/storage.py`
+  - `src/excelalchemy/storage/`
   - `src/excelalchemy/adapters/pydantic.py`
 - the public vs internal distinction changes for a concept
 - import, template, export, or storage lifecycle steps change in a way users or maintainers need to reason about

@@ -57,7 +57,7 @@ Each entry should include:
   - `src/excelalchemy/runtime/`
   - `src/excelalchemy/schema/`
   - `src/excelalchemy/rendering/`
-  - `src/excelalchemy/storage_minio.py`
+  - `src/excelalchemy/storage/minio.py`
   - `docs/public-api.md`
 - If the debt is tightly coupled to a planned piece of work, link the relevant plan under `harness/plans/`.
 - If the debt exists because of a deliberate architecture choice, link the relevant historical ADR under `docs/history/adr/`.

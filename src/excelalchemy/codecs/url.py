@@ -4,7 +4,7 @@ from excelalchemy.codecs.field_codec import ExcelFieldCodecSpec, WorkbookInputVa
 from excelalchemy.codecs.text import TextFieldCodec
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
-from excelalchemy.metadata import FieldMetaInfo
+from excelalchemy.workbook_fields import FieldMetaInfo
 
 
 class UrlFieldCodec(TextFieldCodec):

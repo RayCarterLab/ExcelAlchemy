@@ -69,7 +69,7 @@ Recommended usage:
 
 Developer diagnostics are a separate layer. Warning and info logs are emitted
 through named loggers such as `excelalchemy.codecs`, `excelalchemy.runtime`, and
-`excelalchemy.metadata`, and should not be treated as API payload text.
+`excelalchemy.workbook_fields`, and should not be treated as API payload text.
 
 ## `ImportResult`
 

@@ -7,8 +7,8 @@ from excelalchemy.codecs.number import NumberFieldCodec, canonicalize_decimal, t
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
-from excelalchemy.metadata import FieldMetaInfo
 from excelalchemy.primitives.identity import Key
+from excelalchemy.workbook_fields import FieldMetaInfo
 
 
 class NumberRangeValue:

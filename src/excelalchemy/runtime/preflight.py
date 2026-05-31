@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pydantic import BaseModel
 
 from excelalchemy.config import ImporterConfig
-from excelalchemy.exceptions import ConfigError, WorksheetNotFoundError
+from excelalchemy.errors import ConfigError, WorksheetNotFoundError
 from excelalchemy.policies import HEADER_HINT_LINE_COUNT
 from excelalchemy.results import (
     ImportPreflightResult,

@@ -55,7 +55,6 @@ The 3.0 public surface should be intentionally small:
 - `excelalchemy.storage`
 - `excelalchemy.results`
 - `excelalchemy.errors`
-- `excelalchemy.exceptions`
 - `excelalchemy.artifacts`
 
 Preferred field declaration:
@@ -129,8 +128,8 @@ src/excelalchemy/
   config.py
   columns.py
   codecs/
-  storage.py
-  results.py
+  storage/
+  results/
   errors.py
   schema/
   workbook/
@@ -147,8 +146,8 @@ Responsibilities:
 - `columns.py`: `ExcelColumn`, resolved column metadata, metadata extraction
   helpers.
 - `codecs/`: Excel parse, normalize, format, and header-comment behavior.
-- `storage.py`: `ExcelStorage` protocol and storage helpers.
-- `results.py`: result, issue-map, remediation, preflight, and event models.
+- `storage/`: `ExcelStorage` protocol and storage helpers.
+- `results/`: result, issue-map, remediation, preflight, and event models.
 - `errors.py`: public exceptions.
 - `schema/`: Pydantic model inspection and Excel schema layout.
 - `workbook/`: worksheet table, header parsing, workbook reading helpers, and
@@ -318,7 +317,7 @@ Validation:
 Scope:
 
 - `src/excelalchemy/columns.py`
-- `src/excelalchemy/metadata.py` or its 3.0 replacement
+- `src/excelalchemy/workbook_fields/` or its 3.0 replacement
 - `src/excelalchemy/adapters/pydantic.py`
 - tests near schema extraction
 
@@ -360,7 +359,7 @@ Validation:
 Scope:
 
 - `src/excelalchemy/policies.py`
-- `src/excelalchemy/results.py`
+- `src/excelalchemy/results/`
 - `src/excelalchemy/runtime/`
 - import event tests
 
@@ -445,7 +444,7 @@ Validation:
 
 Scope:
 
-- `src/excelalchemy/storage.py`
+- `src/excelalchemy/storage/`
 - storage examples
 - storage contract tests
 
@@ -465,7 +464,7 @@ Validation:
 
 Scope:
 
-- `src/excelalchemy/results.py`
+- `src/excelalchemy/results/`
 - `docs/result-objects.md`
 - `docs/api-response-cookbook.md`
 - result contract tests

@@ -4,7 +4,7 @@ from unittest import IsolatedAsyncioTestCase
 from pydantic import BaseModel
 
 from excelalchemy import ColumnIndex, ExcelAlchemy, ImporterConfig, RowIndex
-from excelalchemy.storage_minio import MinioStorageGateway
+from excelalchemy.storage.minio import MinioStorageGateway
 from tests.support.mock_minio import local_minio
 
 

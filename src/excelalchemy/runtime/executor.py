@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from excelalchemy.adapters.pydantic import instantiate_pydantic_model
 from excelalchemy.config import ImporterConfig, ImportMode
-from excelalchemy.exceptions import ConfigError, ExcelCellError, ExcelRowError
+from excelalchemy.errors import ConfigError, ExcelCellError, ExcelRowError
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
 from excelalchemy.primitives.identity import RowIndex

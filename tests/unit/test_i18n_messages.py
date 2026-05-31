@@ -7,6 +7,7 @@ from excelalchemy import (
     DateFormat,
     ExcelColumn,
 )
+from excelalchemy.adapters.pydantic_fields import extract_declared_field_metadata
 from excelalchemy.messages import (
     DISPLAY_DEFAULT_LOCALE,
     SUPPORTED_DISPLAY_LOCALES,
@@ -16,7 +17,6 @@ from excelalchemy.messages import (
     message,
     use_display_locale,
 )
-from excelalchemy.metadata import extract_declared_field_metadata
 from excelalchemy.results import ValidateRowResult
 
 

@@ -9,12 +9,13 @@ from pydantic import BaseModel, ValidationError
 from pydantic.fields import FieldInfo
 from pydantic_core import PydanticUndefined
 
+from excelalchemy.adapters.pydantic_fields import extract_declared_field_metadata
 from excelalchemy.codecs.field_codec import CompositeExcelFieldCodec, ExcelFieldCodec, UnspecifiedFieldCodec
-from excelalchemy.exceptions import ExcelCellError, ExcelRowError, ProgrammaticError
+from excelalchemy.errors import ExcelCellError, ExcelRowError, ProgrammaticError
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
-from excelalchemy.metadata import FieldMetaInfo, extract_declared_field_metadata
 from excelalchemy.primitives.identity import Key, Label
+from excelalchemy.workbook_fields import FieldMetaInfo
 
 type ExcelValidationIssue = ExcelCellError | ExcelRowError
 type ExcelValidationIssues = list[ExcelValidationIssue]

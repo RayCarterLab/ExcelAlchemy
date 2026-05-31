@@ -3,7 +3,8 @@ from unittest import IsolatedAsyncioTestCase
 
 from pydantic import BaseModel
 
-from excelalchemy import ExcelAlchemy, ExcelColumn, ImporterConfig, extract_pydantic_model
+from excelalchemy import ExcelAlchemy, ExcelColumn, ImporterConfig
+from excelalchemy.adapters.pydantic import extract_pydantic_model
 from excelalchemy.util.converter import export_data_converter, import_data_converter
 
 

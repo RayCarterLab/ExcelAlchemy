@@ -17,7 +17,7 @@ public contracts.
   classes.
 - `excelalchemy.results`: import results, issue maps, preflight results,
   lifecycle events, and API payload helpers.
-- `excelalchemy.errors` and `excelalchemy.exceptions`: public exceptions.
+- `excelalchemy.errors`: public exceptions.
 - `excelalchemy.storage`: `ExcelStorage` protocol for workbook IO.
 - `excelalchemy.artifacts`: `ExcelArtifact` transport wrapper.
 
@@ -69,7 +69,7 @@ Config objects accept a single backend path:
 
 ```python
 from excelalchemy import ImporterConfig
-from excelalchemy.storage_minio import MinioStorageGateway
+from excelalchemy.storage.minio import MinioStorageGateway
 
 config = ImporterConfig.for_create(
     EmployeeImport,
@@ -89,6 +89,7 @@ These paths and names are intentionally not part of 3.0:
 - `excelalchemy.identity`
 - `excelalchemy.header_models`
 - `excelalchemy.types.*`
+- `excelalchemy.metadata`
 - `excelalchemy.util.convertor`
 - `excelalchemy.core.*`
 - `excelalchemy.helper.*`

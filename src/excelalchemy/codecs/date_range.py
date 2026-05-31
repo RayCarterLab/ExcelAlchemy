@@ -13,11 +13,10 @@ from excelalchemy.codecs.field_codec import (
     log_codec_parse_fallback,
     log_codec_render_fallback,
 )
-from excelalchemy.exceptions import ConfigError
+from excelalchemy.errors import ConfigError
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
-from excelalchemy.metadata import FieldMetaInfo
 from excelalchemy.primitives.constants import (
     DATE_FORMAT_TO_PYTHON_MAPPING,
     MILLISECOND_TO_SECOND,
@@ -25,6 +24,7 @@ from excelalchemy.primitives.constants import (
     DateFormat,
 )
 from excelalchemy.primitives.identity import Key
+from excelalchemy.workbook_fields import FieldMetaInfo
 
 
 class _DateRangeImpl(BaseModel):

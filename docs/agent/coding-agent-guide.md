@@ -85,8 +85,9 @@ branch/context before applying 3.0 removal rules.
 ## Where To Edit
 
 - Public facade: `src/excelalchemy/runtime/facade.py`
-- Config: `src/excelalchemy/config.py`
+- Config: `src/excelalchemy/config/`
 - Column declarations: `src/excelalchemy/columns.py`
+- Workbook field models: `src/excelalchemy/workbook_fields/`
 - Pydantic adaptation: `src/excelalchemy/adapters/pydantic.py`
 - Schema layout: `src/excelalchemy/schema/layout.py`
 - Header parsing and validation: `src/excelalchemy/workbook/headers.py`
@@ -95,9 +96,9 @@ branch/context before applying 3.0 removal rules.
 - Import session state and events: `src/excelalchemy/runtime/import_session.py`
 - Rendering and workbook writing: `src/excelalchemy/rendering/renderer.py`,
   `src/excelalchemy/rendering/writer.py`
-- Results and payload helpers: `src/excelalchemy/results.py`
-- Storage protocol and adapters: `src/excelalchemy/storage.py`,
-  `src/excelalchemy/storage_gateway.py`, `src/excelalchemy/storage_minio.py`
+- Results and payload helpers: `src/excelalchemy/results/`
+- Storage protocol and adapters: `src/excelalchemy/storage/`,
+  `src/excelalchemy/storage/gateway.py`, `src/excelalchemy/storage/minio.py`
 - Messages and locale text: `src/excelalchemy/messages.py`
 
 For a broader file map, use `docs/repo-map.md`. For boundary details, use

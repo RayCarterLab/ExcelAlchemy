@@ -6,8 +6,8 @@ from minio import Minio
 from pydantic import BaseModel
 
 from excelalchemy import ExcelAlchemy, ExcelColumn, ImporterConfig
-from excelalchemy.storage_gateway import build_storage_gateway
-from excelalchemy.storage_minio import MinioStorageGateway
+from excelalchemy.storage.gateway import build_storage_gateway
+from excelalchemy.storage.minio import MinioStorageGateway
 
 
 class EmployeeImporter(BaseModel):

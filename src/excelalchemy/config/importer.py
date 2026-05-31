@@ -1,84 +1,22 @@
-"""Configuration objects used to instantiate the ExcelAlchemy facade."""
+"""Importer configuration object."""
 
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from enum import StrEnum
 from typing import Self
 
 from pydantic import BaseModel
 
 from excelalchemy.adapters.pydantic import get_model_field_names
-from excelalchemy.exceptions import ConfigError
+from excelalchemy.config.modes import ImportMode
+from excelalchemy.config.options import ImportBehavior, ImporterSchemaOptions, StorageOptions
+from excelalchemy.errors import ConfigError
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
 from excelalchemy.primitives.payloads import DataConverter, DmlCallback, ExistenceCheckCallback, ImportContext
 from excelalchemy.storage import ExcelStorage
-from excelalchemy.util.converter import export_data_converter, import_data_converter
-
-
-class ExcelMode(StrEnum):
-    """Top-level Excel workflow mode."""
-
-    IMPORT = 'IMPORT'
-    EXPORT = 'EXPORT'
-
-
-class ImportMode(StrEnum):
-    CREATE = 'CREATE'
-    UPDATE = 'UPDATE'
-    CREATE_OR_UPDATE = 'CREATE_OR_UPDATE'
-
-
-@dataclass(slots=True, frozen=True)
-class StorageOptions:
-    """Normalized storage backend settings shared by importer and exporter configs."""
-
-    storage: ExcelStorage | None
-
-    @property
-    def has_storage(self) -> bool:
-        return self.storage is not None
-
-
-@dataclass(slots=True, frozen=True)
-class ImporterSchemaOptions[ImportCreateModelT: BaseModel, ImportUpdateModelT: BaseModel]:
-    """Schema declaration and workbook presentation settings for imports."""
-
-    create_importer_model: type[ImportCreateModelT] | None
-    update_importer_model: type[ImportUpdateModelT] | None
-    sheet_name: str
-    locale: str
-
-
-@dataclass(slots=True, frozen=True)
-class ImportBehavior[ContextT]:
-    """Execution callbacks and import workflow policy."""
-
-    data_converter: DataConverter | None
-    creator: DmlCallback[ContextT] | None
-    updater: DmlCallback[ContextT] | None
-    context: ImportContext[ContextT]
-    is_data_exist: ExistenceCheckCallback[ContextT] | None
-    exec_formatter: Callable[[Exception], str]
-    import_mode: ImportMode
-
-
-@dataclass(slots=True, frozen=True)
-class ExporterSchemaOptions[ExportModelT: BaseModel]:
-    """Schema declaration and workbook presentation settings for exports."""
-
-    exporter_model: type[ExportModelT]
-    sheet_name: str
-    locale: str
-
-
-@dataclass(slots=True, frozen=True)
-class ExportBehavior:
-    """Execution behavior used when rendering export rows."""
-
-    data_converter: DataConverter | None
+from excelalchemy.util.converter import import_data_converter
 
 
 @dataclass(slots=True)
@@ -257,73 +195,4 @@ class ImporterConfig[ContextT, ImportCreateModelT: BaseModel, ImportUpdateModelT
         self.storage_options = StorageOptions(storage=self.storage)
 
 
-@dataclass(slots=True)
-class ExporterConfig[ExportModelT: BaseModel]:
-    exporter_model: type[ExportModelT]
-    # The converter receives schema keys rather than workbook labels.
-    data_converter: DataConverter | None = export_data_converter
-
-    storage: ExcelStorage | None = None
-    locale: str = 'zh-CN'
-
-    sheet_name: str = 'Sheet1'
-    schema_options: ExporterSchemaOptions[ExportModelT] = field(init=False, repr=False)
-    behavior: ExportBehavior = field(init=False, repr=False)
-    storage_options: StorageOptions = field(init=False, repr=False)
-
-    @classmethod
-    def for_model(
-        cls,
-        exporter_model: type[ExportModelT],
-        *,
-        data_converter: DataConverter | None = export_data_converter,
-        storage: ExcelStorage | None = None,
-        locale: str = 'zh-CN',
-        sheet_name: str = 'Sheet1',
-    ) -> Self:
-        """Build an exporter config through the recommended constructor."""
-        return cls(
-            exporter_model=exporter_model,
-            data_converter=data_converter,
-            storage=storage,
-            locale=locale,
-            sheet_name=sheet_name,
-        )
-
-    @classmethod
-    def for_storage(
-        cls,
-        exporter_model: type[ExportModelT],
-        *,
-        storage: ExcelStorage,
-        data_converter: DataConverter | None = export_data_converter,
-        locale: str = 'zh-CN',
-        sheet_name: str = 'Sheet1',
-    ) -> Self:
-        """Build an exporter config for the recommended explicit-storage path."""
-        return cls.for_model(
-            exporter_model,
-            data_converter=data_converter,
-            storage=storage,
-            locale=locale,
-            sheet_name=sheet_name,
-        )
-
-    def validate_model(self) -> Self:
-        if not self.exporter_model:
-            raise ValueError(msg(MessageKey.EXPORTER_MODEL_CANNOT_BE_EMPTY))
-        return self
-
-    def __post_init__(self) -> None:
-        self.validate_model()
-        self.schema_options = ExporterSchemaOptions(
-            exporter_model=self.exporter_model,
-            sheet_name=self.sheet_name,
-            locale=self.locale,
-        )
-        self.behavior = ExportBehavior(data_converter=self.data_converter)
-        self.storage_options = StorageOptions(storage=self.storage)
-
-
-ImportConfig = ImporterConfig
-ExportConfig = ExporterConfig
+__all__ = ['ImporterConfig']
