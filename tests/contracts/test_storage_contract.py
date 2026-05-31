@@ -6,7 +6,7 @@ from excelalchemy import ConfigError, ExcelAlchemy, ExporterConfig, ImporterConf
 from excelalchemy.storage import ExcelStorage
 from excelalchemy.storage.gateway import MissingStorageGateway, build_storage_gateway
 from excelalchemy.storage.minio import MinioStorageGateway
-from excelalchemy.workbook.table import WorksheetTable
+from excelalchemy.worksheet.table import WorksheetTable
 from tests.support import BaseTestCase, FileRegistry, InMemoryExcelStorage
 from tests.support.contract_models import SimpleContractImporter, creator, sample_simple_export_row
 

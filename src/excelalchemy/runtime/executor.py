@@ -12,7 +12,7 @@ from excelalchemy.messages import message as msg
 from excelalchemy.primitives.identity import RowIndex
 from excelalchemy.primitives.payloads import DataConverter, DmlCallback, ImportContext, ModelRowPayload
 from excelalchemy.runtime.rows import ImportIssueTracker
-from excelalchemy.workbook.table import WorksheetTable
+from excelalchemy.worksheet.table import WorksheetTable
 
 
 class ImportExecutor[ContextT, ImportCreateModelT: BaseModel, ImportUpdateModelT: BaseModel]:

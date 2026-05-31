@@ -106,7 +106,7 @@ Use them to understand how the library is intended to be used from application c
 ## What An Agent Should Not Infer
 
 - Do not infer that implementation modules under `src/excelalchemy/runtime/`,
-  `src/excelalchemy/schema/`, `src/excelalchemy/workbook/`, or
+  `src/excelalchemy/schema/`, `src/excelalchemy/worksheet/`, or
   `src/excelalchemy/primitives/` are intended application import paths just
   because an example touches a low-level concept.
 - Do not reintroduce legacy Minio config fields; use `storage=...`.

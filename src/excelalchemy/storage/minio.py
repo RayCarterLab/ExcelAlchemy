@@ -14,7 +14,7 @@ from excelalchemy.messages import message as msg
 from excelalchemy.primitives.identity import UrlStr
 from excelalchemy.storage.base import ExcelStorage
 from excelalchemy.util.file import remove_excel_prefix
-from excelalchemy.workbook.table import WorksheetTable
+from excelalchemy.worksheet.table import WorksheetTable
 
 
 class MinioObjectResponse(Protocol):

@@ -5,10 +5,10 @@ from excelalchemy.codecs.field_codec import (
     WorkbookInputValue,
     log_codec_render_fallback,
 )
+from excelalchemy.field_metadata import FieldMetaInfo
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
-from excelalchemy.workbook_fields import FieldMetaInfo
 
 
 class BooleanFieldCodec(ExcelFieldCodec):

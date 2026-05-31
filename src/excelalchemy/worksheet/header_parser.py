@@ -1,24 +1,19 @@
-"""Header parsing and validation helpers for import workbooks."""
+"""Worksheet header parsing helpers."""
 
-from collections.abc import Container, Sequence
-
-from excelalchemy.config import ImportMode
 from excelalchemy.errors import ConfigError
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
 from excelalchemy.primitives.identity import Label, UniqueLabel
-from excelalchemy.results import ValidateHeaderResult
-from excelalchemy.schema import ExcelSchemaLayout
 from excelalchemy.util.file import value_is_nan
-from excelalchemy.workbook.header_models import ExcelHeader
-from excelalchemy.workbook.table import WorksheetTable
+from excelalchemy.worksheet.header import ExcelHeader
+from excelalchemy.worksheet.table import WorksheetTable
 
 
 class ExcelHeaderParser:
     """Parse raw worksheet header rows into normalized header objects."""
 
     def has_merged_header(self, header_table: WorksheetTable) -> bool:
-        """Detect whether the workbook uses a merged two-row header."""
+        """Detect whether the worksheet uses a merged two-row header."""
         return any(value_is_nan(value) for value in header_table.iloc[0].tolist()) or any(
             header_table.iloc[0].str.startswith('Unnamed')
         )
@@ -83,65 +78,4 @@ class ExcelHeaderParser:
         return worksheet_table
 
 
-class ExcelHeaderValidator:
-    """Validate parsed headers against one schema layout."""
-
-    def validate(
-        self,
-        headers: list[ExcelHeader],
-        layout: ExcelSchemaLayout,
-        import_mode: ImportMode,
-    ) -> ValidateHeaderResult:
-        """Return the full header validation result consumed by the facade."""
-        required_labels = [field_meta.unique_label for field_meta in layout.ordered_field_meta if field_meta.required]
-        primary_labels = [
-            field_meta.unique_label for field_meta in layout.ordered_field_meta if field_meta.is_primary_key
-        ]
-        schema_labels = [field_meta.unique_label for field_meta in layout.ordered_field_meta]
-        input_labels = [header.unique_label for header in headers]
-
-        visited: set[Label] = set()
-        duplicated: list[Label] = []
-        for label in input_labels:
-            if label in visited:
-                duplicated.append(label)
-            else:
-                visited.add(label)
-
-        schema_label_set = set(schema_labels)
-        input_label_set = set(input_labels)
-        unrecognized = [Label(label) for label in self._ordered_difference(input_labels, schema_label_set)]
-
-        missing_primary: list[Label] = []
-        if import_mode == ImportMode.UPDATE:
-            missing_primary = self._ordered_missing(primary_labels, input_label_set)
-        missing_required = self._ordered_missing(required_labels, input_label_set, excluded=set(missing_primary))
-
-        return ValidateHeaderResult(
-            unrecognized=unrecognized,
-            duplicated=duplicated,
-            missing_required=missing_required,
-            missing_primary=missing_primary,
-            is_valid=not (missing_required or unrecognized or duplicated or missing_primary),
-        )
-
-    @staticmethod
-    def _ordered_difference[T](values: Sequence[T], allowed: Container[T]) -> list[T]:
-        seen: set[T] = set()
-        result: list[T] = []
-        for value in values:
-            if value in allowed or value in seen:
-                continue
-            seen.add(value)
-            result.append(value)
-        return result
-
-    @staticmethod
-    def _ordered_missing[T](
-        expected: Sequence[T],
-        actual: Container[T],
-        *,
-        excluded: Container[T] | None = None,
-    ) -> list[T]:
-        excluded = excluded or set()
-        return [value for value in expected if value not in actual and value not in excluded]
+__all__ = ['ExcelHeaderParser']

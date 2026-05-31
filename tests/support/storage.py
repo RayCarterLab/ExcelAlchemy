@@ -8,7 +8,7 @@ from excelalchemy.errors import WorksheetNotFoundError
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
 from excelalchemy.storage import ExcelStorage
-from excelalchemy.workbook.table import WorksheetTable
+from excelalchemy.worksheet.table import WorksheetTable
 
 
 class InMemoryExcelStorage(ExcelStorage):

@@ -3,9 +3,9 @@
 from pydantic.fields import FieldInfo
 
 from excelalchemy.errors import ProgrammaticError
+from excelalchemy.field_metadata import FieldMetaInfo
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
-from excelalchemy.workbook_fields import FieldMetaInfo
 
 
 def extract_declared_field_metadata(field_info: FieldInfo) -> FieldMetaInfo:

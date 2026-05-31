@@ -4,11 +4,11 @@ from excelalchemy.codecs.field_codec import (
     WorkbookDisplayValue,
     WorkbookInputValue,
 )
+from excelalchemy.field_metadata import FieldMetaInfo
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
 from excelalchemy.primitives.constants import CharacterSet
-from excelalchemy.workbook_fields import FieldMetaInfo
 
 SPECIAL_SYMBOLS = set(
     '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~"。？！，、；：‘’“”（）《》〈〉【】〔〕｛｝｟｠〖〗〘〙〚〛〜〝〞〟〰–—‘‛“”„‟…‧﹏.'

@@ -8,7 +8,7 @@ from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
 from excelalchemy.primitives.identity import UrlStr
 from excelalchemy.storage.base import ExcelStorage
-from excelalchemy.workbook.table import WorksheetTable
+from excelalchemy.worksheet.table import WorksheetTable
 
 
 class MissingStorageGateway(ExcelStorage):

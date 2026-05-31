@@ -11,11 +11,11 @@ compatibility surfaces are not current domain concepts.
 | Pydantic schema model | user code | Defines the Python data contract with ordinary type annotations. | Public |
 | `ExcelColumn(...)` | `src/excelalchemy/columns.py` | Attaches workbook labels, ordering, hints, options, requiredness override, and explicit codec configuration through `Annotated`. | Public |
 | Codec helpers | `src/excelalchemy/codecs/*.py` | Build immutable codec configuration objects such as `DateCodec.day()` and `EmailCodec()`. | Public |
-| `FieldMetaInfo` | `src/excelalchemy/workbook_fields/` | Resolved runtime metadata produced from `ExcelColumn(...)`; not a declaration API. | Internal runtime concept |
+| `FieldMetaInfo` | `src/excelalchemy/field_metadata/` | Resolved Excel-facing field metadata produced from `ExcelColumn(...)`; not a declaration API. | Internal runtime concept |
 | `ImporterConfig` / `ExporterConfig` | `src/excelalchemy/config/` | Configure models, callbacks, locale, conversion, import mode, and explicit storage. | Public |
 | `ExcelStorage` | `src/excelalchemy/storage/` | Protocol for reading workbook tables and uploading rendered workbook bytes. | Public extension surface |
 | `ExcelSchemaLayout` | `src/excelalchemy/schema/layout.py` | Flattens model fields into ordered workbook columns and expands composite codecs. | Internal |
-| Header parser and validator | `src/excelalchemy/workbook/headers.py` | Parse simple and merged headers and compare uploads with schema layout. | Internal |
+| Header parser and validator | `src/excelalchemy/worksheet/header_parser.py`, `src/excelalchemy/worksheet/header_validator.py` | Parse simple and merged headers and compare uploads with schema layout. | Internal |
 | Row aggregator | `src/excelalchemy/runtime/rows.py` | Reconstructs flattened worksheet rows into model-shaped payloads and maps issues to coordinates. | Internal |
 | Import executor | `src/excelalchemy/runtime/executor.py` | Validates row payloads and dispatches create, update, or create-or-update callbacks. | Internal |
 | Import session | `src/excelalchemy/runtime/import_session.py` | Owns one import run, lifecycle events, counts, tables, and result rendering decisions. | Internal |

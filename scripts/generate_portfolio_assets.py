@@ -26,7 +26,7 @@ from excelalchemy import (
 )
 from excelalchemy.primitives.identity import UrlStr
 from excelalchemy.util.file import remove_excel_prefix
-from excelalchemy.workbook.table import WorksheetTable
+from excelalchemy.worksheet.table import WorksheetTable
 
 ROOT = Path(__file__).resolve().parents[1]
 FILES_DIR = ROOT / 'docs' / 'assets' / 'workbooks' / 'portfolio'

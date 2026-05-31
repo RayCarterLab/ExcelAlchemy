@@ -66,7 +66,7 @@ It is meant to help both humans and coding agents find the right files before ma
   - `ImportMode`
 - `src/excelalchemy/columns.py`
   - Public `ExcelColumn(...)` declaration helper and immutable column specs.
-- `src/excelalchemy/workbook_fields/`
+- `src/excelalchemy/field_metadata/`
   - Resolved runtime metadata model behind `FieldMetaInfo`.
 - `src/excelalchemy/results/`
   - Public import result objects and API-friendly error maps:
@@ -90,10 +90,12 @@ It is meant to help both humans and coding agents find the right files before ma
   - Read-only structural preflight workflow.
 - `src/excelalchemy/schema/layout.py`
   - Builds flattened Excel-facing schema layout from Pydantic models.
-- `src/excelalchemy/workbook/headers.py`
-  - Parses and validates simple and merged workbook headers.
-- `src/excelalchemy/workbook/header_models.py`
-  - Header validation result models and merged-header records.
+- `src/excelalchemy/worksheet/header.py`
+  - Normalized worksheet header record.
+- `src/excelalchemy/worksheet/header_parser.py`
+  - Parses simple and merged worksheet headers.
+- `src/excelalchemy/worksheet/header_validator.py`
+  - Validates parsed worksheet headers against schema layout.
 - `src/excelalchemy/runtime/rows.py`
   - Aggregates worksheet rows back into model-shaped payloads and tracks row/cell issues.
 - `src/excelalchemy/runtime/executor.py`
@@ -108,7 +110,7 @@ It is meant to help both humans and coding agents find the right files before ma
   - Storage gateway resolution and missing-storage fallback behavior.
 - `src/excelalchemy/storage/minio.py`
   - Built-in Minio-backed storage implementation.
-- `src/excelalchemy/workbook/table.py`
+- `src/excelalchemy/worksheet/table.py`
   - Internal `WorksheetTable` abstraction used instead of pandas.
 
 ## Field Codecs: `src/excelalchemy/codecs/`
@@ -293,7 +295,7 @@ These compatibility paths are removed in 3.0.
 - Public API starting points:
   - `src/excelalchemy/__init__.py`
   - `src/excelalchemy/config/`
-  - `src/excelalchemy/workbook_fields/`
+  - `src/excelalchemy/field_metadata/`
   - `src/excelalchemy/results/`
   - `src/excelalchemy/errors.py`
   - `src/excelalchemy/codecs/`
@@ -301,7 +303,8 @@ These compatibility paths are removed in 3.0.
   - `src/excelalchemy/runtime/facade.py`
   - `src/excelalchemy/runtime/import_session.py`
   - `src/excelalchemy/schema/layout.py`
-  - `src/excelalchemy/workbook/headers.py`
+  - `src/excelalchemy/worksheet/header_parser.py`
+  - `src/excelalchemy/worksheet/header_validator.py`
   - `src/excelalchemy/runtime/rows.py`
   - `src/excelalchemy/runtime/executor.py`
 
@@ -310,12 +313,13 @@ These compatibility paths are removed in 3.0.
 - Public facade and configuration:
   - `src/excelalchemy/__init__.py`
   - `src/excelalchemy/config/`
-  - `src/excelalchemy/workbook_fields/`
+  - `src/excelalchemy/field_metadata/`
   - `src/excelalchemy/results/`
 - Import flow:
   - `src/excelalchemy/runtime/facade.py`
   - `src/excelalchemy/runtime/import_session.py`
-  - `src/excelalchemy/workbook/headers.py`
+  - `src/excelalchemy/worksheet/header_parser.py`
+  - `src/excelalchemy/worksheet/header_validator.py`
   - `src/excelalchemy/runtime/rows.py`
   - `src/excelalchemy/runtime/executor.py`
   - `src/excelalchemy/adapters/pydantic.py`
@@ -329,7 +333,7 @@ These compatibility paths are removed in 3.0.
   - `src/excelalchemy/storage/`
   - `src/excelalchemy/storage/gateway.py`
   - `src/excelalchemy/storage/minio.py`
-  - `src/excelalchemy/workbook/table.py`
+  - `src/excelalchemy/worksheet/table.py`
   - `examples/custom_storage.py`
 - Result payloads and API responses:
   - `src/excelalchemy/results/`
@@ -344,7 +348,7 @@ These compatibility paths are removed in 3.0.
   - `docs/public-api.md`
   - `src/excelalchemy/__init__.py`
   - `src/excelalchemy/config/`
-  - `src/excelalchemy/workbook_fields/`
+  - `src/excelalchemy/field_metadata/`
   - `src/excelalchemy/results/`
 
 - Understanding import flow:
@@ -352,7 +356,8 @@ These compatibility paths are removed in 3.0.
   - `examples/employee_import_workflow.py`
   - `src/excelalchemy/runtime/facade.py`
   - `src/excelalchemy/runtime/import_session.py`
-  - `src/excelalchemy/workbook/headers.py`
+  - `src/excelalchemy/worksheet/header_parser.py`
+  - `src/excelalchemy/worksheet/header_validator.py`
   - `src/excelalchemy/runtime/rows.py`
   - `src/excelalchemy/runtime/executor.py`
   - `tests/contracts/test_import_contract.py`
@@ -371,7 +376,7 @@ These compatibility paths are removed in 3.0.
   - `src/excelalchemy/storage/`
   - `src/excelalchemy/storage/gateway.py`
   - `src/excelalchemy/storage/minio.py`
-  - `src/excelalchemy/workbook/table.py`
+  - `src/excelalchemy/worksheet/table.py`
   - `examples/custom_storage.py`
   - `tests/contracts/test_storage_contract.py`
 

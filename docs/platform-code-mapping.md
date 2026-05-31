@@ -8,8 +8,8 @@ tree. It is a human-readable ownership map; agent-facing rules live in
 
 | Platform area | Primary code owners | Status |
 | --- | --- | --- |
-| Template Authoring Layer | `workbook_fields/`, `columns.py`, `schema/layout.py`, `rendering/`, `codecs/`, `runtime/facade.py` | current |
-| Preflight Gate Layer | `runtime/preflight.py`, `workbook/headers.py`, `runtime/facade.py`, `results/`, `storage/` | current |
+| Template Authoring Layer | `field_metadata/`, `columns.py`, `schema/layout.py`, `rendering/`, `codecs/`, `runtime/facade.py` | current |
+| Preflight Gate Layer | `runtime/preflight.py`, `worksheet/header_parser.py`, `worksheet/header_validator.py`, `runtime/facade.py`, `results/`, `storage/` | current |
 | Import Runtime Layer | `runtime/facade.py`, `runtime/import_session.py`, `runtime/rows.py`, `runtime/executor.py`, `adapters/pydantic.py`, `schema/layout.py` | current |
 | Lifecycle Events | `runtime/import_session.py`, public facade entry in `runtime/facade.py`, `results/` | current |
 | Result Intelligence Layer | `results/`, `runtime/rows.py`, `runtime/import_session.py`, `runtime/executor.py` | current |
@@ -21,7 +21,7 @@ tree. It is a human-readable ownership map; agent-facing rules live in
 
 Primary files:
 
-- `src/excelalchemy/workbook_fields/`
+- `src/excelalchemy/field_metadata/`
 - `src/excelalchemy/columns.py`
 - `src/excelalchemy/schema/layout.py`
 - `src/excelalchemy/codecs/`
@@ -41,7 +41,8 @@ Public entry points:
 Primary files:
 
 - `src/excelalchemy/runtime/preflight.py`
-- `src/excelalchemy/workbook/headers.py`
+- `src/excelalchemy/worksheet/header_parser.py`
+- `src/excelalchemy/worksheet/header_validator.py`
 - `src/excelalchemy/runtime/facade.py`
 - `src/excelalchemy/results/`
 - `src/excelalchemy/storage/`

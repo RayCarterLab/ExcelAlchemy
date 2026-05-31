@@ -4,11 +4,11 @@ from typing import cast
 
 from excelalchemy.codecs.field_codec import CompositeExcelFieldCodec, ExcelFieldCodecSpec, log_codec_parse_fallback
 from excelalchemy.codecs.number import NumberFieldCodec, canonicalize_decimal, transform_decimal
+from excelalchemy.field_metadata import FieldMetaInfo
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
 from excelalchemy.primitives.identity import Key
-from excelalchemy.workbook_fields import FieldMetaInfo
 
 
 class NumberRangeValue:

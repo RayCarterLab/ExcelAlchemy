@@ -17,7 +17,7 @@ from excelalchemy import (
     ImportResult,
     UrlStr,
 )
-from excelalchemy.workbook.table import WorksheetTable
+from excelalchemy.worksheet.table import WorksheetTable
 
 
 class CustomerImporter(BaseModel):

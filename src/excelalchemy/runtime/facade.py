@@ -14,6 +14,7 @@ from excelalchemy.diagnostics import (
     log_runtime_ignoring_unrecognized_export_keys,
 )
 from excelalchemy.errors import ConfigError
+from excelalchemy.field_metadata import FieldMetaInfo
 from excelalchemy.messages import MessageKey, use_display_locale
 from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
@@ -29,10 +30,10 @@ from excelalchemy.schema import ExcelSchemaLayout
 from excelalchemy.storage import ExcelStorage
 from excelalchemy.storage.gateway import build_storage_gateway
 from excelalchemy.util.file import flatten
-from excelalchemy.workbook.header_models import ExcelHeader
-from excelalchemy.workbook.headers import ExcelHeaderParser, ExcelHeaderValidator
-from excelalchemy.workbook.table import WorksheetTable
-from excelalchemy.workbook_fields import FieldMetaInfo
+from excelalchemy.worksheet.header import ExcelHeader
+from excelalchemy.worksheet.header_parser import ExcelHeaderParser
+from excelalchemy.worksheet.header_validator import ExcelHeaderValidator
+from excelalchemy.worksheet.table import WorksheetTable
 
 RESULT_COLUMN = FieldMetaInfo(label=dmsg(RESULT_WORKBOOK_POLICY.result_column.label_message_key, locale='zh-CN'))
 RESULT_COLUMN.parent_label = RESULT_COLUMN.label

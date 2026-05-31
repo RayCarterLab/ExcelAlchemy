@@ -35,7 +35,7 @@ from excelalchemy.results import (
     ValidateResult,
 )
 from excelalchemy.util.file import flatten
-from excelalchemy.workbook.header_models import ExcelHeader
+from excelalchemy.worksheet.header import ExcelHeader
 
 
 def test_v3_workbook_layout_policies_make_header_row_counts_explicit() -> None:

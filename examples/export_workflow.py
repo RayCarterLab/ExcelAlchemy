@@ -6,7 +6,7 @@ from typing import Annotated
 from pydantic import BaseModel
 
 from excelalchemy import ExcelAlchemy, ExcelColumn, ExcelStorage, ExporterConfig, UrlStr
-from excelalchemy.workbook.table import WorksheetTable
+from excelalchemy.worksheet.table import WorksheetTable
 
 
 class InMemoryExportStorage(ExcelStorage):

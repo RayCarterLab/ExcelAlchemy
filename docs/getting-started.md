@@ -48,7 +48,7 @@ from excelalchemy.errors import ConfigError, ExcelCellError, ExcelRowError
 ```
 
 Avoid importing implementation modules such as `excelalchemy.runtime.*`,
-`excelalchemy.schema.*`, `excelalchemy.workbook.*`,
+`excelalchemy.schema.*`, `excelalchemy.worksheet.*`,
 `excelalchemy.rendering.*`, or `excelalchemy.primitives.*` in application code.
 The old `excelalchemy.core.*`, `excelalchemy.helper.*`,
 `excelalchemy.i18n.*`, and `excelalchemy._primitives.*` paths are removed in

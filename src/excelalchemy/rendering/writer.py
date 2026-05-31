@@ -14,6 +14,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
 from excelalchemy.errors import ExcelCellError, ProgrammaticError
+from excelalchemy.field_metadata import FieldMetaInfo
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
@@ -34,8 +35,7 @@ from excelalchemy.primitives.constants import (
 from excelalchemy.primitives.identity import ColumnIndex, DataUrlStr, Label, RowIndex, UniqueLabel
 from excelalchemy.results import ValidateRowResult
 from excelalchemy.util.file import add_excel_prefix, value_is_nan
-from excelalchemy.workbook.table import WorksheetTable, WorksheetValue
-from excelalchemy.workbook_fields import FieldMetaInfo
+from excelalchemy.worksheet.table import WorksheetTable, WorksheetValue
 
 
 def _get_file(file: BinaryIO | None = None) -> BinaryIO:

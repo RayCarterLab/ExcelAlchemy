@@ -15,6 +15,7 @@ from excelalchemy.codecs.field_codec import (
     log_codec_parse_fallback,
 )
 from excelalchemy.errors import ConfigError
+from excelalchemy.field_metadata import FieldMetaInfo
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
 from excelalchemy.primitives.constants import (
@@ -23,7 +24,6 @@ from excelalchemy.primitives.constants import (
     DataRangeOption,
     DateFormat,
 )
-from excelalchemy.workbook_fields import FieldMetaInfo
 
 
 class DateFieldCodec(ExcelFieldCodec):

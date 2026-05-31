@@ -1,4 +1,4 @@
-"""Internal workbook header models."""
+"""Normalized worksheet header record."""
 
 from pydantic import BaseModel
 from pydantic.fields import Field
@@ -8,17 +8,17 @@ from excelalchemy.primitives.identity import Label, UniqueLabel
 
 
 class ExcelHeader(BaseModel):
-    """Normalized workbook header extracted from user input."""
+    """Normalized worksheet header extracted from user input."""
 
-    label: Label = Field(description='Workbook header label.')
+    label: Label = Field(description='Worksheet header label.')
     parent_label: Label = Field(
-        description='Parent workbook header label. Falls back to the label itself for flat headers.'
+        description='Parent worksheet header label. Falls back to the label itself for flat headers.'
     )
     offset: int = Field(default=0, description='Child-column offset under a merged parent header.')
 
     @property
     def unique_label(self) -> UniqueLabel:
-        """Return the fully qualified workbook header label."""
+        """Return the fully qualified worksheet header label."""
         label = (
             f'{self.parent_label}{WORKBOOK_UNIQUE_LABEL_SEPARATOR}{self.label}'
             if self.parent_label != self.label

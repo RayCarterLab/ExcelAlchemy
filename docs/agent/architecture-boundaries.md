@@ -22,7 +22,7 @@ modules and ownership surfaces when editing current code and docs:
 - `excelalchemy`
 - `excelalchemy.config`
 - `excelalchemy.columns`
-- `excelalchemy.workbook_fields`
+- `excelalchemy.field_metadata`
 - `excelalchemy.results`
 - `excelalchemy.errors`
 - `excelalchemy.storage`
@@ -30,7 +30,7 @@ modules and ownership surfaces when editing current code and docs:
 - `excelalchemy.policies`
 - `excelalchemy.messages`
 
-Some modules in this list, such as `excelalchemy.workbook_fields`,
+Some modules in this list, such as `excelalchemy.field_metadata`,
 `excelalchemy.messages`, and `excelalchemy.policies`, are stable ownership
 surfaces for agents and maintainers but are not ordinary application-facing
 entry points.
@@ -55,7 +55,7 @@ Prefer concrete responsibility modules when editing implementation code:
 
 - `excelalchemy.adapters.*`
 - `excelalchemy.schema.*`
-- `excelalchemy.workbook.*`
+- `excelalchemy.worksheet.*`
 - `excelalchemy.runtime.*`
 - `excelalchemy.rendering.*`
 - `excelalchemy.primitives.*`
@@ -74,7 +74,7 @@ shims:
 - `excelalchemy.header_models`
 - `excelalchemy.const`
 - `excelalchemy.types.*`
-- `excelalchemy.metadata` (use `excelalchemy.workbook_fields`)
+- `excelalchemy.metadata` (use `excelalchemy.field_metadata`)
 - `excelalchemy.util.convertor`
 - `excelalchemy.core.*`
 - `excelalchemy.helper.*`
@@ -112,8 +112,10 @@ Use these ownership boundaries when deciding where a change belongs:
   coordinates template generation, import, export, and upload.
 - Schema: `src/excelalchemy/schema/layout.py` extracts Excel-facing layout from
   Pydantic models, expands composite fields, and validates ordering.
-- Headers: `src/excelalchemy/workbook/headers.py` parses simple and merged headers
-  and validates workbook header rows against schema layout.
+- Worksheet headers: `src/excelalchemy/worksheet/header.py` owns normalized
+  header records, `src/excelalchemy/worksheet/header_parser.py` parses simple
+  and merged headers, and `src/excelalchemy/worksheet/header_validator.py`
+  validates worksheet header rows against schema layout.
 - Rows: `src/excelalchemy/runtime/rows.py` aggregates flattened worksheet rows
   back into model-shaped payloads and maps row/cell issues to workbook
   coordinates.
@@ -127,8 +129,8 @@ Use these ownership boundaries when deciding where a change belongs:
 - Storage: `src/excelalchemy/storage/`, `src/excelalchemy/storage/gateway.py`,
   and `src/excelalchemy/storage/minio.py` define and resolve storage behavior.
 - Columns: `src/excelalchemy/columns.py` owns `ExcelColumn(...)` declarations.
-- Workbook fields: `src/excelalchemy/workbook_fields/` owns resolved
-  Excel-facing field presentation and runtime state.
+- Field metadata: `src/excelalchemy/field_metadata/` owns resolved
+  Excel-facing field declaration, presentation, and runtime state.
 - Pydantic integration: `src/excelalchemy/adapters/pydantic.py` shields the rest
   of the codebase from Pydantic-version details.
 - Messages: `src/excelalchemy/messages.py` separates runtime
@@ -151,7 +153,7 @@ Use these ownership boundaries when deciding where a change belongs:
 Preserve these seams:
 
 - facade vs collaborators
-- workbook field semantics vs validation backend
+- field metadata semantics vs validation backend
 - storage protocol vs concrete storage
 - workbook display text vs runtime messages
 
@@ -161,13 +163,15 @@ Before changing these files, inspect related tests and docs:
 
 - `src/excelalchemy/__init__.py`
 - `src/excelalchemy/config/`
-- `src/excelalchemy/workbook_fields/`
+- `src/excelalchemy/field_metadata/`
 - `src/excelalchemy/results/`
 - `src/excelalchemy/errors.py`
 - `src/excelalchemy/runtime/facade.py`
 - `src/excelalchemy/runtime/import_session.py`
 - `src/excelalchemy/schema/layout.py`
-- `src/excelalchemy/workbook/headers.py`
+- `src/excelalchemy/worksheet/header.py`
+- `src/excelalchemy/worksheet/header_parser.py`
+- `src/excelalchemy/worksheet/header_validator.py`
 - `src/excelalchemy/runtime/rows.py`
 - `src/excelalchemy/runtime/executor.py`
 - `src/excelalchemy/rendering/renderer.py`

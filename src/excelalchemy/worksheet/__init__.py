@@ -1,11 +1,12 @@
-"""Workbook parsing and table primitives."""
+"""Worksheet parsing and table primitives."""
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from excelalchemy.workbook.header_models import ExcelHeader
-    from excelalchemy.workbook.headers import ExcelHeaderParser, ExcelHeaderValidator
-    from excelalchemy.workbook.table import (
+    from excelalchemy.worksheet.header import ExcelHeader
+    from excelalchemy.worksheet.header_parser import ExcelHeaderParser
+    from excelalchemy.worksheet.header_validator import ExcelHeaderValidator
+    from excelalchemy.worksheet.table import (
         WorksheetColumn,
         WorksheetColumns,
         WorksheetRow,
@@ -27,15 +28,19 @@ __all__ = [
 
 def __getattr__(name: str) -> object:
     if name == 'ExcelHeader':
-        from excelalchemy.workbook.header_models import ExcelHeader
+        from excelalchemy.worksheet.header import ExcelHeader
 
         return ExcelHeader
-    if name in {'ExcelHeaderParser', 'ExcelHeaderValidator'}:
-        from excelalchemy.workbook.headers import ExcelHeaderParser, ExcelHeaderValidator
+    if name == 'ExcelHeaderParser':
+        from excelalchemy.worksheet.header_parser import ExcelHeaderParser
 
-        return {'ExcelHeaderParser': ExcelHeaderParser, 'ExcelHeaderValidator': ExcelHeaderValidator}[name]
+        return ExcelHeaderParser
+    if name == 'ExcelHeaderValidator':
+        from excelalchemy.worksheet.header_validator import ExcelHeaderValidator
+
+        return ExcelHeaderValidator
     if name in {'WorksheetColumn', 'WorksheetColumns', 'WorksheetRow', 'WorksheetTable', 'WorksheetValue'}:
-        from excelalchemy.workbook.table import (
+        from excelalchemy.worksheet.table import (
             WorksheetColumn,
             WorksheetColumns,
             WorksheetRow,

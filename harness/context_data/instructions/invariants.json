@@ -58,7 +58,7 @@
       "id": "v3-no-generic-internal-package",
       "scope": "ExcelAlchemy 3.0 tasks",
       "statement": "Do not introduce a generic _internal package for 3.0 code.",
-      "enforcement": "Use concrete responsibility names such as schema, workbook, runtime, rendering, adapters, policies, messages, or diagnostics."
+      "enforcement": "Use concrete responsibility names such as schema, worksheet, field_metadata, runtime, rendering, adapters, policies, messages, or diagnostics."
     },
     {
       "id": "v3-current-docs-must-stay-current",
@@ -79,10 +79,10 @@
       "statement": "Stable public imports come from the package root and public modules.",
       "paths": [
         "src/excelalchemy/__init__.py",
-        "src/excelalchemy/config.py",
-        "src/excelalchemy/metadata.py",
-        "src/excelalchemy/results.py",
-        "src/excelalchemy/exceptions.py",
+        "src/excelalchemy/config/",
+        "src/excelalchemy/field_metadata/",
+        "src/excelalchemy/results/",
+        "src/excelalchemy/errors.py",
         "src/excelalchemy/codecs/"
       ]
     },
@@ -92,7 +92,7 @@
       "paths": [
         "src/excelalchemy/runtime/",
         "src/excelalchemy/schema/",
-        "src/excelalchemy/workbook/",
+        "src/excelalchemy/worksheet/",
         "src/excelalchemy/rendering/",
         "src/excelalchemy/adapters/",
         "src/excelalchemy/primitives/"
@@ -110,9 +110,9 @@
       "id": "storage-protocol-boundary",
       "statement": "Storage is modeled as ExcelStorage, not as a Minio-only architecture.",
       "paths": [
-        "src/excelalchemy/storage.py",
-        "src/excelalchemy/storage_gateway.py",
-        "src/excelalchemy/storage_minio.py"
+        "src/excelalchemy/storage/",
+        "src/excelalchemy/storage/gateway.py",
+        "src/excelalchemy/storage/minio.py"
       ]
     }
   ],
@@ -147,7 +147,7 @@
       "id": "worksheet-table-runtime",
       "statement": "Runtime workbook tables use WorksheetTable rather than pandas-first internals.",
       "paths": [
-        "src/excelalchemy/workbook/table.py"
+        "src/excelalchemy/worksheet/table.py"
       ]
     },
     {
@@ -162,7 +162,7 @@
       "id": "cell-vs-row-issues",
       "statement": "Cell-level and row-level validation issues remain distinct.",
       "paths": [
-        "src/excelalchemy/exceptions.py",
+        "src/excelalchemy/errors.py",
         "src/excelalchemy/adapters/pydantic.py",
         "src/excelalchemy/runtime/rows.py",
         "src/excelalchemy/results.py"

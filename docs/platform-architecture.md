@@ -342,13 +342,14 @@ flowchart TD
     P --> D[Result Intelligence Layer]
     P --> E[Artifact / Delivery Layer]
 
-    A --> A1[workbook_fields/]
+    A --> A1[field_metadata/]
     A --> A2[schema/layout.py]
     A --> A3[codecs/]
     A --> A4[rendering/renderer.py / writer.py]
 
     B --> B1[runtime/preflight.py]
-    B --> B2[workbook/headers.py]
+    B --> B2[worksheet/header_parser.py]
+    B --> B3[worksheet/header_validator.py]
     B --> B3[storage/]
 
     C --> C1[runtime/facade.py]

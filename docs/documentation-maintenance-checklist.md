@@ -25,7 +25,7 @@ It is intentionally lightweight and specific to the current `ExcelAlchemy` repos
 - the recommended public import surface changes:
   - `src/excelalchemy/__init__.py`
   - `src/excelalchemy/config/`
-  - `src/excelalchemy/workbook_fields/`
+  - `src/excelalchemy/field_metadata/`
   - `src/excelalchemy/results/`
   - `src/excelalchemy/errors.py`
 - the repo’s main entry points, safe edit zones, or caution areas change
@@ -36,7 +36,7 @@ It is intentionally lightweight and specific to the current `ExcelAlchemy` repos
     `excelalchemy.exc`, `excelalchemy.identity`, `excelalchemy.header_models`,
     `excelalchemy.util.convertor`, `excelalchemy.core`, `excelalchemy.helper`,
     `excelalchemy.i18n`, and `excelalchemy._primitives`
-  - the `WorksheetTable` storage seam in `src/excelalchemy/workbook/table.py`
+  - the `WorksheetTable` storage seam in `src/excelalchemy/worksheet/table.py`
 
 ## Update `docs/repo-map.md` when
 
@@ -58,7 +58,8 @@ It is intentionally lightweight and specific to the current `ExcelAlchemy` repos
 - an existing concept is renamed, split, merged, or removed
 - responsibilities move between major collaborators such as:
   - `src/excelalchemy/schema/layout.py`
-  - `src/excelalchemy/workbook/headers.py`
+  - `src/excelalchemy/worksheet/header_parser.py`
+  - `src/excelalchemy/worksheet/header_validator.py`
   - `src/excelalchemy/runtime/rows.py`
   - `src/excelalchemy/runtime/executor.py`
   - `src/excelalchemy/rendering/renderer.py`

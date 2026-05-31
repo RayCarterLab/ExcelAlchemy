@@ -7,8 +7,9 @@ from excelalchemy.config import ImportMode
 from excelalchemy.runtime.facade import REASON_COLUMN, RESULT_COLUMN
 from excelalchemy.runtime.rows import ImportIssueTracker, RowAggregator
 from excelalchemy.schema import ExcelSchemaLayout
-from excelalchemy.workbook.headers import ExcelHeaderParser, ExcelHeaderValidator
-from excelalchemy.workbook.table import WorksheetTable
+from excelalchemy.worksheet.header_parser import ExcelHeaderParser
+from excelalchemy.worksheet.header_validator import ExcelHeaderValidator
+from excelalchemy.worksheet.table import WorksheetTable
 from tests.support.contract_models import MergedContractImporter, SimpleContractImporter
 
 

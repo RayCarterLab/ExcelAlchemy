@@ -25,7 +25,7 @@ from excelalchemy.results import (
     ImportLifecycleEventName,
     ImportRowProcessedEvent,
 )
-from excelalchemy.workbook.table import WorksheetTable
+from excelalchemy.worksheet.table import WorksheetTable
 
 
 class EmployeeImporter(BaseModel):

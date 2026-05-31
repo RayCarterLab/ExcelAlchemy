@@ -3,7 +3,7 @@
 from typing import Protocol, runtime_checkable
 
 from excelalchemy.primitives.identity import UrlStr
-from excelalchemy.workbook.table import WorksheetTable
+from excelalchemy.worksheet.table import WorksheetTable
 
 
 @runtime_checkable

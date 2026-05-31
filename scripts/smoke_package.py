@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from excelalchemy import ExcelAlchemy, ExcelColumn, ExcelStorage, ExporterConfig, ImporterConfig, UrlStr
 from excelalchemy.results import build_frontend_remediation_payload
-from excelalchemy.workbook.table import WorksheetTable
+from excelalchemy.worksheet.table import WorksheetTable
 
 
 class SmokeImporter(BaseModel):

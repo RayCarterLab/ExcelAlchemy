@@ -60,7 +60,7 @@
       "responsibility": "Main public package surface and common re-export facade."
     },
     {
-      "path": "src/excelalchemy/config.py",
+      "path": "src/excelalchemy/config/",
       "responsibility": "Public importer/exporter configuration objects and import modes."
     },
     {
@@ -68,15 +68,15 @@
       "responsibility": "Public ExcelColumn declaration helper and immutable column specs."
     },
     {
-      "path": "src/excelalchemy/metadata.py",
-      "responsibility": "Public Excel field metadata entry points and layered field metadata model."
+      "path": "src/excelalchemy/field_metadata/",
+      "responsibility": "Agent-stable resolved Excel-facing field metadata model."
     },
     {
-      "path": "src/excelalchemy/results.py",
+      "path": "src/excelalchemy/results/",
       "responsibility": "Public result objects, validation result states, lifecycle events, and API-friendly error maps."
     },
     {
-      "path": "src/excelalchemy/exceptions.py",
+      "path": "src/excelalchemy/errors.py",
       "responsibility": "Public exception types for configuration, cell, row, and programmatic errors."
     },
     {
@@ -104,15 +104,19 @@
       "responsibility": "Builds flattened Excel-facing schema layout from Pydantic model declarations."
     },
     {
-      "path": "src/excelalchemy/workbook/headers.py",
-      "responsibility": "Parses and validates simple and merged workbook headers."
+      "path": "src/excelalchemy/worksheet/header.py",
+      "responsibility": "Normalized worksheet header record."
     },
     {
-      "path": "src/excelalchemy/workbook/header_models.py",
-      "responsibility": "Header validation result models and merged-header records."
+      "path": "src/excelalchemy/worksheet/header_parser.py",
+      "responsibility": "Parses simple and merged worksheet headers."
     },
     {
-      "path": "src/excelalchemy/workbook/table.py",
+      "path": "src/excelalchemy/worksheet/header_validator.py",
+      "responsibility": "Validates parsed worksheet headers against schema layout."
+    },
+    {
+      "path": "src/excelalchemy/worksheet/table.py",
       "responsibility": "WorksheetTable abstraction used for runtime workbook tables instead of pandas."
     },
     {
@@ -136,15 +140,15 @@
       "responsibility": "Workbook writing, formatting, comments, colors, and result columns."
     },
     {
-      "path": "src/excelalchemy/storage.py",
+      "path": "src/excelalchemy/storage/",
       "responsibility": "ExcelStorage protocol and storage extension boundary."
     },
     {
-      "path": "src/excelalchemy/storage_gateway.py",
+      "path": "src/excelalchemy/storage/gateway.py",
       "responsibility": "Storage gateway resolution and missing-storage fallback behavior."
     },
     {
-      "path": "src/excelalchemy/storage_minio.py",
+      "path": "src/excelalchemy/storage/minio.py",
       "responsibility": "Built-in Minio-compatible ExcelStorage implementation."
     },
     {
@@ -182,21 +186,22 @@
     "import_validation": [
       "src/excelalchemy/runtime/facade.py",
       "src/excelalchemy/runtime/import_session.py",
-      "src/excelalchemy/workbook/headers.py",
+      "src/excelalchemy/worksheet/header_parser.py",
+      "src/excelalchemy/worksheet/header_validator.py",
       "src/excelalchemy/runtime/rows.py",
       "src/excelalchemy/runtime/executor.py",
       "src/excelalchemy/adapters/pydantic.py"
     ],
     "result_rendering": [
-      "src/excelalchemy/results.py",
+      "src/excelalchemy/results/",
       "src/excelalchemy/rendering/renderer.py",
       "src/excelalchemy/rendering/writer.py"
     ],
     "storage_integration": [
-      "src/excelalchemy/storage.py",
-      "src/excelalchemy/storage_gateway.py",
-      "src/excelalchemy/storage_minio.py",
-      "src/excelalchemy/workbook/table.py",
+      "src/excelalchemy/storage/",
+      "src/excelalchemy/storage/gateway.py",
+      "src/excelalchemy/storage/minio.py",
+      "src/excelalchemy/worksheet/table.py",
       "examples/custom_storage.py"
     ],
     "backend_api_integration": [
@@ -216,6 +221,8 @@
     "src/excelalchemy/exc.py",
     "src/excelalchemy/identity.py",
     "src/excelalchemy/header_models.py",
+    "src/excelalchemy/workbook/",
+    "src/excelalchemy/workbook_fields/",
     "src/excelalchemy/util/convertor.py"
   ]
 }

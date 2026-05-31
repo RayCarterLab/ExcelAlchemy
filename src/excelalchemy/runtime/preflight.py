@@ -15,8 +15,9 @@ from excelalchemy.results import (
 )
 from excelalchemy.schema import ExcelSchemaLayout
 from excelalchemy.storage import ExcelStorage
-from excelalchemy.workbook.headers import ExcelHeaderParser, ExcelHeaderValidator
-from excelalchemy.workbook.table import WorksheetTable
+from excelalchemy.worksheet.header_parser import ExcelHeaderParser
+from excelalchemy.worksheet.header_validator import ExcelHeaderValidator
+from excelalchemy.worksheet.table import WorksheetTable
 
 
 @dataclass(slots=True)

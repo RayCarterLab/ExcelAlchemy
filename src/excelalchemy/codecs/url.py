@@ -2,9 +2,9 @@ from pydantic import HttpUrl, TypeAdapter
 
 from excelalchemy.codecs.field_codec import ExcelFieldCodecSpec, WorkbookInputValue
 from excelalchemy.codecs.text import TextFieldCodec
+from excelalchemy.field_metadata import FieldMetaInfo
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
-from excelalchemy.workbook_fields import FieldMetaInfo
 
 
 class UrlFieldCodec(TextFieldCodec):

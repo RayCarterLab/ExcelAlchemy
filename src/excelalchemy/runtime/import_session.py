@@ -13,6 +13,7 @@ from excelalchemy.codecs.field_codec import SystemReservedFieldCodec
 from excelalchemy.config import ImporterConfig
 from excelalchemy.diagnostics import runtime_logger
 from excelalchemy.errors import ConfigError
+from excelalchemy.field_metadata import FieldMetaInfo
 from excelalchemy.messages import MessageKey, use_display_locale
 from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
@@ -37,10 +38,10 @@ from excelalchemy.runtime.executor import ImportExecutor
 from excelalchemy.runtime.rows import ImportIssueTracker, RowAggregator
 from excelalchemy.schema import ExcelSchemaLayout
 from excelalchemy.storage import ExcelStorage
-from excelalchemy.workbook.header_models import ExcelHeader
-from excelalchemy.workbook.headers import ExcelHeaderParser, ExcelHeaderValidator
-from excelalchemy.workbook.table import WorksheetRow, WorksheetTable
-from excelalchemy.workbook_fields import FieldMetaInfo
+from excelalchemy.worksheet.header import ExcelHeader
+from excelalchemy.worksheet.header_parser import ExcelHeaderParser
+from excelalchemy.worksheet.header_validator import ExcelHeaderValidator
+from excelalchemy.worksheet.table import WorksheetRow, WorksheetTable
 
 
 class ImportSessionPhase(StrEnum):

@@ -1,4 +1,4 @@
-"""Resolved workbook field metadata used by runtime components."""
+"""Resolved Excel-facing field metadata used by runtime components."""
 
 import copy
 import datetime
@@ -7,6 +7,10 @@ from functools import cached_property
 from typing import Self
 
 from excelalchemy.codecs.field_codec import ExcelFieldCodec
+from excelalchemy.field_metadata.constraints import ImportConstraints
+from excelalchemy.field_metadata.declaration import DeclaredFieldMeta
+from excelalchemy.field_metadata.presentation import WorkbookPresentationMeta
+from excelalchemy.field_metadata.runtime import RuntimeFieldBinding
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import message as msg
 from excelalchemy.primitives.constants import (
@@ -18,10 +22,6 @@ from excelalchemy.primitives.constants import (
     Option,
 )
 from excelalchemy.primitives.identity import Key, Label, OptionId, UniqueKey, UniqueLabel
-from excelalchemy.workbook_fields.constraints import ImportConstraints
-from excelalchemy.workbook_fields.declaration import DeclaredFieldMeta
-from excelalchemy.workbook_fields.presentation import WorkbookPresentationMeta
-from excelalchemy.workbook_fields.runtime import RuntimeFieldBinding
 
 
 def _normalize_character_set(character_set: set[CharacterSet] | None) -> frozenset[CharacterSet]:

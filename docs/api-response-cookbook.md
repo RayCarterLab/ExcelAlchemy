@@ -47,7 +47,7 @@ Within each error item:
 
 Developer diagnostics are intentionally separate from these payload fields.
 Application logs use named loggers such as `excelalchemy.codecs`,
-`excelalchemy.runtime`, and `excelalchemy.workbook_fields`; API responses should rely
+`excelalchemy.runtime`, and `excelalchemy.field_metadata`; API responses should rely
 on `code`, `message_key`, `message`, and `display_message` instead of raw log
 output.
 

@@ -70,7 +70,7 @@ def test_v3_target_public_modules_are_importable() -> None:
         'excelalchemy.storage',
         'excelalchemy.storage.gateway',
         'excelalchemy.storage.minio',
-        'excelalchemy.workbook_fields',
+        'excelalchemy.field_metadata',
         'excelalchemy.results',
         'excelalchemy.results.import_result',
         'excelalchemy.results.issue_maps',
@@ -85,6 +85,8 @@ def test_v3_target_public_modules_are_importable() -> None:
 def test_v3_removed_duplicate_public_modules_are_not_importable() -> None:
     assert importlib.util.find_spec('excelalchemy.exceptions') is None
     assert importlib.util.find_spec('excelalchemy.metadata') is None
+    assert importlib.util.find_spec('excelalchemy.workbook') is None
+    assert importlib.util.find_spec('excelalchemy.workbook_fields') is None
     assert importlib.util.find_spec('excelalchemy.storage_gateway') is None
     assert importlib.util.find_spec('excelalchemy.storage_minio') is None
 
@@ -118,9 +120,11 @@ def test_v3_concrete_responsibility_modules_are_importable() -> None:
         'excelalchemy.adapters.pydantic',
         'excelalchemy.schema',
         'excelalchemy.schema.layout',
-        'excelalchemy.workbook',
-        'excelalchemy.workbook.headers',
-        'excelalchemy.workbook.table',
+        'excelalchemy.worksheet',
+        'excelalchemy.worksheet.header',
+        'excelalchemy.worksheet.header_parser',
+        'excelalchemy.worksheet.header_validator',
+        'excelalchemy.worksheet.table',
         'excelalchemy.runtime',
         'excelalchemy.runtime.facade',
         'excelalchemy.runtime.import_session',

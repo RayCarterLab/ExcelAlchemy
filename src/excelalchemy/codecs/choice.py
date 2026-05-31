@@ -10,12 +10,12 @@ from excelalchemy.codecs.field_codec import (
     log_codec_parse_fallback,
 )
 from excelalchemy.errors import ProgrammaticError
+from excelalchemy.field_metadata import FieldMetaInfo
 from excelalchemy.messages import MessageKey
 from excelalchemy.messages import display_message as dmsg
 from excelalchemy.messages import message as msg
 from excelalchemy.primitives.constants import MULTI_CHECKBOX_SEPARATOR
 from excelalchemy.primitives.identity import OptionId
-from excelalchemy.workbook_fields import FieldMetaInfo
 
 
 class SingleChoiceFieldCodec(ExcelFieldCodec):

@@ -15,7 +15,7 @@
     },
     {
       "module": "excelalchemy.config",
-      "path": "src/excelalchemy/config.py",
+      "path": "src/excelalchemy/config/",
       "role": "ImporterConfig, ExporterConfig, and ImportMode."
     },
     {
@@ -24,13 +24,13 @@
       "role": "ExcelColumn declarations and immutable column specs."
     },
     {
-      "module": "excelalchemy.metadata",
-      "path": "src/excelalchemy/metadata.py",
-      "role": "Resolved runtime field metadata."
+      "module": "excelalchemy.field_metadata",
+      "path": "src/excelalchemy/field_metadata/",
+      "role": "Resolved Excel-facing field declaration, presentation, and runtime metadata."
     },
     {
       "module": "excelalchemy.results",
-      "path": "src/excelalchemy/results.py",
+      "path": "src/excelalchemy/results/",
       "role": "ImportResult, preflight results, lifecycle events, issue maps, and API helpers."
     },
     {
@@ -39,13 +39,8 @@
       "role": "Public exception re-export module."
     },
     {
-      "module": "excelalchemy.exceptions",
-      "path": "src/excelalchemy/exceptions.py",
-      "role": "Stable public exception module."
-    },
-    {
       "module": "excelalchemy.storage",
-      "path": "src/excelalchemy/storage.py",
+      "path": "src/excelalchemy/storage/",
       "role": "ExcelStorage protocol."
     },
     {
@@ -81,18 +76,23 @@
       "role": "Excel-facing schema layout extraction and flattening."
     },
     {
-      "module": "excelalchemy.workbook.headers",
-      "path": "src/excelalchemy/workbook/headers.py",
-      "role": "Workbook header parsing and validation."
+      "module": "excelalchemy.worksheet.header",
+      "path": "src/excelalchemy/worksheet/header.py",
+      "role": "Normalized worksheet header record."
     },
     {
-      "module": "excelalchemy.workbook.header_models",
-      "path": "src/excelalchemy/workbook/header_models.py",
-      "role": "Header validation result models and merged-header records."
+      "module": "excelalchemy.worksheet.header_parser",
+      "path": "src/excelalchemy/worksheet/header_parser.py",
+      "role": "Simple and merged worksheet header parsing."
     },
     {
-      "module": "excelalchemy.workbook.table",
-      "path": "src/excelalchemy/workbook/table.py",
+      "module": "excelalchemy.worksheet.header_validator",
+      "path": "src/excelalchemy/worksheet/header_validator.py",
+      "role": "Parsed worksheet header validation against schema layout."
+    },
+    {
+      "module": "excelalchemy.worksheet.table",
+      "path": "src/excelalchemy/worksheet/table.py",
       "role": "WorksheetTable runtime table abstraction."
     },
     {
@@ -126,13 +126,13 @@
       "role": "Runtime and workbook display message handling."
     },
     {
-      "module": "excelalchemy.storage_gateway",
-      "path": "src/excelalchemy/storage_gateway.py",
+      "module": "excelalchemy.storage.gateway",
+      "path": "src/excelalchemy/storage/gateway.py",
       "role": "Configured storage resolution and missing-storage fallback."
     },
     {
-      "module": "excelalchemy.storage_minio",
-      "path": "src/excelalchemy/storage_minio.py",
+      "module": "excelalchemy.storage.minio",
+      "path": "src/excelalchemy/storage/minio.py",
       "role": "Built-in Minio-compatible storage backend."
     },
     {
@@ -179,17 +179,16 @@
     "excelalchemy",
     "excelalchemy.config",
     "excelalchemy.columns",
-    "excelalchemy.metadata",
+    "excelalchemy.field_metadata",
     "excelalchemy.results",
     "excelalchemy.errors",
-    "excelalchemy.exceptions",
     "excelalchemy.storage",
     "excelalchemy.codecs"
   ],
   "avoid_in_application_code": [
     "excelalchemy.runtime.*",
     "excelalchemy.schema.*",
-    "excelalchemy.workbook.*",
+    "excelalchemy.worksheet.*",
     "excelalchemy.rendering.*",
     "excelalchemy.adapters.*",
     "excelalchemy.primitives.*"

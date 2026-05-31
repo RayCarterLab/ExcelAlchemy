@@ -125,14 +125,15 @@ Suggested target layout:
 ```text
 src/excelalchemy/
   __init__.py
-  config.py
+  config/
   columns.py
   codecs/
   storage/
   results/
   errors.py
+  field_metadata/
   schema/
-  workbook/
+  worksheet/
   runtime/
   rendering/
   adapters/
@@ -143,15 +144,16 @@ src/excelalchemy/
 
 Responsibilities:
 
-- `columns.py`: `ExcelColumn`, resolved column metadata, metadata extraction
-  helpers.
+- `columns.py`: `ExcelColumn` declarations for `Annotated`.
 - `codecs/`: Excel parse, normalize, format, and header-comment behavior.
 - `storage/`: `ExcelStorage` protocol and storage helpers.
 - `results/`: result, issue-map, remediation, preflight, and event models.
 - `errors.py`: public exceptions.
+- `field_metadata/`: resolved Excel-facing field declaration, presentation,
+  and runtime metadata.
 - `schema/`: Pydantic model inspection and Excel schema layout.
-- `workbook/`: worksheet table, header parsing, workbook reading helpers, and
-  workbook-coordinate primitives.
+- `worksheet/`: worksheet table abstraction, normalized header records, header
+  parsing, and header validation.
 - `runtime/`: import sessions, row aggregation, execution, lifecycle events.
 - `rendering/`: workbook rendering and writer code.
 - `adapters/`: explicit framework boundaries, starting with Pydantic.
@@ -317,7 +319,7 @@ Validation:
 Scope:
 
 - `src/excelalchemy/columns.py`
-- `src/excelalchemy/workbook_fields/` or its 3.0 replacement
+- `src/excelalchemy/field_metadata/` or its 3.0 replacement
 - `src/excelalchemy/adapters/pydantic.py`
 - tests near schema extraction
 
@@ -424,7 +426,7 @@ Scope:
 
 - `src/excelalchemy/runtime/`
 - `src/excelalchemy/schema/`
-- `src/excelalchemy/workbook/`
+- `src/excelalchemy/worksheet/`
 - integration and contract tests
 
 Actions:

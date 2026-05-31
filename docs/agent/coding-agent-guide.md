@@ -87,10 +87,10 @@ branch/context before applying 3.0 removal rules.
 - Public facade: `src/excelalchemy/runtime/facade.py`
 - Config: `src/excelalchemy/config/`
 - Column declarations: `src/excelalchemy/columns.py`
-- Workbook field models: `src/excelalchemy/workbook_fields/`
+- Workbook field models: `src/excelalchemy/field_metadata/`
 - Pydantic adaptation: `src/excelalchemy/adapters/pydantic.py`
 - Schema layout: `src/excelalchemy/schema/layout.py`
-- Header parsing and validation: `src/excelalchemy/workbook/headers.py`
+- Header parsing and validation: `src/excelalchemy/worksheet/header_parser.py`
 - Row aggregation: `src/excelalchemy/runtime/rows.py`
 - Import execution: `src/excelalchemy/runtime/executor.py`
 - Import session state and events: `src/excelalchemy/runtime/import_session.py`

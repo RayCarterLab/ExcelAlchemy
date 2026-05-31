@@ -251,7 +251,7 @@ If you want the shortest path:
 
 1. Start with [README.md](../README.md)
 2. Read [docs/platform-code-mapping.md](platform-code-mapping.md)
-3. Look at [src/excelalchemy/README.md](../src/excelalchemy/README.md) and the concrete `runtime/`, `schema/`, `workbook/`, and `rendering/` packages.
+3. Look at [src/excelalchemy/README.md](../src/excelalchemy/README.md) and the concrete `runtime/`, `schema/`, `worksheet/`, and `rendering/` packages.
 4. Then inspect tests under `tests/contracts/`
 
 That path shows both the architecture and the behavioral safety net.

@@ -12,7 +12,7 @@ restore 2.x compatibility shims.
 - `columns.py`: `ExcelColumn(...)` and immutable column declarations for
   `typing.Annotated`.
 - `codecs/`: built-in workbook codecs and codec extension base classes.
-- `workbook_fields/`: resolved Excel metadata used by the runtime.
+- `field_metadata/`: resolved Excel-facing field metadata used by the runtime.
 - `results/`: import results, issue maps, preflight results, lifecycle events,
   and API payload helpers.
 - `errors.py`: public exception exports.
@@ -26,7 +26,7 @@ restore 2.x compatibility shims.
 - `adapters/`: framework boundaries, currently Pydantic model extraction and
   validation error normalization.
 - `schema/`: Excel schema layout extraction and flattened column planning.
-- `workbook/`: worksheet tables, header parsing, and header models.
+- `worksheet/`: worksheet tables, header records, header parsing, and header validation.
 - `runtime/`: facade, import sessions, row aggregation, execution, and preflight.
 - `rendering/`: workbook rendering and low-level writing.
 - `messages.py`: runtime and workbook-facing message lookup.
