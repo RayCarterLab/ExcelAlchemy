@@ -44,6 +44,45 @@ class TestPydanticContracts:
         assert [meta.offset for meta in metas] == [0, 0, 1]
         assert metas[0].required is True
 
+    def test_requiredness_follows_pydantic_v2_nullable_field_semantics(self):
+        class NullableRequiredModel(BaseModel):
+            email: Annotated[str | None, ExcelColumn(label='邮箱', order=1)]
+
+        field = NullableRequiredModel.model_fields['email']
+        metas = extract_pydantic_model(NullableRequiredModel)
+
+        assert field.is_required() is True
+        assert metas[0].required is True
+
+    def test_default_none_makes_nullable_field_optional(self):
+        class NullableDefaultModel(BaseModel):
+            email: Annotated[str | None, ExcelColumn(label='邮箱', order=1)] = None
+
+        field = NullableDefaultModel.model_fields['email']
+        metas = extract_pydantic_model(NullableDefaultModel)
+
+        assert field.is_required() is False
+        assert metas[0].required is False
+
+    def test_excelcolumn_required_override_controls_workbook_requiredness(self):
+        class WorkbookOptionalModel(BaseModel):
+            email: Annotated[str, ExcelColumn(label='邮箱', order=1, required=False)]
+
+        field = WorkbookOptionalModel.model_fields['email']
+        metas = extract_pydantic_model(WorkbookOptionalModel)
+
+        assert field.is_required() is True
+        assert metas[0].required is False
+
+    def test_unique_field_cannot_be_declared_workbook_optional(self):
+        class UniqueOptionalModel(BaseModel):
+            email: Annotated[str, ExcelColumn(label='邮箱', order=1, unique=True, required=False)]
+
+        with pytest.raises(ProgrammaticError) as context:
+            extract_pydantic_model(UniqueOptionalModel)
+
+        assert str(context.value) == 'Primary key and unique fields must be required'
+
     def test_instantiate_pydantic_model_maps_validation_errors_to_excel_cell_errors(self):
         result = instantiate_pydantic_model({'email': 'not-an-email'}, ContractPydanticModel)
 

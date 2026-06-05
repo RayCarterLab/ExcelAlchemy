@@ -38,6 +38,13 @@ responsibility names instead.
 
 - Prefer explicit types over untyped dictionaries and implicit conventions.
 - Preserve Pydantic boundary behavior in `src/excelalchemy/adapters/pydantic.py`.
+- ExcelAlchemy follows Pydantic v2 requiredness semantics: nullable annotations
+  such as `T | None` allow `None` but do not make a field optional. A field is
+  optional only when Pydantic reports it as not required, unless
+  `ExcelColumn(required=...)` explicitly overrides workbook-facing
+  requiredness.
+- Import-mode missing-value behavior is owned by the runtime
+  `MISSING_VALUE_IMPORT_POLICY`, not by schema declaration requiredness.
 - Public result objects and config objects must remain typed and stable.
 - Do not silence type errors without a narrow documented reason.
 

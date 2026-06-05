@@ -50,8 +50,13 @@ Rules:
 - Python annotations define the data shape.
 - `ExcelColumn(...)` defines workbook-facing metadata.
 - Pydantic `Field(...)` defines Pydantic validation metadata.
+- Requiredness follows Pydantic v2 semantics: `T | None` allows `None` but
+  remains required unless the field has a default. `ExcelColumn(required=...)`
+  is an explicit workbook-facing override.
 - `ExcelColumn(codec=...)` selects non-default workbook parsing, formatting,
   and comment behavior.
+- Import-mode handling for missing worksheet values is controlled by runtime
+  missing-value policy, not by nullable annotations.
 
 ## Execution Flow
 

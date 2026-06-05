@@ -242,13 +242,16 @@ class PydanticFieldAdapter:
         declared = self.declared_metadata
         declared_meta = declared.declared
 
+        if declared_meta.is_primary_key or declared_meta.unique:
+            if declared_meta.required is False:
+                raise ProgrammaticError(
+                    msg(MessageKey.PRIMARY_KEY_AND_UNIQUE_MUST_BE_REQUIRED),
+                    message_key=MessageKey.PRIMARY_KEY_AND_UNIQUE_MUST_BE_REQUIRED,
+                )
+            return True
         if declared_meta.effective_required is not None:
             return bool(declared_meta.effective_required)
-        if declared_meta.is_primary_key or declared_meta.unique:
-            return True
-        if self.raw_field.default is not PydanticUndefined or self.raw_field.default_factory is not None:
-            return False
-        return not self.allows_none
+        return self.raw_field.is_required()
 
     @property
     def declared_metadata(self) -> FieldMetaInfo:
@@ -268,7 +271,7 @@ class PydanticFieldAdapter:
 
     def validate_value(self, raw_value: object) -> object:
         if raw_value is None:
-            if self.allows_none and not self.required:
+            if self.allows_none:
                 return None
             raise ValueError(umsg(MessageKey.THIS_FIELD_IS_REQUIRED))
 
