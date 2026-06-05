@@ -99,18 +99,18 @@ def main() -> None:
     for filename, output_name in EXAMPLE_ASSETS.items():
         output = _run_example(filename)
         output_path = OUTPUT_DIR / output_name
-        output_path.write_text(f'{output}\n', encoding='utf-8')
+        output_path.write_text(f'{output}\n', encoding='utf-8', newline='\n')
         print(f'Generated example output: {output_path}')
 
     for module_name, output_name in MODULE_ASSETS.items():
         output = _run_module_example(module_name)
         output_path = OUTPUT_DIR / output_name
-        output_path.write_text(f'{output}\n', encoding='utf-8')
+        output_path.write_text(f'{output}\n', encoding='utf-8', newline='\n')
         print(f'Generated example output: {output_path}')
 
     payload = asyncio.run(_build_import_failure_api_payload())
     payload_path = OUTPUT_DIR / 'import-failure-api-payload.json'
-    payload_path.write_text(f'{json.dumps(payload, indent=2, sort_keys=True)}\n', encoding='utf-8')
+    payload_path.write_text(f'{json.dumps(payload, indent=2, sort_keys=True)}\n', encoding='utf-8', newline='\n')
     print(f'Generated example output: {payload_path}')
 
 

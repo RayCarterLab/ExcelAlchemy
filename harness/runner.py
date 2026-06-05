@@ -37,7 +37,19 @@ def _agent_command(agent_command: str | None) -> tuple[str, ...] | None:
     raw_command = agent_command or os.environ.get('EXCELALCHEMY_HARNESS_AGENT_COMMAND')
     if raw_command is None or not raw_command.strip():
         return None
+    return _split_agent_command(raw_command, platform=os.name)
+
+
+def _split_agent_command(raw_command: str, *, platform: str) -> tuple[str, ...]:
+    if platform == 'nt':
+        return tuple(_strip_wrapping_quotes(part) for part in shlex.split(raw_command, posix=False))
     return tuple(shlex.split(raw_command))
+
+
+def _strip_wrapping_quotes(value: str) -> str:
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+        return value[1:-1]
+    return value
 
 
 if __name__ == '__main__':

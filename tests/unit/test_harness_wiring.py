@@ -237,6 +237,40 @@ print(json.dumps(output))
     assert list((tmp_path / 'harness' / 'plans' / 'active').glob('*.md'))
 
 
+def test_agent_command_parser_preserves_windows_paths() -> None:
+    _prepend_repo_root()
+    from harness.runner import _split_agent_command
+
+    assert _split_agent_command(
+        r'C:\Users\dex\AppData\Local\Programs\Python\Python314\python.exe C:\Temp\agent.py',
+        platform='nt',
+    ) == (
+        r'C:\Users\dex\AppData\Local\Programs\Python\Python314\python.exe',
+        r'C:\Temp\agent.py',
+    )
+    assert _split_agent_command(
+        r'"C:\Program Files\Python314\python.exe" "C:\Temp Dir\agent.py"',
+        platform='nt',
+    ) == (
+        r'C:\Program Files\Python314\python.exe',
+        r'C:\Temp Dir\agent.py',
+    )
+
+
+def test_agent_command_parser_splits_posix_commands() -> None:
+    _prepend_repo_root()
+    from harness.runner import _split_agent_command
+
+    assert _split_agent_command(
+        "python3 -m package.agent --flag 'two words'",
+        platform='posix',
+    ) == ('python3', '-m', 'package.agent', '--flag', 'two words')
+    assert _split_agent_command(
+        "'/Applications/Python 3.14/bin/python3' '/tmp/Agent Dir/agent.py'",
+        platform='posix',
+    ) == ('/Applications/Python 3.14/bin/python3', '/tmp/Agent Dir/agent.py')
+
+
 def test_loop_runs_plan_validation_commands_through_evaluator(monkeypatch) -> None:
     _prepend_repo_root()
     import harness.evaluators.local
