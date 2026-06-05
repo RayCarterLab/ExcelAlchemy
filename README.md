@@ -27,6 +27,22 @@ The current stable release is `2.2.8`, which continues the ExcelAlchemy 2.x line
 - Stay lightweight at runtime with `openpyxl` instead of pandas
 - Protect behavior with contract tests, `ruff`, and `pyright`
 
+## Why This Matters
+
+Excel import/export is often treated as a utility problem, but in internal systems it becomes a contract problem.
+Templates, validation rules, row-level errors, generated result workbooks, and backend storage all need to stay aligned.
+
+ExcelAlchemy keeps those concerns explicit: schemas define data shape, metadata defines workbook behavior, import execution is separated from parsing, and storage is handled through a protocol rather than a hard-coded backend.
+
+## Engineering Signals
+
+- Reusable Python library with a small facade and focused internal components.
+- Typed contracts through Pydantic models and workbook metadata.
+- Storage boundary via `ExcelStorage`, with Minio and custom-storage examples.
+- Contract and integration tests, plus `ruff`, `pyright`, CI, and Codecov.
+- Documentation for architecture, public API, result objects, locale policy, examples, migration notes, and FastAPI integration.
+- Generated example assets and smoke checks that keep README examples and output artifacts honest.
+
 ## Screenshots
 
 | Template | Import Result |
