@@ -1,4 +1,5 @@
 import pytest
+from pydantic import ValidationError
 
 from excelalchemy import ImportPreflightStatus, Label, ProgrammaticError, ValidateResult
 from excelalchemy.results import (
@@ -56,6 +57,10 @@ class TestResultContracts:
         assert result.is_success is True
         assert result.is_header_invalid is False
         assert result.is_data_invalid is False
+
+    def test_import_result_rejects_unknown_fields(self):
+        with pytest.raises(ValidationError):
+            ImportResult(result=ValidateResult.SUCCESS, legacy_field='kept')
 
     def test_import_result_to_api_payload_for_success_case(self):
         result = ImportResult(result=ValidateResult.SUCCESS, success_count=1, fail_count=0, url='memory://result.xlsx')

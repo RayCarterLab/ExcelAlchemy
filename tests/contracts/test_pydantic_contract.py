@@ -12,6 +12,9 @@ from excelalchemy import (
     ExcelFieldCodec,
     ExcelRowError,
     Label,
+    MultiChoiceCodec,
+    Option,
+    OptionId,
     ProgrammaticError,
 )
 from excelalchemy.adapters.pydantic import extract_pydantic_model, instantiate_pydantic_model
@@ -131,6 +134,49 @@ class TestPydanticContracts:
 
         assert isinstance(wrong_domain, list)
         assert wrong_domain == [ExcelCellError(label=Label('邮箱'), message='Must use the company domain')]
+
+    def test_instantiate_pydantic_model_validates_by_model_field_name_when_field_has_alias(self):
+        class AliasedModel(BaseModel):
+            full_name: Annotated[str, Field(alias='fullName'), ExcelColumn(label='姓名', order=1)]
+
+        result = instantiate_pydantic_model({'full_name': 'Alice'}, AliasedModel)
+
+        assert isinstance(result, AliasedModel)
+        assert result.full_name == 'Alice'
+
+    def test_instantiate_pydantic_model_maps_aliased_field_errors_to_excel_labels(self):
+        class AliasedModel(BaseModel):
+            full_name: Annotated[str, Field(alias='fullName', min_length=5), ExcelColumn(label='姓名', order=1)]
+
+        result = instantiate_pydantic_model({'full_name': 'Al'}, AliasedModel)
+
+        assert isinstance(result, list)
+        assert result == [
+            ExcelCellError(label=Label('姓名'), message='The minimum length is 5 characters', min_length=5)
+        ]
+
+    def test_instantiate_pydantic_model_normalizes_list_constraint_errors_from_pydantic_context(self):
+        options = [
+            Option(id=OptionId('a'), name='A'),
+            Option(id=OptionId('b'), name='B'),
+            Option(id=OptionId('c'), name='C'),
+        ]
+
+        class MultiChoiceModel(BaseModel):
+            choices: Annotated[
+                list[str],
+                Field(min_length=2, max_length=2),
+                ExcelColumn(codec=MultiChoiceCodec(), label='选项', order=1, options=options),
+            ]
+
+        too_short = instantiate_pydantic_model({'choices': ['A']}, MultiChoiceModel)
+        too_long = instantiate_pydantic_model({'choices': ['A', 'B', 'C']}, MultiChoiceModel)
+
+        assert isinstance(too_short, list)
+        assert too_short == [ExcelCellError(label=Label('选项'), message='Select at least 2 items', min_items=2)]
+
+        assert isinstance(too_long, list)
+        assert too_long == [ExcelCellError(label=Label('选项'), message='Select no more than 2 items', max_items=2)]
 
     def test_instantiate_pydantic_model_maps_model_validators_to_row_errors(self):
         class ModelValidatedContract(BaseModel):

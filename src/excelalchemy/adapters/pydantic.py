@@ -132,6 +132,65 @@ def _normalize_validation_message(
     return NormalizedValidationMessage(normalized)
 
 
+def _normalize_pydantic_error(
+    error: Mapping[str, object],
+    field_def: FieldMetaInfo | None = None,
+    *,
+    excel_codec: type[ExcelFieldCodec] | None = None,
+) -> NormalizedValidationMessage:
+    normalized_message = _normalize_constraint_error(error, field_def, excel_codec=excel_codec)
+    if normalized_message is not None:
+        return normalized_message
+    return _normalize_validation_message(error.get('msg', ''), field_def, excel_codec=excel_codec)
+
+
+def _normalize_constraint_error(
+    error: Mapping[str, object],
+    field_def: FieldMetaInfo | None,
+    *,
+    excel_codec: type[ExcelFieldCodec] | None = None,
+) -> NormalizedValidationMessage | None:
+    if field_def is None:
+        return None
+
+    error_type = error.get('type')
+    ctx = error.get('ctx')
+    if not isinstance(ctx, Mapping):
+        return None
+
+    ctx = cast(Mapping[object, object], ctx)
+    field_type = ctx.get('field_type')
+    constraints = field_def.constraints
+    if error_type == 'too_short' and field_type == 'List':
+        min_items = _int_from_context(ctx, 'min_length') or constraints.min_items
+        if min_items is not None:
+            return NormalizedValidationMessage.from_key(MessageKey.MIN_ITEMS_REQUIRED, min_items=min_items)
+
+    if error_type == 'too_long' and field_type == 'List':
+        max_items = _int_from_context(ctx, 'max_length') or constraints.max_items
+        if max_items is not None:
+            return NormalizedValidationMessage.from_key(MessageKey.MAX_ITEMS_ALLOWED, max_items=max_items)
+
+    if error_type == 'string_too_short':
+        min_length = _int_from_context(ctx, 'min_length') or constraints.min_length
+        if min_length is not None:
+            return NormalizedValidationMessage.from_key(MessageKey.MIN_LENGTH_CHARACTERS, min_length=min_length)
+
+    if error_type == 'string_too_long':
+        max_length = _int_from_context(ctx, 'max_length') or constraints.max_length
+        if max_length is not None:
+            return NormalizedValidationMessage.from_key(MessageKey.MAX_LENGTH_CHARACTERS, max_length=max_length)
+
+    return _normalize_constraint_message(str(error.get('msg', '')), field_def, excel_codec=excel_codec)
+
+
+def _int_from_context(ctx: Mapping[object, object], key: str) -> int | None:
+    value = ctx.get(key)
+    if isinstance(value, int):
+        return value
+    return None
+
+
 def _normalize_constraint_message(
     message: str,
     field_def: FieldMetaInfo | None,
@@ -293,8 +352,48 @@ class PydanticModelAdapter:
     def field(self, name: str) -> PydanticFieldAdapter:
         return PydanticFieldAdapter(name=name, raw_field=self.model.model_fields[name])
 
+    def field_for_validation_location(self, location: str) -> PydanticFieldAdapter | None:
+        field_name = self._field_name_for_validation_location(location)
+        if field_name is None:
+            return None
+        return self.field(field_name)
+
+    def _field_name_for_validation_location(self, location: str) -> str | None:
+        if location in self.model.model_fields:
+            return location
+
+        for name, field_info in self.model.model_fields.items():
+            if location in _validation_locations_for_field(field_info):
+                return name
+
+        return None
+
     def field_names(self) -> list[str]:
         return list(self.model.model_fields.keys())
+
+
+def _validation_locations_for_field(field_info: FieldInfo) -> set[str]:
+    locations: set[str] = set()
+    if isinstance(field_info.alias, str):
+        locations.add(field_info.alias)
+    _collect_validation_alias_locations(field_info.validation_alias, locations)
+    return locations
+
+
+def _collect_validation_alias_locations(alias: object, locations: set[str]) -> None:
+    if isinstance(alias, str):
+        locations.add(alias)
+        return
+
+    choices = getattr(alias, 'choices', None)
+    if isinstance(choices, (list, tuple)):
+        for choice in cast(Iterable[object], choices):
+            _collect_validation_alias_locations(choice, locations)
+        return
+
+    path = getattr(alias, 'path', None)
+    if isinstance(path, (list, tuple)) and path and isinstance(path[0], str):
+        locations.add(path[0])
 
 
 def extract_pydantic_model(
@@ -383,7 +482,7 @@ def _model_validate[ModelT: BaseModel](
     failed_fields: set[str],
 ) -> ModelT | list[ExcelCellError | ExcelRowError]:
     try:
-        return model.model_validate(data)
+        return model.model_validate(data, by_alias=False, by_name=True)
     except ValidationError as exc:
         return _map_validation_error(exc, model_adapter, failed_fields)
 
@@ -397,21 +496,26 @@ def _map_validation_error(
     for error in exc.errors():
         loc = error.get('loc', ())
         if not loc:
-            normalized = _normalize_validation_message(str(error['msg']))
+            normalized = _normalize_pydantic_error(error)
             mapped.append(_build_row_error(normalized))
             continue
 
         field_name = loc[0]
         if not isinstance(field_name, str):
-            normalized = _normalize_validation_message(str(error['msg']))
+            normalized = _normalize_pydantic_error(error)
             mapped.append(_build_row_error(normalized))
             continue
         if field_name in failed_fields:
             continue
 
-        field_adapter = model_adapter.field(field_name)
-        normalized = _normalize_validation_message(
-            str(error['msg']),
+        field_adapter = model_adapter.field_for_validation_location(field_name)
+        if field_adapter is None:
+            normalized = _normalize_pydantic_error(error)
+            mapped.append(_build_row_error(normalized))
+            continue
+
+        normalized = _normalize_pydantic_error(
+            error,
             field_adapter.declared_metadata,
             excel_codec=field_adapter.excel_codec,
         )

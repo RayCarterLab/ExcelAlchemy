@@ -14,11 +14,13 @@ def empty_labels() -> list[Label]:
 class ValidateHeaderResult(BaseModel):
     """Header validation result."""
 
+    # fmt: off
     missing_required: list[Label] = Field(description='Required headers missing from the workbook.')
     missing_primary: list[Label] = Field(description='Primary-key headers missing from the workbook.')
     unrecognized: list[Label] = Field(description='Headers present in the workbook but unknown to the schema.')
     duplicated: list[Label] = Field(description='Headers that appear more than once in the workbook.')
     is_valid: bool = Field(default=True, description='Whether header validation succeeded.')
+    # fmt: on
 
     @property
     def is_required_missing(self) -> bool:
@@ -38,32 +40,20 @@ class ImportPreflightStatus(StrEnum):
 class ImportPreflightResult(BaseModel):
     """Structured result returned from lightweight import preflight."""
 
+    # fmt: off
     status: ImportPreflightStatus = Field(description='Overall preflight result.')
     sheet_name: str = Field(description='Configured worksheet name used for preflight.')
     sheet_exists: bool = Field(description='Whether the configured worksheet was found.')
-    has_merged_header: bool | None = Field(
-        default=None,
-        description='Whether the workbook uses a merged two-row header when the header block was readable.',
-    )
+    has_merged_header: bool | None = Field(default=None, description='Whether the workbook uses a merged two-row header when the header block was readable.')
     estimated_row_count: int = Field(default=0, description='Estimated number of data rows for a later import run.')
-    structural_issue_codes: list[str] = Field(
-        default_factory=list,
-        description='Stable structural issue codes emitted for non-header preflight failures.',
-    )
+    structural_issue_codes: list[str] = Field(default_factory=list, description='Stable structural issue codes emitted for non-header preflight failures.')
 
     is_required_missing: bool = Field(default=False, description='Whether required headers are missing.')
-    missing_required: list[Label] = Field(
-        default_factory=empty_labels, description='Required headers missing from the workbook.'
-    )
-    missing_primary: list[Label] = Field(
-        default_factory=empty_labels, description='Primary-key headers missing from the workbook.'
-    )
-    unrecognized: list[Label] = Field(
-        default_factory=empty_labels, description='Headers present in the workbook but unknown to the schema.'
-    )
-    duplicated: list[Label] = Field(
-        default_factory=empty_labels, description='Headers that appear more than once in the workbook.'
-    )
+    missing_required: list[Label] = Field(default_factory=empty_labels, description='Required headers missing from the workbook.')
+    missing_primary: list[Label] = Field(default_factory=empty_labels, description='Primary-key headers missing from the workbook.')
+    unrecognized: list[Label] = Field(default_factory=empty_labels, description='Headers present in the workbook but unknown to the schema.')
+    duplicated: list[Label] = Field(default_factory=empty_labels, description='Headers that appear more than once in the workbook.')
+    # fmt: on
 
     @property
     def is_valid(self) -> bool:

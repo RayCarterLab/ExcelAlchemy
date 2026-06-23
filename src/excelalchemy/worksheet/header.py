@@ -10,11 +10,11 @@ from excelalchemy.primitives.identity import Label, UniqueLabel
 class ExcelHeader(BaseModel):
     """Normalized worksheet header extracted from user input."""
 
+    # fmt: off
     label: Label = Field(description='Worksheet header label.')
-    parent_label: Label = Field(
-        description='Parent worksheet header label. Falls back to the label itself for flat headers.'
-    )
+    parent_label: Label = Field(description='Parent worksheet header label. Falls back to the label itself for flat headers.')
     offset: int = Field(default=0, description='Child-column offset under a merged parent header.')
+    # fmt: on
 
     @property
     def unique_label(self) -> UniqueLabel:
