@@ -92,13 +92,47 @@ class TestDateValueType(BaseTestCase):
         assert field.excel_codec.parse_input('2022-02-02', field) == DateTime(
             2022, 2, 2, 0, 0, 0, tzinfo=Timezone('Asia/Shanghai')
         )
-        assert field.excel_codec.parse_input('2022-02-02 12:12:12', field) == DateTime(
-            2022, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai')
-        )
+        assert field.excel_codec.parse_input('2022-02-02 12:12:12', field) == '2022-02-02 12:12:12'
         assert field.excel_codec.parse_input('2022-02-02 25:00:00', field) == '2022-02-02 25:00:00'
         assert field.excel_codec.parse_input(
             DateTime(2022, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai')), field
         ) == DateTime(2022, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai'))
+
+    async def test_parse_input_enforces_configured_date_format_granularity(self):
+        class MonthImporter(BaseModel):
+            birth_date: Annotated[
+                int, ExcelColumn(codec=DateCodec.month(), label='出生日期', order=6, date_format=DateFormat.MONTH)
+            ]
+
+        class YearImporter(BaseModel):
+            birth_date: Annotated[
+                int, ExcelColumn(codec=DateCodec.year(), label='出生日期', order=6, date_format=DateFormat.YEAR)
+            ]
+
+        class MinuteImporter(BaseModel):
+            birth_date: Annotated[
+                int, ExcelColumn(codec=DateCodec.minute(), label='出生日期', order=6, date_format=DateFormat.MINUTE)
+            ]
+
+        month_field = self.build_alchemy(MonthImporter).ordered_field_meta[0]
+        year_field = self.build_alchemy(YearImporter).ordered_field_meta[0]
+        minute_field = self.build_alchemy(MinuteImporter).ordered_field_meta[0]
+
+        assert month_field.excel_codec.parse_input('2022/02', month_field) == DateTime(
+            2022, 2, 1, 0, 0, 0, tzinfo=Timezone('Asia/Shanghai')
+        )
+        assert month_field.excel_codec.parse_input('2022/02/01', month_field) == DateTime(
+            2022, 2, 1, 0, 0, 0, tzinfo=Timezone('Asia/Shanghai')
+        )
+        assert month_field.excel_codec.parse_input('2022/02/02', month_field) == '2022/02/02'
+        assert year_field.excel_codec.parse_input('2022', year_field) == DateTime(
+            2022, 1, 1, 0, 0, 0, tzinfo=Timezone('Asia/Shanghai')
+        )
+        assert year_field.excel_codec.parse_input('2022/02', year_field) == '2022/02'
+        assert minute_field.excel_codec.parse_input('2022/02/02 12:12', minute_field) == DateTime(
+            2022, 2, 2, 12, 12, 0, tzinfo=Timezone('Asia/Shanghai')
+        )
+        assert minute_field.excel_codec.parse_input('2022/02/02 12:12:12', minute_field) == '2022/02/02 12:12:12'
 
     async def test_deserialize_formats_supported_runtime_values(self):
         class Importer(BaseModel):

@@ -100,7 +100,15 @@ class MinioStorageGateway(ExcelStorage):
     @staticmethod
     def _construct_file_like_object(response: MinioObjectResponse) -> IO[bytes]:
         """Construct a file-like object from an object storage response."""
-        return io.BytesIO(response.read())
+        try:
+            return io.BytesIO(response.read())
+        finally:
+            close = getattr(response, 'close', None)
+            if close is not None:
+                close()
+            release_conn = getattr(response, 'release_conn', None)
+            if release_conn is not None:
+                release_conn()
 
     @classmethod
     def _read_file_object(cls, client: MinioObjectClient, bucket_name: str, filename: str) -> IO[bytes]:

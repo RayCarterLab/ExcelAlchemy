@@ -1,6 +1,5 @@
 from datetime import datetime
 from datetime import timezone as DateTimeZone
-from typing import cast
 
 import pendulum
 from pendulum import DateTime
@@ -21,10 +20,35 @@ from excelalchemy.messages import message as msg
 from excelalchemy.messages import user_message as umsg
 from excelalchemy.primitives.constants import (
     DATE_FORMAT_TO_HINT_MAPPING,
+    DATE_FORMAT_TO_PYTHON_MAPPING,
     MILLISECOND_TO_SECOND,
     DataRangeOption,
     DateFormat,
 )
+
+
+def parse_excel_datetime_text(value: str, field_meta: FieldMetaInfo) -> DateTime:
+    """Parse workbook date text with the exact configured Excel date granularity."""
+    presentation = field_meta.presentation
+    if not presentation.date_format:
+        raise ConfigError(msg(MessageKey.DATE_FORMAT_NOT_CONFIGURED))
+
+    normalized = value.strip().replace('/', '-')
+    parsed = _parse_datetime_with_configured_granularity(normalized, presentation.must_date_format)
+    return pendulum.instance(parsed, tz=presentation.timezone)
+
+
+def _parse_datetime_with_configured_granularity(value: str, date_format: DateFormat) -> datetime:
+    try:
+        return datetime.strptime(value, DATE_FORMAT_TO_PYTHON_MAPPING[date_format])
+    except ValueError:
+        if date_format is DateFormat.YEAR:
+            return datetime.strptime(value, DATE_FORMAT_TO_PYTHON_MAPPING[DateFormat.DAY])
+        if date_format is DateFormat.MONTH:
+            parsed = datetime.strptime(value, DATE_FORMAT_TO_PYTHON_MAPPING[DateFormat.DAY])
+            if parsed.day == 1:
+                return parsed
+        raise
 
 
 class DateFieldCodec(ExcelFieldCodec):
@@ -73,9 +97,7 @@ class DateFieldCodec(ExcelFieldCodec):
 
         value = str(value).strip()
         try:
-            v = value.replace('/', '-')  # pendulum does not accept "/" as a date separator here.
-            dt: DateTime = cast(DateTime, pendulum.parse(v))
-            return dt.replace(tzinfo=presentation.timezone)
+            return parse_excel_datetime_text(value, field_meta)
         except Exception as exc:
             log_codec_parse_fallback(cls.__name__, value, field_label=declared.label, exc=exc)
             return value

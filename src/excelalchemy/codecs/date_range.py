@@ -7,6 +7,7 @@ import pendulum
 from pendulum import DateTime
 from pydantic import BaseModel
 
+from excelalchemy.codecs.date import parse_excel_datetime_text
 from excelalchemy.codecs.field_codec import (
     CompositeExcelFieldCodec,
     ExcelFieldCodecSpec,
@@ -216,13 +217,7 @@ class DateRangeFieldCodec(CompositeExcelFieldCodec):
 
     @staticmethod
     def _parse_datetime_text(value: str, field_meta: FieldMetaInfo) -> DateTime:
-        presentation = field_meta.presentation
-        parsed = pendulum.parse(value)
-        if isinstance(parsed, DateTime):
-            return parsed.replace(tzinfo=presentation.timezone)
-        if isinstance(parsed, datetime):
-            return pendulum.instance(parsed).replace(tzinfo=presentation.timezone)
-        raise ValueError(umsg(MessageKey.INVALID_INPUT))
+        return parse_excel_datetime_text(value, field_meta)
 
 
 class DateRangeCodec:

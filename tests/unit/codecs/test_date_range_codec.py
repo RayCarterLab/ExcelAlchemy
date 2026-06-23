@@ -112,11 +112,58 @@ class TestDateRangeValueType(BaseTestCase):
 
         assert codec.parse_input('2023/02/02', field) == DateTime(2023, 2, 2, 0, 0, 0, tzinfo=Timezone('Asia/Shanghai'))
 
-        assert codec.parse_input('2023/02/02 12:12:12', field) == DateTime(
-            2023, 2, 2, 12, 12, 12, tzinfo=Timezone('Asia/Shanghai')
-        )
+        assert codec.parse_input('2023/02/02 12:12:12', field) == '2023/02/02 12:12:12'
 
         assert codec.parse_input('不能解析的值', field) == '不能解析的值'
+
+    async def test_parse_input_enforces_configured_date_range_format_granularity(self):
+        class MonthImporter(BaseModel):
+            date_range: Annotated[
+                dict[str, object],
+                ExcelColumn(codec=DateRangeCodec.month(), label='日期范围', order=1, date_format=DateFormat.MONTH),
+            ]
+
+        class YearImporter(BaseModel):
+            date_range: Annotated[
+                dict[str, object],
+                ExcelColumn(codec=DateRangeCodec.year(), label='日期范围', order=1, date_format=DateFormat.YEAR),
+            ]
+
+        class MinuteImporter(BaseModel):
+            date_range: Annotated[
+                dict[str, object],
+                ExcelColumn(codec=DateRangeCodec.minute(), label='日期范围', order=1, date_format=DateFormat.MINUTE),
+            ]
+
+        month_field = self.build_alchemy(MonthImporter).ordered_field_meta[0]
+        year_field = self.build_alchemy(YearImporter).ordered_field_meta[0]
+        minute_field = self.build_alchemy(MinuteImporter).ordered_field_meta[0]
+        month_codec = cast(DateRangeFieldCodec, month_field.excel_codec)
+        year_codec = cast(DateRangeFieldCodec, year_field.excel_codec)
+        minute_codec = cast(DateRangeFieldCodec, minute_field.excel_codec)
+        invalid_month_range = {'start': '2022/02/02', 'end': '2022/03/03'}
+
+        assert month_codec.parse_input({'start': '2022/02', 'end': '2022/03'}, month_field) == {
+            'start': DateTime(2022, 2, 1, 0, 0, 0, tzinfo=Timezone('Asia/Shanghai')),
+            'end': DateTime(2022, 3, 1, 0, 0, 0, tzinfo=Timezone('Asia/Shanghai')),
+        }
+        assert month_codec.parse_input(invalid_month_range, month_field) == invalid_month_range
+        assert year_codec.parse_input({'start': '2022', 'end': '2023'}, year_field) == {
+            'start': DateTime(2022, 1, 1, 0, 0, 0, tzinfo=Timezone('Asia/Shanghai')),
+            'end': DateTime(2023, 1, 1, 0, 0, 0, tzinfo=Timezone('Asia/Shanghai')),
+        }
+        assert year_codec.parse_input({'start': '2022/02', 'end': '2023/03'}, year_field) == {
+            'start': '2022/02',
+            'end': '2023/03',
+        }
+        assert minute_codec.parse_input(
+            {'start': '2022/02/02 12:12', 'end': '2022/02/03 13:13'},
+            minute_field,
+        ) == {
+            'start': DateTime(2022, 2, 2, 12, 12, 0, tzinfo=Timezone('Asia/Shanghai')),
+            'end': DateTime(2022, 2, 3, 13, 13, 0, tzinfo=Timezone('Asia/Shanghai')),
+        }
+        assert minute_codec.parse_input('2022/02/02 12:12:12', minute_field) == '2022/02/02 12:12:12'
 
     async def test_validate_rejects_invalid_date_range_boundaries_and_constraints(self):
         class Importer(BaseModel):

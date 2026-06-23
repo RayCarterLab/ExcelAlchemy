@@ -11,6 +11,36 @@ from tests.support import BaseTestCase, FileRegistry, InMemoryExcelStorage
 from tests.support.contract_models import SimpleContractImporter, creator, sample_simple_export_row
 
 
+class LifecycleTrackingResponse:
+    def __init__(self, payload: bytes):
+        self.payload = payload
+        self.events: list[str] = []
+
+    def read(self) -> bytes:
+        self.events.append('read')
+        return self.payload
+
+    def close(self) -> None:
+        self.events.append('close')
+
+    def release_conn(self) -> None:
+        self.events.append('release_conn')
+
+
+class LifecycleTrackingMinioClient:
+    def __init__(self, response: LifecycleTrackingResponse):
+        self.response = response
+
+    def get_object(self, bucket_name: str, filename: str) -> LifecycleTrackingResponse:
+        return self.response
+
+    def put_object(self, bucket_name: str, filename: str, data: io.BytesIO, length: int) -> object:
+        return None
+
+    def presigned_get_object(self, bucket_name: str, filename: str, *, expires) -> str:
+        return filename
+
+
 class TestStorageContracts(BaseTestCase):
     def _build_storage_gateway(self) -> ExcelStorage:
         config = ImporterConfig(SimpleContractImporter, creator=creator, storage=self.storage_gateway)
@@ -138,6 +168,26 @@ class TestStorageContracts(BaseTestCase):
         assert table.shape == (2, 17)
         assert table.iloc[0].tolist()[:3] == ['年龄', '姓名', '地址']
         assert table.iloc[1].tolist()[:3] == ['18', '张三', '北京市']
+
+    async def test_storage_reader_closes_and_releases_minio_response(self):
+        workbook = Workbook()
+        worksheet = workbook.active
+        assert worksheet is not None
+        worksheet.title = 'Sheet1'
+        worksheet.append(['HEADER_HINT'])
+        worksheet.append(['姓名'])
+        worksheet.append(['张三'])
+
+        file_object = io.BytesIO()
+        workbook.save(file_object)
+        response = LifecycleTrackingResponse(file_object.getvalue())
+        client = LifecycleTrackingMinioClient(response)
+        gateway = MinioStorageGateway(client)
+
+        table = gateway.read_excel_table('contract-lifecycle.xlsx', skiprows=1, sheet_name='Sheet1')
+
+        assert table.iloc[0].tolist() == ['姓名']
+        assert response.events == ['read', 'close', 'release_conn']
 
     async def test_storage_reader_preserves_empty_cells_from_merged_headers(self):
         gateway = self._build_storage_gateway()
