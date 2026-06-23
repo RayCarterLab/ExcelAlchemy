@@ -2,6 +2,5 @@
 
 This directory contains historical hand-written plans.
 
-Current harness-generated plan artifacts belong in `harness/plans/active/` or
-`harness/plans/archive/`. Archived plans here are retained only for historical context
-and do not override `AGENTS.md` or `docs/agent/*`.
+Archived plans here are retained only for historical context and do not
+override `AGENTS.md` or `docs/agent/*`.

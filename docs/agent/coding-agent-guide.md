@@ -155,5 +155,3 @@ Never hide failed or unrun validation in the final report.
 - User asks for a review: use `docs/agent/review.md` and lead with findings.
 - User asks for 3.0 compatibility or removed APIs: use `docs/agent/v3-prd.md`,
   `docs/public-api.md`, and `docs/migrations.md`.
-- User asks for harness work: inspect `harness/`, `harness/context_data/`, and
-  the relevant harness tests before editing.

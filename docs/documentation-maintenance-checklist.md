@@ -11,7 +11,7 @@ It is intentionally lightweight and specific to the current `ExcelAlchemy` repos
 - [agent/invariants.md](agent/invariants.md) for behavior that should not drift accidentally.
 - [../src/excelalchemy/README.md](../src/excelalchemy/README.md) for the main package implementation guide.
 - [../tests/README.md](../tests/README.md) and [../examples/README.md](../examples/README.md) for executable contract surfaces.
-- [../harness/plans/README.md](../harness/plans/README.md), [tech-debt/README.md](tech-debt/README.md), and [history/adr/README.md](history/adr/README.md) for planning, debt tracking, and historical architecture records.
+- [tech-debt/README.md](tech-debt/README.md) and [history/adr/README.md](history/adr/README.md) for debt tracking and historical architecture records.
 
 ## Use this checklist when
 
@@ -124,8 +124,6 @@ Use `docs/history/adr/README.md` for the expected structure.
   - `docs/assets/example-outputs/`
 - the work needs explicit sequencing, checkpoints, or risk tracking
 - the change is large enough that a PR description is not sufficient
-
-Use `harness/plans/README.md` for status conventions and logging format.
 
 ## Record technical debt when
 

@@ -27,9 +27,6 @@ It is meant to help both humans and coding agents find the right files before ma
   - These are part of the user-facing contract, not throwaway demos.
 - `docs/`
   - Human documentation, agent rules, history, release notes, and technical debt records.
-- `harness/`
-  - Agent-facing deterministic runtime, machine-readable context, local tools,
-    evaluators, task plans, and ignored run artifacts.
 - `scripts/`
   - Smoke checks and asset-generation helpers used to validate docs, examples, and package behavior.
 - `.github/`
@@ -268,27 +265,6 @@ These compatibility paths are removed in 3.0.
   - Generated portfolio/demo workbook assets used by documentation screenshots.
 - `docs/assets/workbooks/legacy/`
   - Legacy workbook samples kept as documentation assets.
-
-## Agent Harness: `harness/`
-
-- `harness/loop.py`
-  - Deterministic workflow controller and structured agent output schemas.
-- `harness/state.py`
-  - Serializable run state, step records, retry state, and fix-context aggregation.
-- `harness/runner.py`
-  - Public entry point for running one harness task.
-- `harness/context.py`
-  - Loader for machine-readable context under `harness/context_data/`.
-- `harness/context_data/`
-  - Runtime instruction, architecture, and validation context loaded by the harness.
-- `harness/evaluators/`
-  - Local evaluation adapters used by the deterministic harness.
-- `harness/tools/`
-  - Harness-facing deterministic local tool definitions and adapters.
-- `harness/plans/`
-  - Harness task-plan template plus active/archive runtime plan artifacts.
-- `harness/runs/`
-  - Ignored harness run-state artifacts.
 
 ## Public API vs Internal Implementation
 

@@ -279,17 +279,14 @@ Scope:
 
 - `AGENTS.md`
 - `docs/agent/*`
-- `harness/context_data/instructions/*`
 
 Actions:
 
 - Add explicit 3.0 override language for compatibility rules.
-- Add a machine-readable 3.0 invariant set if harness context needs it.
 - Make it clear that 3.0 compatibility removal is intentional, not casual.
 
 Validation:
 
-- `uv run python scripts/smoke_agent_context.py`
 - `uv run ruff format --check .`
 - `uv run ruff check .`
 
@@ -541,7 +538,6 @@ Validation:
 uv run ruff format --check .
 uv run ruff check .
 uv run pyright
-uv run python scripts/smoke_agent_context.py
 uv run pytest --cov=excelalchemy --cov-report=term-missing:skip-covered tests
 uv run python scripts/smoke_package.py
 uv run python scripts/smoke_examples.py

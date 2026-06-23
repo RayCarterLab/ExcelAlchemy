@@ -8,7 +8,6 @@ workflows built around Pydantic models.
 This repository is maintained as an agent-native system:
 
 - Agents are non-deterministic.
-- The workflow harness is deterministic.
 - Every action must be controlled, verifiable, and recoverable.
 
 The root `AGENTS.md` is intentionally short. Detailed agent rules live in
@@ -20,18 +19,14 @@ Use this order when documents conflict:
 
 1. `AGENTS.md`
 2. `docs/agent/*`
-3. `harness/context_data/*`
-4. `docs/*`
-5. `docs/history/*`
+3. `docs/*`
+4. `docs/history/*`
 
 `docs/agent/*` is the authoritative rule source for agents and the repository's
-agent-facing SSOT. `harness/context_data/*` is machine-readable runtime context
-for the harness and agents, not ordinary prose documentation. `docs/*` is
-supplementary human documentation, including `docs/tech-debt/` maintenance debt
-records. `docs/history/*` contains archived plans and historical ADRs only; it
-does not override current rules and should be used only to debug past design
-decisions. `harness/plans/` is the harness runtime task-plan artifact directory,
-not a historical documentation directory.
+agent-facing SSOT. `docs/*` is supplementary human documentation, including
+`docs/tech-debt/` maintenance debt records. `docs/history/*` contains archived
+plans and historical ADRs only; it does not override current rules and should
+be used only to debug past design decisions.
 
 ## High-Priority Rules
 
@@ -138,29 +133,6 @@ Core rules:
 - [src/excelalchemy/README.md](src/excelalchemy/README.md): package layout.
 - [tests/README.md](tests/README.md): test ownership.
 - [examples/README.md](examples/README.md): examples as contract.
-
-## Harness Placement
-
-Harness runtime source belongs in:
-
-- `harness/loop.py`
-- `harness/state.py`
-- `harness/runner.py`
-- `harness/context.py`
-- `harness/plan_artifact.py`
-
-Local evaluation adapters belong in:
-
-- `harness/evaluators/local.py`
-
-Harness-facing tool adapters belong in:
-
-- `harness/tools/repo_tools.py`
-
-Harness run artifacts belong in `harness/runs/` and are ignored by Git except
-for tracked placeholders. Legacy `.harness-runs/` artifacts are also ignored.
-Plan run artifacts belong in `harness/plans/active/` or
-`harness/plans/archive/`.
 
 ## Definition of Done
 

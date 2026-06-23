@@ -189,7 +189,7 @@ Rules:
 - Do not edit a file that has not been read in the current task context.
 - Search before changing shared APIs, public names, compatibility paths, or
   behavior used across modules.
-- Use `apply_patch` or the harness equivalent for manual edits.
+- Use `apply_patch` for manual edits.
 - Use deterministic commands for validation.
 - Record exact commands when reporting results.
 - Never use destructive repository commands such as hard resets unless the user

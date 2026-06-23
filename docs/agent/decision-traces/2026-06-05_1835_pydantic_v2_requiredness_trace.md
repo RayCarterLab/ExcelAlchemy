@@ -89,7 +89,6 @@ uv run pytest tests/contracts/test_pydantic_contract.py tests/contracts/test_v3_
 uv run ruff format --check src\excelalchemy\adapters\pydantic.py tests\contracts\test_pydantic_contract.py
 uv run ruff check src\excelalchemy\adapters\pydantic.py tests\contracts\test_pydantic_contract.py
 uv run pyright
-uv run python scripts\smoke_agent_context.py
 ```
 
 Review validation also ran:
