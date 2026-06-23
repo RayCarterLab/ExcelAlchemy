@@ -11,8 +11,8 @@ ExcelAlchemy turns Pydantic models into workbook contracts:
 - return result workbooks and API-friendly error payloads
 - keep workbook IO pluggable through `ExcelStorage`
 
-The current mainline is ExcelAlchemy 3.0. It uses ordinary Python annotations
-plus explicit `ExcelColumn(...)` metadata. Old 2.x field factories,
+The current stable release is ExcelAlchemy 3.0. It uses ordinary Python
+annotations plus explicit `ExcelColumn(...)` metadata. Old 2.x field factories,
 compatibility imports, legacy config fields, and facade aliases are not current
 API.
 

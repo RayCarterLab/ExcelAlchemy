@@ -10,7 +10,7 @@ readme = { file = 'README-pypi.md', content-type = 'text/markdown' }
 license = { file = 'LICENSE' }
 keywords = ['excel', 'openpyxl', 'pydantic', 'minio', 'schema']
 classifiers = [
-    'Development Status :: 3 - Alpha',
+    'Development Status :: 5 - Production/Stable',
     'Intended Audience :: Developers',
     'License :: OSI Approved :: MIT License',
     'Operating System :: OS Independent',

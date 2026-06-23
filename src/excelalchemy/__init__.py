@@ -1,6 +1,6 @@
 """Public ExcelAlchemy API."""
 
-__version__ = '3.0.0a0'
+__version__ = '3.0.0'
 from excelalchemy.artifacts import ExcelArtifact
 from excelalchemy.codecs.boolean import BooleanCodec
 from excelalchemy.codecs.choice import MultiChoiceCodec, SingleChoiceCodec

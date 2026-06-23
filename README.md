@@ -21,10 +21,10 @@ Use it when you want to turn Python models into Excel workbook contracts:
 - return user-friendly result workbooks
 - keep storage pluggable through `ExcelStorage`
 
-The current mainline is ExcelAlchemy 3.0. It uses ordinary Python annotations
-plus explicit `ExcelColumn(...)` metadata. The old 2.x field factories,
-compatibility imports, legacy config fields, and facade aliases are not current
-API.
+The current stable release is ExcelAlchemy 3.0. It uses ordinary Python
+annotations plus explicit `ExcelColumn(...)` metadata. The old 2.x field
+factories, compatibility imports, legacy config fields, and facade aliases are
+not current API.
 
 ## Why This Matters
 

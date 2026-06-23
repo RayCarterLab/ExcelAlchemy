@@ -14,7 +14,7 @@ ExcelAlchemy 是一个基于 Pydantic 模型的 schema-driven Excel 导入/导�
 - 生成面向用户的结果工作簿
 - 通过 `ExcelStorage` 支持可替换的存储实现
 
-当前主线是 ExcelAlchemy 3.0。3.0 使用普通 Python 类型标注配合显式
+当前稳定版本是 ExcelAlchemy 3.0。3.0 使用普通 Python 类型标注配合显式
 `ExcelColumn(...)` 元数据。2.x 的字段工厂、兼容导入、legacy 配置字段和
 facade 别名都不再是当前 API。
 

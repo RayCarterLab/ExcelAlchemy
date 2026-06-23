@@ -4,19 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog and versioned according to PEP 440.
 
-## [3.0.0a0] - 2026-05-30
+## [3.0.0] - 2026-06-23
 
-This is a breaking 3.0 alpha release focused on a cleaner public API and module
-layout.
+This is the first stable ExcelAlchemy 3.0 release. It finalizes the breaking
+3.0 public API, documentation set, examples, and release validation path around
+typed Pydantic models plus explicit workbook metadata.
+
+### Added
+
+- Added stable 3.0 guidance across README, PyPI README, Chinese README,
+  public API docs, migration notes, examples, and generated output smoke checks.
+- Added release smoke coverage for package install behavior, repository
+  examples, docs assets, and API payload snapshots.
 
 ### Changed
 
 - Use the 3.0 public API from `excelalchemy`, `excelalchemy.config`,
   `excelalchemy.codecs`, `excelalchemy.storage`, and related public modules.
 - Internal modules now use explicit responsibility names such as `runtime`,
-  `schema`, `workbook`, `rendering`, `adapters`, and `primitives`.
+  `schema`, `worksheet`, `rendering`, `adapters`, and `primitives`.
 - Storage configuration uses `storage=...` with an `ExcelStorage`
   implementation.
+- Package metadata now marks the 3.0 line as a stable release.
 
 ### Removed
 
@@ -36,6 +45,15 @@ layout.
   `row_errors`.
 - Removed legacy Minio config fields such as `minio`, `bucket_name`, and
   `url_expires`.
+
+### Migration Notes
+
+- 3.0 intentionally does not preserve 2.x compatibility imports, field
+  factories, config aliases, or facade aliases.
+- Python annotations define the data shape, Pydantic `Field(...)` defines
+  Pydantic validation, and `ExcelColumn(...)` defines workbook-facing metadata.
+- Use `docs/migrations.md` and `docs/public-api.md` as the current upgrade and
+  public surface references.
 
 ## [2.4.0] - 2026-04-24
 
